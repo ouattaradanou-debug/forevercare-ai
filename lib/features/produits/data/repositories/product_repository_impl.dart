@@ -25,6 +25,23 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
+  Future<void> updateStock(
+    String productId,
+    int newStock,
+  ) async {
+    if (newStock < 0) {
+      throw ArgumentError(
+        'Le stock ne peut pas être négatif.',
+      );
+    }
+
+    await _localDataSource.updateStock(
+      productId,
+      newStock,
+    );
+  }
+
+  @override
   Future<void> deleteProduct(String id) async {
     await _localDataSource.delete(id);
   }

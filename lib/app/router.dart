@@ -8,6 +8,9 @@ import '../features/clients/presentation/pages/clients_page.dart';
 import '../features/produits/presentation/pages/add_product_page.dart';
 import '../features/produits/presentation/pages/products_page.dart';
 
+import '../features/commandes/presentation/pages/orders_page.dart';
+import '../features/commandes/presentation/pages/add_order_page.dart';
+
 /// ============================================================================
 /// ForeverCare AI
 /// Routeur officiel
@@ -74,6 +77,22 @@ abstract final class AppRouter {
         path: '/products/new',
         name: 'add-product',
         builder: (context, state) => const AddProductPage(),
+      ),
+
+            //----------------------------------------------------------------------
+      // Commandes
+      //----------------------------------------------------------------------
+
+      GoRoute(
+        path: '/orders',
+        name: 'orders',
+        builder: (context, state) => const OrdersPage(),
+      ),
+
+      GoRoute(
+        path: '/orders/new',
+        name: 'add-order',
+        builder: (context, state) => const AddOrderPage(),
       ),
     ],
   );

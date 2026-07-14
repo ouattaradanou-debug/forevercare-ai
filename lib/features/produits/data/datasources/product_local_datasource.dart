@@ -73,4 +73,27 @@ class ProductLocalDataSource {
 
     return result.map(ProductModel.fromMap).toList();
   }
+
+  //--------------------------------------------------------------------------
+  // UPDATE STOCK
+  //--------------------------------------------------------------------------
+
+  /// Met à jour uniquement le stock d'un produit.
+  Future<void> updateStock(
+    String productId,
+    int newStock,
+  ) async {
+    final db = await _database.database;
+
+    await db.update(
+      ProductConstants.table,
+      {
+        ProductConstants.stock: newStock,
+        ProductConstants.updatedAt:
+            DateTime.now().toIso8601String(),
+      },
+      where: '${ProductConstants.id} = ?',
+      whereArgs: [productId],
+    );
+  }
 }

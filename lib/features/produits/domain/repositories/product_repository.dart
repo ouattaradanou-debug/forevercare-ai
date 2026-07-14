@@ -18,4 +18,13 @@ abstract class ProductRepository {
 
   /// Recherche des produits par nom, code ou catégorie.
   Future<List<Product>> searchProducts(String query);
+  
+  /// Met à jour uniquement le stock d'un produit.
+  ///
+  /// [productId] : identifiant du produit.
+  /// [newStock] : nouvelle quantité en stock.
+  Future<void> updateStock(
+    String productId,
+    int newStock,
+  );
 }

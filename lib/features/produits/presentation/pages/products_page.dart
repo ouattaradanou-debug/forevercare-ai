@@ -9,6 +9,32 @@ import 'add_product_page.dart';
 class ProductsPage extends ConsumerWidget {
   const ProductsPage({super.key});
 
+  Future<bool> _confirmDelete(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Supprimer le produit'),
+          content: const Text(
+            'Voulez-vous vraiment supprimer ce produit ?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Supprimer'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(productsProvider);
@@ -78,7 +104,124 @@ class ProductsPage extends ConsumerWidget {
           }
 
           // La liste sera ajoutée dans la livraison C2.
-          return const SizedBox.shrink();
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: products.length,
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final product = products[index];
+
+              return Card(
+                child: ListTile(
+                  leading: CircleAvatar(
+                    child: Text(
+                      product.name.substring(0, 1).toUpperCase(),
+                    ),
+                  ),
+
+                  title: Text(product.name),
+
+                  subtitle: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      Text(product.code),
+                      Text(product.category),
+                      Text('Stock : ${product.stock}'),
+                    ],
+                  ),
+
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (value) async {
+                      switch (value) {
+                        case 'edit':
+                          final result =
+                              await Navigator.of(context)
+                                  .push<bool>(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  AddProductPage(
+                                product: product,
+                              ),
+                            ),
+                          );
+
+                          if (result == true) {
+                            ref.invalidate(
+                              productsProvider,
+                            );
+                          }
+
+                          break;
+
+                        case 'delete':
+                          final confirmed = await _confirmDelete(context);
+
+                          if (!confirmed) {
+                            break;
+                          }
+
+                          final deleteProduct =
+                              ref.read(deleteProductUseCaseProvider);
+
+                          await deleteProduct(product.id);
+
+                          ref.invalidate(productsProvider);
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${product.name} a été supprimé.',
+                                ),
+                              ),
+                            );
+                          }
+
+                          break;
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: Icon(Icons.edit),
+                          title: Text('Modifier'),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: ListTile(
+                          leading: Icon(Icons.delete),
+                          title: Text('Supprimer'),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  onTap: () async {
+                    final result =
+                        await Navigator.of(context)
+                            .push<bool>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AddProductPage(
+                          product: product,
+                        ),
+                      ),
+                    );
+
+                    if (result == true) {
+                      ref.invalidate(
+                        productsProvider,
+                      );
+                    }
+                  },
+                ),
+              );
+            },
+          );
         },
       ),
     );
