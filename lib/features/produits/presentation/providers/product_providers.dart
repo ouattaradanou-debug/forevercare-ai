@@ -11,6 +11,8 @@ import '../../domain/usecases/get_all_products_usecase.dart';
 import '../../domain/usecases/get_product_by_id_usecase.dart';
 import '../../domain/usecases/search_products_usecase.dart';
 import '../../domain/usecases/update_product_usecase.dart';
+import '../../domain/usecases/update_product_stock_usecase.dart';
+
 
 /// DataSource locale
 final productLocalDataSourceProvider =
@@ -70,6 +72,14 @@ final searchProductsUseCaseProvider =
 final getProductByIdUseCaseProvider =
     Provider<GetProductByIdUseCase>(
   (ref) => GetProductByIdUseCase(
+    ref.read(productRepositoryProvider),
+  ),
+);
+
+/// UseCase : mise à jour du stock
+final updateProductStockUseCaseProvider =
+    Provider<UpdateProductStockUseCase>(
+  (ref) => UpdateProductStockUseCase(
     ref.read(productRepositoryProvider),
   ),
 );

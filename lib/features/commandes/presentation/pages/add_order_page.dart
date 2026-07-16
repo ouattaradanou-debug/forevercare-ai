@@ -10,10 +10,8 @@ import '../../../produits/presentation/pages/product_picker_page.dart';
 import '../../../produits/domain/entities/product.dart';
 import '../../../clients/domain/entities/client.dart';
 import '../../../clients/presentation/pages/client_picker_page.dart';
-import '../../../clients/domain/entities/client.dart';
-import '../../../clients/presentation/pages/client_picker_page.dart';
-import '../../../produits/domain/entities/product.dart';
-import '../../../produits/presentation/pages/product_picker_page.dart';
+
+
 
 
 /// ============================================================================

@@ -97,15 +97,6 @@ final getOrderByIdUseCaseProvider =
 /// UseCase : Validation complète d'une commande
 /// ============================================================================
 
-final validateOrderUseCaseProvider =
-    Provider<ValidateOrderUseCase>(
-  (ref) => ValidateOrderUseCase(
-    createOrderUseCase:
-        ref.read(createOrderUseCaseProvider),
-    updateProductStockUseCase:
-        ref.read(updateProductStockUseCaseProvider),
-  ),
-);
 
 /// Liste des commandes
 final ordersProvider =
@@ -128,9 +119,3 @@ final validateOrderUseCaseProvider =
   ),
 );
 
-final getProductByIdUseCaseProvider =
-    Provider<GetProductByIdUseCase>(
-  (ref) => GetProductByIdUseCase(
-    ref.read(productRepositoryProvider),
-  ),
-);
