@@ -13,6 +13,23 @@ class EcranGestionApprentis extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
+
+    if (!estProprietaire) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Mes apprentis')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Seul le propriétaire de l\'atelier peut gérer les apprentis.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     final utilisateurs = ref.watch(utilisateursDeLAtelierProvider);
 
     return Scaffold(

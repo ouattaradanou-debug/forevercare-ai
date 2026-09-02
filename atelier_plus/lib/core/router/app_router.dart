@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../data/models/client.dart';
+import '../../data/models/type_tenue.dart';
 import '../../data/remote/supabase_client_provider.dart';
 import '../../features/auth/presentation/ecran_accueil_provisoire.dart';
 import '../../features/auth/presentation/ecran_connexion.dart';
@@ -11,6 +13,15 @@ import '../../features/auth/presentation/ecran_creation_apprenti.dart';
 import '../../features/auth/presentation/ecran_creation_compte_atelier.dart';
 import '../../features/auth/presentation/ecran_gestion_apprentis.dart';
 import '../../features/auth/providers/auth_providers.dart';
+import '../../features/clients/presentation/ecran_fiche_client.dart';
+import '../../features/clients/presentation/ecran_formulaire_client.dart';
+import '../../features/clients/presentation/ecran_gestion_photos.dart';
+import '../../features/clients/presentation/ecran_liste_clients.dart';
+import '../../features/mesures/presentation/ecran_creation_type_tenue.dart';
+import '../../features/mesures/presentation/ecran_gestion_champs.dart';
+import '../../features/mesures/presentation/ecran_gestion_types_tenue.dart';
+import '../../features/mesures/presentation/ecran_prise_mesure.dart';
+import '../../features/mesures/presentation/ecran_selection_type_tenue.dart';
 import '../../features/permissions/presentation/ecran_panneau_permissions.dart';
 
 /// Chemins nommés des routes de l'application, centralisés pour éviter les
@@ -27,6 +38,27 @@ class AppRoutes {
 
   static String permissionsApprenti(String utilisateurId) =>
       '/apprentis/$utilisateurId/permissions';
+
+  static const String clients = '/clients';
+  static const String creationClient = '/clients/nouveau';
+  static const String _ficheClientTemplate = '/clients/:id';
+  static const String _modificationClientTemplate = '/clients/:id/modifier';
+  static const String _selectionTypeTenueTemplate = '/clients/:id/mesures';
+  static const String _priseMesureTemplate = '/clients/:id/mesures/:typeTenueId';
+  static const String _photosClientTemplate = '/clients/:id/photos';
+
+  static String ficheClient(String id) => '/clients/$id';
+  static String modificationClient(String id) => '/clients/$id/modifier';
+  static String selectionTypeTenue(String clientId) => '/clients/$clientId/mesures';
+  static String priseMesure(String clientId, String typeTenueId) =>
+      '/clients/$clientId/mesures/$typeTenueId';
+  static String photosClient(String clientId) => '/clients/$clientId/photos';
+
+  static const String typesTenue = '/types-tenue';
+  static const String creationTypeTenue = '/types-tenue/nouveau';
+  static const String _gestionChampsTemplate = '/types-tenue/:id/champs';
+
+  static String gestionChampsTypeTenue(String id) => '/types-tenue/$id/champs';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -73,6 +105,51 @@ final routerProvider = Provider<GoRouter>((ref) {
           utilisateurId: state.pathParameters['id']!,
           nomApprenti: (state.extra as String?) ?? '',
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.clients,
+        builder: (context, state) => const EcranListeClients(),
+      ),
+      GoRoute(
+        path: AppRoutes.creationClient,
+        builder: (context, state) => const EcranFormulaireClient(),
+      ),
+      GoRoute(
+        path: AppRoutes._ficheClientTemplate,
+        builder: (context, state) => EcranFicheClient(clientId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes._modificationClientTemplate,
+        builder: (context, state) =>
+            EcranFormulaireClient(clientExistant: state.extra as Client?),
+      ),
+      GoRoute(
+        path: AppRoutes._selectionTypeTenueTemplate,
+        builder: (context, state) =>
+            EcranSelectionTypeTenue(clientId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes._priseMesureTemplate,
+        builder: (context, state) => EcranPriseMesure(
+          clientId: state.pathParameters['id']!,
+          typeTenueId: state.pathParameters['typeTenueId']!,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes._photosClientTemplate,
+        builder: (context, state) => EcranGestionPhotos(clientId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.typesTenue,
+        builder: (context, state) => const EcranGestionTypesTenue(),
+      ),
+      GoRoute(
+        path: AppRoutes.creationTypeTenue,
+        builder: (context, state) => const EcranCreationTypeTenue(),
+      ),
+      GoRoute(
+        path: AppRoutes._gestionChampsTemplate,
+        builder: (context, state) => EcranGestionChamps(type: state.extra as TypeTenue),
       ),
     ],
   );

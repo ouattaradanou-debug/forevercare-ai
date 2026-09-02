@@ -3,10 +3,12 @@
 ## Application du schéma
 
 1. Créer un projet Supabase (https://supabase.com).
-2. Dans **SQL Editor**, exécuter `schema.sql` en une fois (script idempotent,
-   peut être rejoué sans erreur grâce aux `if not exists` / `drop ... if
-   exists`).
-3. Récupérer l'URL du projet et la clé `anon` dans **Project Settings > API**
+2. Dans **SQL Editor**, exécuter dans l'ordre (chaque script est idempotent) :
+   `schema.sql`, puis `storage.sql`, puis `storage_photos_clients.sql`, puis
+   `seed_gabarits.sql`.
+3. Désactiver "Confirm email" (voir section suivante) et déployer la
+   fonction Edge `creer-apprenti` (voir plus bas).
+4. Récupérer l'URL du projet et la clé `anon` dans **Project Settings > API**
    pour les fournir à l'application (voir `lib/core/config/supabase_config.dart`).
 
 Ou, avec la CLI Supabase :
@@ -56,6 +58,16 @@ Voir `supabase/storage.sql` pour la création du bucket `logos-ateliers` et
 ses politiques d'accès (upload/suppression réservés au propriétaire de
 l'atelier concerné). À exécuter après `schema.sql`, dans le même SQL
 Editor.
+
+## Gabarits de mesure par défaut (Phase 2)
+
+`supabase/seed_gabarits.sql` insère les types de tenue par défaut (7
+gabarits Femme, 5 gabarits Homme) et leurs champs de mesure. Script
+idempotent (identifiants fixes + index unique), à exécuter une fois après
+`schema.sql`. Ces gabarits ont `atelier_id = null` : visibles par tous les
+ateliers en lecture, jamais modifiables directement (RLS) — un atelier qui
+veut les adapter doit les **dupliquer** depuis l'écran "Gérer mes types de
+tenues" (Phase 2), ce qui crée une copie avec son propre `atelier_id`.
 
 ## Résumé des garanties de sécurité (RLS)
 

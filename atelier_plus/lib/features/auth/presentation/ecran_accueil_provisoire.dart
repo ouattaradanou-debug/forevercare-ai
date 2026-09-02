@@ -5,10 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../providers/auth_providers.dart';
 
-/// Écran d'accueil minimal de la Phase 1 : confirme la connexion, affiche
-/// l'atelier courant et donne accès à la gestion des apprentis. Le vrai
-/// tableau de bord (statistiques, accès rapide clients/rendez-vous) sera
-/// construit dans les phases suivantes.
+/// Écran d'accueil minimal : confirme la connexion, affiche l'atelier
+/// courant et donne accès aux apprentis, aux clients et aux types de tenue.
+/// Le vrai tableau de bord (statistiques, rendez-vous du jour) sera
+/// construit en Phase 3.
 class EcranAccueilProvisoire extends ConsumerWidget {
   const EcranAccueilProvisoire({super.key});
 
@@ -51,16 +51,28 @@ class EcranAccueilProvisoire extends ConsumerWidget {
                 error: (_, __) => const SizedBox.shrink(),
               ),
               const SizedBox(height: 24),
-              if (estProprietaire)
-                ElevatedButton.icon(
+              ElevatedButton.icon(
+                onPressed: () => context.push(AppRoutes.clients),
+                icon: const Icon(Icons.people_alt_outlined),
+                label: const Text('Mes clients'),
+              ),
+              if (estProprietaire) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => context.push(AppRoutes.typesTenue),
+                  icon: const Icon(Icons.checkroom_outlined),
+                  label: const Text('Mes types de tenue'),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
                   onPressed: () => context.push(AppRoutes.apprentis),
-                  icon: const Icon(Icons.people_outline),
+                  icon: const Icon(Icons.person_outline),
                   label: const Text('Gérer mes apprentis'),
                 ),
+              ],
               const SizedBox(height: 16),
               Text(
-                'Clients, mesures, rendez-vous et finances arrivent dans les '
-                'phases suivantes.',
+                'Rendez-vous et finances arrivent en Phase 3.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),

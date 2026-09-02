@@ -42,8 +42,8 @@ class _EcranCreationCompteAtelierState
   }
 
   Future<void> _choisirLogo() async {
-    final image = await choisirSourceEtImage(context);
-    if (image != null) setState(() => _logo = image);
+    final resultat = await choisirSourceEtImage(context);
+    if (resultat != null) setState(() => _logo = resultat.$1);
   }
 
   Future<void> _creerCompte() async {

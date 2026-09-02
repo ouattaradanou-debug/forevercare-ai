@@ -69,14 +69,114 @@ class SessionLocale extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [AtelierEntries, UtilisateurEntries, PermissionEntries, SessionLocale])
+/// Cache local des clients de l'atelier.
+@DataClassName('ClientEntry')
+class ClientEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get nom => text()();
+  TextColumn get prenom => text().nullable()();
+  TextColumn get telephone => text().nullable()();
+  TextColumn get sexe => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local des types de tenue (gabarits par défaut + personnalisés).
+@DataClassName('TypeTenueEntry')
+class TypeTenueEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text().nullable()();
+  TextColumn get nom => text()();
+  TextColumn get sexe => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local des champs de mesure d'un type de tenue.
+@DataClassName('ChampMesureEntry')
+class ChampMesureEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get typeTenueId => text()();
+  TextColumn get nom => text()();
+  TextColumn get unite => text()();
+  TextColumn get statut => text()();
+  IntColumn get ordre => integer().withDefault(const Constant(0))();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local des mesures prises (historique, jamais écrasé).
+/// [valeursJson] est un objet JSON encodé en texte (SQLite n'a pas de type
+/// JSON natif dans l'API typée de Drift) : `{champMesureId: "valeur"}`.
+@DataClassName('MesureEntry')
+class MesureEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get clientId => text()();
+  TextColumn get typeTenueId => text()();
+  DateTimeColumn get datePrise => dateTime()();
+  TextColumn get valeursJson => text()();
+  TextColumn get prisePar => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local des photos (tissus/modèles) d'un client.
+@DataClassName('PhotoEntry')
+class PhotoEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get clientId => text()();
+  TextColumn get type => text()();
+  TextColumn get url => text()();
+  TextColumn get source => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(tables: [
+  AtelierEntries,
+  UtilisateurEntries,
+  PermissionEntries,
+  SessionLocale,
+  ClientEntries,
+  TypeTenueEntries,
+  ChampMesureEntries,
+  MesureEntries,
+  PhotoEntries,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
-  /// Incrémenté à chaque ajout/modification de table. Phase 2 y ajoutera
-  /// les tables clients/gabarits/mesures, Phase 3 la file de synchronisation.
+  /// Incrémenté à chaque ajout/modification de table. Phase 3 y ajoutera la
+  /// file d'attente de synchronisation.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(clientEntries);
+            await m.createTable(typeTenueEntries);
+            await m.createTable(champMesureEntries);
+            await m.createTable(mesureEntries);
+            await m.createTable(photoEntries);
+          }
+        },
+      );
 
   // --- Session locale ---
 
@@ -168,6 +268,196 @@ class AppDatabase extends _$AppDatabase {
   Future<PermissionEntry?> permissionsDe(String utilisateurId) {
     return (select(permissionEntries)..where((t) => t.utilisateurId.equals(utilisateurId)))
         .getSingleOrNull();
+  }
+
+  // --- Clients ---
+
+  Future<void> enregistrerClient({
+    required String id,
+    required String atelierId,
+    required String nom,
+    String? prenom,
+    String? telephone,
+    String? sexe,
+    required DateTime updatedAt,
+  }) async {
+    await into(clientEntries).insertOnConflictUpdate(
+      ClientEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        nom: nom,
+        prenom: Value(prenom),
+        telephone: Value(telephone),
+        sexe: Value(sexe),
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  Future<ClientEntry?> clientParId(String id) {
+    return (select(clientEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  /// Recherche instantanée locale par nom, prénom ou téléphone — c'est le
+  /// chemin de lecture normal de l'écran liste des clients (hors-ligne au
+  /// quotidien).
+  Stream<List<ClientEntry>> rechercherClients(String atelierId, String requete) {
+    final termeRecherche = requete.trim();
+    final motif = '%$termeRecherche%';
+    return (select(clientEntries)
+          ..where((t) {
+            final memeAtelier = t.atelierId.equals(atelierId);
+            if (termeRecherche.isEmpty) return memeAtelier;
+            final correspond = t.nom.like(motif) | t.prenom.like(motif) | t.telephone.like(motif);
+            return memeAtelier & correspond;
+          })
+          ..orderBy([(t) => OrderingTerm.asc(t.nom)]))
+        .watch();
+  }
+
+  // --- Types de tenue ---
+
+  Future<void> enregistrerTypeTenue({
+    required String id,
+    String? atelierId,
+    required String nom,
+    required String sexe,
+    required DateTime updatedAt,
+  }) async {
+    await into(typeTenueEntries).insertOnConflictUpdate(
+      TypeTenueEntriesCompanion.insert(
+        id: id,
+        atelierId: Value(atelierId),
+        nom: nom,
+        sexe: sexe,
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  /// Gabarits par défaut (atelierId NULL) + gabarits propres à l'atelier —
+  /// même règle de visibilité que la politique RLS `types_tenue_select`.
+  Stream<List<TypeTenueEntry>> observerTypesTenueVisibles(String atelierId) {
+    return (select(typeTenueEntries)
+          ..where((t) => t.atelierId.isNull() | t.atelierId.equals(atelierId))
+          ..orderBy([(t) => OrderingTerm.asc(t.nom)]))
+        .watch();
+  }
+
+  // --- Champs de mesure ---
+
+  Future<void> enregistrerChampMesure({
+    required String id,
+    required String typeTenueId,
+    required String nom,
+    required String unite,
+    required String statut,
+    required int ordre,
+    required DateTime updatedAt,
+  }) async {
+    await into(champMesureEntries).insertOnConflictUpdate(
+      ChampMesureEntriesCompanion.insert(
+        id: id,
+        typeTenueId: typeTenueId,
+        nom: nom,
+        unite: unite,
+        statut: statut,
+        ordre: Value(ordre),
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  /// Champs actifs uniquement, dans l'ordre d'affichage — utilisé pour
+  /// construire le formulaire dynamique de prise de mesure.
+  Stream<List<ChampMesureEntry>> observerChampsActifs(String typeTenueId) {
+    return (select(champMesureEntries)
+          ..where((t) => t.typeTenueId.equals(typeTenueId) & t.statut.equals('actif'))
+          ..orderBy([(t) => OrderingTerm.asc(t.ordre)]))
+        .watch();
+  }
+
+  /// Tous les champs (actifs + masqués), pour l'écran de gestion des
+  /// gabarits.
+  Stream<List<ChampMesureEntry>> observerTousLesChamps(String typeTenueId) {
+    return (select(champMesureEntries)
+          ..where((t) => t.typeTenueId.equals(typeTenueId))
+          ..orderBy([(t) => OrderingTerm.asc(t.ordre)]))
+        .watch();
+  }
+
+  // --- Mesures ---
+
+  Future<void> enregistrerMesure({
+    required String id,
+    required String atelierId,
+    required String clientId,
+    required String typeTenueId,
+    required DateTime datePrise,
+    required String valeursJson,
+    String? prisePar,
+    required DateTime updatedAt,
+  }) async {
+    await into(mesureEntries).insertOnConflictUpdate(
+      MesureEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        clientId: clientId,
+        typeTenueId: typeTenueId,
+        datePrise: datePrise,
+        valeursJson: valeursJson,
+        prisePar: Value(prisePar),
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  /// Toutes les mesures prises pour ce type de tenue, tous clients
+  /// confondus — utilisé pour détecter si un champ de mesure est déjà
+  /// utilisé avant de proposer de le masquer.
+  Future<List<MesureEntry>> mesuresParType(String typeTenueId) {
+    return (select(mesureEntries)..where((t) => t.typeTenueId.equals(typeTenueId))).get();
+  }
+
+  /// Dernière mesure prise pour ce client et ce type de tenue — sert à
+  /// pré-remplir le formulaire de prise de mesure par défaut.
+  Future<MesureEntry?> derniereMesure(String clientId, String typeTenueId) {
+    return (select(mesureEntries)
+          ..where((t) => t.clientId.equals(clientId) & t.typeTenueId.equals(typeTenueId))
+          ..orderBy([(t) => OrderingTerm.desc(t.datePrise)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  // --- Photos ---
+
+  Future<void> enregistrerPhoto({
+    required String id,
+    required String atelierId,
+    required String clientId,
+    required String type,
+    required String url,
+    required String source,
+    required DateTime createdAt,
+  }) async {
+    await into(photoEntries).insertOnConflictUpdate(
+      PhotoEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        clientId: clientId,
+        type: type,
+        url: url,
+        source: source,
+        createdAt: createdAt,
+      ),
+    );
+  }
+
+  Stream<List<PhotoEntry>> observerPhotosDuClient(String clientId) {
+    return (select(photoEntries)
+          ..where((t) => t.clientId.equals(clientId))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .watch();
   }
 }
 

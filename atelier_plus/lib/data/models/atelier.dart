@@ -24,13 +24,4 @@ class Atelier {
   Map<String, dynamic> versJson() {
     return {'id': id, 'nom': nom, 'logo_url': logoUrl};
   }
-
-  Atelier copierAvec({String? nom, String? logoUrl}) {
-    return Atelier(
-      id: id,
-      nom: nom ?? this.nom,
-      logoUrl: logoUrl ?? this.logoUrl,
-      updatedAt: updatedAt,
-    );
-  }
 }

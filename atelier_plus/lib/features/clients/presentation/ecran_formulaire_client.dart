@@ -1,0 +1,150 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/router/app_router.dart';
+import '../../../core/utils/validators.dart';
+import '../../../data/models/client.dart';
+import '../../auth/providers/auth_providers.dart';
+import '../providers/clients_providers.dart';
+
+/// Création ou édition d'une fiche client. [clientExistant] null = création.
+class EcranFormulaireClient extends ConsumerStatefulWidget {
+  const EcranFormulaireClient({super.key, this.clientExistant});
+
+  final Client? clientExistant;
+
+  @override
+  ConsumerState<EcranFormulaireClient> createState() => _EcranFormulaireClientState();
+}
+
+class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nomCtrl;
+  late final TextEditingController _prenomCtrl;
+  late final TextEditingController _telephoneCtrl;
+  String? _sexe;
+  bool _chargement = false;
+  String? _erreur;
+
+  bool get _modeEdition => widget.clientExistant != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final client = widget.clientExistant;
+    _nomCtrl = TextEditingController(text: client?.nom ?? '');
+    _prenomCtrl = TextEditingController(text: client?.prenom ?? '');
+    _telephoneCtrl = TextEditingController(text: client?.telephone ?? '');
+    _sexe = client?.sexe;
+  }
+
+  @override
+  void dispose() {
+    _nomCtrl.dispose();
+    _prenomCtrl.dispose();
+    _telephoneCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _enregistrer() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _chargement = true;
+      _erreur = null;
+    });
+
+    try {
+      final repo = ref.read(clientsRepositoryProvider);
+      final Client client;
+      if (_modeEdition) {
+        client = await repo.modifierClient(
+          widget.clientExistant!,
+          nom: _nomCtrl.text.trim(),
+          prenom: _videVersNull(_prenomCtrl.text),
+          telephone: _videVersNull(_telephoneCtrl.text),
+          sexe: _sexe,
+        );
+      } else {
+        final utilisateur = await ref.read(utilisateurCourantProvider.future);
+        client = await repo.creerClient(
+          atelierId: utilisateur!.atelierId,
+          nom: _nomCtrl.text.trim(),
+          prenom: _videVersNull(_prenomCtrl.text),
+          telephone: _videVersNull(_telephoneCtrl.text),
+          sexe: _sexe,
+        );
+      }
+      if (mounted) context.pushReplacement(AppRoutes.ficheClient(client.id));
+    } catch (e) {
+      setState(() => _erreur = e.toString());
+    } finally {
+      if (mounted) setState(() => _chargement = false);
+    }
+  }
+
+  String? _videVersNull(String valeur) => valeur.trim().isEmpty ? null : valeur.trim();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(_modeEdition ? 'Modifier le client' : 'Nouveau client')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _nomCtrl,
+                  decoration: const InputDecoration(labelText: 'Nom'),
+                  validator: Validators.nomRequis,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _prenomCtrl,
+                  decoration: const InputDecoration(labelText: 'Prénom (optionnel)'),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _telephoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(labelText: 'Téléphone (optionnel)'),
+                ),
+                const SizedBox(height: 16),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'femme', label: Text('Femme')),
+                    ButtonSegment(value: 'homme', label: Text('Homme')),
+                  ],
+                  selected: _sexe == null ? const {} : {_sexe!},
+                  emptySelectionAllowed: true,
+                  onSelectionChanged: (selection) {
+                    setState(() => _sexe = selection.isEmpty ? null : selection.first);
+                  },
+                ),
+                if (_erreur != null) ...[
+                  const SizedBox(height: 8),
+                  Text(_erreur!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                ],
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _chargement ? null : _enregistrer,
+                  child: _chargement
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Enregistrer'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
