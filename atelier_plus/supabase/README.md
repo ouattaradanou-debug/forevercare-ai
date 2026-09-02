@@ -16,6 +16,47 @@ supabase link --project-ref <votre-ref-projet>
 supabase db push --file supabase/schema.sql
 ```
 
+## Configuration Auth requise (Phase 1)
+
+L'authentification se fait par **téléphone + PIN**, pas par email : voir
+`lib/core/utils/telephone.dart`. Techniquement, un compte Auth email/mot de
+passe classique est créé avec un email synthétique jamais délivré
+(`tel-XXXXXXXX@atelierplus.local`). Pour que la connexion fonctionne, le
+projet Supabase doit avoir la confirmation d'email **désactivée** :
+
+> **Dashboard Supabase → Authentication → Sign In / Providers → Email →
+> désactiver "Confirm email"**
+
+Sans cela, un compte nouvellement créé resterait bloqué en attente d'une
+confirmation qui ne peut jamais arriver (l'adresse est fictive).
+
+## Fonction Edge `creer-apprenti`
+
+Le propriétaire crée les comptes apprentis via la fonction Edge
+`supabase/functions/creer-apprenti/` plutôt que directement depuis
+l'application : un appel client à `auth.signUp` remplacerait la session du
+propriétaire par celle du nouvel apprenti (le SDK Supabase ne gère qu'une
+session à la fois). La fonction utilise la clé `service_role` côté serveur
+pour créer le compte apprenti sans jamais affecter la session de l'appelant,
+après avoir vérifié que l'appelant est bien `proprietaire` de l'atelier.
+
+Déploiement :
+
+```bash
+supabase functions deploy creer-apprenti
+```
+
+Aucune variable d'environnement à configurer manuellement : `SUPABASE_URL`,
+`SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY` sont injectées
+automatiquement par la plateforme Supabase à l'exécution des fonctions Edge.
+
+## Storage : bucket des logos d'atelier
+
+Voir `supabase/storage.sql` pour la création du bucket `logos-ateliers` et
+ses politiques d'accès (upload/suppression réservés au propriétaire de
+l'atelier concerné). À exécuter après `schema.sql`, dans le même SQL
+Editor.
+
 ## Résumé des garanties de sécurité (RLS)
 
 | Règle demandée | Mise en œuvre |
@@ -42,3 +83,10 @@ supabase db push --file supabase/schema.sql
 - **`abonnements`** : aucune politique d'écriture pour le rôle `authenticated`.
   La transition essai → actif sera gérée par une fonction Edge Supabase
   utilisant la clé `service_role`, après confirmation de paiement (Phase 4).
+- **Authentification téléphone + PIN** (Phase 1) : compte Auth email/mot de
+  passe standard avec email synthétique dérivé du téléphone (Supabase Auth
+  n'a pas de mode PIN natif sans SMS payant). Détail dans la section
+  "Configuration Auth requise" ci-dessus.
+- **Création d'apprenti** (Phase 1) : passe par la fonction Edge
+  `creer-apprenti` (clé `service_role`) plutôt qu'un appel client direct, pour
+  ne pas remplacer la session du propriétaire par celle du nouvel apprenti.

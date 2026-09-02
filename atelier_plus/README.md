@@ -20,7 +20,8 @@ disponible.
 cd atelier_plus
 flutter pub get
 
-# Génération du code Drift (tables locales) — à lancer après la Phase 2
+# Génération du code Drift (obligatoire dès maintenant : lib/data/local/database.dart
+# définit déjà les tables de cache local de l'identité utilisateur/atelier)
 dart run build_runner build --delete-conflicting-outputs
 
 flutter run \
@@ -75,11 +76,16 @@ l'option la plus stable et documentée, signale ton choix" :
 | Gestion d'état Riverpod | Providers écrits à la main, **sans** génération de code (`riverpod_generator`) | Réduit le nombre de générateurs actifs en parallèle avec `drift_dev` (simplicité de build), plus simple à lire pour une petite équipe. Réévaluable plus tard sans rupture d'API si besoin. |
 | Modèles de données | Classes Dart manuelles (`fromJson`/`toJson`) plutôt que `freezed`/`json_serializable` | Évite d'ajouter deux générateurs de code supplémentaires dès la Phase 0 ; à reconsidérer si le volume de modèles le justifie en Phase 1-2. |
 | Authentification propriétaire/apprenti | Compte Supabase Auth classique (email/mot de passe interne), le "numéro de téléphone provisoire" de l'apprenti servant d'identifiant métier | Supabase Auth n'a pas de mode "PIN" natif ; détaillé en Phase 1. |
+| Création d'apprenti (Phase 1) | Fonction Edge Supabase `creer-apprenti` (clé `service_role`) plutôt qu'un appel client direct | `auth.signUp` côté client remplacerait la session du propriétaire par celle du nouvel apprenti (une seule session gérée à la fois par le SDK). Voir `supabase/functions/creer-apprenti/`. |
+| Base locale Drift (Phase 1) | Introduite dès maintenant avec un socle minimal (identité : atelier, utilisateurs, permissions, session locale), étendue en Phase 2/3 avec clients/mesures/etc. | Évite une double mécanique locale temporaire (ex. `flutter_secure_storage` pour un cache JSON) qui serait de toute façon remplacée à la Phase 2 ; la session doit être connue hors-ligne dès la Phase 1 (contrainte transversale "fonctionne hors-ligne au quotidien"). |
 
 ## Où en est le projet
 
-- **Phase 0 (ce commit) :** architecture, dépendances, schéma SQL + RLS. ✅
-- Phases 1 à 5 : voir la conversation / les commits suivants.
+- **Phase 0 :** architecture, dépendances, schéma SQL + RLS. ✅
+- **Phase 1 (ce commit) :** authentification (création de compte atelier,
+  connexion téléphone + PIN, récupération du profil sur nouvel appareil),
+  gestion des apprentis, panneau de permissions. ✅
+- Phases 2 à 5 : voir la conversation / les commits suivants.
 
 ## Note sur la génération de la plateforme native
 

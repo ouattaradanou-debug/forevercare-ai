@@ -1,0 +1,122 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/router/app_router.dart';
+import '../../../core/utils/validators.dart';
+import '../providers/auth_providers.dart';
+
+class EcranConnexion extends ConsumerStatefulWidget {
+  const EcranConnexion({super.key});
+
+  @override
+  ConsumerState<EcranConnexion> createState() => _EcranConnexionState();
+}
+
+class _EcranConnexionState extends ConsumerState<EcranConnexion> {
+  final _formKey = GlobalKey<FormState>();
+  final _telephoneCtrl = TextEditingController();
+  final _pinCtrl = TextEditingController();
+  bool _chargement = false;
+  String? _erreur;
+
+  @override
+  void dispose() {
+    _telephoneCtrl.dispose();
+    _pinCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _connecter() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _chargement = true;
+      _erreur = null;
+    });
+
+    try {
+      await ref.read(authRepositoryProvider).connecter(
+            telephone: _telephoneCtrl.text,
+            pin: _pinCtrl.text,
+          );
+      if (mounted) context.go(AppRoutes.accueil);
+    } catch (e) {
+      setState(() => _erreur = e.toString());
+    } finally {
+      if (mounted) setState(() => _chargement = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Icon(Icons.content_cut, size: 64, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Atelier+',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 32),
+                  TextFormField(
+                    controller: _telephoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Numéro de téléphone',
+                      prefixIcon: Icon(Icons.phone),
+                    ),
+                    validator: Validators.telephone,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _pinCtrl,
+                    keyboardType: TextInputType.number,
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'Code PIN (6 chiffres)',
+                      prefixIcon: Icon(Icons.lock_outline),
+                    ),
+                    validator: Validators.pin,
+                  ),
+                  if (_erreur != null) ...[
+                    const SizedBox(height: 8),
+                    Text(_erreur!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  ],
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: _chargement ? null : _connecter,
+                    child: _chargement
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Se connecter'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _chargement
+                        ? null
+                        : () => context.push(AppRoutes.creationCompte),
+                    child: const Text('Créer un compte atelier'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
