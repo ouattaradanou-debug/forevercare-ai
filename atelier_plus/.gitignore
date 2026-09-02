@@ -1,0 +1,35 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+pubspec.lock
+
+# Fichiers générés (Drift, json_serializable, etc.)
+**/*.g.dart
+**/*.drift.dart
+
+# Plateformes générées par `flutter create` (non versionnées tant qu'elles
+# n'ont pas été générées dans cet environnement — voir README.md)
+android/
+ios/
+linux/
+macos/
+windows/
+web/
+
+# Secrets Supabase — ne jamais commiter les clés
+.env
+dart_define.json
+*.dart_define.json
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Divers OS
+.DS_Store

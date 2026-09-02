@@ -1,0 +1,56 @@
+name: atelier_plus
+description: "Atelier+ — application de gestion de clientèle pour tailleurs et couturiers, fonctionnant intégralement hors-ligne avec synchronisation Supabase."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # --- Gestion d'état ---
+  flutter_riverpod: ^2.6.1
+
+  # --- Navigation déclarative ---
+  go_router: ^14.6.2
+
+  # --- Backend Supabase (Auth, PostgreSQL, Storage, RLS) ---
+  supabase_flutter: ^2.8.0
+
+  # --- Base locale hors-ligne (cache SQLite via Drift) ---
+  drift: ^2.22.0
+  sqlite3_flutter_libs: ^0.5.26
+  path_provider: ^2.1.5
+  path: ^1.9.0
+
+  # --- Détection de connectivité (déclenche la synchronisation auto) ---
+  connectivity_plus: ^6.1.0
+
+  # --- Photos : capture caméra ET galerie obligatoires, avec compression ---
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+
+  # --- Notifications locales (rappels de rendez-vous) ---
+  flutter_local_notifications: ^18.0.1
+
+  # --- Formatage des montants (FCFA) et des dates en français ---
+  intl: ^0.19.0
+
+  # --- Identifiants uniques générés côté client (indispensable hors-ligne) ---
+  uuid: ^4.5.1
+
+  # --- Stockage sécurisé de la session et du PIN de connexion ---
+  flutter_secure_storage: ^9.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.13
+  drift_dev: ^2.22.0
+
+flutter:
+  uses-material-design: true
