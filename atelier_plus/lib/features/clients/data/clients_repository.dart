@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/client.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des fiches clients : écriture toujours locale d'abord (l'écran
 /// ne dépend jamais du réseau), avec tentative immédiate de synchronisation
@@ -26,6 +27,7 @@ class ClientsRepository {
     String? telephone,
     String? sexe,
   }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
     final client = Client(
       id: _uuid.v4(),
       atelierId: atelierId,
@@ -55,6 +57,7 @@ class ClientsRepository {
     String? telephone,
     String? sexe,
   }) async {
+    await verifierEcritureAutorisee(_baseLocale, existant.atelierId);
     final miseAJour = Client(
       id: existant.id,
       atelierId: existant.atelierId,

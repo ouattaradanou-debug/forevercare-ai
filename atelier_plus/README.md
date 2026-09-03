@@ -85,6 +85,10 @@ l'option la plus stable et documentée, signale ton choix" :
 | Rappel de rendez-vous (Phase 3) | Un seul rappel, 1 heure avant, via `flutter_local_notifications` + `timezone`/`flutter_timezone` | Simple et suffisant pour le besoin exprimé ; `timezone`/`flutter_timezone` sont les packages recommandés par la documentation officielle de `flutter_local_notifications` pour la planification exacte (`zonedSchedule`). |
 | Modèle "commande" (Phase 3) | Une seule commande par client (montant total + avance ajustables), pas une liste de commandes distinctes | Correspond à l'écran "finances par client" du cahier des charges ; extensible plus tard si plusieurs commandes simultanées par client sont nécessaires. |
 | Cache financier local (Phase 3) | Effacé à la déconnexion (si rien n'est en attente d'envoi) | Un appareil peut être partagé entre le propriétaire et un apprenti : les données financières ne doivent jamais rester lisibles sur le disque après le départ du propriétaire, en plus du filtrage déjà fait par l'écran et par la RLS. |
+| Export PDF (Phase 4) | `pdf` + `printing` (nouvelles dépendances), logo téléchargé via `http` (nouvelle dépendance) | Choix les plus stables/documentés de l'écosystème Flutter pour la génération et le partage/impression de PDF ; `printing` fournit l'aperçu système sans gérer soi-même les permissions de stockage. |
+| Statut réel de l'essai (Phase 4) | Calculé côté application (`estEnModeConsultationSeule`) plutôt que de faire confiance à `abonnements.statut` seul | Aucune tâche planifiée côté serveur ne fait passer `statut` de 'essai' à 'expire' quand `date_fin_essai` est dépassée (non demandé au cahier des charges) : l'échéance réelle est donc déterminée en comparant la date actuelle à `date_fin_essai`, en plus de `statut`. |
+| Mode consultation seule (Phase 4) | Vérifié en tête de chaque méthode d'écriture des repositories "métier" (clients, mesures, photos, rendez-vous, finances, gabarits), pas dans chaque écran | Point de contrôle unique et systématique plutôt que de désactiver un bouton dans une quinzaine d'écrans séparément ; échoue "ouvert" (n'écrase jamais) si l'abonnement n'est pas encore en cache, pour ne jamais bloquer un nouvel utilisateur légitime par un simple délai de synchronisation. Les actions de compte (connexion, apprentis) restent volontairement exclues de ce blocage. |
+| Renouvellement d'abonnement (Phase 4) | Écran d'information + contact, pas de paiement réel | Aucun prestataire de paiement n'était spécifié au cahier des charges ; simuler un paiement fonctionnel aurait été trompeur. Point d'extension explicitement laissé pour une intégration future (Mobile Money ou autre). |
 
 ## Où en est le projet
 
@@ -96,13 +100,20 @@ l'option la plus stable et documentée, signale ton choix" :
   gabarits de mesure (12 gabarits par défaut, gestion des champs avec
   masquage et duplication), prise de mesure historisée avec
   pré-remplissage, photos de tissus/modèles. ✅
-- **Phase 3 (ce commit) :** rendez-vous (création, liste triée, rappel
-  local programmé), finances par client (reste à payer calculé
-  automatiquement, historique des paiements, réservé au propriétaire),
-  couche de synchronisation Drift ↔ Supabase (file d'attente,
-  déclenchement automatique via `connectivity_plus`, résolution de conflit
-  par horodatage avec journalisation). ✅
-- Phases 4 à 5 : voir la conversation / les commits suivants.
+- **Phase 3 :** rendez-vous (création, liste triée, rappel local
+  programmé), finances par client (reste à payer calculé automatiquement,
+  historique des paiements, réservé au propriétaire), couche de
+  synchronisation Drift ↔ Supabase (file d'attente, déclenchement
+  automatique via `connectivity_plus`, résolution de conflit par
+  horodatage avec journalisation). ✅
+- **Phase 4 (ce commit) :** nom/logo de l'atelier appliqués dynamiquement
+  (écran d'accueil + export PDF de fiche client avec dernières mesures par
+  type de tenue), essai gratuit de 30 jours avec bandeau de rappel (J-7 à
+  J-1), mode consultation seule appliqué au niveau des repositories
+  (jamais de perte de données, aucune écriture bloquée n'est jamais
+  silencieuse). ✅
+- Phase 5 (vérification finale) : voir la conversation / les commits
+  suivants.
 
 ## Note sur la génération de la plateforme native
 

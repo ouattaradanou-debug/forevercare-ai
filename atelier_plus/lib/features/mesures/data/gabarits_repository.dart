@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/champ_mesure.dart';
 import '../../../data/models/type_tenue.dart';
+import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des gabarits (types de tenue + champs de mesure).
 ///
@@ -70,6 +71,7 @@ class GabaritsRepository {
     required String nom,
     required String sexe,
   }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
     final ligne = await _client
         .from('types_tenue')
         .insert({'atelier_id': atelierId, 'nom': nom, 'sexe': sexe})
@@ -125,7 +127,11 @@ class GabaritsRepository {
     required String nom,
     String unite = 'cm',
     int ordre = 0,
+    String? atelierId,
   }) async {
+    if (atelierId != null) {
+      await verifierEcritureAutorisee(_baseLocale, atelierId);
+    }
     final ligne = await _client
         .from('champs_mesure')
         .insert({'type_tenue_id': typeTenueId, 'nom': nom, 'unite': unite, 'ordre': ordre})
@@ -162,11 +168,16 @@ class GabaritsRepository {
     return mesures.any((m) => m.valeursJson.contains('"${champ.id}"'));
   }
 
-  Future<void> masquerChamp(ChampMesure champ) => _changerStatutChamp(champ.id, StatutChamp.masque);
+  Future<void> masquerChamp(ChampMesure champ, {String? atelierId}) =>
+      _changerStatutChamp(champ.id, StatutChamp.masque, atelierId);
 
-  Future<void> reactiverChamp(ChampMesure champ) => _changerStatutChamp(champ.id, StatutChamp.actif);
+  Future<void> reactiverChamp(ChampMesure champ, {String? atelierId}) =>
+      _changerStatutChamp(champ.id, StatutChamp.actif, atelierId);
 
-  Future<void> _changerStatutChamp(String champId, StatutChamp statut) async {
+  Future<void> _changerStatutChamp(String champId, StatutChamp statut, String? atelierId) async {
+    if (atelierId != null) {
+      await verifierEcritureAutorisee(_baseLocale, atelierId);
+    }
     final ligne = await _client
         .from('champs_mesure')
         .update({'statut': statut.name})

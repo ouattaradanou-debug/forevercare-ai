@@ -6,6 +6,7 @@ import '../../../core/notifications/notifications_service.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/rendez_vous.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des rendez-vous : écriture locale d'abord, comme les clients et
 /// les mesures — un rendez-vous fait partie de l'usage quotidien hors-ligne
@@ -28,6 +29,7 @@ class RendezVousRepository {
     required String type,
     required String nomClientPourRappel,
   }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
     final rdv = RendezVous(
       id: _uuid.v4(),
       atelierId: atelierId,
@@ -71,6 +73,7 @@ class RendezVousRepository {
   }
 
   Future<RendezVous> changerStatut(RendezVous existant, String nouveauStatut) async {
+    await verifierEcritureAutorisee(_baseLocale, existant.atelierId);
     final miseAJour = existant.copierAvec(statut: nouveauStatut);
     await _mettreEnCache(miseAJour);
     await ecrireEtSynchroniser(

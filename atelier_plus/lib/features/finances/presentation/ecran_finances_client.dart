@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/gestion_erreurs.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../clients/providers/clients_providers.dart';
 import '../data/calcul_solde.dart';
@@ -96,12 +97,16 @@ class _ContenuFinancesState extends ConsumerState<_ContenuFinances> {
     final avance = double.tryParse(avanceCtrl.text.replaceAll(',', '.')) ?? 0;
 
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
-    await ref.read(financesRepositoryProvider).definirCommande(
-          atelierId: utilisateur!.atelierId,
-          clientId: widget.clientId,
-          montantTotal: montant,
-          avance: avance,
-        );
+    if (!mounted) return;
+    await executerAvecErreurAffichee(
+      context,
+      () => ref.read(financesRepositoryProvider).definirCommande(
+            atelierId: utilisateur!.atelierId,
+            clientId: widget.clientId,
+            montantTotal: montant,
+            avance: avance,
+          ),
+    );
     ref.invalidate(commandeDuClientProvider(widget.clientId));
   }
 
@@ -129,11 +134,15 @@ class _ContenuFinancesState extends ConsumerState<_ContenuFinances> {
     if (montant <= 0) return;
 
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
-    await ref.read(financesRepositoryProvider).ajouterPaiement(
-          atelierId: utilisateur!.atelierId,
-          commandeId: commandeId,
-          montant: montant,
-        );
+    if (!mounted) return;
+    await executerAvecErreurAffichee(
+      context,
+      () => ref.read(financesRepositoryProvider).ajouterPaiement(
+            atelierId: utilisateur!.atelierId,
+            commandeId: commandeId,
+            montant: montant,
+          ),
+    );
   }
 
   @override

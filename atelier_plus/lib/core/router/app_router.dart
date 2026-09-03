@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/client.dart';
 import '../../data/models/type_tenue.dart';
 import '../../data/remote/supabase_client_provider.dart';
+import '../../features/abonnement/presentation/ecran_abonnement.dart';
 import '../../features/auth/presentation/ecran_accueil_provisoire.dart';
 import '../../features/auth/presentation/ecran_connexion.dart';
 import '../../features/auth/presentation/ecran_creation_apprenti.dart';
@@ -69,6 +70,8 @@ class AppRoutes {
   static const String _financesClientTemplate = '/clients/:id/finances';
 
   static String financesClient(String clientId) => '/clients/$clientId/finances';
+
+  static const String abonnement = '/abonnement';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -173,6 +176,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes._financesClientTemplate,
         builder: (context, state) => EcranFinancesClient(clientId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.abonnement,
+        builder: (context, state) => const EcranAbonnement(),
       ),
     ],
   );

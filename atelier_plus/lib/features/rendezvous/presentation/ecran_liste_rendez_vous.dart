@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/gestion_erreurs.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../clients/providers/clients_providers.dart';
 import '../providers/rendezvous_providers.dart';
@@ -105,10 +106,13 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     );
 
     if (nouveauStatut != null && nouveauStatut != statutActuel) {
-      await ref.read(rendezVousRepositoryProvider).changerStatutParId(
-            rendezVousId,
-            nouveauStatut,
-          );
+      await executerAvecErreurAffichee(
+        context,
+        () => ref.read(rendezVousRepositoryProvider).changerStatutParId(
+              rendezVousId,
+              nouveauStatut,
+            ),
+      );
     }
   }
 }

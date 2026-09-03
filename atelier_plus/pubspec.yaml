@@ -49,6 +49,12 @@ dependencies:
   # --- Stockage sécurisé de la session et du PIN de connexion ---
   flutter_secure_storage: ^9.2.2
 
+  # --- Export PDF de fiche client, avec logo/nom d'atelier ---
+  pdf: ^3.11.1
+  printing: ^5.13.4
+  # Téléchargement du logo (Supabase Storage) pour l'incorporer au PDF.
+  http: ^1.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

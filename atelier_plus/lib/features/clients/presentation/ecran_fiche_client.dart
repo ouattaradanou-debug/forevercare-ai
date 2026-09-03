@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:printing/printing.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../permissions/providers/permissions_providers.dart';
+import '../../../data/models/client.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../branding/providers/branding_providers.dart';
+import '../../permissions/providers/permissions_providers.dart';
 import '../providers/clients_providers.dart';
 
 /// Écran central d'un client : informations, et accès à la prise de mesure,
@@ -89,10 +92,37 @@ class EcranFicheClient extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.financesClient(client.id)),
                   ),
                 ),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.picture_as_pdf_outlined),
+                  title: const Text('Exporter la fiche en PDF'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _exporterPdf(context, ref, client),
+                ),
+              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  /// Ouvre l'aperçu d'impression/partage du système avec la fiche client
+  /// (mesures les plus récentes par type de tenue), en-tête personnalisé
+  /// avec le nom et le logo de l'atelier.
+  Future<void> _exporterPdf(BuildContext context, WidgetRef ref, Client client) async {
+    final atelier = await ref.read(atelierCourantProvider.future);
+    if (atelier == null) return;
+
+    final groupes =
+        await ref.read(donneesExportClientProvider).dernieresMesuresParType(client.id);
+
+    await Printing.layoutPdf(
+      onLayout: (_) => ref.read(pdfExportServiceProvider).genererFicheClientPdf(
+            atelier: atelier,
+            client: client,
+            groupesMesures: groupes,
+          ),
     );
   }
 }

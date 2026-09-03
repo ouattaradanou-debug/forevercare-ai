@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../data/remote/stockage_repository.dart';
+import '../../abonnement/data/abonnement_guard.dart';
 
 const String bucketPhotosClients = 'photos-clients';
 
@@ -34,6 +35,7 @@ class PhotosRepository {
     required SourcePhoto source,
     required XFile fichier,
   }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
     final url = await _stockage.televerserImageCompressee(
       fichier: fichier,
       bucket: bucketPhotosClients,

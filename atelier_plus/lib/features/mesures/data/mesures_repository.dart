@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/mesure.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../abonnement/data/abonnement_guard.dart';
 
 /// Prise de mesure : écriture locale d'abord (comme `ClientsRepository`),
 /// chaque prise crée une nouvelle ligne historisée — jamais de mise à jour
@@ -26,6 +27,7 @@ class MesuresRepository {
     required Map<String, String> valeurs,
     required String prisePar,
   }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
     final mesure = Mesure(
       id: _uuid.v4(),
       atelierId: atelierId,

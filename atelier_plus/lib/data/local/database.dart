@@ -205,6 +205,22 @@ class SyncQueueEntries extends Table {
   TextColumn get derniereErreur => text().nullable()();
 }
 
+/// Cache local de l'abonnement de l'atelier — jamais écrit depuis
+/// l'application (voir modèle `Abonnement`), seulement lu, y compris
+/// hors-ligne, pour calculer le bandeau de rappel d'essai et activer le
+/// mode consultation seule le cas échéant.
+@DataClassName('AbonnementEntry')
+class AbonnementEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get statut => text()();
+  DateTimeColumn get dateFinEssai => dateTime()();
+  DateTimeColumn get dateRenouvellement => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   AtelierEntries,
   UtilisateurEntries,
@@ -219,12 +235,13 @@ class SyncQueueEntries extends Table {
   CommandeEntries,
   PaiementEntries,
   SyncQueueEntries,
+  AbonnementEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -242,6 +259,9 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(commandeEntries);
             await m.createTable(paiementEntries);
             await m.createTable(syncQueueEntries);
+          }
+          if (from < 4) {
+            await m.createTable(abonnementEntries);
           }
         },
       );
@@ -454,6 +474,18 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  /// Utilisé par l'export PDF (Phase 4) pour retrouver le nom du type de
+  /// tenue associé à un groupe de mesures.
+  Future<TypeTenueEntry?> typeTenueParId(String id) {
+    return (select(typeTenueEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  /// Utilisé par l'export PDF (Phase 4) pour retrouver le nom/l'unité d'un
+  /// champ à partir de son id (clé stockée dans `mesures.valeurs`).
+  Future<ChampMesureEntry?> champMesureParId(String id) {
+    return (select(champMesureEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
   // --- Mesures ---
 
   Future<void> enregistrerMesure({
@@ -495,6 +527,12 @@ class AppDatabase extends _$AppDatabase {
           ..orderBy([(t) => OrderingTerm.desc(t.datePrise)])
           ..limit(1))
         .getSingleOrNull();
+  }
+
+  /// Toutes les mesures d'un client (tous types de tenue confondus),
+  /// utilisé par l'export PDF (Phase 4) pour composer la fiche complète.
+  Future<List<MesureEntry>> toutesMesuresDuClient(String clientId) {
+    return (select(mesureEntries)..where((t) => t.clientId.equals(clientId))).get();
   }
 
   // --- Photos ---
@@ -680,6 +718,31 @@ class AppDatabase extends _$AppDatabase {
     final compte = syncQueueEntries.id.count();
     final requete = selectOnly(syncQueueEntries)..addColumns([compte]);
     return requete.watchSingle().map((ligne) => ligne.read(compte) ?? 0);
+  }
+
+  // --- Abonnement ---
+
+  Future<void> enregistrerAbonnement({
+    required String id,
+    required String atelierId,
+    required String statut,
+    required DateTime dateFinEssai,
+    DateTime? dateRenouvellement,
+  }) async {
+    await into(abonnementEntries).insertOnConflictUpdate(
+      AbonnementEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        statut: statut,
+        dateFinEssai: dateFinEssai,
+        dateRenouvellement: Value(dateRenouvellement),
+      ),
+    );
+  }
+
+  Stream<AbonnementEntry?> observerAbonnement(String atelierId) {
+    return (select(abonnementEntries)..where((t) => t.atelierId.equals(atelierId)))
+        .watchSingleOrNull();
   }
 }
 

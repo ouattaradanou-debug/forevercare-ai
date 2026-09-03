@@ -5,6 +5,7 @@ import '../../../data/local/database.dart';
 import '../../../data/models/commande.dart';
 import '../../../data/models/paiement.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des commandes et paiements — données financières.
 ///
@@ -49,6 +50,7 @@ class FinancesRepository {
     required double montantTotal,
     required double avance,
   }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
     final existante = await commandeDuClient(clientId);
     final commande = Commande(
       id: existante?.id ?? _uuid.v4(),
@@ -76,6 +78,7 @@ class FinancesRepository {
     required String commandeId,
     required double montant,
   }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
     final paiement = Paiement(
       id: _uuid.v4(),
       atelierId: atelierId,

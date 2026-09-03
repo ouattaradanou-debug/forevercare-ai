@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/gestion_erreurs.dart';
 import '../../../data/models/champ_mesure.dart';
 import '../../../data/models/type_tenue.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -43,7 +44,10 @@ class EcranGestionChamps extends ConsumerWidget {
     );
 
     if (confirmer == true) {
-      await repo.masquerChamp(champ);
+      await executerAvecErreurAffichee(
+        context,
+        () => repo.masquerChamp(champ, atelierId: type.atelierId),
+      );
     }
   }
 
@@ -68,7 +72,11 @@ class EcranGestionChamps extends ConsumerWidget {
       ),
     );
     if (nom != null && nom.isNotEmpty) {
-      await ref.read(gabaritsRepositoryProvider).ajouterChamp(typeTenueId: type.id, nom: nom);
+      await ref.read(gabaritsRepositoryProvider).ajouterChamp(
+            typeTenueId: type.id,
+            nom: nom,
+            atelierId: type.atelierId,
+          );
     }
   }
 
@@ -137,7 +145,10 @@ class EcranGestionChamps extends ConsumerWidget {
                               onChanged: (valeur) async {
                                 final repo = ref.read(gabaritsRepositoryProvider);
                                 if (valeur) {
-                                  await repo.reactiverChamp(champ);
+                                  await executerAvecErreurAffichee(
+                                    context,
+                                    () => repo.reactiverChamp(champ, atelierId: type.atelierId),
+                                  );
                                 } else {
                                   await _demanderMasquage(context, ref, champ);
                                 }
