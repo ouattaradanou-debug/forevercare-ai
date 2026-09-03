@@ -1,4 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Accès réseau, requis en permanence (pas seulement en debug) pour la
+         synchronisation avec Supabase. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Requis par image_picker pour la capture caméra. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Requis par flutter_local_notifications (rappels de rendez-vous). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <application
         android:label="atelier_plus"
         android:name="${applicationName}"
