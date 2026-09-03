@@ -71,7 +71,7 @@ l'option la plus stable et documentée, signale ton choix" :
 | Décision | Choix retenu | Raison |
 |---|---|---|
 | Identifiants d'enregistrement | `uuid` généré côté client (package `uuid`) | Indispensable en offline-first : un client/une mesure créé(e) hors-ligne doit avoir un identifiant définitif immédiatement, sans attendre une réponse serveur. |
-| Stockage de la session/PIN | `flutter_secure_storage` | Package le plus stable et documenté pour du stockage chiffré multiplateforme (Keychain iOS / Keystore Android). |
+| Stockage de la session/PIN | `flutter_secure_storage` retenu en Phase 0, **retiré en Phase 5** | Supabase gère déjà lui-même la persistance sécurisée de sa session ; aucun usage concret ne s'est présenté sur 4 phases (pas d'app-lock local implémenté). Dépendance non utilisée retirée à la vérification finale plutôt que laissée en poids mort. |
 | Compression photo avant upload | `flutter_image_compress` | Package le plus utilisé et maintenu pour cette tâche précise ; complète `image_picker` (capture) sans le remplacer. |
 | Gestion d'état Riverpod | Providers écrits à la main, **sans** génération de code (`riverpod_generator`) | Réduit le nombre de générateurs actifs en parallèle avec `drift_dev` (simplicité de build), plus simple à lire pour une petite équipe. Réévaluable plus tard sans rupture d'API si besoin. |
 | Modèles de données | Classes Dart manuelles (`fromJson`/`toJson`) plutôt que `freezed`/`json_serializable` | Évite d'ajouter deux générateurs de code supplémentaires dès la Phase 0 ; à reconsidérer si le volume de modèles le justifie en Phase 1-2. |
@@ -106,14 +106,102 @@ l'option la plus stable et documentée, signale ton choix" :
   synchronisation Drift ↔ Supabase (file d'attente, déclenchement
   automatique via `connectivity_plus`, résolution de conflit par
   horodatage avec journalisation). ✅
-- **Phase 4 (ce commit) :** nom/logo de l'atelier appliqués dynamiquement
-  (écran d'accueil + export PDF de fiche client avec dernières mesures par
-  type de tenue), essai gratuit de 30 jours avec bandeau de rappel (J-7 à
-  J-1), mode consultation seule appliqué au niveau des repositories
-  (jamais de perte de données, aucune écriture bloquée n'est jamais
-  silencieuse). ✅
-- Phase 5 (vérification finale) : voir la conversation / les commits
-  suivants.
+- **Phase 4 :** nom/logo de l'atelier appliqués dynamiquement (écran
+  d'accueil + export PDF de fiche client avec dernières mesures par type
+  de tenue), essai gratuit de 30 jours avec bandeau de rappel (J-7 à J-1),
+  mode consultation seule appliqué au niveau des repositories (jamais de
+  perte de données, aucune écriture bloquée n'est jamais silencieuse). ✅
+- **Phase 5 (ce commit) — vérification finale :** voir le détail complet
+  ci-dessous. ✅
+
+## Phase 5 — Vérification finale
+
+Relecture explicite des quatre garanties demandées, par lecture directe du
+code (RLS + Dart), pas par simple rappel de ce qui avait été annoncé aux
+phases précédentes :
+
+1. **Un apprenti ne peut jamais accéder à `commandes`/`paiements`,
+   même indirectement.** Vérifié à trois niveaux : RLS (`commandes_all`/
+   `paiements_all` exigent `est_proprietaire()`, sans aucune exception liée
+   à une permission) ; `permissions_apprenti` ne contient aucune colonne
+   financière ; côté application, `financesRepositoryProvider` et les
+   providers qui en dépendent ne sont référencés QUE dans
+   `EcranFinancesClient`, lui-même gardé par un contrôle de rôle avant
+   affichage. Cas limite vérifié aussi : sur un appareil partagé où une
+   tâche de synchronisation financière resterait en attente après le
+   départ du propriétaire, la relecture côté serveur (RLS) renvoie un
+   résultat vide sous session apprenti — aucune valeur financière n'est
+   donc jamais lue localement, et aucune entrée `journal_actions` n'est
+   créée dans ce cas (la journalisation de conflit ne se déclenche que si
+   la ligne serveur a pu être lue).
+2. **La suppression d'un champ de mesure utilisé est bien bloquée.**
+   Aucune politique RLS `DELETE` n'existe sur `champs_mesure` (vérifié dans
+   `schema.sql`) et aucune méthode de suppression n'existe côté client
+   (grep confirmé) : seul le masquage (`statut = 'masque'`) est possible,
+   inconditionnellement — la protection est donc plus forte que "bloquée
+   si utilisée", elle est bloquée en toute circonstance.
+3. **L'application reste utilisable hors-ligne pour créer un client,
+   prendre une mesure, noter un rendez-vous.** Confirmé pour les trois
+   écritures (locales d'abord, `verifierEcritureAutorisee` n'accède qu'au
+   cache local). **Un bug réel a été trouvé et corrigé pendant cette
+   vérification** : `EcranSelectionTypeTenue` (l'étape "quel type de
+   tenue ?" avant la prise de mesure) ne rapatriait jamais les gabarits
+   depuis le serveur — seul l'écran de gestion des gabarits (réservé au
+   propriétaire) le faisait. Un tailleur ou un apprenti passant directement
+   par "Prendre une mesure" sans jamais avoir ouvert "Mes types de tenue"
+   voyait donc une liste vide, même en ligne. Corrigé : cet écran rapatrie
+   désormais aussi les gabarits par défaut à son ouverture.
+4. **Le logo/nom d'atelier n'est modifiable que par le compte
+   propriétaire.** La RLS (`ateliers_update`) l'impose correctement. Constat
+   honnête cependant : **aucun écran ne permet actuellement de modifier le
+   nom/logo après la création du compte**, pour le propriétaire comme pour
+   quiconque — seule la création initiale (Phase 1) écrit dans `ateliers`.
+   La garantie demandée est donc vraie mais non démontrée par un vrai flux
+   "le propriétaire modifie, l'apprenti ne peut pas" ; ajouter cet écran
+   d'édition serait une extension naturelle d'une phase future.
+
+**Nettoyage effectué en cours de vérification** : `flutter_secure_storage`,
+retenu en Phase 0, n'a jamais été utilisé dans le code sur les 4 phases
+suivantes (Supabase gère déjà sa propre persistance de session) — retiré du
+`pubspec.yaml` plutôt que laissé en dépendance morte.
+
+### Tests à écrire en priorité
+
+Déjà écrits dans `test/` (fonctions pures, aucune dépendance à mocker) :
+- `test/features/finances/data/calcul_solde_test.dart` — `resteAPayer`
+  (cas normal, trop-perçu négatif, soldé, sans aucun paiement).
+- `test/features/abonnement/data/etat_abonnement_test.dart` —
+  `estEnModeConsultationSeule`, `joursRestantsEssai`,
+  `doitAfficherRappelEssai` (essai en cours, dépassé, actif, expiré,
+  suspendu).
+
+Restent à écrire (nécessitent de mocker `SupabaseClient`/`AppDatabase`,
+non tentés ici pour ne pas ajouter une dépendance de mock — ex. `mocktail`
+— sans validation du besoin par l'équipe) :
+- **`SyncEngine.traiterFileAttente`** : la tâche la plus critique à
+  couvrir. Cas à tester : reprise après échec réseau (la tâche reste en
+  file avec `tentatives` incrémenté) ; résolution de conflit "serveur plus
+  récent gagne" sur `clients`/`rendez_vous`/`commandes` (vérifier que le
+  cache local est bien réaligné et qu'une entrée `journal_actions` est
+  créée) ; non-régression sur `mesures`/`paiements` (jamais de vérification
+  de conflit, toujours un simple insert) ; traitement idempotent d'une
+  violation de contrainte d'unicité sur un insert déjà appliqué (code
+  Postgres `23505` → tâche retirée sans erreur, pas de boucle infinie).
+- **Permissions** (`permissions_apprenti` + gardes d'écran) : pour chacun
+  des 5 droits, vérifier qu'un apprenti sans la permission voit l'action
+  désactivée/masquée ET que l'appel repository correspondant échoue côté
+  RLS s'il est forcé directement (défense en profondeur, pas seulement
+  l'UI) ; vérifier spécifiquement qu'aucune combinaison de permissions
+  n'accorde jamais d'accès à `commandes`/`paiements`.
+- **`ClientsRepository`/`MesuresRepository`/`RendezVousRepository`** :
+  vérifier qu'un échec réseau simulé sur l'envoi immédiat aboutit bien à
+  une entrée dans `SyncQueueEntries` avec le bon `payloadJson`, et que
+  l'écriture locale a quand même réussi (le cœur de la promesse
+  offline-first).
+- **`verifierEcritureAutorisee`** : vérifie qu'elle bloque bien en mode
+  consultation seule, qu'elle laisse toujours passer un abonnement actif,
+  et — cas volontairement permissif à documenter dans le test — qu'elle
+  ne bloque jamais quand aucun abonnement n'est encore en cache.
 
 ## Note sur la génération de la plateforme native
 

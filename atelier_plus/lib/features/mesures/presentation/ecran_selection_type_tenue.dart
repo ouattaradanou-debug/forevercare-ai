@@ -3,16 +3,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../providers/gabarits_providers.dart';
 
 /// Choix du type de tenue avant la prise de mesure.
-class EcranSelectionTypeTenue extends ConsumerWidget {
+///
+/// Hydrate elle-même le cache des gabarits (comme EcranGestionTypesTenue) :
+/// un tailleur qui va directement "Prendre une mesure" sans jamais être
+/// passé par l'écran de gestion des types de tenue doit quand même voir
+/// les gabarits par défaut, pas une liste vide.
+class EcranSelectionTypeTenue extends ConsumerStatefulWidget {
   const EcranSelectionTypeTenue({super.key, required this.clientId});
 
   final String clientId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EcranSelectionTypeTenue> createState() => _EcranSelectionTypeTenueState();
+}
+
+class _EcranSelectionTypeTenueState extends ConsumerState<EcranSelectionTypeTenue> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      if (utilisateur != null) {
+        await ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final types = ref.watch(typesTenueVisiblesProvider);
 
     return Scaffold(
@@ -22,7 +44,16 @@ class EcranSelectionTypeTenue extends ConsumerWidget {
         error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
         data: (liste) {
           if (liste.isEmpty) {
-            return const Center(child: Text('Aucun gabarit disponible.'));
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Aucun gabarit disponible pour le moment.\n'
+                  'Connectez-vous à internet une première fois pour les récupérer.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
           }
           return ListView.builder(
             itemCount: liste.length,
@@ -33,7 +64,7 @@ class EcranSelectionTypeTenue extends ConsumerWidget {
                 title: Text(type.nom),
                 subtitle: Text(type.sexe[0].toUpperCase() + type.sexe.substring(1)),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push(AppRoutes.priseMesure(clientId, type.id)),
+                onTap: () => context.push(AppRoutes.priseMesure(widget.clientId, type.id)),
               );
             },
           );
