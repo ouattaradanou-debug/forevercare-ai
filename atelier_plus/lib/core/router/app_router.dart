@@ -22,7 +22,10 @@ import '../../features/mesures/presentation/ecran_gestion_champs.dart';
 import '../../features/mesures/presentation/ecran_gestion_types_tenue.dart';
 import '../../features/mesures/presentation/ecran_prise_mesure.dart';
 import '../../features/mesures/presentation/ecran_selection_type_tenue.dart';
+import '../../features/finances/presentation/ecran_finances_client.dart';
 import '../../features/permissions/presentation/ecran_panneau_permissions.dart';
+import '../../features/rendezvous/presentation/ecran_formulaire_rendez_vous.dart';
+import '../../features/rendezvous/presentation/ecran_liste_rendez_vous.dart';
 
 /// Chemins nommés des routes de l'application, centralisés pour éviter les
 /// chaînes de caractères éparpillées dans le code.
@@ -59,6 +62,13 @@ class AppRoutes {
   static const String _gestionChampsTemplate = '/types-tenue/:id/champs';
 
   static String gestionChampsTypeTenue(String id) => '/types-tenue/$id/champs';
+
+  static const String rendezVous = '/rendez-vous';
+  static const String creationRendezVous = '/rendez-vous/nouveau';
+
+  static const String _financesClientTemplate = '/clients/:id/finances';
+
+  static String financesClient(String clientId) => '/clients/$clientId/finances';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -150,6 +160,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes._gestionChampsTemplate,
         builder: (context, state) => EcranGestionChamps(type: state.extra as TypeTenue),
+      ),
+      GoRoute(
+        path: AppRoutes.rendezVous,
+        builder: (context, state) => const EcranListeRendezVous(),
+      ),
+      GoRoute(
+        path: AppRoutes.creationRendezVous,
+        builder: (context, state) =>
+            EcranFormulaireRendezVous(clientPreselectionne: state.extra as Client?),
+      ),
+      GoRoute(
+        path: AppRoutes._financesClientTemplate,
+        builder: (context, state) => EcranFinancesClient(clientId: state.pathParameters['id']!),
       ),
     ],
   );

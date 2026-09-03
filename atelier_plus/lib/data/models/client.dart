@@ -32,6 +32,10 @@ class Client {
     );
   }
 
+  /// Inclut `updated_at` bien que le déclencheur SQL `maj_updated_at` le
+  /// réécrive de toute façon à chaque UPDATE côté serveur : c'est la valeur
+  /// que `SyncEngine` compare à celle du serveur avant de rejouer une tâche
+  /// en attente, pour détecter un conflit ("dernière modification gagne").
   Map<String, dynamic> versJson() {
     return {
       'id': id,
@@ -40,6 +44,7 @@ class Client {
       'prenom': prenom,
       'telephone': telephone,
       'sexe': sexe,
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 }

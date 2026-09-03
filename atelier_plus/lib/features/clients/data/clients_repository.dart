@@ -3,13 +3,13 @@ import 'package:uuid/uuid.dart';
 
 import '../../../data/local/database.dart';
 import '../../../data/models/client.dart';
+import '../../../data/sync/ecriture_synchronisee.dart';
 
 /// Gestion des fiches clients : écriture toujours locale d'abord (l'écran
 /// ne dépend jamais du réseau), avec tentative immédiate de synchronisation
-/// vers Supabase en meilleur effort. Si cette tentative échoue (hors-ligne,
-/// coupure réseau), la fiche reste utilisable localement — la reprise
-/// automatique de l'envoi sera assurée par la file d'attente de
-/// synchronisation de la Phase 3, qui n'existe pas encore.
+/// vers Supabase ; en cas d'échec (hors-ligne), l'écriture est déposée dans
+/// la file d'attente de synchronisation et rejouée automatiquement dès
+/// qu'une connexion est détectée (voir data/sync/).
 class ClientsRepository {
   ClientsRepository({required SupabaseClient client, required AppDatabase baseLocale})
       : _client = client,
@@ -37,7 +37,14 @@ class ClientsRepository {
     );
 
     await _mettreEnCache(client);
-    await _pousserVersServeurAuMieux(() => _client.from('clients').insert(client.versJson()));
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'clients',
+      recordId: client.id,
+      operation: 'insert',
+      payload: client.versJson(),
+    );
     return client;
   }
 
@@ -58,8 +65,13 @@ class ClientsRepository {
       updatedAt: DateTime.now().toUtc(),
     );
     await _mettreEnCache(miseAJour);
-    await _pousserVersServeurAuMieux(
-      () => _client.from('clients').update(miseAJour.versJson()).eq('id', miseAJour.id),
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'clients',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
     );
     return miseAJour;
   }
@@ -91,14 +103,5 @@ class ClientsRepository {
       sexe: client.sexe,
       updatedAt: client.updatedAt,
     );
-  }
-
-  Future<void> _pousserVersServeurAuMieux(Future<void> Function() envoi) async {
-    try {
-      await envoi();
-    } catch (_) {
-      // Voir commentaire de classe : la reprise est du ressort de la
-      // Phase 3.
-    }
   }
 }

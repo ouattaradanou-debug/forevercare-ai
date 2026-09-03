@@ -81,6 +81,10 @@ l'option la plus stable et documentée, signale ton choix" :
 | Écritures clients/mesures/photos (Phase 2) | Toujours locales d'abord (Drift), puis tentative best-effort vers Supabase ; échec silencieux si hors-ligne | Satisfait l'exigence "créer client / prendre mesure" utilisable hors-ligne au quotidien, sans anticiper la vraie file d'attente de synchronisation (retries, résolution de conflit) qui est le périmètre explicite de la Phase 3. |
 | Écritures gabarits (types_tenue/champs_mesure, Phase 2) | Serveur d'abord (pas d'écriture locale immédiate) | Action administrative peu fréquente (absente de la liste "usage hors-ligne quotidien" du cahier des charges), dont la cohérence (contrainte d'unicité, RLS propriétaire) doit être garantie par Supabase avant tout reflet local. |
 | Bucket Storage `photos-clients` (Phase 2) | Public (comme `logos-ateliers`), chemins non énumérables (UUID) | Évite la complexité des URLs signées à renouveler pour de simples photos de tissus/modèles, non classées "données sensibles" dans le cahier des charges (contrairement aux données financières). Voir `supabase/storage_photos_clients.sql`. |
+| Écritures rendez-vous/commandes/paiements (Phase 3) | Locales d'abord, via la même file d'attente de synchronisation que clients/mesures (`data/sync/`) | Un rendez-vous fait partie de l'usage quotidien hors-ligne ("noter RDV"). Pour les finances, la file d'attente désormais réelle (retries + résolution de conflit) rend le local-first sûr — contrairement au choix "serveur d'abord" retenu pour les gabarits en Phase 2, qui reste inchangé (action rare, hors du périmètre synchronisé). |
+| Rappel de rendez-vous (Phase 3) | Un seul rappel, 1 heure avant, via `flutter_local_notifications` + `timezone`/`flutter_timezone` | Simple et suffisant pour le besoin exprimé ; `timezone`/`flutter_timezone` sont les packages recommandés par la documentation officielle de `flutter_local_notifications` pour la planification exacte (`zonedSchedule`). |
+| Modèle "commande" (Phase 3) | Une seule commande par client (montant total + avance ajustables), pas une liste de commandes distinctes | Correspond à l'écran "finances par client" du cahier des charges ; extensible plus tard si plusieurs commandes simultanées par client sont nécessaires. |
+| Cache financier local (Phase 3) | Effacé à la déconnexion (si rien n'est en attente d'envoi) | Un appareil peut être partagé entre le propriétaire et un apprenti : les données financières ne doivent jamais rester lisibles sur le disque après le départ du propriétaire, en plus du filtrage déjà fait par l'écran et par la RLS. |
 
 ## Où en est le projet
 
@@ -88,11 +92,17 @@ l'option la plus stable et documentée, signale ton choix" :
 - **Phase 1 :** authentification (création de compte atelier, connexion
   téléphone + PIN, récupération du profil sur nouvel appareil), gestion des
   apprentis, panneau de permissions. ✅
-- **Phase 2 (ce commit) :** clients (liste, recherche instantanée,
-  création/édition), gabarits de mesure (12 gabarits par défaut, gestion
-  des champs avec masquage et duplication), prise de mesure historisée avec
+- **Phase 2 :** clients (liste, recherche instantanée, création/édition),
+  gabarits de mesure (12 gabarits par défaut, gestion des champs avec
+  masquage et duplication), prise de mesure historisée avec
   pré-remplissage, photos de tissus/modèles. ✅
-- Phases 3 à 5 : voir la conversation / les commits suivants.
+- **Phase 3 (ce commit) :** rendez-vous (création, liste triée, rappel
+  local programmé), finances par client (reste à payer calculé
+  automatiquement, historique des paiements, réservé au propriétaire),
+  couche de synchronisation Drift ↔ Supabase (file d'attente,
+  déclenchement automatique via `connectivity_plus`, résolution de conflit
+  par horodatage avec journalisation). ✅
+- Phases 4 à 5 : voir la conversation / les commits suivants.
 
 ## Note sur la génération de la plateforme native
 

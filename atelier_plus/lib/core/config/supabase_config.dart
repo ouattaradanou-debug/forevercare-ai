@@ -23,4 +23,17 @@ class SupabaseConfig {
   /// Permet de détecter tôt (au démarrage) un oubli de configuration plutôt
   /// que de laisser Supabase échouer avec une erreur réseau peu claire.
   static bool get estConfigure => url.isNotEmpty && anonKey.isNotEmpty;
+
+  /// URL/clé effectivement utilisées pour initialiser Supabase : les
+  /// vraies valeurs si configurées, sinon des valeurs de substitution
+  /// syntaxiquement valides. Indispensable de toujours appeler
+  /// `Supabase.initialize` (voir main.dart) : `Supabase.instance.client`
+  /// est utilisé partout dans l'application dès l'affichage du premier
+  /// écran (redirection du router selon l'état de connexion), y compris
+  /// hors-ligne — sans appel préalable à `initialize`, ne serait-ce que
+  /// lire `Supabase.instance` lèverait une exception immédiatement, avant
+  /// même la moindre tentative réseau (que le reste du code gère déjà
+  /// normalement comme un cas hors-ligne).
+  static String get urlEffective => estConfigure ? url : 'https://placeholder.invalid';
+  static String get anonKeyEffective => estConfigure ? anonKey : 'placeholder-anon-key';
 }

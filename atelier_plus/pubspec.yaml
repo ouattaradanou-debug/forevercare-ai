@@ -35,6 +35,10 @@ dependencies:
 
   # --- Notifications locales (rappels de rendez-vous) ---
   flutter_local_notifications: ^18.0.1
+  # Requis par flutter_local_notifications pour la planification exacte
+  # (zonedSchedule a besoin d'un DateTime conscient du fuseau horaire).
+  timezone: ^0.9.4
+  flutter_timezone: ^1.0.8
 
   # --- Formatage des montants (FCFA) et des dates en français ---
   intl: ^0.19.0

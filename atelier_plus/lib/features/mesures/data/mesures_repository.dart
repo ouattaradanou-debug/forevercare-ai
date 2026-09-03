@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../data/local/database.dart';
 import '../../../data/models/mesure.dart';
+import '../../../data/sync/ecriture_synchronisee.dart';
 
 /// Prise de mesure : écriture locale d'abord (comme `ClientsRepository`),
 /// chaque prise crée une nouvelle ligne historisée — jamais de mise à jour
@@ -37,11 +38,14 @@ class MesuresRepository {
     );
 
     await _mettreEnCache(mesure);
-    try {
-      await _client.from('mesures').insert(mesure.versJson());
-    } catch (_) {
-      // Voir ClientsRepository : reprise assurée par la Phase 3.
-    }
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'mesures',
+      recordId: mesure.id,
+      operation: 'insert',
+      payload: mesure.versJson(),
+    );
     return mesure;
   }
 

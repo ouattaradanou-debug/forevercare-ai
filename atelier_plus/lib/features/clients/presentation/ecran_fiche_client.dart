@@ -7,9 +7,10 @@ import '../../permissions/providers/permissions_providers.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/clients_providers.dart';
 
-/// Écran central d'un client : informations, et accès à la prise de mesure
-/// et aux photos. Les finances (Phase 3) n'apparaîtront ici que pour le
-/// propriétaire.
+/// Écran central d'un client : informations, et accès à la prise de mesure,
+/// aux photos, aux rendez-vous et aux finances (ce dernier bouton
+/// n'apparaît que pour le propriétaire — l'écran lui-même vérifie aussi le
+/// rôle en défense en profondeur).
 class EcranFicheClient extends ConsumerWidget {
   const EcranFicheClient({super.key, required this.clientId});
 
@@ -71,6 +72,23 @@ class EcranFicheClient extends ConsumerWidget {
                   onTap: () => context.push(AppRoutes.photosClient(client.id)),
                 ),
               ),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.event_outlined),
+                  title: const Text('Prendre un rendez-vous'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.creationRendezVous, extra: client),
+                ),
+              ),
+              if (estProprietaire)
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.payments_outlined),
+                    title: const Text('Finances'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push(AppRoutes.financesClient(client.id)),
+                  ),
+                ),
             ],
           ),
         );

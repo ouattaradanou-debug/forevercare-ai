@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../data/sync/sync_providers.dart';
 import '../providers/auth_providers.dart';
 
 /// Écran d'accueil minimal : confirme la connexion, affiche l'atelier
-/// courant et donne accès aux apprentis, aux clients et aux types de tenue.
-/// Le vrai tableau de bord (statistiques, rendez-vous du jour) sera
-/// construit en Phase 3.
+/// courant et donne accès aux apprentis, aux clients, aux types de tenue et
+/// aux rendez-vous. Le vrai tableau de bord (statistiques) sera construit
+/// dans une phase ultérieure.
 class EcranAccueilProvisoire extends ConsumerWidget {
   const EcranAccueilProvisoire({super.key});
 
@@ -17,6 +18,7 @@ class EcranAccueilProvisoire extends ConsumerWidget {
     final atelier = ref.watch(atelierCourantProvider);
     final utilisateur = ref.watch(utilisateurCourantProvider);
     final estProprietaire = ref.watch(estProprietaireProvider);
+    final tachesEnAttente = ref.watch(tachesSyncEnAttenteProvider).valueOrNull ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -26,6 +28,22 @@ class EcranAccueilProvisoire extends ConsumerWidget {
           error: (_, __) => const Text('Atelier+'),
         ),
         actions: [
+          if (tachesEnAttente > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(
+                child: Tooltip(
+                  message: '$tachesEnAttente modification(s) en attente de connexion',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cloud_off, color: Colors.white, size: 18),
+                      const SizedBox(width: 4),
+                      Text('$tachesEnAttente', style: const TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           IconButton(
             tooltip: 'Se déconnecter',
             icon: const Icon(Icons.logout),
@@ -56,6 +74,12 @@ class EcranAccueilProvisoire extends ConsumerWidget {
                 icon: const Icon(Icons.people_alt_outlined),
                 label: const Text('Mes clients'),
               ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => context.push(AppRoutes.rendezVous),
+                icon: const Icon(Icons.event_outlined),
+                label: const Text('Rendez-vous'),
+              ),
               if (estProprietaire) ...[
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
@@ -70,12 +94,6 @@ class EcranAccueilProvisoire extends ConsumerWidget {
                   label: const Text('Gérer mes apprentis'),
                 ),
               ],
-              const SizedBox(height: 16),
-              Text(
-                'Rendez-vous et finances arrivent en Phase 3.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
             ],
           ),
         ),

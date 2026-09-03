@@ -190,6 +190,10 @@ class AuthRepository {
 
   Future<void> deconnecter() async {
     await _client.auth.signOut();
+    // Un appareil peut être repris par un autre utilisateur de l'atelier
+    // (propriétaire <-> apprenti) : le cache financier ne doit jamais
+    // survivre à la déconnexion (voir AppDatabase.effacerCacheFinancierSiSynchronise).
+    await _baseLocale.effacerCacheFinancierSiSynchronise();
     await _baseLocale.definirUtilisateurConnecte(null);
   }
 

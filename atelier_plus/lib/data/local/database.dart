@@ -145,6 +145,66 @@ class PhotoEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Cache local des rendez-vous.
+@DataClassName('RendezVousEntry')
+class RendezVousEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get clientId => text()();
+  DateTimeColumn get dateHeure => dateTime()();
+  TextColumn get type => text()();
+  TextColumn get statut => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local des commandes — données financières, jamais alimenté ni lu
+/// pour un utilisateur apprenti (l'écran finances vérifie le rôle avant
+/// même de solliciter ce cache, voir EcranFinancesClient).
+@DataClassName('CommandeEntry')
+class CommandeEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get clientId => text()();
+  RealColumn get montantTotal => real()();
+  RealColumn get avance => real()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local des paiements — même remarque que CommandeEntries.
+@DataClassName('PaiementEntry')
+class PaiementEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get commandeId => text()();
+  RealColumn get montant => real()();
+  DateTimeColumn get datePaiement => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// File d'attente de synchronisation (Phase 3) : toute écriture "locale
+/// d'abord" dont l'envoi immédiat vers Supabase a échoué (hors-ligne,
+/// coupure réseau) y est déposée, puis rejouée par `SyncEngine` dès qu'une
+/// connexion est détectée (`connectivity_plus`).
+@DataClassName('TacheSyncEntry')
+class SyncQueueEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get nomTable => text()();
+  TextColumn get recordId => text()();
+  TextColumn get operation => text()(); // 'insert' | 'update'
+  TextColumn get payloadJson => text()();
+  DateTimeColumn get creeLe => dateTime()();
+  IntColumn get tentatives => integer().withDefault(const Constant(0))();
+  TextColumn get derniereErreur => text().nullable()();
+}
+
 @DriftDatabase(tables: [
   AtelierEntries,
   UtilisateurEntries,
@@ -155,14 +215,16 @@ class PhotoEntries extends Table {
   ChampMesureEntries,
   MesureEntries,
   PhotoEntries,
+  RendezVousEntries,
+  CommandeEntries,
+  PaiementEntries,
+  SyncQueueEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
-  /// Incrémenté à chaque ajout/modification de table. Phase 3 y ajoutera la
-  /// file d'attente de synchronisation.
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -174,6 +236,12 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(champMesureEntries);
             await m.createTable(mesureEntries);
             await m.createTable(photoEntries);
+          }
+          if (from < 3) {
+            await m.createTable(rendezVousEntries);
+            await m.createTable(commandeEntries);
+            await m.createTable(paiementEntries);
+            await m.createTable(syncQueueEntries);
           }
         },
       );
@@ -458,6 +526,160 @@ class AppDatabase extends _$AppDatabase {
           ..where((t) => t.clientId.equals(clientId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .watch();
+  }
+
+  // --- Rendez-vous ---
+
+  Future<void> enregistrerRendezVous({
+    required String id,
+    required String atelierId,
+    required String clientId,
+    required DateTime dateHeure,
+    required String type,
+    required String statut,
+    required DateTime updatedAt,
+  }) async {
+    await into(rendezVousEntries).insertOnConflictUpdate(
+      RendezVousEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        clientId: clientId,
+        dateHeure: dateHeure,
+        type: type,
+        statut: statut,
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  Future<RendezVousEntry?> rendezVousParId(String id) {
+    return (select(rendezVousEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  /// Rendez-vous à venir, triés par date — lecture locale, hors-ligne.
+  Stream<List<RendezVousEntry>> observerRendezVousTries(String atelierId) {
+    return (select(rendezVousEntries)
+          ..where((t) => t.atelierId.equals(atelierId))
+          ..orderBy([(t) => OrderingTerm.asc(t.dateHeure)]))
+        .watch();
+  }
+
+  // --- Commandes (financier — jamais consulté pour un apprenti) ---
+
+  Future<void> enregistrerCommande({
+    required String id,
+    required String atelierId,
+    required String clientId,
+    required double montantTotal,
+    required double avance,
+    required DateTime updatedAt,
+  }) async {
+    await into(commandeEntries).insertOnConflictUpdate(
+      CommandeEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        clientId: clientId,
+        montantTotal: montantTotal,
+        avance: avance,
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  Future<CommandeEntry?> commandeDuClient(String clientId) {
+    return (select(commandeEntries)..where((t) => t.clientId.equals(clientId)))
+        .getSingleOrNull();
+  }
+
+  // --- Paiements (financier — jamais consulté pour un apprenti) ---
+
+  Future<void> enregistrerPaiement({
+    required String id,
+    required String atelierId,
+    required String commandeId,
+    required double montant,
+    required DateTime datePaiement,
+  }) async {
+    await into(paiementEntries).insertOnConflictUpdate(
+      PaiementEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        commandeId: commandeId,
+        montant: montant,
+        datePaiement: datePaiement,
+      ),
+    );
+  }
+
+  Stream<List<PaiementEntry>> observerPaiementsDeLaCommande(String commandeId) {
+    return (select(paiementEntries)
+          ..where((t) => t.commandeId.equals(commandeId))
+          ..orderBy([(t) => OrderingTerm.desc(t.datePaiement)]))
+        .watch();
+  }
+
+  /// Vide le cache local des commandes/paiements à la déconnexion : un
+  /// appareil peut être partagé entre le propriétaire et un apprenti, et
+  /// les données financières ne doivent jamais rester lisibles sur disque
+  /// après le départ du propriétaire (défense en profondeur, en plus du
+  /// filtrage déjà fait par l'écran et par la RLS). Ne fait rien s'il reste
+  /// des écritures financières non encore synchronisées, pour ne jamais
+  /// perdre de données en attente d'envoi.
+  Future<void> effacerCacheFinancierSiSynchronise() async {
+    final tachesFinancieres = await (select(syncQueueEntries)
+          ..where((t) => t.nomTable.isIn(const ['commandes', 'paiements'])))
+        .get();
+    if (tachesFinancieres.isNotEmpty) return;
+
+    await delete(commandeEntries).go();
+    await delete(paiementEntries).go();
+  }
+
+  // --- File d'attente de synchronisation ---
+
+  Future<void> enfilerSync({
+    required String nomTable,
+    required String recordId,
+    required String operation,
+    required String payloadJson,
+  }) async {
+    await into(syncQueueEntries).insert(
+      SyncQueueEntriesCompanion.insert(
+        nomTable: nomTable,
+        recordId: recordId,
+        operation: operation,
+        payloadJson: payloadJson,
+        creeLe: DateTime.now().toUtc(),
+      ),
+    );
+  }
+
+  Future<List<TacheSyncEntry>> tachesEnAttente() {
+    return (select(syncQueueEntries)..orderBy([(t) => OrderingTerm.asc(t.creeLe)])).get();
+  }
+
+  Future<void> retirerTacheSync(int id) {
+    return (delete(syncQueueEntries)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<void> enregistrerEchecSync(int id, String erreur) async {
+    final tache =
+        await (select(syncQueueEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (tache == null) return;
+    await (update(syncQueueEntries)..where((t) => t.id.equals(id))).write(
+      SyncQueueEntriesCompanion(
+        tentatives: Value(tache.tentatives + 1),
+        derniereErreur: Value(erreur),
+      ),
+    );
+  }
+
+  /// Nombre de tâches en attente, affiché comme indicateur discret dans
+  /// l'application (ex. "3 en attente de synchronisation").
+  Stream<int> observerNombreTachesEnAttente() {
+    final compte = syncQueueEntries.id.count();
+    final requete = selectOnly(syncQueueEntries)..addColumns([compte]);
+    return requete.watchSingle().map((ligne) => ligne.read(compte) ?? 0);
   }
 }
 

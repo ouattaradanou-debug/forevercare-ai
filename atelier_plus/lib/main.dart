@@ -5,8 +5,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/app_config.dart';
 import 'core/config/supabase_config.dart';
+import 'core/notifications/notifications_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'data/sync/sync_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,14 +16,19 @@ Future<void> main() async {
   // Format des dates en français (jours/mois écrits en toutes lettres, etc.)
   await initializeDateFormatting('fr_FR', null);
 
-  if (SupabaseConfig.estConfigure) {
-    await Supabase.initialize(
-      url: SupabaseConfig.url,
-      anonKey: SupabaseConfig.anonKey,
-    );
-  } else {
-    // En développement local sans Supabase configuré, l'application démarre
-    // quand même : le mode hors-ligne (Drift) reste pleinement utilisable.
+  await NotificationsService.instance.initialiser();
+
+  // Toujours initialisé, même sans configuration réelle (voir
+  // SupabaseConfig.urlEffective) : Supabase.instance.client est sollicité
+  // dès le premier écran (redirection du router), y compris en mode
+  // hors-ligne pur. Sans configuration réelle, les appels réseau échouent
+  // simplement et sont déjà traités comme "hors-ligne" partout ailleurs
+  // dans l'application.
+  await Supabase.initialize(
+    url: SupabaseConfig.urlEffective,
+    anonKey: SupabaseConfig.anonKeyEffective,
+  );
+  if (!SupabaseConfig.estConfigure) {
     debugPrint(
       'SUPABASE_URL / SUPABASE_ANON_KEY non configurés : '
       'la synchronisation distante est désactivée.',
@@ -37,6 +44,9 @@ class AtelierPlusApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    // Instancié une seule fois pour toute la durée de vie de l'app : démarre
+    // l'écoute connectivity_plus qui déclenche la synchronisation (Phase 3).
+    ref.watch(syncTriggerProvider);
 
     return MaterialApp.router(
       title: AppConfig.nomApplication,
