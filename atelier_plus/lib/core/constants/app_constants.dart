@@ -2,11 +2,6 @@
 class AppConstants {
   const AppConstants._();
 
-  // Rôles utilisateur (doivent correspondre au CHECK constraint SQL sur
-  // utilisateurs.role).
-  static const String rolePropriétaire = 'proprietaire';
-  static const String roleApprenti = 'apprenti';
-
   // Statuts de rendez-vous (doivent correspondre au CHECK constraint SQL).
   static const String rdvPlanifie = 'planifie';
   static const String rdvConfirme = 'confirme';
