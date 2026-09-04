@@ -26,8 +26,8 @@ class NotificationsService {
 
     tz_data.initializeTimeZones();
     try {
-      final nomFuseau = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(nomFuseau));
+      final infoFuseau = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(infoFuseau.identifier));
     } catch (_) {
       // Fuseau horaire indisponible (rare) : reste sur UTC par défaut
       // plutôt que de bloquer le démarrage de l'application.
