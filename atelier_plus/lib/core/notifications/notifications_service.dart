@@ -43,7 +43,7 @@ class NotificationsService {
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
     await _plugin
-        .resolvePlatformSpecificImplementation<DarwinFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
         ?.requestPermissions(alert: true, badge: true, sound: true);
 
     _initialise = true;
@@ -75,6 +75,9 @@ class NotificationsService {
         iOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      // Requis par la version installée (18.0.1) du plugin, même si elle
+      // ne s'applique qu'à un iOS < 10 qu'Atelier+ ne cible pas.
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
