@@ -9,6 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Traductions Material/Cupertino en français (requis dès qu'une locale
+  # est déclarée dans MaterialApp — sinon crash au démarrage).
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.8
 
   # --- Gestion d'état ---
