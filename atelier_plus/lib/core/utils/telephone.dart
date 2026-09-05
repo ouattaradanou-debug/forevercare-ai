@@ -11,7 +11,10 @@
 class Telephone {
   const Telephone._();
 
-  static const String _domaineSynthetique = 'atelierplus.local';
+  // '.local' est un TLD réservé (mDNS) que la validation d'email de
+  // Supabase Auth rejette désormais ("email_address_invalid") : un TLD
+  // réel est nécessaire même si l'adresse n'est jamais délivrée.
+  static const String _domaineSynthetique = 'atelierplus.app';
 
   /// Ne garde que les chiffres (retire espaces, points, tirets, indicatif +).
   static String normaliser(String saisie) {
