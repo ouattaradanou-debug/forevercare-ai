@@ -28,9 +28,8 @@ function reponseJson(corps: unknown, statut = 200): Response {
 
 function emailSynthetique(telephone: string): string {
   // Doit rester identique à Telephone._domaineSynthetique (lib/core/utils/
-  // telephone.dart) : '.local' est un TLD réservé rejeté par la validation
-  // d'email de Supabase Auth.
-  return `tel-${telephone}@atelierplus.app`;
+  // telephone.dart) : Supabase Auth exige un domaine avec MX valide.
+  return `tel-${telephone}@gmail.com`;
 }
 
 Deno.serve(async (requete) => {

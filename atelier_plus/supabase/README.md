@@ -23,7 +23,9 @@ supabase db push --file supabase/schema.sql
 L'authentification se fait par **téléphone + PIN**, pas par email : voir
 `lib/core/utils/telephone.dart`. Techniquement, un compte Auth email/mot de
 passe classique est créé avec un email synthétique jamais délivré
-(`tel-XXXXXXXX@atelierplus.app`). Pour que la connexion fonctionne, le
+(`tel-XXXXXXXX@gmail.com` — un domaine avec MX valide est requis par la
+validation d'email de Supabase Auth, voir `telephone.dart`). Pour que la
+connexion fonctionne, le
 projet Supabase doit avoir la confirmation d'email **désactivée** :
 
 > **Dashboard Supabase → Authentication → Sign In / Providers → Email →

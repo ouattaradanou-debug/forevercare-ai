@@ -11,10 +11,13 @@
 class Telephone {
   const Telephone._();
 
-  // '.local' est un TLD réservé (mDNS) que la validation d'email de
-  // Supabase Auth rejette désormais ("email_address_invalid") : un TLD
-  // réel est nécessaire même si l'adresse n'est jamais délivrée.
-  static const String _domaineSynthetique = 'atelierplus.app';
+  // Supabase Auth rejette ("email_address_invalid") tout domaine sans
+  // enregistrement MX valide — 'atelierplus.local' puis 'atelierplus.app'
+  // (domaine non réellement configuré) ont tous deux échoué à ce contrôle.
+  // 'gmail.com' est garanti avoir des MX valides ; aucun email n'est
+  // jamais réellement envoyé (Confirm email désactivé, aucun flux de
+  // récupération de mot de passe par email dans l'app).
+  static const String _domaineSynthetique = 'gmail.com';
 
   /// Ne garde que les chiffres (retire espaces, points, tirets, indicatif +).
   static String normaliser(String saisie) {
