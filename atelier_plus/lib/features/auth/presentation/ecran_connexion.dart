@@ -39,6 +39,10 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
             telephone: _telephoneCtrl.text,
             pin: _pinCtrl.text,
           );
+      // Même risque de course que sur l'écran de création de compte : la
+      // redirection automatique du routeur peut précéder l'écriture du
+      // cache local par recupererDonneesApresConnexion().
+      ref.invalidate(utilisateurCourantProvider);
       if (mounted) context.go(AppRoutes.accueil);
     } catch (e) {
       setState(() => _erreur = e.toString());

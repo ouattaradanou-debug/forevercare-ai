@@ -61,6 +61,13 @@ class _EcranCreationCompteAtelierState
             pin: _pinCtrl.text,
             logo: _logo,
           );
+      // La session Supabase apparaît dès `signUp`, à l'intérieur de
+      // creerCompteAtelier — le routeur peut donc déjà avoir redirigé vers
+      // l'accueil (redirection automatique sur changement d'état d'auth)
+      // avant que le cache local (atelier/utilisateur/rôle) ne soit écrit.
+      // Sans cette invalidation, l'écran d'accueil resterait figé sur son
+      // premier calcul (utilisateur introuvable) sans jamais se corriger.
+      ref.invalidate(utilisateurCourantProvider);
       if (mounted) context.go(AppRoutes.accueil);
     } catch (e) {
       setState(() => _erreur = e.toString());
