@@ -34,6 +34,11 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
       _erreur = null;
     });
 
+    // Capturé avant l'await : la redirection automatique du routeur (sur
+    // apparition de la session) peut disposer cet écran pendant l'attente,
+    // rendant `ref` inutilisable ensuite — le conteneur, lui, survit.
+    final conteneur = ProviderScope.containerOf(context, listen: false);
+
     try {
       await ref.read(authRepositoryProvider).connecter(
             telephone: _telephoneCtrl.text,
@@ -42,10 +47,10 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
       // Même risque de course que sur l'écran de création de compte : la
       // redirection automatique du routeur peut précéder l'écriture du
       // cache local par recupererDonneesApresConnexion().
-      ref.invalidate(utilisateurCourantProvider);
+      conteneur.invalidate(utilisateurCourantProvider);
       if (mounted) context.go(AppRoutes.accueil);
     } catch (e) {
-      setState(() => _erreur = e.toString());
+      if (mounted) setState(() => _erreur = e.toString());
     } finally {
       if (mounted) setState(() => _chargement = false);
     }

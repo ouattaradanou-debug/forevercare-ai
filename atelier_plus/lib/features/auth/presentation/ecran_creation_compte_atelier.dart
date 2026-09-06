@@ -53,6 +53,12 @@ class _EcranCreationCompteAtelierState
       _erreur = null;
     });
 
+    // Capturé avant l'await : la redirection automatique du routeur (sur
+    // apparition de la session, dès `signUp`) peut disposer cet écran
+    // pendant l'attente, rendant `ref` inutilisable ensuite — le
+    // conteneur, lui, survit à la disparition du widget.
+    final conteneur = ProviderScope.containerOf(context, listen: false);
+
     try {
       await ref.read(authRepositoryProvider).creerCompteAtelier(
             nomAtelier: _nomAtelierCtrl.text.trim(),
@@ -61,16 +67,14 @@ class _EcranCreationCompteAtelierState
             pin: _pinCtrl.text,
             logo: _logo,
           );
-      // La session Supabase apparaît dès `signUp`, à l'intérieur de
-      // creerCompteAtelier — le routeur peut donc déjà avoir redirigé vers
-      // l'accueil (redirection automatique sur changement d'état d'auth)
-      // avant que le cache local (atelier/utilisateur/rôle) ne soit écrit.
-      // Sans cette invalidation, l'écran d'accueil resterait figé sur son
-      // premier calcul (utilisateur introuvable) sans jamais se corriger.
-      ref.invalidate(utilisateurCourantProvider);
+      // Le routeur peut avoir redirigé vers l'accueil avant que le cache
+      // local (atelier/utilisateur/rôle) ne soit écrit. Sans cette
+      // invalidation, l'écran d'accueil resterait figé sur son premier
+      // calcul (utilisateur introuvable) sans jamais se corriger.
+      conteneur.invalidate(utilisateurCourantProvider);
       if (mounted) context.go(AppRoutes.accueil);
     } catch (e) {
-      setState(() => _erreur = e.toString());
+      if (mounted) setState(() => _erreur = e.toString());
     } finally {
       if (mounted) setState(() => _chargement = false);
     }
