@@ -22,6 +22,28 @@ Toutes les évolutions importantes du projet sont documentées ici.
 
 ---
 
+## v0.2.0 — Phase 1 : Authentification et compte atelier
+
+### Ajout
+
+- Connexion téléphone + code PIN (email synthétique interne, sans SMS)
+- Écrans de création de compte atelier (avec logo optionnel) et de connexion
+- Base locale Drift : ateliers, utilisateurs, permissions_apprenti
+- Récupération complète des données sur un nouvel appareil après connexion
+  (scénario perte de téléphone)
+- Gestion des apprentis : création via Edge Function `create-apprentice`
+  (clé service_role, jamais côté client) + panneau de permissions
+  (tout désactivé par défaut)
+- Politiques Supabase Storage pour le bucket `logos`
+- Écran d'accueil connecté aux vraies données atelier/utilisateur
+
+### Architecture
+
+- Riverpod pour l'état d'authentification et les données de compte
+- go_router avec redirection automatique selon l'état de connexion
+
+---
+
 ## Prochaine version
 
-v0.2.0 — Phase 1 : Authentification et compte atelier
+v0.3.0 — Phase 2 : Clients et gabarits de mesures dynamiques

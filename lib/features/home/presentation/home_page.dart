@@ -1,35 +1,52 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
+import '../../../data/models/atelier.dart';
+import '../../../data/models/utilisateur.dart';
 import '../../../shared/widgets/stitched_divider.dart';
+import '../../auth/presentation/providers/auth_providers.dart';
 import 'widgets/home_action_card.dart';
 
-/// Écran d'accueil statique d'Atelier+.
+/// Écran d'accueil d'Atelier+.
 ///
-/// Phase 0 : cet écran ne consomme aucune donnée réelle. Il sert à valider
-/// la direction visuelle (palette couture, typographie affirmée,
-/// micro-interactions) avant de brancher la logique métier dans les phases
-/// suivantes. Les valeurs affichées (nom d'atelier, statistiques) sont des
-/// exemples de mise en page.
-class HomePage extends StatelessWidget {
+/// Depuis la Phase 1, l'en-tête affiche les vraies données de l'atelier et
+/// de l'utilisateur connecté (cache local, lecture hors-ligne d'abord). Les
+/// statistiques du jour restent des exemples de mise en page : elles seront
+/// branchées sur les vraies données client/rendez-vous en Phases 2 et 3.
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     final TextTheme texte = Theme.of(context).textTheme;
     final String dateDuJour = DateFormat.yMMMMEEEEd('fr_FR').format(
       DateTime.now(),
     );
 
+    final Atelier? atelier = ref.watch(atelierCourantProvider).valueOrNull;
+    final Utilisateur? utilisateur = ref
+        .watch(utilisateurCourantProvider)
+        .valueOrNull;
+    final bool estProprietaire = utilisateur?.estProprietaire ?? false;
+
     return Scaffold(
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(child: _EnTeteAtelier(dateDuJour: dateDuJour)),
+            SliverToBoxAdapter(
+              child: _EnTeteAtelier(
+                dateDuJour: dateDuJour,
+                atelier: atelier,
+                utilisateur: utilisateur,
+              ),
+            ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.l,
@@ -39,7 +56,7 @@ class HomePage extends StatelessWidget {
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  const _BandeauEssaiGratuit(joursRestants: 23),
+                  const _BandeauEssaiGratuit(joursRestants: 30),
                   const SizedBox(height: AppSpacing.xl),
                   Text('Actions rapides', style: texte.headlineMedium),
                   const SizedBox(height: AppSpacing.m),
@@ -69,12 +86,27 @@ class HomePage extends StatelessWidget {
                         couleurAccent: AppColors.or600,
                         onTap: () {},
                       ),
-                      HomeActionCard(
-                        icone: Icons.savings_outlined,
-                        libelle: 'Finances',
-                        couleurAccent: AppColors.succes,
-                        onTap: () {},
-                      ),
+                      if (estProprietaire)
+                        HomeActionCard(
+                          icone: Icons.savings_outlined,
+                          libelle: 'Finances',
+                          couleurAccent: AppColors.succes,
+                          onTap: () {},
+                        )
+                      else
+                        HomeActionCard(
+                          icone: Icons.photo_camera_outlined,
+                          libelle: 'Photos',
+                          couleurAccent: AppColors.succes,
+                          onTap: () {},
+                        ),
+                      if (estProprietaire)
+                        HomeActionCard(
+                          icone: Icons.groups_2_outlined,
+                          libelle: 'Mon équipe',
+                          couleurAccent: AppColors.indigo500,
+                          onTap: () => context.push('/apprentis'),
+                        ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xl),
@@ -93,13 +125,32 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _EnTeteAtelier extends StatelessWidget {
-  const _EnTeteAtelier({required this.dateDuJour});
+class _EnTeteAtelier extends ConsumerWidget {
+  const _EnTeteAtelier({
+    required this.dateDuJour,
+    required this.atelier,
+    required this.utilisateur,
+  });
 
   final String dateDuJour;
+  final Atelier? atelier;
+  final Utilisateur? utilisateur;
+
+  String _initiales(String nom) {
+    final List<String> mots = nom.trim().split(RegExp(r'\s+'));
+    if (mots.isEmpty || mots.first.isEmpty) return 'A+';
+    final String premiere = mots.first.substring(0, 1).toUpperCase();
+    final String seconde = mots.length > 1 && mots[1].isNotEmpty
+        ? mots[1].substring(0, 1).toUpperCase()
+        : '';
+    return '$premiere$seconde';
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final String nomAtelier = atelier?.nom ?? 'Mon atelier';
+    final String prenomUtilisateur = utilisateur?.nom.split(' ').first ?? '';
+
     return Container(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.l,
@@ -123,24 +174,19 @@ class _EnTeteAtelier extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: AppColors.or500,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.ecru50.withValues(alpha: 0.4),
-                    width: 2,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  'AC',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppColors.anthracite900,
-                  ),
-                ),
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: AppColors.or500,
+                backgroundImage: atelier?.logoUrl != null
+                    ? CachedNetworkImageProvider(atelier!.logoUrl!)
+                    : null,
+                child: atelier?.logoUrl == null
+                    ? Text(
+                        _initiales(nomAtelier),
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(color: AppColors.anthracite900),
+                      )
+                    : null,
               ),
               const SizedBox(width: AppSpacing.m),
               Expanded(
@@ -148,13 +194,17 @@ class _EnTeteAtelier extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Atelier Awa Couture',
+                      nomAtelier,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: AppColors.ecru50,
                       ),
                     ),
                     Text(
-                      'Propriétaire',
+                      utilisateur == null
+                          ? ''
+                          : (utilisateur!.estProprietaire
+                                ? 'Propriétaire'
+                                : 'Apprenti'),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.ecru50.withValues(alpha: 0.75),
                       ),
@@ -163,15 +213,17 @@ class _EnTeteAtelier extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.notifications_none),
+                onPressed: () =>
+                    ref.read(authRepositoryProvider).seDeconnecter(),
+                icon: const Icon(Icons.logout),
                 color: AppColors.ecru50,
+                tooltip: 'Se déconnecter',
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.l),
           Text(
-            'Bonjour, Awa',
+            prenomUtilisateur.isEmpty ? 'Bonjour' : 'Bonjour, $prenomUtilisateur',
             style: Theme.of(context).textTheme.displayMedium?.copyWith(
               color: AppColors.ecru50,
             ),
@@ -251,7 +303,7 @@ class _RangeeStatistiques extends StatelessWidget {
         Expanded(
           child: _CarteStatistique(
             icone: Icons.groups_outlined,
-            valeur: '128',
+            valeur: '0',
             libelle: 'Clients',
             couleurAccent: AppColors.indigo700,
           ),
@@ -260,7 +312,7 @@ class _RangeeStatistiques extends StatelessWidget {
         Expanded(
           child: _CarteStatistique(
             icone: Icons.event_outlined,
-            valeur: '4',
+            valeur: '0',
             libelle: 'Rendez-vous',
             couleurAccent: AppColors.terracotta600,
           ),

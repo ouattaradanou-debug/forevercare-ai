@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'core/config/supabase_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,9 +13,12 @@ Future<void> main() async {
   // dates de rendez-vous, de mesures, etc. dans toute l'application).
   await initializeDateFormatting('fr_FR');
 
-  // Remarque Phase 0 : l'initialisation de Supabase (connexion au projet
-  // distant) et l'ouverture de la base locale Drift seront ajoutées à
-  // partir de la Phase 1, une fois le projet Supabase du tailleur créé.
+  // Connexion au projet Supabase (voir lib/core/config/supabase_config.dart
+  // pour la marche à suivre de configuration).
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    anonKey: SupabaseConfig.anonKey,
+  );
 
-  runApp(const AtelierPlusApp());
+  runApp(const ProviderScope(child: AtelierPlusApp()));
 }

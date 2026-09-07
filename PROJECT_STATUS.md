@@ -11,7 +11,12 @@
 
 ## Phase 1 — Authentification et compte atelier
 
-- [ ] Non commencé
+- [x] Connexion Supabase (config + initialisation)
+- [x] Base locale Drift (ateliers, utilisateurs, permissions_apprenti)
+- [x] Création de compte atelier (nom, logo, téléphone, PIN)
+- [x] Connexion + récupération complète des données sur nouvel appareil
+- [x] Gestion des apprentis (Edge Function service_role) + permissions
+- [ ] Validation utilisateur sur téléphone
 
 ## Phase 2 — Clients et gabarits de mesures dynamiques
 
