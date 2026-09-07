@@ -68,7 +68,7 @@ final StreamProvider<Atelier?> atelierCourantProvider =
     StreamProvider<Atelier?>((ref) {
       final Utilisateur? utilisateur = ref
           .watch(utilisateurCourantProvider)
-          .valueOrNull;
+          .asData?.value;
       if (utilisateur == null) return Stream<Atelier?>.value(null);
       return ref
           .watch(atelierRepositoryProvider)

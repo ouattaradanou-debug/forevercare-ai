@@ -8,7 +8,7 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 /// depuis le cache local.
 final StreamProvider<List<Utilisateur>> equipeAtelierProvider =
     StreamProvider<List<Utilisateur>>((ref) {
-      final atelier = ref.watch(atelierCourantProvider).valueOrNull;
+      final atelier = ref.watch(atelierCourantProvider).asData?.value;
       if (atelier == null) return Stream<List<Utilisateur>>.value(const []);
       return ref
           .watch(utilisateurRepositoryProvider)
@@ -16,8 +16,7 @@ final StreamProvider<List<Utilisateur>> equipeAtelierProvider =
     });
 
 /// Permissions d'un apprenti donné, lues depuis le cache local.
-final StreamProviderFamily<PermissionsApprenti?, String>
-permissionsApprentiProvider =
+final permissionsApprentiProvider =
     StreamProvider.family<PermissionsApprenti?, String>((ref, utilisateurId) {
       return ref
           .watch(utilisateurRepositoryProvider)

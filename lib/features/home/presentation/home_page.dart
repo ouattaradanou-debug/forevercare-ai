@@ -29,10 +29,10 @@ class HomePage extends ConsumerWidget {
       DateTime.now(),
     );
 
-    final Atelier? atelier = ref.watch(atelierCourantProvider).valueOrNull;
+    final Atelier? atelier = ref.watch(atelierCourantProvider).asData?.value;
     final Utilisateur? utilisateur = ref
         .watch(utilisateurCourantProvider)
-        .valueOrNull;
+        .asData?.value;
     final bool estProprietaire = utilisateur?.estProprietaire ?? false;
 
     return Scaffold(

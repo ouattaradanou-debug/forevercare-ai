@@ -18,7 +18,7 @@ class ApprentisPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final Utilisateur? utilisateur = ref
         .watch(utilisateurCourantProvider)
-        .valueOrNull;
+        .asData?.value;
 
     if (utilisateur != null && !utilisateur.estProprietaire) {
       return Scaffold(

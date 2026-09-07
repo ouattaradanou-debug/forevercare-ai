@@ -49,7 +49,7 @@ class _NouvelApprentiPageState extends ConsumerState<NouvelApprentiPage> {
             pin: _pinCtrl.text,
           );
 
-      final atelier = ref.read(atelierCourantProvider).valueOrNull;
+      final atelier = ref.read(atelierCourantProvider).asData?.value;
       if (atelier != null) {
         await ref
             .read(utilisateurRepositoryProvider)
