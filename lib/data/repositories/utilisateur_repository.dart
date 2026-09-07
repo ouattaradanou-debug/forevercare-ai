@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/utils/telephone_utils.dart';
-import '../local/app_database.dart';
+import '../local/app_database.dart' as local;
 import '../models/permissions_apprenti.dart';
 import '../models/utilisateur.dart';
 
@@ -11,7 +11,7 @@ class UtilisateurRepository {
   UtilisateurRepository(this._client, this._db);
 
   final SupabaseClient _client;
-  final AppDatabase _db;
+  final local.AppDatabase _db;
 
   static const String _table = 'utilisateurs';
   static const String _tablePermissions = 'permissions_apprenti';
