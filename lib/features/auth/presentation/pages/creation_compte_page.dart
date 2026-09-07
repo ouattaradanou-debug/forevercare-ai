@@ -45,8 +45,21 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
   }
 
   Future<void> _choisirLogo() async {
-    final XFile? photo = await choisirPhoto(context);
-    if (photo != null) setState(() => _logoChoisi = photo);
+    try {
+      final XFile? photo = await choisirPhoto(context);
+      if (photo != null) setState(() => _logoChoisi = photo);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Accès à la caméra ou à la galerie refusé. Vérifie les "
+            "autorisations de l'application dans les paramètres du "
+            "téléphone, ou continue sans logo pour l'instant.",
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _creerCompte() async {
@@ -99,9 +112,9 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
 
       if (mounted) context.go('/');
     } on AuthException catch (e) {
-      setState(() => _erreur = e.message);
+      if (mounted) setState(() => _erreur = e.message);
     } catch (e) {
-      setState(() => _erreur = 'Une erreur est survenue : $e');
+      if (mounted) setState(() => _erreur = 'Une erreur est survenue : $e');
     } finally {
       if (mounted) setState(() => _enCours = false);
     }

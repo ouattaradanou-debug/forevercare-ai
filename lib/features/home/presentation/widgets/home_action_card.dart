@@ -48,9 +48,11 @@ class HomeActionCard extends StatelessWidget {
               ),
               child: Icon(icone, color: couleurAccent, size: 24),
             ),
-            const SizedBox(height: AppSpacing.m),
+            const SizedBox(height: AppSpacing.s),
             Text(
               libelle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ],

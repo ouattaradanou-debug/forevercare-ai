@@ -66,7 +66,7 @@ class HomePage extends ConsumerWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: AppSpacing.m,
                     crossAxisSpacing: AppSpacing.m,
-                    childAspectRatio: 1.15,
+                    childAspectRatio: 0.95,
                     children: [
                       HomeActionCard(
                         icone: Icons.person_add_alt_1,

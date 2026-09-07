@@ -55,11 +55,13 @@ class _ConnexionPageState extends ConsumerState<ConnexionPage> {
 
       if (mounted) context.go('/');
     } on AuthException catch (e) {
-      setState(
-        () => _erreur = 'Numéro ou code PIN incorrect (${e.message}).',
-      );
+      if (mounted) {
+        setState(
+          () => _erreur = 'Numéro ou code PIN incorrect (${e.message}).',
+        );
+      }
     } catch (e) {
-      setState(() => _erreur = 'Une erreur est survenue : $e');
+      if (mounted) setState(() => _erreur = 'Une erreur est survenue : $e');
     } finally {
       if (mounted) setState(() => _enCours = false);
     }
