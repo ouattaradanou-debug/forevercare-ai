@@ -17,12 +17,13 @@ class SupabaseConfig {
 
   static const String url = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://VOTRE-PROJET.supabase.co',
+    defaultValue: 'https://jykjxstnctjkzjrtoyye.supabase.co',
   );
 
   static const String anonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'VOTRE_CLE_ANON_PUBLIQUE',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5a2p4c3RuY3Rqa3pqcnRveXllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MDE2MTMsImV4cCI6MjEwNDM3NzYxM30.eWqKpmYWUIUA2UPnC7UcD2wuMuQNQKZRiXXchMYptnw',
   );
 
   static bool get estConfigure =>
