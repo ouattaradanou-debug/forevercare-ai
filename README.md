@@ -1,22 +1,31 @@
-# ForeverCare AI
+# Atelier+
 
-ForeverCare AI est une application Flutter destinée à la gestion des activités Forever Living.
+Atelier+ est une application Flutter de gestion de clientèle pour les tailleurs et couturiers d'Afrique de l'Ouest : fiches clients, mesures corporelles par type de tenue, rendez-vous, suivi financier, gestion d'apprentis avec permissions, personnalisation de marque par atelier.
 
-## Fonctionnalités
+L'application fonctionne intégralement hors-ligne au quotidien et se synchronise automatiquement avec Supabase dès qu'une connexion est détectée.
 
-- Gestion des clients
-- Gestion des produits
-- Gestion des ventes
-- Gestion des protocoles
-- Gestion des rendez-vous
-- Gestion des paiements
-- Gestion des fournisseurs
-- Tableau de bord
-- Statistiques
-- SQLite Offline
-- Riverpod
-- Clean Architecture
+## Stack technique
+
+- **Frontend** : Flutter (Dart), Riverpod
+- **Backend** : Supabase (PostgreSQL, Auth, Storage, Row Level Security)
+- **Base locale hors-ligne** : Drift (SQLite), synchronisation bidirectionnelle
+- **Photos** : image_picker (caméra + galerie), compression avant upload
+- **Notifications locales** : flutter_local_notifications
+- **Navigation** : go_router
 
 ## Architecture
 
-Le projet suit une Clean Architecture.
+```
+lib/
+  core/       configuration, thème, routeur, utilitaires
+  data/       modèles, repositories, sources locale (Drift) et distante (Supabase)
+  features/   un dossier par fonctionnalité (auth, clients, mesures, rendezvous,
+              finances, permissions, abonnement, branding, home)
+  shared/     widgets réutilisables
+supabase/
+  schema.sql  schéma PostgreSQL complet + politiques Row Level Security
+```
+
+## Méthode de développement
+
+Le projet est construit par phases successives, chacune validée sur téléphone avant de passer à la suivante. Voir `PROJECT_STATUS.md` pour l'état d'avancement.

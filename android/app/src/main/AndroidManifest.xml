@@ -1,6 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Accès réseau pour la synchronisation avec Supabase dès connexion détectée -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Photos de tissus, modèles et logo d'atelier : caméra et galerie -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <!-- Rappels de rendez-vous et d'échéance d'abonnement -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <application
-        android:label="forevercare_ai"
+        android:label="Atelier+"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
