@@ -4,6 +4,28 @@ import 'package:drift/drift.dart' show Value;
 
 import '../local/app_database.dart';
 
+/// Un rendez-vous planifié pendant la saisie du formulaire client, avant
+/// même que le client n'existe (donc avant qu'un `client_id` réel ne soit
+/// disponible pour créer une vraie ligne `rendez_vous`).
+class RendezVousBrouillon {
+  const RendezVousBrouillon({required this.dateHeure, required this.type});
+
+  final DateTime dateHeure;
+  final String type;
+
+  factory RendezVousBrouillon.depuisJson(Map<String, dynamic> json) {
+    return RendezVousBrouillon(
+      dateHeure: DateTime.parse(json['date_heure'] as String),
+      type: json['type'] as String,
+    );
+  }
+
+  Map<String, dynamic> versJson() => {
+    'date_heure': dateHeure.toIso8601String(),
+    'type': type,
+  };
+}
+
 /// Brouillon de fiche client en cours de saisie (voir BrouillonsClient dans
 /// app_database.dart). Un seul brouillon actif par utilisateur.
 class BrouillonClient {
@@ -19,10 +41,12 @@ class BrouillonClient {
     Map<String, String>? valeursMesures,
     List<String>? photosTissu,
     List<String>? photosModele,
+    List<RendezVousBrouillon>? rendezVousEnAttente,
     required this.misAJourLe,
   }) : valeursMesures = valeursMesures ?? const {},
        photosTissu = photosTissu ?? const [],
-       photosModele = photosModele ?? const [];
+       photosModele = photosModele ?? const [],
+       rendezVousEnAttente = rendezVousEnAttente ?? const [];
 
   final String utilisateurId;
   final String atelierId;
@@ -35,6 +59,7 @@ class BrouillonClient {
   final Map<String, String> valeursMesures;
   final List<String> photosTissu;
   final List<String> photosModele;
+  final List<RendezVousBrouillon> rendezVousEnAttente;
   final DateTime misAJourLe;
 
   bool get aAuMoinsUneMesureRenseignee =>
@@ -50,7 +75,8 @@ class BrouillonClient {
       typeTenueId == null &&
       valeursMesures.values.every((v) => v.trim().isEmpty) &&
       photosTissu.isEmpty &&
-      photosModele.isEmpty;
+      photosModele.isEmpty &&
+      rendezVousEnAttente.isEmpty;
 
   static BrouillonClient vide({
     required String utilisateurId,
@@ -83,6 +109,15 @@ class BrouillonClient {
       photosModele: ligne.photosModeleJson != null
           ? List<String>.from(jsonDecode(ligne.photosModeleJson!) as List)
           : const [],
+      rendezVousEnAttente: ligne.rendezVousJson != null
+          ? (jsonDecode(ligne.rendezVousJson!) as List)
+                .map(
+                  (e) => RendezVousBrouillon.depuisJson(
+                    e as Map<String, dynamic>,
+                  ),
+                )
+                .toList()
+          : const [],
       misAJourLe: ligne.misAJourLe,
     );
   }
@@ -100,6 +135,9 @@ class BrouillonClient {
       valeursMesuresJson: Value(jsonEncode(valeursMesures)),
       photosTissuJson: Value(jsonEncode(photosTissu)),
       photosModeleJson: Value(jsonEncode(photosModele)),
+      rendezVousJson: Value(
+        jsonEncode(rendezVousEnAttente.map((r) => r.versJson()).toList()),
+      ),
       misAJourLe: Value(misAJourLe),
     );
   }
@@ -114,6 +152,7 @@ class BrouillonClient {
     Map<String, String>? valeursMesures,
     List<String>? photosTissu,
     List<String>? photosModele,
+    List<RendezVousBrouillon>? rendezVousEnAttente,
   }) {
     return BrouillonClient(
       utilisateurId: utilisateurId,
@@ -133,6 +172,7 @@ class BrouillonClient {
       valeursMesures: valeursMesures ?? this.valeursMesures,
       photosTissu: photosTissu ?? this.photosTissu,
       photosModele: photosModele ?? this.photosModele,
+      rendezVousEnAttente: rendezVousEnAttente ?? this.rendezVousEnAttente,
       misAJourLe: DateTime.now(),
     );
   }

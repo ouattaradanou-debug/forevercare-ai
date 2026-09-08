@@ -19,6 +19,7 @@ import '../widgets/section_finances.dart';
 import '../widgets/section_infos_client.dart';
 import '../widgets/section_mesures.dart';
 import '../widgets/section_photos.dart';
+import '../widgets/section_rendez_vous.dart';
 
 /// Formulaire continu de création client : toutes les sections sont
 /// empilées dans une seule page scrollable, sans étape bloquante, sans
@@ -48,6 +49,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
   Map<String, String> _valeursMesures = {};
   List<String> _photosTissu = [];
   List<String> _photosModele = [];
+  List<RendezVousBrouillon> _rendezVous = [];
 
   Timer? _debounce;
   Timer? _timerIndicateur;
@@ -161,6 +163,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
       _valeursMesures = Map.of(brouillon.valeursMesures);
       _photosTissu = List.of(brouillon.photosTissu);
       _photosModele = List.of(brouillon.photosModele);
+      _rendezVous = List.of(brouillon.rendezVousEnAttente);
       _brouillonCharge = true;
     });
   }
@@ -193,6 +196,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
       valeursMesures: Map.of(_valeursMesures),
       photosTissu: List.of(_photosTissu),
       photosModele: List.of(_photosModele),
+      rendezVousEnAttente: List.of(_rendezVous),
       misAJourLe: DateTime.now(),
     );
     await ref.read(brouillonRepositoryProvider).enregistrer(brouillon);
@@ -280,6 +284,23 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
     _programmerSauvegarde();
   }
 
+  void _ajouterRendezVous(DateTime dateHeure, String type) {
+    setState(
+      () => _rendezVous = [
+        ..._rendezVous,
+        RendezVousBrouillon(dateHeure: dateHeure, type: type),
+      ],
+    );
+    _programmerSauvegarde();
+  }
+
+  void _supprimerRendezVous(int index) {
+    setState(
+      () => _rendezVous = [..._rendezVous]..removeAt(index),
+    );
+    _programmerSauvegarde();
+  }
+
   bool get _aAuMoinsUneMesure =>
       _typeTenueId != null &&
       _valeursMesures.values.any((v) => v.trim().isNotEmpty);
@@ -347,6 +368,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
             valeursMesures: Map.of(_valeursMesures),
             cheminsPhotosTissu: List.of(_photosTissu),
             cheminsPhotosModele: List.of(_photosModele),
+            rendezVous: List.of(_rendezVous),
           );
       await ref.read(brouillonRepositoryProvider).supprimer(utilisateurId);
       if (mounted) context.pop();
@@ -486,6 +508,12 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
             ),
             const SizedBox(height: AppSpacing.xl),
             const SectionFinances(),
+            const SizedBox(height: AppSpacing.xl),
+            SectionRendezVous(
+              rendezVous: _rendezVous,
+              onAjouter: _ajouterRendezVous,
+              onSupprimer: _supprimerRendezVous,
+            ),
           ],
         ),
       ),

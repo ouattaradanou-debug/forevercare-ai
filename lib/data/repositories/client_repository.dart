@@ -4,9 +4,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../local/app_database.dart';
+import '../models/brouillon_client.dart' show RendezVousBrouillon;
 import '../models/client.dart';
 import '../models/mesure.dart';
 import '../models/photo.dart';
+import '../models/rendez_vous.dart';
 
 /// Fiches clients définitives.
 ///
@@ -43,6 +45,7 @@ class ClientRepository {
     required Map<String, String> valeursMesures,
     required List<String> cheminsPhotosTissu,
     required List<String> cheminsPhotosModele,
+    List<RendezVousBrouillon> rendezVous = const [],
   }) async {
     final DateTime maintenant = DateTime.now();
 
@@ -100,9 +103,26 @@ class ClientRepository {
           .insertOnConflictUpdate(photo.versCompagnonLocal());
     }
 
+    final List<RendezVous> rendezVousCrees = [
+      for (final RendezVousBrouillon r in rendezVous)
+        RendezVous(
+          id: _uuid.v4(),
+          clientId: client.id,
+          dateHeure: r.dateHeure,
+          type: TypeRendezVous.depuisTexte(r.type),
+          createdAt: maintenant,
+          updatedAt: maintenant,
+        ),
+    ];
+    for (final RendezVous rdv in rendezVousCrees) {
+      await _db
+          .into(_db.rendezVousTable)
+          .insertOnConflictUpdate(rdv.versCompagnonLocal());
+    }
+
     if (await _estEnLigne()) {
       try {
-        await _synchroniserVersSupabase(client, mesure);
+        await _synchroniserVersSupabase(client, mesure, rendezVousCrees);
       } catch (_) {
         // Best-effort : les données restent valides localement et seront
         // resynchronisées par le moteur de synchronisation de la Phase 3.
@@ -112,7 +132,11 @@ class ClientRepository {
     return client;
   }
 
-  Future<void> _synchroniserVersSupabase(Client client, Mesure mesure) async {
+  Future<void> _synchroniserVersSupabase(
+    Client client,
+    Mesure mesure,
+    List<RendezVous> rendezVous,
+  ) async {
     await _client.from('clients').insert({
       'id': client.id,
       'atelier_id': client.atelierId,
@@ -129,6 +153,19 @@ class ClientRepository {
       'valeurs': mesure.valeurs,
       'prise_par': mesure.prisePar,
     });
+    if (rendezVous.isNotEmpty) {
+      await _client
+          .from('rendez_vous')
+          .insert([
+            for (final RendezVous rdv in rendezVous)
+              {
+                'id': rdv.id,
+                'client_id': rdv.clientId,
+                'date_heure': rdv.dateHeure.toIso8601String(),
+                'type': rdv.type.name,
+              },
+          ]);
+    }
   }
 
   Stream<List<Client>> observerClients(String atelierId) {
@@ -137,6 +174,15 @@ class ClientRepository {
       ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
     return query.watch().map(
       (lignes) => lignes.map(Client.depuisLigneLocale).toList(),
+    );
+  }
+
+  Stream<List<RendezVous>> observerRendezVousClient(String clientId) {
+    final query = _db.select(_db.rendezVousTable)
+      ..where((t) => t.clientId.equals(clientId))
+      ..orderBy([(t) => OrderingTerm.asc(t.dateHeure)]);
+    return query.watch().map(
+      (lignes) => lignes.map(RendezVous.depuisLigneLocale).toList(),
     );
   }
 }

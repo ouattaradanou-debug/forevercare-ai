@@ -156,6 +156,12 @@ class Photos extends Table {
 /// primaire. Entièrement local, jamais envoyé à Supabase — un client n'est
 /// créé "pour de vrai" (table `clients` + synchronisation) qu'au moment de
 /// la finalisation, dès lors qu'il possède au moins une mesure.
+///
+/// `rendezVousJson` contient les rendez-vous planifiés pendant la saisie,
+/// avant même que le client n'existe (donc avant qu'un `client_id` réel ne
+/// soit disponible pour la table `rendez_vous`) : une liste JSON de
+/// `{date_heure, type}`, transformée en vraies lignes `rendez_vous` au
+/// moment de la finalisation (voir `ClientRepository.finaliserClient`).
 @DataClassName('BrouillonClientLocal')
 class BrouillonsClient extends Table {
   TextColumn get utilisateurId => text()();
@@ -169,10 +175,28 @@ class BrouillonsClient extends Table {
   TextColumn get valeursMesuresJson => text().nullable()();
   TextColumn get photosTissuJson => text().nullable()();
   TextColumn get photosModeleJson => text().nullable()();
+  TextColumn get rendezVousJson => text().nullable()();
   DateTimeColumn get misAJourLe => dateTime()();
 
   @override
   Set<Column> get primaryKey => {utilisateurId};
+}
+
+/// Cache local de la table `rendez_vous`. `type` vaut 'essayage' ou
+/// 'livraison', `statut` 'planifie'/'confirme'/'termine'/'annule' (voir
+/// supabase/schema.sql).
+@DataClassName('RendezVousLocal')
+class RendezVousTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get clientId => text()();
+  DateTimeColumn get dateHeure => dateTime()();
+  TextColumn get type => text()();
+  TextColumn get statut => text().withDefault(const Constant('planifie'))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 /// Base de données locale (SQLite via Drift), cache hors-ligne d'Atelier+.
@@ -187,13 +211,14 @@ class BrouillonsClient extends Table {
     Mesures,
     Photos,
     BrouillonsClient,
+    RendezVousTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -206,6 +231,10 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(mesures);
         await m.createTable(photos);
         await m.createTable(brouillonsClient);
+      }
+      if (depuis < 3) {
+        await m.createTable(rendezVousTable);
+        await m.addColumn(brouillonsClient, brouillonsClient.rendezVousJson);
       }
     },
   );
