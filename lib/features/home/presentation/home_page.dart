@@ -91,31 +91,11 @@ class HomePage extends ConsumerWidget {
                         onTap: () => context.push('/clients/nouveau'),
                       ),
                       HomeActionCard(
-                        icone: Icons.straighten,
-                        libelle: 'Prendre des mesures',
+                        icone: Icons.groups_outlined,
+                        libelle: 'Mes clients',
                         couleurAccent: AppColors.terracotta600,
-                        onTap: () {},
+                        onTap: () => context.push('/clients'),
                       ),
-                      HomeActionCard(
-                        icone: Icons.event_available,
-                        libelle: 'Rendez-vous',
-                        couleurAccent: AppColors.or600,
-                        onTap: () {},
-                      ),
-                      if (estProprietaire)
-                        HomeActionCard(
-                          icone: Icons.savings_outlined,
-                          libelle: 'Finances',
-                          couleurAccent: AppColors.succes,
-                          onTap: () {},
-                        )
-                      else
-                        HomeActionCard(
-                          icone: Icons.photo_camera_outlined,
-                          libelle: 'Photos',
-                          couleurAccent: AppColors.succes,
-                          onTap: () {},
-                        ),
                       if (estProprietaire)
                         HomeActionCard(
                           icone: Icons.groups_2_outlined,
