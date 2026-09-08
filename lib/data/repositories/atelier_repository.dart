@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../core/utils/image_utils.dart';
 import '../local/app_database.dart';
@@ -16,13 +17,26 @@ class AtelierRepository {
   static const String _table = 'ateliers';
   static const String _bucketLogos = 'logos';
 
+  // L'identifiant est généré côté client (et non pas laissé au défaut
+  // `gen_random_uuid()` de la base) pour pouvoir insérer SANS relire la
+  // ligne via `.select()` juste après. Relire immédiatement poserait
+  // problème : la policy RLS de lecture (`ateliers_select_mon_atelier`)
+  // exige une ligne `utilisateurs` déjà existante pour ce compte, qui
+  // n'est créée qu'à l'étape suivante de l'inscription (voir
+  // `UtilisateurRepository.creerUtilisateurProprietaire`) — Postgres
+  // rejette alors l'insertion avec "new row violates row-level security
+  // policy", car la clause RETURNING est elle-même filtrée par cette
+  // policy de lecture.
   Future<Atelier> creerAtelier(String nom) async {
-    final Map<String, dynamic> ligne = await _client
-        .from(_table)
-        .insert({'nom': nom})
-        .select()
-        .single();
-    final Atelier atelier = Atelier.depuisSupabase(ligne);
+    final String id = Uuid().v4();
+    final DateTime maintenant = DateTime.now();
+    await _client.from(_table).insert({'id': id, 'nom': nom});
+    final Atelier atelier = Atelier(
+      id: id,
+      nom: nom,
+      createdAt: maintenant,
+      updatedAt: maintenant,
+    );
     await enregistrerLocalement(atelier);
     return atelier;
   }
