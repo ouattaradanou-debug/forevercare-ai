@@ -19,25 +19,41 @@ class UtilisateurRepository {
   /// Bootstrap du compte propriétaire, appelé juste après la création du
   /// compte Supabase Auth : voir la policy RLS `utilisateurs_insert_soi_meme`
   /// dans supabase/schema.sql (id = auth.uid() obligatoire).
+  ///
+  /// Comme pour `AtelierRepository.creerAtelier`, on n'enchaîne pas
+  /// `.select()` après l'insertion : la ligne créée n'est pas encore visible
+  /// à ce moment précis pour la policy RLS de lecture
+  /// (`utilisateurs_select_mon_atelier`, via `mon_atelier_id()`), qui
+  /// interroge la table `utilisateurs` elle-même — Postgres rejetterait
+  /// alors l'insertion avec "new row violates row-level security policy",
+  /// la clause RETURNING étant filtrée par cette policy de lecture. On
+  /// connaît déjà toutes les valeurs de la ligne, la relecture est donc
+  /// inutile.
   Future<Utilisateur> creerUtilisateurProprietaire({
     required String id,
     required String atelierId,
     required String nom,
     required String telephone,
   }) async {
-    final Map<String, dynamic> ligne = await _client
-        .from(_table)
-        .insert({
-          'id': id,
-          'atelier_id': atelierId,
-          'nom': nom,
-          'telephone': TelephoneUtils.normaliser(telephone),
-          'role': 'proprietaire',
-        })
-        .select()
-        .single();
+    final String telephoneNormalise = TelephoneUtils.normaliser(telephone);
+    final DateTime maintenant = DateTime.now();
+    await _client.from(_table).insert({
+      'id': id,
+      'atelier_id': atelierId,
+      'nom': nom,
+      'telephone': telephoneNormalise,
+      'role': 'proprietaire',
+    });
 
-    final Utilisateur utilisateur = Utilisateur.depuisSupabase(ligne);
+    final Utilisateur utilisateur = Utilisateur(
+      id: id,
+      atelierId: atelierId,
+      nom: nom,
+      telephone: telephoneNormalise,
+      role: RoleUtilisateur.proprietaire,
+      createdAt: maintenant,
+      updatedAt: maintenant,
+    );
     await enregistrerLocalement(utilisateur);
     return utilisateur;
   }
