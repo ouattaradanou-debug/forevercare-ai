@@ -87,15 +87,16 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
     final authRepo = ref.read(authRepositoryProvider);
     final atelierRepo = ref.read(atelierRepositoryProvider);
     final utilisateurRepo = ref.read(utilisateurRepositoryProvider);
+    final gabaritRepo = ref.read(gabaritRepositoryProvider);
 
     try {
-      debugPrint('[creation-compte] 1/5 appel authRepo.creerCompte...');
+      debugPrint('[creation-compte] 1/6 appel authRepo.creerCompte...');
       final reponse = await authRepo.creerCompte(
         telephone: _telephoneCtrl.text,
         pin: _pinCtrl.text,
       );
       debugPrint(
-        '[creation-compte] 1/5 OK — user=${reponse.user?.id}, '
+        '[creation-compte] 1/6 OK — user=${reponse.user?.id}, '
         'session=${reponse.session != null}',
       );
 
@@ -109,14 +110,14 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
       }
       authentificationReussie = true;
 
-      debugPrint('[creation-compte] 2/5 appel atelierRepo.creerAtelier...');
+      debugPrint('[creation-compte] 2/6 appel atelierRepo.creerAtelier...');
       final atelier = await atelierRepo.creerAtelier(
         _nomAtelierCtrl.text.trim(),
       );
-      debugPrint('[creation-compte] 2/5 OK — atelier.id=${atelier.id}');
+      debugPrint('[creation-compte] 2/6 OK — atelier.id=${atelier.id}');
 
       debugPrint(
-        '[creation-compte] 3/5 appel utilisateurRepo.creerUtilisateurProprietaire...',
+        '[creation-compte] 3/6 appel utilisateurRepo.creerUtilisateurProprietaire...',
       );
       await utilisateurRepo.creerUtilisateurProprietaire(
         id: id,
@@ -124,20 +125,29 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
         nom: _nomProprietaireCtrl.text.trim(),
         telephone: _telephoneCtrl.text,
       );
-      debugPrint('[creation-compte] 3/5 OK');
+      debugPrint('[creation-compte] 3/6 OK');
 
       if (_logoChoisi != null) {
-        debugPrint('[creation-compte] 4/5 appel atelierRepo.televerserLogo...');
+        debugPrint('[creation-compte] 4/6 appel atelierRepo.televerserLogo...');
         await atelierRepo.televerserLogo(
           atelierId: atelier.id,
           fichierOriginal: File(_logoChoisi!.path),
         );
-        debugPrint('[creation-compte] 4/5 OK');
+        debugPrint('[creation-compte] 4/6 OK');
       } else {
-        debugPrint('[creation-compte] 4/5 ignoré (pas de logo choisi)');
+        debugPrint('[creation-compte] 4/6 ignoré (pas de logo choisi)');
       }
 
-      debugPrint('[creation-compte] 5/5 navigation vers /');
+      // Sans cette étape, les gabarits (types de tenue + champs de mesure)
+      // restent absents du cache local pour un compte tout juste créé —
+      // seule une connexion ultérieure les synchronise (voir
+      // RecuperationCompteService) — et la section "Mesures" du formulaire
+      // client se retrouverait sans aucun type de tenue à proposer.
+      debugPrint('[creation-compte] 5/6 appel gabaritRepo.synchroniserGabarits...');
+      await gabaritRepo.synchroniserGabarits(atelier.id);
+      debugPrint('[creation-compte] 5/6 OK');
+
+      debugPrint('[creation-compte] 6/6 navigation vers /');
       if (mounted) context.go('/');
     } on AuthException catch (e) {
       debugPrint('[creation-compte] ÉCHEC (AuthException) : ${e.message}');

@@ -15,6 +15,7 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../permissions/presentation/providers/apprentis_providers.dart';
 import '../providers/clients_providers.dart';
 import '../widgets/indicateur_sauvegarde.dart';
+import '../widgets/section_finances.dart';
 import '../widgets/section_infos_client.dart';
 import '../widgets/section_mesures.dart';
 import '../widgets/section_photos.dart';
@@ -483,6 +484,8 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
               onAjouter: _ajouterPhotoModele,
               onSupprimer: _supprimerPhotoModele,
             ),
+            const SizedBox(height: AppSpacing.xl),
+            const SectionFinances(),
           ],
         ),
       ),
