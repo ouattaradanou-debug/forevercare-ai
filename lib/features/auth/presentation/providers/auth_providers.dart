@@ -6,6 +6,7 @@ import '../../../../data/models/atelier.dart';
 import '../../../../data/models/utilisateur.dart';
 import '../../../../data/repositories/atelier_repository.dart';
 import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/repositories/gabarit_repository.dart';
 import '../../../../data/repositories/recuperation_compte_service.dart';
 import '../../../../data/repositories/utilisateur_repository.dart';
 
@@ -33,11 +34,20 @@ final Provider<UtilisateurRepository> utilisateurRepositoryProvider =
       ),
     );
 
+final Provider<GabaritRepository> gabaritRepositoryProvider =
+    Provider<GabaritRepository>(
+      (ref) => GabaritRepository(
+        ref.watch(supabaseClientProvider),
+        ref.watch(appDatabaseProvider),
+      ),
+    );
+
 final Provider<RecuperationCompteService> recuperationCompteServiceProvider =
     Provider<RecuperationCompteService>(
       (ref) => RecuperationCompteService(
         ref.watch(atelierRepositoryProvider),
         ref.watch(utilisateurRepositoryProvider),
+        ref.watch(gabaritRepositoryProvider),
       ),
     );
 

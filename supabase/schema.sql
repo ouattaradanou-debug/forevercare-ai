@@ -190,14 +190,19 @@ create trigger trg_permissions_apprenti_updated_at
 -- =============================================================================
 -- TABLE : clients
 -- =============================================================================
+-- Remarque (correctif formulaire continu) : aucun champ d'identité n'est
+-- obligatoire ici. Seule l'existence d'au moins une mesure (table
+-- `mesures`) conditionne la création "officielle" d'un client côté
+-- application ; voir supabase/migration_phase2_champs_optionnels.sql pour
+-- la migration d'un projet déjà créé avec l'ancienne version de ce schéma.
 create table if not exists public.clients (
   id                    uuid primary key default gen_random_uuid(),
   atelier_id            uuid not null references public.ateliers (id) on delete cascade,
-  nom                   text not null check (char_length(trim(nom)) > 0),
-  prenom                text not null check (char_length(trim(prenom)) > 0),
-  telephone             text not null,
-  sexe                  text not null check (sexe in ('Homme', 'Femme')),
-  date_prise_mesures    date not null,
+  nom                   text,
+  prenom                text,
+  telephone             text,
+  sexe                  text check (sexe in ('Homme', 'Femme')),
+  date_prise_mesures    date,
   created_at            timestamptz not null default now(),
   updated_at            timestamptz not null default now()
 );

@@ -7,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/utilisateur.dart';
 import '../../features/auth/presentation/pages/connexion_page.dart';
 import '../../features/auth/presentation/pages/creation_compte_page.dart';
+import '../../features/clients/presentation/pages/clients_list_page.dart';
+import '../../features/clients/presentation/pages/formulaire_client_page.dart';
 import '../../features/home/presentation/home_page.dart';
 import '../../features/permissions/presentation/pages/apprentis_page.dart';
 import '../../features/permissions/presentation/pages/nouvel_apprenti_page.dart';
@@ -62,6 +64,18 @@ final GoRouter appRouter = GoRouter(
       path: '/creation-compte',
       name: 'creation-compte',
       builder: (context, state) => const CreationComptePage(),
+    ),
+    GoRoute(
+      path: '/clients',
+      name: 'clients',
+      builder: (context, state) => const ClientsListPage(),
+      routes: [
+        GoRoute(
+          path: 'nouveau',
+          name: 'nouveau-client',
+          builder: (context, state) => const FormulaireClientPage(),
+        ),
+      ],
     ),
     GoRoute(
       path: '/apprentis',

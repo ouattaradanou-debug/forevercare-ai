@@ -20,7 +20,13 @@
 
 ## Phase 2 — Clients et gabarits de mesures dynamiques
 
-- [ ] Non commencé
+- [x] Gabarits par défaut Homme (5) / Femme (7) à partir de la bibliothèque de champs
+- [x] Formulaire de création client continu et scrollable (aucun champ obligatoire)
+- [x] Brouillon local auto-sauvegardé (debounce 1s), reprise après fermeture complète de l'app
+- [x] Règle de finalisation assouplie (message doux si aucune mesure, jamais de blocage dur)
+- [x] Liste des clients avec recherche instantanée (nom/téléphone)
+- [ ] Écran "Gérer mes types de tenues" (ajout/masquage de champ, duplication de gabarit) — non commencé
+- [ ] Validation utilisateur sur téléphone
 
 ## Phase 3 — Rendez-vous, finances et synchronisation offline
 

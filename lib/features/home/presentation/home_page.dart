@@ -7,9 +7,11 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../data/models/atelier.dart';
+import '../../../data/models/brouillon_client.dart';
 import '../../../data/models/utilisateur.dart';
 import '../../../shared/widgets/stitched_divider.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
+import '../../clients/presentation/providers/clients_providers.dart';
 import 'widgets/home_action_card.dart';
 
 /// Écran d'accueil d'Atelier+.
@@ -34,6 +36,13 @@ class HomePage extends ConsumerWidget {
         .watch(utilisateurCourantProvider)
         .asData?.value;
     final bool estProprietaire = utilisateur?.estProprietaire ?? false;
+    final BrouillonClient? brouillon = ref
+        .watch(brouillonActuelProvider)
+        .asData
+        ?.value;
+    final bool aUnBrouillon =
+        brouillon != null && !brouillon.estCompletementVide;
+    final int nombreClients = ref.watch(clientsProvider).asData?.value.length ?? 0;
 
     return Scaffold(
       body: SafeArea(
@@ -57,6 +66,13 @@ class HomePage extends ConsumerWidget {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   const _BandeauEssaiGratuit(joursRestants: 30),
+                  if (aUnBrouillon) ...[
+                    const SizedBox(height: AppSpacing.m),
+                    _CarteFicheACompleter(
+                      brouillon: brouillon,
+                      onTap: () => context.push('/clients/nouveau'),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.xl),
                   Text('Actions rapides', style: texte.headlineMedium),
                   const SizedBox(height: AppSpacing.m),
@@ -72,7 +88,7 @@ class HomePage extends ConsumerWidget {
                         icone: Icons.person_add_alt_1,
                         libelle: 'Nouveau client',
                         couleurAccent: AppColors.indigo700,
-                        onTap: () {},
+                        onTap: () => context.push('/clients/nouveau'),
                       ),
                       HomeActionCard(
                         icone: Icons.straighten,
@@ -114,7 +130,7 @@ class HomePage extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.xl),
                   Text("Aujourd'hui", style: texte.headlineMedium),
                   const SizedBox(height: AppSpacing.m),
-                  const _RangeeStatistiques(),
+                  _RangeeStatistiques(nombreClients: nombreClients),
                 ]),
               ),
             ),
@@ -294,22 +310,25 @@ class _BandeauEssaiGratuit extends StatelessWidget {
 }
 
 class _RangeeStatistiques extends StatelessWidget {
-  const _RangeeStatistiques();
+  const _RangeeStatistiques({required this.nombreClients});
+
+  final int nombreClients;
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
         Expanded(
           child: _CarteStatistique(
             icone: Icons.groups_outlined,
-            valeur: '0',
+            valeur: '$nombreClients',
             libelle: 'Clients',
             couleurAccent: AppColors.indigo700,
+            onTap: () => context.push('/clients'),
           ),
         ),
-        SizedBox(width: AppSpacing.m),
-        Expanded(
+        const SizedBox(width: AppSpacing.m),
+        const Expanded(
           child: _CarteStatistique(
             icone: Icons.event_outlined,
             valeur: '0',
@@ -328,37 +347,103 @@ class _CarteStatistique extends StatelessWidget {
     required this.valeur,
     required this.libelle,
     required this.couleurAccent,
+    this.onTap,
   });
 
   final IconData icone;
   final String valeur;
   final String libelle;
   final Color couleurAccent;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.m),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: scheme.outline.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icone, color: couleurAccent),
-          const SizedBox(height: AppSpacing.s),
-          Text(valeur, style: Theme.of(context).textTheme.displayMedium),
-          Text(
-            libelle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurface.withValues(alpha: 0.7),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: scheme.outline.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icone, color: couleurAccent),
+            const SizedBox(height: AppSpacing.s),
+            Text(valeur, style: Theme.of(context).textTheme.displayMedium),
+            Text(
+              libelle,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurface.withValues(alpha: 0.7),
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CarteFicheACompleter extends StatelessWidget {
+  const _CarteFicheACompleter({required this.brouillon, required this.onTap});
+
+  final BrouillonClient brouillon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final String nom = [
+      brouillon.nom,
+      brouillon.prenom,
+    ].where((v) => v != null && v.trim().isNotEmpty).join(' ');
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: AppColors.terracotta500.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(
+            color: AppColors.terracotta500.withValues(alpha: 0.4),
           ),
-        ],
+        ),
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.terracotta500,
+              child: Icon(
+                Icons.edit_note,
+                color: AppColors.ecru50,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Fiche à compléter',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Text(
+                    nom.isEmpty ? 'Client sans nom' : nom,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
       ),
     );
   }

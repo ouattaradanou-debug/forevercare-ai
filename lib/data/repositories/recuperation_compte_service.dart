@@ -1,4 +1,5 @@
 import 'atelier_repository.dart';
+import 'gabarit_repository.dart';
 import 'utilisateur_repository.dart';
 
 /// Récupération complète des données d'un compte sur un nouvel appareil
@@ -7,14 +8,16 @@ import 'utilisateur_repository.dart';
 /// local Drift avant d'afficher l'application, qui ne lit ensuite plus que
 /// le cache local (lecture hors-ligne d'abord).
 ///
-/// Ce service ne couvre pour l'instant que les données de compte (atelier,
-/// équipe, permissions), seules concernées par la Phase 1. Il sera étendu
-/// au fil des Phases 2 et 3 pour inclure clients, mesures, rendez-vous, etc.
+/// Depuis la Phase 2, la synchronisation initiale inclut aussi les
+/// gabarits (types de tenue + champs de mesure), pour qu'ils restent
+/// disponibles hors-ligne dès la prochaine ouverture de l'application, y
+/// compris pour la toute première prise de mesure d'un client.
 class RecuperationCompteService {
-  RecuperationCompteService(this._ateliers, this._utilisateurs);
+  RecuperationCompteService(this._ateliers, this._utilisateurs, this._gabarits);
 
   final AtelierRepository _ateliers;
   final UtilisateurRepository _utilisateurs;
+  final GabaritRepository _gabarits;
 
   Future<void> recupererDonneesCompte(String utilisateurId) async {
     final utilisateur = await _utilisateurs.recupererDepuisSupabase(
@@ -43,5 +46,7 @@ class RecuperationCompteService {
       // Un apprenti ne peut lire que ses propres permissions (RLS).
       await _utilisateurs.recupererPermissions(utilisateur.id);
     }
+
+    await _gabarits.synchroniserGabarits(utilisateur.atelierId);
   }
 }

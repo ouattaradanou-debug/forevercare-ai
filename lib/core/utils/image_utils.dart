@@ -27,4 +27,25 @@ class ImageUtils {
 
     return resultat != null ? File(resultat.path) : original;
   }
+
+  /// Compresse puis copie l'image dans le stockage permanent de
+  /// l'application (survit au redémarrage du téléphone, contrairement au
+  /// dossier temporaire que le système peut vider à tout moment). Utilisé
+  /// pour les photos de brouillon, tant qu'elles ne sont pas encore
+  /// envoyées à Supabase Storage.
+  static Future<File> compresserEtPersister(File original) async {
+    final File compresse = await compresser(original);
+    final Directory dossierDocuments = await getApplicationDocumentsDirectory();
+    final Directory dossierPhotos = Directory(
+      chemin.join(dossierDocuments.path, 'photos_brouillons'),
+    );
+    if (!await dossierPhotos.exists()) {
+      await dossierPhotos.create(recursive: true);
+    }
+    final String cheminPermanent = chemin.join(
+      dossierPhotos.path,
+      '${DateTime.now().microsecondsSinceEpoch}.jpg',
+    );
+    return compresse.copy(cheminPermanent);
+  }
 }

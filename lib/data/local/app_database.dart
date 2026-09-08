@@ -60,18 +60,155 @@ class PermissionsApprenti extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// Base de données locale (SQLite via Drift), cache hors-ligne d'Atelier+.
+/// Cache local de la table `types_tenue`. `atelierId` nul = gabarit par
+/// défaut fourni par Atelier+ (voir supabase/schema.sql).
+@DataClassName('TypeTenueLocal')
+class TypesTenue extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text().nullable()();
+  TextColumn get nom => text()();
+  TextColumn get sexe => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local de la table `champs_mesure`.
+@DataClassName('ChampMesureLocal')
+class ChampsMesure extends Table {
+  TextColumn get id => text()();
+  TextColumn get typeTenueId => text()();
+  TextColumn get nom => text()();
+  TextColumn get unite => text().nullable()();
+  TextColumn get statut => text().withDefault(const Constant('actif'))();
+  IntColumn get ordre => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local de la table `clients`.
 ///
-/// Phase 1 : seules les tables nécessaires au compte, à l'atelier et aux
-/// permissions d'apprenti sont présentes. Les tables clients, mesures,
-/// rendez-vous, etc. seront ajoutées dans ce même fichier au fil des
-/// Phases 2 et 3, suivant le même schéma que leur équivalent Supabase.
-@DriftDatabase(tables: [Ateliers, Utilisateurs, PermissionsApprenti])
+/// Décision d'architecture (correctif formulaire continu) : `nom`,
+/// `prenom`, `telephone`, `sexe` et `datePriseMesures` sont nullable ici
+/// (et sur la table Supabase correspondante, voir
+/// supabase/migration_phase2_champs_optionnels.sql) car aucun champ
+/// d'identité n'est individuellement obligatoire : seule l'existence d'au
+/// moins une mesure conditionne la création officielle du client.
+@DataClassName('ClientLocal')
+class Clients extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get nom => text().nullable()();
+  TextColumn get prenom => text().nullable()();
+  TextColumn get telephone => text().nullable()();
+  TextColumn get sexe => text().nullable()();
+  DateTimeColumn get datePriseMesures => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local de la table `mesures`. Historisée : jamais mise à jour après
+/// écriture, une nouvelle prise crée toujours une nouvelle ligne.
+/// `valeursJson` contient la carte {nom du champ: valeur saisie} encodée
+/// en JSON (Drift/SQLite n'a pas de colonne JSON native).
+@DataClassName('MesureLocal')
+class Mesures extends Table {
+  TextColumn get id => text()();
+  TextColumn get clientId => text()();
+  TextColumn get typeTenueId => text()();
+  DateTimeColumn get datePrise => dateTime()();
+  TextColumn get valeursJson => text().withDefault(const Constant('{}'))();
+  TextColumn get prisePar => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local de la table `photos`. `cheminLocal` pointe vers une copie
+/// permanente du fichier dans le stockage de l'application (voir
+/// `ImageUtils.compresserEtPersister`) : l'envoi vers Supabase Storage sera
+/// ajouté avec le reste du moteur de synchronisation en Phase 3.
+@DataClassName('PhotoLocal')
+class Photos extends Table {
+  TextColumn get id => text()();
+  TextColumn get clientId => text()();
+  TextColumn get type => text()();
+  TextColumn get cheminLocal => text()();
+  TextColumn get source => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Brouillon de fiche client en cours de saisie.
+///
+/// Un seul brouillon actif par utilisateur : `utilisateurId` est la clé
+/// primaire. Entièrement local, jamais envoyé à Supabase — un client n'est
+/// créé "pour de vrai" (table `clients` + synchronisation) qu'au moment de
+/// la finalisation, dès lors qu'il possède au moins une mesure.
+@DataClassName('BrouillonClientLocal')
+class BrouillonsClient extends Table {
+  TextColumn get utilisateurId => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get nom => text().nullable()();
+  TextColumn get prenom => text().nullable()();
+  TextColumn get telephone => text().nullable()();
+  TextColumn get sexe => text().nullable()();
+  DateTimeColumn get datePriseMesures => dateTime().nullable()();
+  TextColumn get typeTenueId => text().nullable()();
+  TextColumn get valeursMesuresJson => text().nullable()();
+  TextColumn get photosTissuJson => text().nullable()();
+  TextColumn get photosModeleJson => text().nullable()();
+  DateTimeColumn get misAJourLe => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {utilisateurId};
+}
+
+/// Base de données locale (SQLite via Drift), cache hors-ligne d'Atelier+.
+@DriftDatabase(
+  tables: [
+    Ateliers,
+    Utilisateurs,
+    PermissionsApprenti,
+    TypesTenue,
+    ChampsMesure,
+    Clients,
+    Mesures,
+    Photos,
+    BrouillonsClient,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) => m.createAll(),
+    onUpgrade: (Migrator m, int depuis, int vers) async {
+      if (depuis < 2) {
+        await m.createTable(typesTenue);
+        await m.createTable(champsMesure);
+        await m.createTable(clients);
+        await m.createTable(mesures);
+        await m.createTable(photos);
+        await m.createTable(brouillonsClient);
+      }
+    },
+  );
 
   static QueryExecutor _ouvrirConnexion() {
     return driftDatabase(name: 'atelier_plus');
