@@ -53,6 +53,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
   bool _indicateurVisible = false;
   bool _brouillonCharge = false;
   bool _enregistrementEnCours = false;
+  String? _erreurChargement;
 
   @override
   void initState() {
@@ -88,6 +89,19 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
   }
 
   Future<void> _chargerBrouillonExistant() async {
+    try {
+      await _chargerBrouillonExistantInterne();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _erreurChargement = '$e';
+          _brouillonCharge = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _chargerBrouillonExistantInterne() async {
     final String? utilisateurId = ref.read(idUtilisateurConnecteProvider);
     if (utilisateurId == null) {
       setState(() => _brouillonCharge = true);
@@ -378,6 +392,37 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
           ),
         );
       }
+    }
+
+    if (_erreurChargement != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Nouveau client')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.l),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Impossible de charger le brouillon : $_erreurChargement",
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.m),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _erreurChargement = null;
+                      _brouillonCharge = false;
+                    });
+                    _chargerBrouillonExistant();
+                  },
+                  child: const Text('Réessayer'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     if (atelierId == null || !_brouillonCharge) {
