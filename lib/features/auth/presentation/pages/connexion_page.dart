@@ -40,27 +40,34 @@ class _ConnexionPageState extends ConsumerState<ConnexionPage> {
     });
 
     try {
+      debugPrint('[connexion] appel authRepo.seConnecter...');
       final reponse = await ref
           .read(authRepositoryProvider)
           .seConnecter(telephone: _telephoneCtrl.text, pin: _pinCtrl.text);
 
       final String? id = reponse.user?.id;
+      debugPrint('[connexion] OK — user=$id');
       if (id == null) {
         throw const AuthException('Connexion impossible.');
       }
 
+      debugPrint('[connexion] récupération des données de compte...');
       await ref
           .read(recuperationCompteServiceProvider)
           .recupererDonneesCompte(id);
+      debugPrint('[connexion] récupération OK, navigation vers /');
 
       if (mounted) context.go('/');
     } on AuthException catch (e) {
+      debugPrint('[connexion] ÉCHEC (AuthException) : ${e.message}');
       if (mounted) {
         setState(
           () => _erreur = 'Numéro ou code PIN incorrect (${e.message}).',
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[connexion] ÉCHEC (exception) : $e');
+      debugPrint('[connexion] stack : $stack');
       if (mounted) setState(() => _erreur = 'Une erreur est survenue : $e');
     } finally {
       if (mounted) setState(() => _enCours = false);

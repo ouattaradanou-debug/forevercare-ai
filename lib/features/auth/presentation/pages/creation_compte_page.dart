@@ -89,9 +89,14 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
     final utilisateurRepo = ref.read(utilisateurRepositoryProvider);
 
     try {
+      debugPrint('[creation-compte] 1/5 appel authRepo.creerCompte...');
       final reponse = await authRepo.creerCompte(
         telephone: _telephoneCtrl.text,
         pin: _pinCtrl.text,
+      );
+      debugPrint(
+        '[creation-compte] 1/5 OK — user=${reponse.user?.id}, '
+        'session=${reponse.session != null}',
       );
 
       final String? id = reponse.user?.id;
@@ -104,29 +109,46 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
       }
       authentificationReussie = true;
 
+      debugPrint('[creation-compte] 2/5 appel atelierRepo.creerAtelier...');
       final atelier = await atelierRepo.creerAtelier(
         _nomAtelierCtrl.text.trim(),
       );
+      debugPrint('[creation-compte] 2/5 OK — atelier.id=${atelier.id}');
 
+      debugPrint(
+        '[creation-compte] 3/5 appel utilisateurRepo.creerUtilisateurProprietaire...',
+      );
       await utilisateurRepo.creerUtilisateurProprietaire(
         id: id,
         atelierId: atelier.id,
         nom: _nomProprietaireCtrl.text.trim(),
         telephone: _telephoneCtrl.text,
       );
+      debugPrint('[creation-compte] 3/5 OK');
 
       if (_logoChoisi != null) {
+        debugPrint('[creation-compte] 4/5 appel atelierRepo.televerserLogo...');
         await atelierRepo.televerserLogo(
           atelierId: atelier.id,
           fichierOriginal: File(_logoChoisi!.path),
         );
+        debugPrint('[creation-compte] 4/5 OK');
+      } else {
+        debugPrint('[creation-compte] 4/5 ignoré (pas de logo choisi)');
       }
 
+      debugPrint('[creation-compte] 5/5 navigation vers /');
       if (mounted) context.go('/');
     } on AuthException catch (e) {
+      debugPrint('[creation-compte] ÉCHEC (AuthException) : ${e.message}');
       if (mounted) setState(() => _erreur = e.message);
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[creation-compte] ÉCHEC (exception) : $e');
+      debugPrint('[creation-compte] stack : $stack');
       if (authentificationReussie) {
+        debugPrint(
+          '[creation-compte] déconnexion du compte fantôme suite à échec',
+        );
         await authRepo.seDeconnecter();
       }
       if (mounted) {
