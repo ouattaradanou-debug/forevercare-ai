@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_dimens.dart';
+import '../../../../shared/widgets/visionneuse_photo.dart';
 import 'section_titre.dart';
 
 /// Section photo réutilisable (tissu ou modèle) : choix explicite caméra
@@ -36,26 +37,33 @@ class SectionPhotos extends StatelessWidget {
           spacing: AppSpacing.s,
           runSpacing: AppSpacing.s,
           children: [
-            for (final String chemin in chemins)
+            for (int i = 0; i < chemins.length; i++)
               SizedBox(
                 width: 84,
                 height: 84,
                 child: Stack(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.champ),
-                      child: Image.file(
-                        File(chemin),
-                        width: 84,
-                        height: 84,
-                        fit: BoxFit.cover,
+                    GestureDetector(
+                      onTap: () => afficherPhotosPleinEcran(
+                        context,
+                        chemins: chemins,
+                        indexInitial: i,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.champ),
+                        child: Image.file(
+                          File(chemins[i]),
+                          width: 84,
+                          height: 84,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                     Positioned(
                       top: 2,
                       right: 2,
                       child: GestureDetector(
-                        onTap: () => onSupprimer(chemin),
+                        onTap: () => onSupprimer(chemins[i]),
                         child: const CircleAvatar(
                           radius: 11,
                           backgroundColor: Colors.black54,

@@ -10,6 +10,7 @@ import '../../../../data/models/client.dart';
 import '../../../../data/models/mesure.dart';
 import '../../../../data/models/photo.dart';
 import '../../../../data/models/rendez_vous.dart';
+import '../../../../shared/widgets/visionneuse_photo.dart';
 import '../providers/clients_providers.dart';
 import '../widgets/section_titre.dart';
 
@@ -197,18 +198,26 @@ class _GaleriePhotos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<String> chemins = photos.map((p) => p.cheminLocal).toList();
     return Wrap(
       spacing: AppSpacing.s,
       runSpacing: AppSpacing.s,
       children: [
-        for (final Photo photo in photos)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.champ),
-            child: Image.file(
-              File(photo.cheminLocal),
-              width: 84,
-              height: 84,
-              fit: BoxFit.cover,
+        for (int i = 0; i < photos.length; i++)
+          GestureDetector(
+            onTap: () => afficherPhotosPleinEcran(
+              context,
+              chemins: chemins,
+              indexInitial: i,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.champ),
+              child: Image.file(
+                File(photos[i].cheminLocal),
+                width: 84,
+                height: 84,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
       ],
