@@ -56,9 +56,9 @@ class GabaritRepository {
   }) {
     final query = _db.select(_db.typesTenue)
       ..where(
-        (t) =>
-            t.sexe.equals(sexe) &
-            (t.atelierId.isNull() | t.atelierId.equals(atelierId)),
+        (t) => t.sexe.equals(sexe).and(
+          t.atelierId.isNull().or(t.atelierId.equals(atelierId)),
+        ),
       )
       ..orderBy([(t) => OrderingTerm.asc(t.nom)]);
     return query.watch().map(
@@ -69,7 +69,7 @@ class GabaritRepository {
   Stream<List<ChampMesure>> observerChampsActifs(String typeTenueId) {
     final query = _db.select(_db.champsMesure)
       ..where(
-        (c) => c.typeTenueId.equals(typeTenueId) & c.statut.equals('actif'),
+        (c) => c.typeTenueId.equals(typeTenueId).and(c.statut.equals('actif')),
       )
       ..orderBy([(c) => OrderingTerm.asc(c.ordre)]);
     return query.watch().map(
