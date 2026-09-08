@@ -303,11 +303,11 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
     _programmerSauvegarde();
   }
 
-  void _ajouterRendezVous(DateTime dateHeure, String type) {
+  void _ajouterRendezVous(DateTime dateHeure) {
     setState(
       () => _rendezVous = [
         ..._rendezVous,
-        RendezVousBrouillon(dateHeure: dateHeure, type: type),
+        RendezVousBrouillon(dateHeure: dateHeure, type: 'essayage'),
       ],
     );
     _programmerSauvegarde();

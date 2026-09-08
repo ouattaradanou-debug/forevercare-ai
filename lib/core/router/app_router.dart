@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../data/models/client.dart';
 import '../../data/models/utilisateur.dart';
 import '../../features/auth/presentation/pages/connexion_page.dart';
 import '../../features/auth/presentation/pages/creation_compte_page.dart';
+import '../../features/clients/presentation/pages/client_detail_page.dart';
 import '../../features/clients/presentation/pages/clients_list_page.dart';
 import '../../features/clients/presentation/pages/formulaire_client_page.dart';
 import '../../features/home/presentation/home_page.dart';
@@ -74,6 +76,12 @@ final GoRouter appRouter = GoRouter(
           path: 'nouveau',
           name: 'nouveau-client',
           builder: (context, state) => const FormulaireClientPage(),
+        ),
+        GoRoute(
+          path: ':id',
+          name: 'client-detail',
+          builder: (context, state) =>
+              ClientDetailPage(client: state.extra as Client),
         ),
       ],
     ),

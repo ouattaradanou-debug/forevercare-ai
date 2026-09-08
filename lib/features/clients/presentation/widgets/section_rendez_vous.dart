@@ -7,14 +7,17 @@ import '../../../../data/models/brouillon_client.dart';
 import 'section_titre.dart';
 
 /// Section "Rendez-vous" : planification d'un ou plusieurs rendez-vous
-/// (essayage, livraison) pour ce client, directement pendant la création
-/// de sa fiche. Aucun rendez-vous n'est obligatoire.
+/// (juste une date et une heure, pas de type à choisir) pour ce client,
+/// directement pendant la création de sa fiche. Aucun rendez-vous n'est
+/// obligatoire.
 ///
 /// Les rendez-vous ajoutés ici restent dans le brouillon (voir
 /// `RendezVousBrouillon`) jusqu'à la finalisation de la fiche client, qui
 /// les transforme en vraies lignes `rendez_vous` — un rendez-vous ne peut
 /// pas exister avant que le client lui-même n'existe (voir schema.sql,
-/// `rendez_vous.client_id` obligatoire).
+/// `rendez_vous.client_id` obligatoire). La colonne `rendez_vous.type`
+/// reste obligatoire côté base (essayage/livraison) mais n'est plus
+/// demandée à l'utilisateur : on envoie systématiquement 'essayage'.
 class SectionRendezVous extends StatelessWidget {
   const SectionRendezVous({
     super.key,
@@ -24,7 +27,7 @@ class SectionRendezVous extends StatelessWidget {
   });
 
   final List<RendezVousBrouillon> rendezVous;
-  final void Function(DateTime dateHeure, String type) onAjouter;
+  final ValueChanged<DateTime> onAjouter;
   final ValueChanged<int> onSupprimer;
 
   Future<void> _choisirRendezVous(BuildContext context) async {
@@ -40,38 +43,11 @@ class SectionRendezVous extends StatelessWidget {
       context: context,
       initialTime: TimeOfDay.now(),
     );
-    if (heure == null || !context.mounted) return;
+    if (heure == null) return;
 
-    final String? type = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.checkroom_outlined),
-              title: const Text('Essayage'),
-              onTap: () => Navigator.of(ctx).pop('essayage'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.local_shipping_outlined),
-              title: const Text('Livraison'),
-              onTap: () => Navigator.of(ctx).pop('livraison'),
-            ),
-          ],
-        ),
-      ),
+    onAjouter(
+      DateTime(date.year, date.month, date.day, heure.hour, heure.minute),
     );
-    if (type == null) return;
-
-    final DateTime dateHeure = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      heure.hour,
-      heure.minute,
-    );
-    onAjouter(dateHeure, type);
   }
 
   @override
@@ -93,16 +69,11 @@ class SectionRendezVous extends StatelessWidget {
             child: Card(
               margin: EdgeInsets.zero,
               child: ListTile(
-                leading: Icon(
-                  rendezVous[i].type == 'livraison'
-                      ? Icons.local_shipping_outlined
-                      : Icons.checkroom_outlined,
+                leading: const Icon(
+                  Icons.event_available,
                   color: AppColors.or600,
                 ),
                 title: Text(format.format(rendezVous[i].dateHeure)),
-                subtitle: Text(
-                  rendezVous[i].type == 'livraison' ? 'Livraison' : 'Essayage',
-                ),
                 trailing: IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => onSupprimer(i),

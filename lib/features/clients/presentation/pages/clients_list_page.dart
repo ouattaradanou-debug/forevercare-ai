@@ -98,6 +98,11 @@ class _ClientsListPageState extends ConsumerState<ClientsListPage> {
                           ),
                           title: Text(client.nomComplet),
                           subtitle: Text(client.telephone ?? 'Aucun contact'),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => context.push(
+                            '/clients/${client.id}',
+                            extra: client,
+                          ),
                         ),
                       );
                     },

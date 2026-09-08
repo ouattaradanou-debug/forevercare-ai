@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/local/database_provider.dart';
 import '../../../../data/models/brouillon_client.dart';
 import '../../../../data/models/client.dart';
+import '../../../../data/models/mesure.dart';
+import '../../../../data/models/photo.dart';
+import '../../../../data/models/rendez_vous.dart';
 import '../../../../data/repositories/brouillon_repository.dart';
 import '../../../../data/repositories/client_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -37,3 +40,28 @@ final StreamProvider<List<Client>> clientsProvider = StreamProvider<List<Client>
   if (atelier == null) return Stream<List<Client>>.value(const []);
   return ref.watch(clientRepositoryProvider).observerClients(atelier.id);
 });
+
+/// Historique des mesures d'un client (la plus récente en premier).
+final mesuresClientProvider = StreamProvider.family<List<Mesure>, String>((
+  ref,
+  clientId,
+) {
+  return ref.watch(clientRepositoryProvider).observerMesuresClient(clientId);
+});
+
+/// Photos (tissu + modèle) d'un client.
+final photosClientProvider = StreamProvider.family<List<Photo>, String>((
+  ref,
+  clientId,
+) {
+  return ref.watch(clientRepositoryProvider).observerPhotosClient(clientId);
+});
+
+/// Rendez-vous planifiés pour un client.
+final rendezVousClientProvider = StreamProvider.family<List<RendezVous>, String>(
+  (ref, clientId) {
+    return ref
+        .watch(clientRepositoryProvider)
+        .observerRendezVousClient(clientId);
+  },
+);

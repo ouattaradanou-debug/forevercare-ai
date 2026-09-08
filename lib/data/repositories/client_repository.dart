@@ -177,6 +177,24 @@ class ClientRepository {
     );
   }
 
+  Stream<List<Mesure>> observerMesuresClient(String clientId) {
+    final query = _db.select(_db.mesures)
+      ..where((t) => t.clientId.equals(clientId))
+      ..orderBy([(t) => OrderingTerm.desc(t.datePrise)]);
+    return query.watch().map(
+      (lignes) => lignes.map(Mesure.depuisLigneLocale).toList(),
+    );
+  }
+
+  Stream<List<Photo>> observerPhotosClient(String clientId) {
+    final query = _db.select(_db.photos)
+      ..where((t) => t.clientId.equals(clientId))
+      ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]);
+    return query.watch().map(
+      (lignes) => lignes.map(Photo.depuisLigneLocale).toList(),
+    );
+  }
+
   Stream<List<RendezVous>> observerRendezVousClient(String clientId) {
     final query = _db.select(_db.rendezVousTable)
       ..where((t) => t.clientId.equals(clientId))
