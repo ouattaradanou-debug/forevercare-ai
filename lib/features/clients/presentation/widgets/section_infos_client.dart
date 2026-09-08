@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import 'section_titre.dart';
 
@@ -87,22 +88,83 @@ class SectionInfosClient extends StatelessWidget {
         const SizedBox(height: AppSpacing.s),
         Row(
           children: [
-            ChoiceChip(
-              label: const Text('Homme'),
-              selected: sexe == 'Homme',
-              onSelected: (selectionne) =>
-                  onSexeChange(selectionne ? 'Homme' : null),
+            Expanded(
+              child: _SelecteurSexe(
+                icone: Icons.male,
+                libelle: 'Homme',
+                selectionne: sexe == 'Homme',
+                onTap: () => onSexeChange(sexe == 'Homme' ? null : 'Homme'),
+              ),
             ),
             const SizedBox(width: AppSpacing.s),
-            ChoiceChip(
-              label: const Text('Femme'),
-              selected: sexe == 'Femme',
-              onSelected: (selectionne) =>
-                  onSexeChange(selectionne ? 'Femme' : null),
+            Expanded(
+              child: _SelecteurSexe(
+                icone: Icons.female,
+                libelle: 'Femme',
+                selectionne: sexe == 'Femme',
+                onTap: () => onSexeChange(sexe == 'Femme' ? null : 'Femme'),
+              ),
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Grand bouton visuel (icône + texte) pour choisir le sexe du client —
+/// pensé pour les tailleurs et tailleuses ne sachant ni lire ni écrire :
+/// le symbole homme/femme suffit à lui seul à faire le bon choix.
+class _SelecteurSexe extends StatelessWidget {
+  const _SelecteurSexe({
+    required this.icone,
+    required this.libelle,
+    required this.selectionne,
+    required this.onTap,
+  });
+
+  final IconData icone;
+  final String libelle;
+  final bool selectionne;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.champ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
+        decoration: BoxDecoration(
+          color: selectionne
+              ? AppColors.indigo700.withValues(alpha: 0.12)
+              : scheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.champ),
+          border: Border.all(
+            color: selectionne ? AppColors.indigo700 : scheme.outline,
+            width: selectionne ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icone,
+              size: 36,
+              color: selectionne ? AppColors.indigo700 : scheme.onSurface,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              libelle,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: selectionne ? AppColors.indigo700 : scheme.onSurface,
+                fontWeight: selectionne ? FontWeight.w700 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
