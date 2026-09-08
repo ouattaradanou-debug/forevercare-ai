@@ -65,3 +65,27 @@ final rendezVousClientProvider = StreamProvider.family<List<RendezVous>, String>
         .observerRendezVousClient(clientId);
   },
 );
+
+/// Tous les rendez-vous de l'atelier, du plus proche au plus lointain —
+/// pour l'écran "Rendez-vous" et le compteur du jour sur l'accueil.
+final rendezVousAtelierProvider =
+    StreamProvider<List<RendezVousAvecClient>>((ref) {
+      final atelier = ref.watch(atelierCourantProvider).asData?.value;
+      if (atelier == null) return Stream<List<RendezVousAvecClient>>.value(const []);
+      return ref
+          .watch(clientRepositoryProvider)
+          .observerRendezVousAtelier(atelier.id);
+    });
+
+/// Nombre de rendez-vous prévus aujourd'hui, tous clients confondus.
+final rendezVousAujourdhuiCompteProvider = Provider<int>((ref) {
+  final List<RendezVousAvecClient> tous =
+      ref.watch(rendezVousAtelierProvider).asData?.value ?? const [];
+  final DateTime maintenant = DateTime.now();
+  return tous.where((r) {
+    final DateTime d = r.rendezVous.dateHeure;
+    return d.year == maintenant.year &&
+        d.month == maintenant.month &&
+        d.day == maintenant.day;
+  }).length;
+});

@@ -43,6 +43,9 @@ class HomePage extends ConsumerWidget {
     final bool aUnBrouillon =
         brouillon != null && !brouillon.estCompletementVide;
     final int nombreClients = ref.watch(clientsProvider).asData?.value.length ?? 0;
+    final int nombreRendezVousAujourdhui = ref.watch(
+      rendezVousAujourdhuiCompteProvider,
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -96,6 +99,12 @@ class HomePage extends ConsumerWidget {
                         couleurAccent: AppColors.terracotta600,
                         onTap: () => context.push('/clients'),
                       ),
+                      HomeActionCard(
+                        icone: Icons.event_available,
+                        libelle: 'Rendez-vous',
+                        couleurAccent: AppColors.or600,
+                        onTap: () => context.push('/rendez-vous'),
+                      ),
                       if (estProprietaire)
                         HomeActionCard(
                           icone: Icons.groups_2_outlined,
@@ -110,7 +119,10 @@ class HomePage extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.xl),
                   Text("Aujourd'hui", style: texte.headlineMedium),
                   const SizedBox(height: AppSpacing.m),
-                  _RangeeStatistiques(nombreClients: nombreClients),
+                  _RangeeStatistiques(
+                    nombreClients: nombreClients,
+                    nombreRendezVous: nombreRendezVousAujourdhui,
+                  ),
                 ]),
               ),
             ),
@@ -290,9 +302,13 @@ class _BandeauEssaiGratuit extends StatelessWidget {
 }
 
 class _RangeeStatistiques extends StatelessWidget {
-  const _RangeeStatistiques({required this.nombreClients});
+  const _RangeeStatistiques({
+    required this.nombreClients,
+    required this.nombreRendezVous,
+  });
 
   final int nombreClients;
+  final int nombreRendezVous;
 
   @override
   Widget build(BuildContext context) {
@@ -308,12 +324,13 @@ class _RangeeStatistiques extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.m),
-        const Expanded(
+        Expanded(
           child: _CarteStatistique(
             icone: Icons.event_outlined,
-            valeur: '0',
-            libelle: 'Rendez-vous',
+            valeur: '$nombreRendezVous',
+            libelle: "Rendez-vous aujourd'hui",
             couleurAccent: AppColors.terracotta600,
+            onTap: () => context.push('/rendez-vous'),
           ),
         ),
       ],

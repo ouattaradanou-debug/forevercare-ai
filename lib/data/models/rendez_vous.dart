@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show Value;
 
 import '../local/app_database.dart';
+import 'client.dart';
 
 /// Type de rendez-vous : essai (essayage) ou remise de la commande
 /// terminée (livraison).
@@ -79,4 +80,14 @@ class RendezVous {
       updatedAt: Value(updatedAt),
     );
   }
+}
+
+/// Un rendez-vous accompagné du client concerné — pour l'écran "Rendez-vous"
+/// de l'atelier, où l'on affiche le nom du client à côté de chaque date
+/// (la table `rendez_vous` ne connaît elle-même que `client_id`).
+class RendezVousAvecClient {
+  const RendezVousAvecClient({required this.rendezVous, required this.client});
+
+  final RendezVous rendezVous;
+  final Client client;
 }

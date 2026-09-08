@@ -203,4 +203,34 @@ class ClientRepository {
       (lignes) => lignes.map(RendezVous.depuisLigneLocale).toList(),
     );
   }
+
+  /// Tous les rendez-vous de l'atelier (tous clients confondus), du plus
+  /// proche au plus lointain — pour l'écran "Rendez-vous" de l'accueil.
+  /// `rendez_vous` ne porte pas directement `atelier_id` : on passe par une
+  /// jointure avec `clients`.
+  Stream<List<RendezVousAvecClient>> observerRendezVousAtelier(
+    String atelierId,
+  ) {
+    final query =
+        _db.select(_db.rendezVousTable).join([
+            innerJoin(
+              _db.clients,
+              _db.clients.id.equalsExp(_db.rendezVousTable.clientId),
+            ),
+          ])
+          ..where(_db.clients.atelierId.equals(atelierId))
+          ..orderBy([OrderingTerm.asc(_db.rendezVousTable.dateHeure)]);
+    return query.watch().map(
+      (lignes) => lignes
+          .map(
+            (ligne) => RendezVousAvecClient(
+              rendezVous: RendezVous.depuisLigneLocale(
+                ligne.readTable(_db.rendezVousTable),
+              ),
+              client: Client.depuisLigneLocale(ligne.readTable(_db.clients)),
+            ),
+          )
+          .toList(),
+    );
+  }
 }
