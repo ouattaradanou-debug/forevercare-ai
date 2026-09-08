@@ -50,6 +50,28 @@ class GabaritRepository {
     }
   }
 
+  /// Résout le gabarit à utiliser pour un sexe donné : celui propre à
+  /// l'atelier s'il existe, sinon le gabarit par défaut (`atelier_id`
+  /// nul). Depuis le correctif "plus de choix de type de tenue", il n'en
+  /// existe plus qu'un seul par sexe (voir supabase/seed_gabarits.sql) —
+  /// appelé automatiquement dès que le sexe du client est renseigné, sans
+  /// aucune sélection de la part de l'utilisatrice ou l'utilisateur.
+  Future<String?> resoudreTypeTenue({
+    required String sexe,
+    required String atelierId,
+  }) async {
+    final query = _db.select(_db.typesTenue)
+      ..where(
+        (t) =>
+            t.sexe.equals(sexe) &
+            (t.atelierId.isNull() | t.atelierId.equals(atelierId)),
+      )
+      ..orderBy([(t) => OrderingTerm.desc(t.atelierId)])
+      ..limit(1);
+    final TypeTenueLocal? ligne = await query.getSingleOrNull();
+    return ligne?.id;
+  }
+
   Stream<List<TypeTenue>> observerTypesTenue({
     required String sexe,
     required String atelierId,

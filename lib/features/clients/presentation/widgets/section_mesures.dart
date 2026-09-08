@@ -5,34 +5,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../data/models/champ_mesure.dart';
-import '../../../../data/models/type_tenue.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import 'section_titre.dart';
 
-/// Section "Mesures" : sélection du type de tenue puis formulaire
-/// dynamique généré à partir du gabarit correspondant. Aucun champ n'est
+/// Section "Mesures" : formulaire dynamique généré à partir du gabarit de
+/// mesures du sexe du client — plus de choix de "type de tenue" (correctif
+/// : un seul gabarit par sexe, résolu automatiquement par la page parente
+/// dès que le sexe est renseigné, voir `GabaritRepository.resoudreTypeTenue`
+/// et `_FormulaireClientPageState._resoudreTypeTenue`). Aucun champ n'est
 /// obligatoire.
 ///
-/// Widget à état pour mettre en cache les flux Drift (types de tenue,
-/// champs du gabarit sélectionné) et ne les recréer que lorsque `sexe` ou
-/// `typeTenueId` changent réellement — la page parente se reconstruit à
-/// chaque interaction (photo ajoutée, date choisie...), ce qui recréerait
-/// sinon inutilement ces flux à chaque fois.
+/// Widget à état pour mettre en cache le flux Drift des champs du gabarit
+/// et ne le recréer que lorsque `typeTenueId` change réellement — la page
+/// parente se reconstruit à chaque interaction (photo ajoutée, date
+/// choisie...), ce qui recréerait sinon inutilement ce flux à chaque fois.
 class SectionMesures extends ConsumerStatefulWidget {
   const SectionMesures({
     super.key,
-    required this.atelierId,
     required this.sexe,
     required this.typeTenueId,
-    required this.onTypeTenueChange,
     required this.valeursMesures,
     required this.onValeurChange,
   });
 
-  final String atelierId;
   final String? sexe;
   final String? typeTenueId;
-  final ValueChanged<String?> onTypeTenueChange;
   final Map<String, String> valeursMesures;
   final void Function(String nomChamp, String valeur) onValeurChange;
 
@@ -41,35 +38,20 @@ class SectionMesures extends ConsumerStatefulWidget {
 }
 
 class _SectionMesuresState extends ConsumerState<SectionMesures> {
-  Stream<List<TypeTenue>>? _fluxTypes;
   Stream<List<ChampMesure>>? _fluxChamps;
 
   @override
   void initState() {
     super.initState();
-    _reconstruireFluxTypes();
     _reconstruireFluxChamps();
   }
 
   @override
   void didUpdateWidget(covariant SectionMesures oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.sexe != widget.sexe ||
-        oldWidget.atelierId != widget.atelierId) {
-      _reconstruireFluxTypes();
-    }
     if (oldWidget.typeTenueId != widget.typeTenueId) {
       _reconstruireFluxChamps();
     }
-  }
-
-  void _reconstruireFluxTypes() {
-    final String? sexe = widget.sexe;
-    _fluxTypes = sexe == null
-        ? null
-        : ref
-              .read(gabaritRepositoryProvider)
-              .observerTypesTenue(sexe: sexe, atelierId: widget.atelierId);
   }
 
   void _reconstruireFluxChamps() {
@@ -90,38 +72,15 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
           couleur: AppColors.terracotta600,
         ),
         const SizedBox(height: AppSpacing.m),
-        if (_fluxTypes == null)
+        if (widget.sexe == null)
           Text(
-            'Renseigne le sexe du client ci-dessus pour choisir un type de '
-            'tenue.',
+            'Renseigne le sexe du client ci-dessus pour afficher les champs '
+            'de mesure.',
             style: Theme.of(context).textTheme.bodyMedium,
           )
+        else if (_fluxChamps == null)
+          const SizedBox.shrink()
         else
-          StreamBuilder<List<TypeTenue>>(
-            stream: _fluxTypes,
-            builder: (context, snapshot) {
-              final List<TypeTenue> types = snapshot.data ?? const [];
-              return InputDecorator(
-                decoration: const InputDecoration(labelText: 'Type de tenue'),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: types.any((t) => t.id == widget.typeTenueId)
-                        ? widget.typeTenueId
-                        : null,
-                    isExpanded: true,
-                    hint: const Text('Choisir un type de tenue'),
-                    items: [
-                      for (final TypeTenue t in types)
-                        DropdownMenuItem(value: t.id, child: Text(t.nom)),
-                    ],
-                    onChanged: widget.onTypeTenueChange,
-                  ),
-                ),
-              );
-            },
-          ),
-        if (_fluxChamps != null) ...[
-          const SizedBox(height: AppSpacing.m),
           StreamBuilder<List<ChampMesure>>(
             stream: _fluxChamps,
             builder: (context, snapshot) {
@@ -155,7 +114,6 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
               );
             },
           ),
-        ],
       ],
     );
   }

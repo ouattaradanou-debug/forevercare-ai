@@ -159,13 +159,16 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
       _telephoneCtrl.text = brouillon.telephone ?? '';
       _sexe = brouillon.sexe;
       _datePriseMesures = brouillon.datePriseMesures;
-      _typeTenueId = brouillon.typeTenueId;
       _valeursMesures = Map.of(brouillon.valeursMesures);
       _photosTissu = List.of(brouillon.photosTissu);
       _photosModele = List.of(brouillon.photosModele);
       _rendezVous = List.of(brouillon.rendezVousEnAttente);
       _brouillonCharge = true;
     });
+    // Ne jamais réutiliser tel quel un `typeTenueId` de brouillon : il
+    // pourrait pointer vers un ancien gabarit par vêtement, supprimé par
+    // la fusion des mesures (voir _resoudreTypeTenue ci-dessous).
+    await _resoudreTypeTenue();
   }
 
   String? _texteOuNull(String v) => v.trim().isEmpty ? null : v.trim();
@@ -211,6 +214,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
 
   void _onSexeChange(String? valeur) {
     setState(() => _sexe = valeur);
+    _resoudreTypeTenue();
     _programmerSauvegarde();
   }
 
@@ -219,9 +223,24 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
     _programmerSauvegarde();
   }
 
-  void _onTypeTenueChange(String? valeur) {
-    setState(() => _typeTenueId = valeur);
-    _programmerSauvegarde();
+  /// Plus de choix de "type de tenue" dans le formulaire : un seul
+  /// gabarit de mesures par sexe (voir supabase/seed_gabarits.sql), résolu
+  /// automatiquement dès que le sexe du client est connu. Appelé au
+  /// changement de sexe et au chargement d'un brouillon existant, pour ne
+  /// jamais dépendre d'un `typeTenueId` sauvegardé qui pourrait pointer
+  /// vers un ancien gabarit supprimé (voir
+  /// supabase/migration_phase2_fusion_mesures.sql).
+  Future<void> _resoudreTypeTenue() async {
+    final String? sexe = _sexe;
+    final String? atelierId = ref.read(atelierCourantProvider).asData?.value?.id;
+    if (sexe == null || atelierId == null) {
+      if (mounted) setState(() => _typeTenueId = null);
+      return;
+    }
+    final String? typeTenueId = await ref
+        .read(gabaritRepositoryProvider)
+        .resoudreTypeTenue(sexe: sexe, atelierId: atelierId);
+    if (mounted) setState(() => _typeTenueId = typeTenueId);
   }
 
   void _onValeurMesureChange(String nomChamp, String valeur) {
@@ -480,10 +499,8 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
             KeyedSubtree(
               key: _mesuresKey,
               child: SectionMesures(
-                atelierId: atelierId,
                 sexe: _sexe,
                 typeTenueId: _typeTenueId,
-                onTypeTenueChange: _onTypeTenueChange,
                 valeursMesures: _valeursMesures,
                 onValeurChange: _onValeurMesureChange,
               ),
