@@ -36,8 +36,9 @@ Future<void> main() async {
       await container
           .read(recuperationCompteServiceProvider)
           .recupererDonneesCompte(session.user.id);
-    } catch (_) {
+    } catch (e) {
       // Best-effort : voir commentaire ci-dessus.
+      debugPrint('Échec de la récupération des données au démarrage : $e');
     }
   }
 
