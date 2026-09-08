@@ -74,6 +74,13 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
       _erreur = null;
     });
 
+    // Si la création du compte Supabase Auth réussit mais qu'une étape
+    // suivante échoue (atelier, ligne utilisateurs, logo...), on
+    // déconnecte pour éviter de laisser une session authentifiée "fantôme"
+    // sans aucune donnée applicative associée — un tel compte resterait
+    // sinon connecté indéfiniment sans jamais pouvoir charger d'atelier.
+    bool authentificationReussie = false;
+
     try {
       final reponse = await ref
           .read(authRepositoryProvider)
@@ -87,6 +94,7 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
           "> Providers > Email > Confirm email).",
         );
       }
+      authentificationReussie = true;
 
       final atelier = await ref
           .read(atelierRepositoryProvider)
@@ -114,7 +122,16 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
     } on AuthException catch (e) {
       if (mounted) setState(() => _erreur = e.message);
     } catch (e) {
-      if (mounted) setState(() => _erreur = 'Une erreur est survenue : $e');
+      if (authentificationReussie) {
+        await ref.read(authRepositoryProvider).seDeconnecter();
+      }
+      if (mounted) {
+        setState(
+          () => _erreur =
+              "La création du compte n'a pas pu être terminée : $e. "
+              'Réessaie.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _enCours = false);
     }
