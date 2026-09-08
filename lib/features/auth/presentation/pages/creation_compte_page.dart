@@ -79,12 +79,20 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
     // déconnecte pour éviter de laisser une session authentifiée "fantôme"
     // sans aucune donnée applicative associée — un tel compte resterait
     // sinon connecté indéfiniment sans jamais pouvoir charger d'atelier.
+    // Les repositories sont lus une seule fois ici, avant tout "await" :
+    // le widget est alors certainement monté, et on évite d'avoir à
+    // relire "ref" plus tard dans le catch, potentiellement après que le
+    // widget a été démonté.
     bool authentificationReussie = false;
+    final authRepo = ref.read(authRepositoryProvider);
+    final atelierRepo = ref.read(atelierRepositoryProvider);
+    final utilisateurRepo = ref.read(utilisateurRepositoryProvider);
 
     try {
-      final reponse = await ref
-          .read(authRepositoryProvider)
-          .creerCompte(telephone: _telephoneCtrl.text, pin: _pinCtrl.text);
+      final reponse = await authRepo.creerCompte(
+        telephone: _telephoneCtrl.text,
+        pin: _pinCtrl.text,
+      );
 
       final String? id = reponse.user?.id;
       if (id == null || reponse.session == null) {
@@ -96,26 +104,22 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
       }
       authentificationReussie = true;
 
-      final atelier = await ref
-          .read(atelierRepositoryProvider)
-          .creerAtelier(_nomAtelierCtrl.text.trim());
+      final atelier = await atelierRepo.creerAtelier(
+        _nomAtelierCtrl.text.trim(),
+      );
 
-      await ref
-          .read(utilisateurRepositoryProvider)
-          .creerUtilisateurProprietaire(
-            id: id,
-            atelierId: atelier.id,
-            nom: _nomProprietaireCtrl.text.trim(),
-            telephone: _telephoneCtrl.text,
-          );
+      await utilisateurRepo.creerUtilisateurProprietaire(
+        id: id,
+        atelierId: atelier.id,
+        nom: _nomProprietaireCtrl.text.trim(),
+        telephone: _telephoneCtrl.text,
+      );
 
       if (_logoChoisi != null) {
-        await ref
-            .read(atelierRepositoryProvider)
-            .televerserLogo(
-              atelierId: atelier.id,
-              fichierOriginal: File(_logoChoisi!.path),
-            );
+        await atelierRepo.televerserLogo(
+          atelierId: atelier.id,
+          fichierOriginal: File(_logoChoisi!.path),
+        );
       }
 
       if (mounted) context.go('/');
@@ -123,7 +127,7 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
       if (mounted) setState(() => _erreur = e.message);
     } catch (e) {
       if (authentificationReussie) {
-        await ref.read(authRepositoryProvider).seDeconnecter();
+        await authRepo.seDeconnecter();
       }
       if (mounted) {
         setState(

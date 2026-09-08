@@ -13,17 +13,20 @@ class AtelierPlusApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Dès qu'une session devient active — connexion manuelle ou
-    // restauration automatique de la session par Supabase au démarrage,
-    // sans repasser par l'écran de connexion — on rapatrie les données
-    // locales (voir RecuperationCompteService). S'appuyer sur ce flux
-    // plutôt que sur une simple vérification juste après
-    // Supabase.initialize() évite toute hypothèse sur le moment exact où
-    // la session persistée est restaurée (potentiellement asynchrone).
+    // Uniquement pour le cas d'une session déjà active restaurée
+    // automatiquement par Supabase au tout premier démarrage de l'app
+    // (sans repasser par l'écran de connexion) : on rapatrie les données
+    // locales une fois (voir RecuperationCompteService). On se limite
+    // volontairement à la toute première évaluation du flux (`previous ==
+    // null`) : une connexion ou une inscription faite pendant que l'app
+    // tourne est déjà prise en charge, au bon moment, par ConnexionPage /
+    // CreationComptePage elles-mêmes — les déclencher aussi ici les
+    // ferait courir en même temps que ces écrans, avant même que la ligne
+    // `utilisateurs` n'existe encore côté inscription.
     ref.listen<AsyncValue<AuthState>>(etatAuthProvider, (previous, next) {
-      final bool avaitDejaUneSession = previous?.asData?.value.session != null;
+      if (previous != null) return;
       final String? idUtilisateur = next.asData?.value.session?.user.id;
-      if (!avaitDejaUneSession && idUtilisateur != null) {
+      if (idUtilisateur != null) {
         ref
             .read(recuperationCompteServiceProvider)
             .recupererDonneesCompte(idUtilisateur)
