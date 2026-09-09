@@ -184,7 +184,8 @@ class _EnTeteAtelier extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final String nomAtelier = atelier?.nom ?? 'Mon atelier';
+    final Atelier? atelierActuel = atelier;
+    final String nomAtelier = atelierActuel?.nom ?? 'Mon atelier';
     final String prenomUtilisateur = utilisateur?.nom.split(' ').first ?? '';
 
     return Container(
@@ -211,8 +212,8 @@ class _EnTeteAtelier extends ConsumerWidget {
           Row(
             children: [
               GestureDetector(
-                onTap: utilisateur?.estProprietaire == true && atelier != null
-                    ? () => _changerLogo(context, ref, atelier.id)
+                onTap: utilisateur?.estProprietaire == true && atelierActuel != null
+                    ? () => _changerLogo(context, ref, atelierActuel.id)
                     : null,
                 child: Stack(
                   children: [
