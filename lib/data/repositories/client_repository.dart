@@ -132,6 +132,155 @@ class ClientRepository {
     return client;
   }
 
+  /// Met à jour la fiche d'un client déjà finalisé : identité (nom,
+  /// prénom, téléphone, sexe, date de prise des mesures — remplacée sur
+  /// place, contrairement aux mesures) et, si renseignées, une nouvelle
+  /// prise de mesures, de nouvelles photos et/ou de nouveaux rendez-vous.
+  ///
+  /// Les mesures restent historisées (voir `Mesures` dans
+  /// app_database.dart) : `actualiserMesures` ajoute toujours une NOUVELLE
+  /// ligne plutôt que de modifier une prise existante, pour conserver
+  /// l'historique des mesures du client dans le temps.
+  Future<void> actualiserClient({
+    required Client client,
+    String? nom,
+    String? prenom,
+    String? telephone,
+    String? sexe,
+    DateTime? datePriseMesures,
+    String? typeTenueId,
+    required Map<String, String> valeursMesures,
+    required String utilisateurId,
+    required List<String> cheminsPhotosTissu,
+    required List<String> cheminsPhotosModele,
+    List<RendezVousBrouillon> rendezVous = const [],
+  }) async {
+    final DateTime maintenant = DateTime.now();
+
+    final Client clientMisAJour = Client(
+      id: client.id,
+      atelierId: client.atelierId,
+      nom: nom,
+      prenom: prenom,
+      telephone: telephone,
+      sexe: sexe,
+      datePriseMesures: datePriseMesures,
+      createdAt: client.createdAt,
+      updatedAt: maintenant,
+    );
+    await _db
+        .into(_db.clients)
+        .insertOnConflictUpdate(clientMisAJour.versCompagnonLocal());
+
+    final bool nouvelleMesure =
+        typeTenueId != null &&
+        valeursMesures.values.any((v) => v.trim().isNotEmpty);
+    final Mesure? mesure = !nouvelleMesure
+        ? null
+        : Mesure(
+            id: _uuid.v4(),
+            clientId: client.id,
+            typeTenueId: typeTenueId,
+            datePrise: maintenant,
+            valeurs: valeursMesures,
+            prisePar: utilisateurId,
+            createdAt: maintenant,
+          );
+    if (mesure != null) {
+      await _db
+          .into(_db.mesures)
+          .insertOnConflictUpdate(mesure.versCompagnonLocal());
+    }
+
+    final List<Photo> photos = [
+      for (final String chemin in cheminsPhotosTissu)
+        Photo(
+          id: _uuid.v4(),
+          clientId: client.id,
+          type: 'tissu',
+          cheminLocal: chemin,
+          source: 'galerie',
+          createdAt: maintenant,
+        ),
+      for (final String chemin in cheminsPhotosModele)
+        Photo(
+          id: _uuid.v4(),
+          clientId: client.id,
+          type: 'modele',
+          cheminLocal: chemin,
+          source: 'galerie',
+          createdAt: maintenant,
+        ),
+    ];
+    for (final Photo photo in photos) {
+      await _db
+          .into(_db.photos)
+          .insertOnConflictUpdate(photo.versCompagnonLocal());
+    }
+
+    final List<RendezVous> rendezVousCrees = [
+      for (final RendezVousBrouillon r in rendezVous)
+        RendezVous(
+          id: _uuid.v4(),
+          clientId: client.id,
+          dateHeure: r.dateHeure,
+          type: TypeRendezVous.depuisTexte(r.type),
+          createdAt: maintenant,
+          updatedAt: maintenant,
+        ),
+    ];
+    for (final RendezVous rdv in rendezVousCrees) {
+      await _db
+          .into(_db.rendezVousTable)
+          .insertOnConflictUpdate(rdv.versCompagnonLocal());
+    }
+
+    if (await _estEnLigne()) {
+      try {
+        await _client
+            .from('clients')
+            .update({
+              'nom': clientMisAJour.nom,
+              'prenom': clientMisAJour.prenom,
+              'telephone': clientMisAJour.telephone,
+              'sexe': clientMisAJour.sexe,
+              'date_prise_mesures': clientMisAJour.datePriseMesures
+                  ?.toIso8601String(),
+            })
+            .eq('id', client.id);
+        if (mesure != null) {
+          await _client.from('mesures').insert({
+            'id': mesure.id,
+            'client_id': mesure.clientId,
+            'type_tenue_id': mesure.typeTenueId,
+            'valeurs': mesure.valeurs,
+            'prise_par': mesure.prisePar,
+          });
+        }
+        // Les photos restent locales pour l'instant, comme dans
+        // finaliserClient (envoi vers Supabase Storage prévu avec le
+        // reste du moteur de synchronisation, voir Photo dans
+        // app_database.dart).
+        if (rendezVousCrees.isNotEmpty) {
+          await _client
+              .from('rendez_vous')
+              .insert([
+                for (final RendezVous rdv in rendezVousCrees)
+                  {
+                    'id': rdv.id,
+                    'client_id': rdv.clientId,
+                    'date_heure': rdv.dateHeure.toIso8601String(),
+                    'type': rdv.type.name,
+                  },
+              ]);
+        }
+      } catch (_) {
+        // Best-effort : les données restent valides localement et seront
+        // resynchronisées par le moteur de synchronisation de la Phase 3.
+      }
+    }
+  }
+
   Future<void> _synchroniserVersSupabase(
     Client client,
     Mesure mesure,
@@ -166,6 +315,13 @@ class ClientRepository {
               },
           ]);
     }
+  }
+
+  Stream<Client?> observerClient(String id) {
+    final query = _db.select(_db.clients)..where((t) => t.id.equals(id));
+    return query.watchSingleOrNull().map(
+      (ligne) => ligne == null ? null : Client.depuisLigneLocale(ligne),
+    );
   }
 
   Stream<List<Client>> observerClients(String atelierId) {

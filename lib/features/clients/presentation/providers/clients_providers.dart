@@ -41,6 +41,16 @@ final StreamProvider<List<Client>> clientsProvider = StreamProvider<List<Client>
   return ref.watch(clientRepositoryProvider).observerClients(atelier.id);
 });
 
+/// Fiche d'un client, à jour en direct (utile pour refléter immédiatement
+/// une modification faite depuis ModifierClientPage sans revenir à la
+/// liste).
+final clientDetailProvider = StreamProvider.family<Client?, String>((
+  ref,
+  clientId,
+) {
+  return ref.watch(clientRepositoryProvider).observerClient(clientId);
+});
+
 /// Historique des mesures d'un client (la plus récente en premier).
 final mesuresClientProvider = StreamProvider.family<List<Mesure>, String>((
   ref,
