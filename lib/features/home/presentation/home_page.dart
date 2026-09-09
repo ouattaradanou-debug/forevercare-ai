@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -9,6 +12,7 @@ import '../../../core/theme/app_dimens.dart';
 import '../../../data/models/atelier.dart';
 import '../../../data/models/brouillon_client.dart';
 import '../../../data/models/utilisateur.dart';
+import '../../../shared/widgets/selecteur_photo.dart';
 import '../../../shared/widgets/stitched_divider.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
 import '../../clients/presentation/providers/clients_providers.dart';
@@ -154,6 +158,30 @@ class _EnTeteAtelier extends ConsumerWidget {
     return '$premiere$seconde';
   }
 
+  // Il n'existait jusqu'ici aucun moyen d'ajouter ou de changer le logo une
+  // fois le compte créé (uniquement possible pendant l'inscription) — un
+  // atelier créé sans logo à ce moment-là n'en avait ensuite plus jamais.
+  // Appuyer sur l'avatar (propriétaire uniquement, voir policy RLS
+  // `ateliers_update_proprietaire`) permet de le faire à tout moment.
+  Future<void> _changerLogo(
+    BuildContext context,
+    WidgetRef ref,
+    String atelierId,
+  ) async {
+    try {
+      final XFile? photo = await choisirPhoto(context);
+      if (photo == null) return;
+      await ref
+          .read(atelierRepositoryProvider)
+          .televerserLogo(atelierId: atelierId, fichierOriginal: File(photo.path));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Impossible d'enregistrer le logo : $e")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final String nomAtelier = atelier?.nom ?? 'Mon atelier';
@@ -182,19 +210,42 @@ class _EnTeteAtelier extends ConsumerWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: AppColors.or500,
-                backgroundImage: atelier?.logoUrl != null
-                    ? CachedNetworkImageProvider(atelier!.logoUrl!)
+              GestureDetector(
+                onTap: utilisateur?.estProprietaire == true && atelier != null
+                    ? () => _changerLogo(context, ref, atelier.id)
                     : null,
-                child: atelier?.logoUrl == null
-                    ? Text(
-                        _initiales(nomAtelier),
-                        style: Theme.of(context).textTheme.titleLarge
-                            ?.copyWith(color: AppColors.anthracite900),
-                      )
-                    : null,
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundColor: AppColors.or500,
+                      backgroundImage: atelier?.logoUrl != null
+                          ? CachedNetworkImageProvider(atelier!.logoUrl!)
+                          : null,
+                      child: atelier?.logoUrl == null
+                          ? Text(
+                              _initiales(nomAtelier),
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(color: AppColors.anthracite900),
+                            )
+                          : null,
+                    ),
+                    if (utilisateur?.estProprietaire == true)
+                      Positioned(
+                        right: -2,
+                        bottom: -2,
+                        child: CircleAvatar(
+                          radius: 10,
+                          backgroundColor: AppColors.or600,
+                          child: const Icon(
+                            Icons.photo_camera_outlined,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(width: AppSpacing.m),
               Expanded(

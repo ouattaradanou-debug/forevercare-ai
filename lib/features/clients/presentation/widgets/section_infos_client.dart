@@ -90,7 +90,7 @@ class SectionInfosClient extends StatelessWidget {
           children: [
             Expanded(
               child: _SelecteurSexe(
-                icone: Icons.male,
+                icone: Icons.man,
                 libelle: 'Homme',
                 selectionne: sexe == 'Homme',
                 onTap: () => onSexeChange(sexe == 'Homme' ? null : 'Homme'),
@@ -99,7 +99,7 @@ class SectionInfosClient extends StatelessWidget {
             const SizedBox(width: AppSpacing.s),
             Expanded(
               child: _SelecteurSexe(
-                icone: Icons.female,
+                icone: Icons.woman,
                 libelle: 'Femme',
                 selectionne: sexe == 'Femme',
                 onTap: () => onSexeChange(sexe == 'Femme' ? null : 'Femme'),
@@ -151,7 +151,7 @@ class _SelecteurSexe extends StatelessWidget {
           children: [
             Icon(
               icone,
-              size: 36,
+              size: 48,
               color: selectionne ? AppColors.indigo700 : scheme.onSurface,
             ),
             const SizedBox(height: AppSpacing.xs),
