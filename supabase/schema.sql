@@ -353,6 +353,25 @@ create index if not exists idx_paiements_commande on public.paiements (commande_
 
 
 -- =============================================================================
+-- TABLE : depenses  — accès strictement réservé au rôle propriétaire (RLS)
+-- =============================================================================
+-- Rattachée directement à l'atelier (pas à un client, contrairement à
+-- `paiements`). Le "récapitulatif annuel" de l'application filtre
+-- l'historique complet par période, sans jamais rien supprimer ni
+-- réinitialiser côté base.
+create table if not exists public.depenses (
+  id            uuid primary key default gen_random_uuid(),
+  atelier_id    uuid not null references public.ateliers (id) on delete cascade,
+  montant       numeric(12, 2) not null check (montant > 0),
+  description   text,
+  date_depense  timestamptz not null default now(),
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists idx_depenses_atelier on public.depenses (atelier_id);
+
+
+-- =============================================================================
 -- TABLE : journal_actions
 -- Journal d'audit en lecture seule (aucune policy UPDATE/DELETE).
 -- =============================================================================
@@ -419,6 +438,7 @@ alter table public.photos              enable row level security;
 alter table public.rendez_vous         enable row level security;
 alter table public.commandes           enable row level security;
 alter table public.paiements           enable row level security;
+alter table public.depenses            enable row level security;
 alter table public.journal_actions     enable row level security;
 alter table public.abonnements         enable row level security;
 
@@ -786,6 +806,26 @@ create policy "paiements_insert_proprietaire_uniquement"
 
 -- Pas de policy UPDATE ni DELETE : un paiement enregistré est définitif ;
 -- une correction se fait par un nouveau paiement (avoir/ajustement).
+
+-- -----------------------------------------------------------------------------
+-- depenses — RÉSERVÉ AU PROPRIÉTAIRE, sans aucune exception de permission.
+-- -----------------------------------------------------------------------------
+create policy "depenses_select_proprietaire_uniquement"
+  on public.depenses for select
+  using (
+    public.mon_role() = 'proprietaire'
+    and atelier_id = public.mon_atelier_id()
+  );
+
+create policy "depenses_insert_proprietaire_uniquement"
+  on public.depenses for insert
+  with check (
+    public.mon_role() = 'proprietaire'
+    and atelier_id = public.mon_atelier_id()
+  );
+
+-- Pas de policy UPDATE ni DELETE : une dépense erronée se corrige par une
+-- nouvelle dépense, comme pour `paiements`.
 
 -- -----------------------------------------------------------------------------
 -- journal_actions — journal d'audit en lecture seule pour le propriétaire.

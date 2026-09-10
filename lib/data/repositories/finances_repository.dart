@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../local/app_database.dart';
 import '../models/commande.dart';
+import '../models/depense.dart';
 import '../models/paiement.dart';
 
 /// Finances d'un client : montant total convenu, avance versée et
@@ -271,6 +272,66 @@ class FinancesRepository {
       _db.paiements,
     )..where((t) => t.id.equals(paiement.id))).write(
       const PaiementsCompanion(synced: Value(true)),
+    );
+  }
+
+  /// Toutes les dépenses de l'atelier — pour l'écran "Suivi des dépenses"
+  /// (dépenses journalières/hebdomadaires/mensuelles/annuelles).
+  Stream<List<Depense>> observerDepensesAtelier(String atelierId) {
+    final query = _db.select(_db.depenses)
+      ..where((t) => t.atelierId.equals(atelierId))
+      ..orderBy([(t) => OrderingTerm.desc(t.dateDepense)]);
+    return query.watch().map(
+      (lignes) => lignes.map(Depense.depuisLigneLocale).toList(),
+    );
+  }
+
+  /// Enregistre une nouvelle dépense de l'atelier.
+  Future<void> ajouterDepense({
+    required String atelierId,
+    required double montant,
+    String? description,
+    DateTime? date,
+  }) async {
+    if (montant <= 0) {
+      throw ArgumentError('Le montant doit être supérieur à zéro.');
+    }
+
+    final DateTime maintenant = DateTime.now();
+    final Depense depense = Depense(
+      id: _uuid.v4(),
+      atelierId: atelierId,
+      montant: montant,
+      description: description,
+      dateDepense: date ?? maintenant,
+      createdAt: maintenant,
+      synced: false,
+    );
+    await _db
+        .into(_db.depenses)
+        .insertOnConflictUpdate(depense.versCompagnonLocal());
+
+    if (await _estEnLigne()) {
+      try {
+        await pousserDepense(depense);
+      } catch (_) {
+        // Best-effort : voir ClientRepository.
+      }
+    }
+  }
+
+  Future<void> pousserDepense(Depense depense) async {
+    await _client.from('depenses').upsert({
+      'id': depense.id,
+      'atelier_id': depense.atelierId,
+      'montant': depense.montant,
+      'description': depense.description,
+      'date_depense': depense.dateDepense.toIso8601String(),
+    });
+    await (_db.update(
+      _db.depenses,
+    )..where((t) => t.id.equals(depense.id))).write(
+      const DepensesCompanion(synced: Value(true)),
     );
   }
 }

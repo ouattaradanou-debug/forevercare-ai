@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/local/app_database.dart';
 import '../../data/models/client.dart';
 import '../../data/models/commande.dart';
+import '../../data/models/depense.dart';
 import '../../data/models/mesure.dart';
 import '../../data/models/paiement.dart';
 import '../../data/models/rendez_vous.dart';
@@ -101,6 +102,16 @@ class SyncEngine {
         () => _finances.pousserPaiement(Paiement.depuisLigneLocale(ligne)),
       );
     }
+
+    final List<DepenseLocal> depenses =
+        await (_db.select(_db.depenses)
+              ..where((t) => t.synced.equals(false)))
+            .get();
+    for (final DepenseLocal ligne in depenses) {
+      await _tenter(
+        () => _finances.pousserDepense(Depense.depuisLigneLocale(ligne)),
+      );
+    }
   }
 
   /// Retélécharge les clients d'un atelier (et leurs mesures, rendez-vous,
@@ -188,6 +199,21 @@ class SyncEngine {
         await _db
             .into(_db.paiements)
             .insertOnConflictUpdate(paiement.versCompagnonLocal());
+      }
+
+      final Set<String> depensesEnAttente = (await (_db.select(
+        _db.depenses,
+      )..where((t) => t.synced.equals(false))).get()).map((l) => l.id).toSet();
+      final List<Map<String, dynamic>> depensesDistantes = await _supabase
+          .from('depenses')
+          .select()
+          .eq('atelier_id', atelierId);
+      for (final Map<String, dynamic> json in depensesDistantes) {
+        final Depense depense = Depense.depuisSupabase(json);
+        if (depensesEnAttente.contains(depense.id)) continue;
+        await _db
+            .into(_db.depenses)
+            .insertOnConflictUpdate(depense.versCompagnonLocal());
       }
     } catch (_) {
       // Best-effort : l'application continue avec le cache local déjà

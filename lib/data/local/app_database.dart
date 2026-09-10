@@ -195,6 +195,24 @@ class Paiements extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Cache local de la table `depenses`. Historisée comme `paiements` : une
+/// dépense enregistrée reste telle quelle, une correction se fait par une
+/// nouvelle dépense (voir FinancesRepository). Rattachée directement à
+/// l'atelier (pas de client concerné), contrairement à `paiements`.
+@DataClassName('DepenseLocal')
+class Depenses extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  RealColumn get montant => real()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get dateDepense => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+  BoolColumn get synced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Brouillon de fiche client en cours de saisie.
 ///
 /// Un seul brouillon actif par utilisateur : `utilisateurId` est la clé
@@ -260,13 +278,14 @@ class RendezVousTable extends Table {
     RendezVousTable,
     Commandes,
     Paiements,
+    Depenses,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -300,6 +319,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (depuis < 7) {
         await m.addColumn(photos, photos.commentaire);
+      }
+      if (depuis < 8) {
+        await m.createTable(depenses);
       }
     },
   );

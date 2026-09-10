@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../data/local/database_provider.dart';
 import '../../../../data/models/commande.dart';
+import '../../../../data/models/depense.dart';
 import '../../../../data/models/paiement.dart';
 import '../../../../data/repositories/finances_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -53,4 +54,14 @@ final StreamProvider<List<Paiement>> paiementsAtelierProvider =
       return ref
           .watch(financesRepositoryProvider)
           .observerPaiementsAtelier(atelier.id);
+    });
+
+/// Toutes les dépenses de l'atelier — pour l'écran "Suivi des dépenses".
+final StreamProvider<List<Depense>> depensesAtelierProvider =
+    StreamProvider<List<Depense>>((ref) {
+      final atelier = ref.watch(atelierCourantProvider).asData?.value;
+      if (atelier == null) return Stream<List<Depense>>.value(const []);
+      return ref
+          .watch(financesRepositoryProvider)
+          .observerDepensesAtelier(atelier.id);
     });
