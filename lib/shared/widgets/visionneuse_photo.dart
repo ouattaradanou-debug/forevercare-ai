@@ -1,24 +1,30 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+
+import 'image_photo.dart';
+
+/// Un élément affichable par [afficherPhotosPleinEcran] : soit une photo
+/// déjà persistée (`url` éventuellement renseignée), soit une photo encore
+/// en cours de composition dans un formulaire (toujours locale, `url`
+/// nulle) — les deux usages existants dans l'application, voir
+/// ClientDetailPage et SectionPhotos.
+typedef ElementPhoto = ({String cheminLocal, String? url, String? commentaire});
 
 /// Ouvre une ou plusieurs photos en plein écran, avec zoom (pincer) et
 /// défilement entre les photos d'une même galerie (glisser à gauche/droite).
-/// `commentaires`, si fourni, doit avoir la même longueur que `chemins` :
-/// affiché en légende sous chaque photo (ex. le type de tissu).
+/// Le commentaire de chaque photo (ex. le type de tissu), s'il y en a un,
+/// s'affiche en légende. Fonctionne aussi bien pour une photo présente
+/// localement que reçue d'un autre appareil (voir imagePhoto).
 Future<void> afficherPhotosPleinEcran(
   BuildContext context, {
-  required List<String> chemins,
+  required List<ElementPhoto> elements,
   required int indexInitial,
-  List<String?>? commentaires,
 }) {
   return Navigator.of(context).push(
     MaterialPageRoute<void>(
       fullscreenDialog: true,
       builder: (context) => _VisionneusePhotoPage(
-        chemins: chemins,
+        elements: elements,
         indexInitial: indexInitial,
-        commentaires: commentaires,
       ),
     ),
   );
@@ -26,14 +32,12 @@ Future<void> afficherPhotosPleinEcran(
 
 class _VisionneusePhotoPage extends StatefulWidget {
   const _VisionneusePhotoPage({
-    required this.chemins,
+    required this.elements,
     required this.indexInitial,
-    this.commentaires,
   });
 
-  final List<String> chemins;
+  final List<ElementPhoto> elements;
   final int indexInitial;
-  final List<String?>? commentaires;
 
   @override
   State<_VisionneusePhotoPage> createState() => _VisionneusePhotoPageState();
@@ -53,33 +57,34 @@ class _VisionneusePhotoPageState extends State<_VisionneusePhotoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final String? commentaireCourant =
-        widget.commentaires != null &&
-            _indexCourant < widget.commentaires!.length
-        ? widget.commentaires![_indexCourant]
-        : null;
+    final String? commentaireCourant = widget.elements[_indexCourant].commentaire;
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: widget.chemins.length > 1
-            ? Text('${_indexCourant + 1} / ${widget.chemins.length}')
+        title: widget.elements.length > 1
+            ? Text('${_indexCourant + 1} / ${widget.elements.length}')
             : null,
       ),
       body: Stack(
         children: [
           PageView.builder(
             controller: _controleur,
-            itemCount: widget.chemins.length,
+            itemCount: widget.elements.length,
             onPageChanged: (i) => setState(() => _indexCourant = i),
             itemBuilder: (context, index) {
+              final ElementPhoto element = widget.elements[index];
               return InteractiveViewer(
                 minScale: 1,
                 maxScale: 5,
                 child: Center(
-                  child: Image.file(File(widget.chemins[index])),
+                  child: imagePhoto(
+                    cheminLocal: element.cheminLocal,
+                    url: element.url,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               );
             },

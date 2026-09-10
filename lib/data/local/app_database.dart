@@ -157,8 +157,10 @@ class Mesures extends Table {
 
 /// Cache local de la table `photos`. `cheminLocal` pointe vers une copie
 /// permanente du fichier dans le stockage de l'application (voir
-/// `ImageUtils.compresserEtPersister`) : l'envoi vers Supabase Storage sera
-/// ajouté avec le reste du moteur de synchronisation en Phase 3.
+/// `ImageUtils.compresserEtPersister`) — chaîne vide pour une photo reçue
+/// d'un autre appareil et jamais téléchargée sur celui-ci : `url` (voir
+/// ClientRepository.pousserPhoto) sert alors de source d'affichage à la
+/// place (voir `imagePhoto` dans lib/shared/widgets/image_photo.dart).
 @DataClassName('PhotoLocal')
 class Photos extends Table {
   TextColumn get id => text()();
@@ -169,6 +171,16 @@ class Photos extends Table {
   // Ex. "Wax hollandais", "Bazin riche" — pour préciser le type de tissu
   // ou tout autre repère utile, visible sous la miniature.
   TextColumn get commentaire => text().nullable()();
+  // Adresse publique une fois envoyée à Supabase Storage — voir
+  // ClientRepository.pousserPhoto.
+  TextColumn get url => text().nullable()();
+  // Par défaut à `false` (contrairement aux autres colonnes `synced` de
+  // cette base) : contrairement aux autres tables, aucune photo n'a
+  // jamais été envoyée à Supabase avant l'ajout de cette colonne — les
+  // marquer `true` par défaut aurait abandonné pour de bon toutes les
+  // photos déjà prises. `false` les fait au contraire reprendre par
+  // SyncEngine dès la prochaine connexion.
+  BoolColumn get synced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
 
   @override
@@ -302,7 +314,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -342,6 +354,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (depuis < 9) {
         await m.createTable(abonnements);
+      }
+      if (depuis < 10) {
+        await m.addColumn(photos, photos.url);
+        await m.addColumn(photos, photos.synced);
       }
     },
   );

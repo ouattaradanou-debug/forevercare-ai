@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -33,6 +35,7 @@ class ClientRepository {
   final SupabaseClient _client;
   final AppDatabase _db;
   static final Uuid _uuid = Uuid();
+  static const String _bucketPhotos = 'photos-clients';
 
   Future<bool> _estEnLigne() async {
     final List<ConnectivityResult> resultats = await Connectivity()
@@ -137,6 +140,9 @@ class ClientRepository {
       try {
         await pousserClient(client);
         await pousserMesure(mesure);
+        for (final Photo photo in photos) {
+          await pousserPhoto(photo);
+        }
         if (rendezVousCrees.isNotEmpty) {
           await pousserRendezVous(rendezVousCrees);
         }
@@ -262,9 +268,9 @@ class ClientRepository {
       try {
         await pousserClient(clientMisAJour);
         if (mesure != null) await pousserMesure(mesure);
-        // Les photos restent locales pour l'instant (envoi vers Supabase
-        // Storage non encore implémenté — voir Photo dans
-        // app_database.dart).
+        for (final Photo photo in photos) {
+          await pousserPhoto(photo);
+        }
         if (rendezVousCrees.isNotEmpty) {
           await pousserRendezVous(rendezVousCrees);
         }
@@ -322,6 +328,58 @@ class ClientRepository {
         const RendezVousTableCompanion(synced: Value(true)),
       );
     }
+  }
+
+  /// Envoie une photo vers Supabase : le fichier lui-même dans Supabase
+  /// Storage (bucket `photos-clients`), puis sa ligne dans `photos`. Si
+  /// `photo.url` est déjà renseignée (photo déjà envoyée une première
+  /// fois, seul un champ comme `commentaire` a changé depuis), le fichier
+  /// n'est pas réenvoyé — seule la ligne `photos` est mise à jour.
+  ///
+  /// `photos` ne porte pas `atelier_id` : on le retrouve via le client
+  /// déjà en cache local, pour construire le chemin de stockage
+  /// "<atelier_id>/<client_id>/<photo_id>.jpg" attendu par les policies du
+  /// bucket (voir supabase/storage_policies_photos.sql).
+  Future<void> pousserPhoto(Photo photo) async {
+    String? url = photo.url;
+
+    if (url == null) {
+      final File fichier = File(photo.cheminLocal);
+      if (!await fichier.exists()) {
+        // Rien à envoyer (fichier disparu localement) : laisse `synced` à
+        // false, SyncEngine retentera plus tard sans jamais réussir tant
+        // que ce sera le cas — best-effort, voir la classe.
+        return;
+      }
+
+      final ClientLocal client = await (_db.select(
+        _db.clients,
+      )..where((t) => t.id.equals(photo.clientId))).getSingle();
+      final String cheminStockage =
+          '${client.atelierId}/${photo.clientId}/${photo.id}.jpg';
+
+      await _client.storage
+          .from(_bucketPhotos)
+          .upload(
+            cheminStockage,
+            fichier,
+            fileOptions: const FileOptions(upsert: true),
+          );
+      url = _client.storage.from(_bucketPhotos).getPublicUrl(cheminStockage);
+    }
+
+    await _client.from('photos').upsert({
+      'id': photo.id,
+      'client_id': photo.clientId,
+      'type': photo.type,
+      'url': url,
+      'source': photo.source,
+      'commentaire': photo.commentaire,
+    });
+
+    await (_db.update(_db.photos)..where((t) => t.id.equals(photo.id))).write(
+      PhotosCompanion(synced: const Value(true), url: Value(url)),
+    );
   }
 
   Stream<Client?> observerClient(String id) {

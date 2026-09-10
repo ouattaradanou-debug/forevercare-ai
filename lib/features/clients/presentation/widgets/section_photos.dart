@@ -95,11 +95,15 @@ class SectionPhotos extends StatelessWidget {
                           GestureDetector(
                             onTap: () => afficherPhotosPleinEcran(
                               context,
-                              chemins: chemins,
-                              indexInitial: i,
-                              commentaires: [
-                                for (final String c in chemins) commentaires[c],
+                              elements: [
+                                for (final String c in chemins)
+                                  (
+                                    cheminLocal: c,
+                                    url: null,
+                                    commentaire: commentaires[c],
+                                  ),
                               ],
+                              indexInitial: i,
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(

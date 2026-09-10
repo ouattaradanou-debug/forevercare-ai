@@ -289,6 +289,8 @@ create table if not exists public.photos (
   type        text not null check (type in ('tissu', 'modele')),
   url         text not null,
   source      text not null check (source in ('camera', 'galerie')),
+  -- Ex. "Wax hollandais", "Bazin riche" — précise ce que montre la photo.
+  commentaire text,
   created_at  timestamptz not null default now()
 );
 
@@ -677,6 +679,22 @@ create policy "photos_select_mon_atelier"
 
 create policy "photos_insert_autorise"
   on public.photos for insert
+  with check (
+    exists (
+      select 1 from public.clients c
+      where c.id = photos.client_id and c.atelier_id = public.mon_atelier_id()
+    )
+    and (public.mon_role() = 'proprietaire' or public.ma_permission('ajouter_photos'))
+  );
+
+create policy "photos_update_autorise"
+  on public.photos for update
+  using (
+    exists (
+      select 1 from public.clients c
+      where c.id = photos.client_id and c.atelier_id = public.mon_atelier_id()
+    )
+  )
   with check (
     exists (
       select 1 from public.clients c

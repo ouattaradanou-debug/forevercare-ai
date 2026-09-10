@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +13,7 @@ import '../../../../data/models/mesure.dart';
 import '../../../../data/models/photo.dart';
 import '../../../../data/models/rendez_vous.dart';
 import '../../../../data/models/utilisateur.dart';
+import '../../../../shared/widgets/image_photo.dart';
 import '../../../../shared/widgets/visionneuse_photo.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../permissions/presentation/providers/apprentis_providers.dart';
@@ -328,7 +327,10 @@ class _GaleriePhotos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> chemins = photos.map((p) => p.cheminLocal).toList();
+    final List<ElementPhoto> elements = [
+      for (final Photo p in photos)
+        (cheminLocal: p.cheminLocal, url: p.url, commentaire: p.commentaire),
+    ];
     return Wrap(
       spacing: AppSpacing.s,
       runSpacing: AppSpacing.s,
@@ -342,17 +344,16 @@ class _GaleriePhotos extends StatelessWidget {
                 GestureDetector(
                   onTap: () => afficherPhotosPleinEcran(
                     context,
-                    chemins: chemins,
+                    elements: elements,
                     indexInitial: i,
-                    commentaires: photos.map((p) => p.commentaire).toList(),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.champ),
-                    child: Image.file(
-                      File(photos[i].cheminLocal),
+                    child: imagePhoto(
+                      cheminLocal: photos[i].cheminLocal,
+                      url: photos[i].url,
                       width: 84,
                       height: 84,
-                      fit: BoxFit.cover,
                     ),
                   ),
                 ),

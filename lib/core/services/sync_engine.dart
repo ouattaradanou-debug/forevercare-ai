@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/local/app_database.dart';
@@ -7,6 +8,7 @@ import '../../data/models/commande.dart';
 import '../../data/models/depense.dart';
 import '../../data/models/mesure.dart';
 import '../../data/models/paiement.dart';
+import '../../data/models/photo.dart';
 import '../../data/models/rendez_vous.dart';
 import '../../data/repositories/client_repository.dart';
 import '../../data/repositories/finances_repository.dart';
@@ -83,6 +85,13 @@ class SyncEngine {
       );
     }
 
+    final List<PhotoLocal> photos =
+        await (_db.select(_db.photos)..where((t) => t.synced.equals(false)))
+            .get();
+    for (final PhotoLocal ligne in photos) {
+      await _tenter(() => _clients.pousserPhoto(Photo.depuisLigneLocale(ligne)));
+    }
+
     final List<CommandeLocal> commandes =
         await (_db.select(_db.commandes)
               ..where((t) => t.synced.equals(false)))
@@ -157,6 +166,31 @@ class SyncEngine {
         await _db
             .into(_db.mesures)
             .insertOnConflictUpdate(mesure.versCompagnonLocal());
+      }
+
+      // `Photo.depuisSupabase` met `cheminLocal` à vide (voir ce modèle) :
+      // sans fichier local, l'affichage passe par `url` à la place. Mais
+      // pour une photo déjà présente sur CET appareil (celui qui l'a
+      // prise, par exemple), il ne faut surtout pas écraser son vrai
+      // chemin local par cette valeur vide — on le préserve donc ici.
+      final List<PhotoLocal> photosLocales = await _db.select(_db.photos).get();
+      final Map<String, String> cheminsLocauxExistants = {
+        for (final PhotoLocal l in photosLocales) l.id: l.cheminLocal,
+      };
+      final Set<String> photosEnAttente = photosLocales
+          .where((l) => !l.synced)
+          .map((l) => l.id)
+          .toSet();
+      final List<Map<String, dynamic>> photosDistantes = await _supabase
+          .from('photos')
+          .select();
+      for (final Map<String, dynamic> json in photosDistantes) {
+        final Photo photo = Photo.depuisSupabase(json);
+        if (photosEnAttente.contains(photo.id)) continue;
+        final PhotosCompanion compagnon = photo.versCompagnonLocal().copyWith(
+          cheminLocal: Value(cheminsLocauxExistants[photo.id] ?? ''),
+        );
+        await _db.into(_db.photos).insertOnConflictUpdate(compagnon);
       }
 
       final Set<String> rendezVousEnAttente = (await (_db.select(
