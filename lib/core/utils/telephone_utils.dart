@@ -32,4 +32,23 @@ class TelephoneUtils {
     final String chiffres = normaliser(telephone);
     return chiffres.length >= 8 && chiffres.length <= 15;
   }
+
+  /// Lien "tel:" pour lancer un appel simple — fonctionne avec le numéro
+  /// tel que saisi (format local), l'appareil le compose exactement comme
+  /// le ferait le composeur natif.
+  static Uri lienAppel(String telephone) {
+    return Uri(scheme: 'tel', path: normaliser(telephone));
+  }
+
+  /// Lien "wa.me" pour ouvrir une discussion WhatsApp avec ce numéro.
+  ///
+  /// Limite connue : WhatsApp exige un numéro complet avec indicatif pays
+  /// (ex. 225XXXXXXXXXX pour la Côte d'Ivoire) pour retrouver le bon
+  /// contact. L'application ne demandant aujourd'hui qu'un numéro local
+  /// sans indicatif, WhatsApp peut ne pas trouver le contact si le
+  /// tailleur ne l'a pas saisi avec l'indicatif — WhatsApp affiche alors
+  /// son propre message d'erreur plutôt qu'un échec silencieux.
+  static Uri lienWhatsApp(String telephone) {
+    return Uri.parse('https://wa.me/${normaliser(telephone)}');
+  }
 }

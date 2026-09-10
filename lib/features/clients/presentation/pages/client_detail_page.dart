@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/utils/telephone_utils.dart';
 import '../../../../data/models/client.dart';
 import '../../../../data/models/mesure.dart';
 import '../../../../data/models/photo.dart';
@@ -204,7 +206,10 @@ class _CarteInfos extends StatelessWidget {
           children: [
             _ligne(context, 'Nom', client.nom),
             _ligne(context, 'Prénom', client.prenom),
-            _ligne(context, 'Téléphone', client.telephone),
+            if (client.telephone != null && client.telephone!.trim().isNotEmpty)
+              _ligneTelephone(context, client.telephone!)
+            else
+              _ligne(context, 'Téléphone', client.telephone),
             _ligne(context, 'Sexe', client.sexe),
             _ligne(
               context,
@@ -231,6 +236,65 @@ class _CarteInfos extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _ligneTelephone(BuildContext context, String telephone) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Téléphone', style: Theme.of(context).textTheme.bodyMedium),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                telephone,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: AppSpacing.s),
+              IconButton(
+                onPressed: () => _appeler(context, telephone),
+                icon: const Icon(Icons.call, color: AppColors.succes),
+                tooltip: 'Appeler',
+                visualDensity: VisualDensity.compact,
+              ),
+              IconButton(
+                onPressed: () => _ouvrirWhatsApp(context, telephone),
+                icon: const Icon(Icons.chat, color: AppColors.succes),
+                tooltip: 'WhatsApp',
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _appeler(BuildContext context, String telephone) async {
+    final Uri uri = TelephoneUtils.lienAppel(telephone);
+    final bool ok = await launchUrl(uri);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Impossible de lancer l'appel.")));
+    }
+  }
+
+  Future<void> _ouvrirWhatsApp(BuildContext context, String telephone) async {
+    final Uri uri = TelephoneUtils.lienWhatsApp(telephone);
+    final bool ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Impossible d'ouvrir WhatsApp. Vérifie que WhatsApp est "
+            "installé et que le numéro inclut l'indicatif du pays.",
+          ),
+        ),
+      );
+    }
   }
 }
 

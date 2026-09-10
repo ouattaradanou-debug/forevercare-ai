@@ -52,5 +52,16 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Contacter un client : appel téléphonique simple et WhatsApp
+             (voir ClientDetailPage) — requis depuis Android 11 pour que
+             l'application puisse voir et lancer ces intentions. -->
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>
