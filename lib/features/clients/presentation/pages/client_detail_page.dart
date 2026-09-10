@@ -247,20 +247,39 @@ class _GaleriePhotos extends StatelessWidget {
       runSpacing: AppSpacing.s,
       children: [
         for (int i = 0; i < photos.length; i++)
-          GestureDetector(
-            onTap: () => afficherPhotosPleinEcran(
-              context,
-              chemins: chemins,
-              indexInitial: i,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.champ),
-              child: Image.file(
-                File(photos[i].cheminLocal),
-                width: 84,
-                height: 84,
-                fit: BoxFit.cover,
-              ),
+          SizedBox(
+            width: 84,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                GestureDetector(
+                  onTap: () => afficherPhotosPleinEcran(
+                    context,
+                    chemins: chemins,
+                    indexInitial: i,
+                    commentaires: photos.map((p) => p.commentaire).toList(),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.champ),
+                    child: Image.file(
+                      File(photos[i].cheminLocal),
+                      width: 84,
+                      height: 84,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                if ((photos[i].commentaire ?? '').isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    photos[i].commentaire!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ],
             ),
           ),
       ],

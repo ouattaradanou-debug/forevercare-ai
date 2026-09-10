@@ -54,6 +54,7 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
   Map<String, String> _valeursMesures = {};
   final List<String> _nouvellesPhotosTissu = [];
   final List<String> _nouvellesPhotosModele = [];
+  Map<String, String> _commentairesPhotos = {};
   List<RendezVousBrouillon> _nouveauxRendezVous = [];
 
   bool _chargementInitial = true;
@@ -171,6 +172,12 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
   void _supprimerPhotoModele(String chemin) =>
       setState(() => _nouvellesPhotosModele.remove(chemin));
 
+  void _definirCommentairePhoto(String chemin, String commentaire) {
+    setState(
+      () => _commentairesPhotos = {..._commentairesPhotos, chemin: commentaire},
+    );
+  }
+
   void _ajouterRendezVous(DateTime dateHeure) {
     setState(
       () => _nouveauxRendezVous = [
@@ -206,6 +213,7 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
             utilisateurId: utilisateurId,
             cheminsPhotosTissu: List.of(_nouvellesPhotosTissu),
             cheminsPhotosModele: List.of(_nouvellesPhotosModele),
+            commentairesPhotos: Map.of(_commentairesPhotos),
             rendezVous: List.of(_nouveauxRendezVous),
           );
 
@@ -293,6 +301,8 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
               chemins: _nouvellesPhotosTissu,
               onAjouter: _ajouterPhotoTissu,
               onSupprimer: _supprimerPhotoTissu,
+              commentaires: _commentairesPhotos,
+              onCommentaireChange: _definirCommentairePhoto,
             ),
             const SizedBox(height: AppSpacing.xl),
             SectionPhotos(
@@ -302,6 +312,8 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
               chemins: _nouvellesPhotosModele,
               onAjouter: _ajouterPhotoModele,
               onSupprimer: _supprimerPhotoModele,
+              commentaires: _commentairesPhotos,
+              onCommentaireChange: _definirCommentairePhoto,
             ),
             if (estProprietaire) ...[
               const SizedBox(height: AppSpacing.xl),

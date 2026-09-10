@@ -52,6 +52,7 @@ class ClientRepository {
     required Map<String, String> valeursMesures,
     required List<String> cheminsPhotosTissu,
     required List<String> cheminsPhotosModele,
+    Map<String, String> commentairesPhotos = const {},
     List<RendezVousBrouillon> rendezVous = const [],
   }) async {
     final DateTime maintenant = DateTime.now();
@@ -95,6 +96,7 @@ class ClientRepository {
           cheminLocal: chemin,
           source: 'galerie',
           createdAt: maintenant,
+          commentaire: commentairesPhotos[chemin],
         ),
       for (final String chemin in cheminsPhotosModele)
         Photo(
@@ -104,6 +106,7 @@ class ClientRepository {
           cheminLocal: chemin,
           source: 'galerie',
           createdAt: maintenant,
+          commentaire: commentairesPhotos[chemin],
         ),
     ];
     for (final Photo photo in photos) {
@@ -167,6 +170,7 @@ class ClientRepository {
     required String utilisateurId,
     required List<String> cheminsPhotosTissu,
     required List<String> cheminsPhotosModele,
+    Map<String, String> commentairesPhotos = const {},
     List<RendezVousBrouillon> rendezVous = const [],
   }) async {
     final DateTime maintenant = DateTime.now();
@@ -217,6 +221,7 @@ class ClientRepository {
           cheminLocal: chemin,
           source: 'galerie',
           createdAt: maintenant,
+          commentaire: commentairesPhotos[chemin],
         ),
       for (final String chemin in cheminsPhotosModele)
         Photo(
@@ -226,6 +231,7 @@ class ClientRepository {
           cheminLocal: chemin,
           source: 'galerie',
           createdAt: maintenant,
+          commentaire: commentairesPhotos[chemin],
         ),
     ];
     for (final Photo photo in photos) {

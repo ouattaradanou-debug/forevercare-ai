@@ -150,6 +150,9 @@ class Photos extends Table {
   TextColumn get type => text()();
   TextColumn get cheminLocal => text()();
   TextColumn get source => text()();
+  // Ex. "Wax hollandais", "Bazin riche" — pour préciser le type de tissu
+  // ou tout autre repère utile, visible sous la miniature.
+  TextColumn get commentaire => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
 
   @override
@@ -263,7 +266,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -294,6 +297,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(rendezVousTable, rendezVousTable.synced);
         await m.addColumn(commandes, commandes.synced);
         await m.addColumn(paiements, paiements.synced);
+      }
+      if (depuis < 7) {
+        await m.addColumn(photos, photos.commentaire);
       }
     },
   );

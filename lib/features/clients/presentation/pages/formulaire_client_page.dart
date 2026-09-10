@@ -52,6 +52,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
   Map<String, String> _valeursMesures = {};
   List<String> _photosTissu = [];
   List<String> _photosModele = [];
+  Map<String, String> _commentairesPhotos = {};
   List<RendezVousBrouillon> _rendezVous = [];
 
   Timer? _debounce;
@@ -308,6 +309,13 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
     _programmerSauvegarde();
   }
 
+  void _definirCommentairePhoto(String chemin, String commentaire) {
+    setState(
+      () => _commentairesPhotos = {..._commentairesPhotos, chemin: commentaire},
+    );
+    _programmerSauvegarde();
+  }
+
   void _ajouterRendezVous(DateTime dateHeure) {
     setState(
       () => _rendezVous = [
@@ -392,6 +400,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
             valeursMesures: Map.of(_valeursMesures),
             cheminsPhotosTissu: List.of(_photosTissu),
             cheminsPhotosModele: List.of(_photosModele),
+            commentairesPhotos: Map.of(_commentairesPhotos),
             rendezVous: List.of(_rendezVous),
           );
 
@@ -556,6 +565,8 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
               chemins: _photosTissu,
               onAjouter: _ajouterPhotoTissu,
               onSupprimer: _supprimerPhotoTissu,
+              commentaires: _commentairesPhotos,
+              onCommentaireChange: _definirCommentairePhoto,
             ),
             const SizedBox(height: AppSpacing.xl),
             SectionPhotos(
@@ -565,6 +576,8 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
               chemins: _photosModele,
               onAjouter: _ajouterPhotoModele,
               onSupprimer: _supprimerPhotoModele,
+              commentaires: _commentairesPhotos,
+              onCommentaireChange: _definirCommentairePhoto,
             ),
             if (utilisateur?.estProprietaire ?? false) ...[
               const SizedBox(height: AppSpacing.xl),
