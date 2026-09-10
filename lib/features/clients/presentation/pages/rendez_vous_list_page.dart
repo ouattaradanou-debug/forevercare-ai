@@ -75,9 +75,9 @@ class RendezVousListPage extends ConsumerWidget {
                   !commande.tenueRetiree &&
                   commande.resteAPayer <= 0;
               final Color? fond = resteAEncaisser
-                  ? AppColors.erreur.withValues(alpha: 0.16)
+                  ? AppColors.erreur.withValues(alpha: 0.45)
                   : resteARemettre
-                  ? AppColors.succes.withValues(alpha: 0.16)
+                  ? AppColors.succes.withValues(alpha: 0.45)
                   : null;
 
               return Card(
