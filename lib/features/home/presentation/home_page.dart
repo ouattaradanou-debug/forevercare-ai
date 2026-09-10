@@ -138,6 +138,10 @@ class HomePage extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.m),
                   const _SelecteurRappel(),
+                  if (estProprietaire) ...[
+                    const SizedBox(height: AppSpacing.m),
+                    const _CarteSuiviFinances(),
+                  ],
                 ]),
               ),
             ),
@@ -614,6 +618,43 @@ class _SelecteurRappel extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Accès au suivi des recettes (journalier, hebdomadaire, mensuel, annuel)
+/// — voir SuiviFinancesPage. Propriétaire uniquement, comme le reste des
+/// finances (voir CarteFinancesClient et PermissionsApprenti).
+class _CarteSuiviFinances extends StatelessWidget {
+  const _CarteSuiviFinances();
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => context.push('/finances'),
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: scheme.outline.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.bar_chart_outlined, color: AppColors.succes),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Text(
+                'Suivi des finances',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
       ),
     );
   }

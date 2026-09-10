@@ -76,6 +76,32 @@ class FinancesRepository {
     );
   }
 
+  /// Tous les paiements reçus par l'atelier (tous clients confondus) —
+  /// pour le suivi des recettes journalières/hebdomadaires/mensuelles/
+  /// annuelles (voir SuiviFinancesPage). Passe par une double jointure
+  /// (paiements -> commandes -> clients), `paiements` ne connaissant pas
+  /// directement l'atelier.
+  Stream<List<Paiement>> observerPaiementsAtelier(String atelierId) {
+    final query = _db.select(_db.paiements).join([
+      innerJoin(
+        _db.commandes,
+        _db.commandes.id.equalsExp(_db.paiements.commandeId),
+      ),
+      innerJoin(
+        _db.clients,
+        _db.clients.id.equalsExp(_db.commandes.clientId),
+      ),
+    ])..where(_db.clients.atelierId.equals(atelierId));
+    return query.watch().map(
+      (lignes) => lignes
+          .map(
+            (ligne) =>
+                Paiement.depuisLigneLocale(ligne.readTable(_db.paiements)),
+          )
+          .toList(),
+    );
+  }
+
   /// Crée le solde du client s'il n'en a pas encore, ou met à jour son
   /// montant total convenu. Refuse de descendre sous l'avance déjà versée
   /// (la contrainte `avance <= montant_total` existe aussi côté base, mais

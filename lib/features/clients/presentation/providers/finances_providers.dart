@@ -43,3 +43,14 @@ final StreamProvider<List<Commande>> commandesAtelierProvider =
           .watch(financesRepositoryProvider)
           .observerCommandesAtelier(atelier.id);
     });
+
+/// Tous les paiements reçus par l'atelier — pour l'écran "Suivi des
+/// finances" (recettes journalières/hebdomadaires/mensuelles/annuelles).
+final StreamProvider<List<Paiement>> paiementsAtelierProvider =
+    StreamProvider<List<Paiement>>((ref) {
+      final atelier = ref.watch(atelierCourantProvider).asData?.value;
+      if (atelier == null) return Stream<List<Paiement>>.value(const []);
+      return ref
+          .watch(financesRepositoryProvider)
+          .observerPaiementsAtelier(atelier.id);
+    });
