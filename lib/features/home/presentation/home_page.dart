@@ -16,6 +16,7 @@ import '../../../shared/widgets/selecteur_photo.dart';
 import '../../../shared/widgets/stitched_divider.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
 import '../../clients/presentation/providers/clients_providers.dart';
+import 'providers/rappel_rendez_vous_providers.dart';
 import 'widgets/home_action_card.dart';
 
 /// Écran d'accueil d'Atelier+.
@@ -50,6 +51,10 @@ class HomePage extends ConsumerWidget {
     final int nombreRendezVousAujourdhui = ref.watch(
       rendezVousAujourdhuiCompteProvider,
     );
+    // Replanifie les rappels locaux de rendez-vous dès que la liste ou le
+    // délai choisi change (voir rappel_rendez_vous_providers.dart) — pas de
+    // valeur utile ici, seul l'effet de bord de planification compte.
+    ref.watch(planificationRappelsProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -127,6 +132,8 @@ class HomePage extends ConsumerWidget {
                     nombreClients: nombreClients,
                     nombreRendezVous: nombreRendezVousAujourdhui,
                   ),
+                  const SizedBox(height: AppSpacing.m),
+                  const _SelecteurRappel(),
                 ]),
               ),
             ),
@@ -433,6 +440,68 @@ class _CarteStatistique extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Choix du délai de rappel (2 à 5 jours avant un rendez-vous) : une
+/// notification locale est alors envoyée sur le téléphone à ce délai avant
+/// chaque rendez-vous, pour que le tailleur n'en oublie aucun (voir
+/// NotificationService et rappelJoursProvider).
+class _SelecteurRappel extends ConsumerWidget {
+  const _SelecteurRappel();
+
+  static const List<int> _options = [2, 3, 4, 5];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final int? joursActuels = ref.watch(rappelJoursProvider).asData?.value;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.notifications_active_outlined,
+                color: AppColors.or600,
+              ),
+              const SizedBox(width: AppSpacing.s),
+              Expanded(
+                child: Text(
+                  'Me rappeler les rendez-vous',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s),
+          Wrap(
+            spacing: AppSpacing.s,
+            runSpacing: AppSpacing.s,
+            children: [
+              for (final int jours in _options)
+                ChoiceChip(
+                  label: Text('$jours jours avant'),
+                  selected: joursActuels == jours,
+                  onSelected: (selectionne) {
+                    if (selectionne) {
+                      ref.read(rappelJoursProvider.notifier).definir(jours);
+                    }
+                  },
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

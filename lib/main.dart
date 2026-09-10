@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/config/supabase_config.dart';
+import 'core/services/notification_service.dart';
 import 'features/auth/presentation/providers/auth_providers.dart';
 
 Future<void> main() async {
@@ -13,6 +14,15 @@ Future<void> main() async {
   // Formats de date/heure en français (nécessaire pour l'affichage des
   // dates de rendez-vous, de mesures, etc. dans toute l'application).
   await initializeDateFormatting('fr_FR');
+
+  // Rappels locaux de rendez-vous : best-effort, ne doit jamais empêcher le
+  // démarrage de l'application (permission refusée, plateforme sans
+  // notifications, etc.).
+  try {
+    await NotificationService.instance.initialiser();
+  } catch (e) {
+    debugPrint("Échec de l'initialisation des notifications : $e");
+  }
 
   // Connexion au projet Supabase (voir lib/core/config/supabase_config.dart
   // pour la marche à suivre de configuration).
