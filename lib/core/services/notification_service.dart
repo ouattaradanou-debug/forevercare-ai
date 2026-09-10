@@ -67,6 +67,20 @@ class NotificationService {
     iOS: DarwinNotificationDetails(),
   );
 
+  /// Envoie immédiatement une notification factice, pour que le tailleur
+  /// puisse vérifier que les rappels s'affichent bien sur son téléphone
+  /// sans attendre plusieurs jours qu'un vrai rappel se déclenche.
+  Future<void> envoyerNotificationTest() async {
+    if (!_initialise) await initialiser();
+    await _plugin.show(
+      999999999,
+      'Rappel de rendez-vous',
+      "Ceci est un rappel test : c'est ainsi que s'affichera un vrai "
+          'rappel avant un rendez-vous.',
+      _details,
+    );
+  }
+
   /// Remplace l'ensemble des rappels planifiés par un nouveau jeu, calculé à
   /// partir de la liste actuelle des rendez-vous de l'atelier et du délai
   /// choisi par le tailleur. Appelé à chaque changement (voir

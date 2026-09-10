@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../data/models/atelier.dart';
@@ -500,6 +501,26 @@ class _SelecteurRappel extends ConsumerWidget {
                   },
                 ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.s),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () async {
+                await NotificationService.instance.envoyerNotificationTest();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Rappel test envoyé — regarde tes notifications.',
+                      ),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.notifications_none),
+              label: const Text('Tester un rappel maintenant'),
+            ),
           ),
         ],
       ),
