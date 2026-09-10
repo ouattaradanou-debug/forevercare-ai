@@ -54,17 +54,25 @@ class NotificationService {
 
   static const AndroidNotificationDetails _detailsAndroid =
       AndroidNotificationDetails(
-        'rappels_rendez_vous',
+        'rappels_rendez_vous_sonore',
         'Rappels de rendez-vous',
         channelDescription:
-            'Rappelle les rendez-vous clients à venir avant leur date.',
-        importance: Importance.high,
-        priority: Priority.high,
+            'Rappelle les rendez-vous clients à venir avant leur date, avec '
+            'son et vibration.',
+        importance: Importance.max,
+        priority: Priority.max,
+        playSound: true,
+        enableVibration: true,
+        category: AndroidNotificationCategory.reminder,
       );
 
   static const NotificationDetails _details = NotificationDetails(
     android: _detailsAndroid,
-    iOS: DarwinNotificationDetails(),
+    iOS: DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    ),
   );
 
   /// Envoie immédiatement une notification factice, pour que le tailleur
