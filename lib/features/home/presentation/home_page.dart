@@ -463,15 +463,18 @@ class _SelecteurRappel extends ConsumerWidget {
         ref.watch(rendezVousAtelierProvider).asData?.value ?? const [];
     final ColorScheme scheme = Theme.of(context).colorScheme;
 
+    // Clients dont le rendez-vous tombe dans la fenêtre choisie (les N
+    // prochains jours) — pas simplement "tous les rendez-vous à venir" :
+    // la liste doit visiblement changer quand le tailleur change de délai.
     final DateTime maintenant = DateTime.now();
     final List<RendezVousAvecClient> concernes = joursActuels == null
         ? const []
         : rendezVous.where((rdv) {
-            final DateTime dateRappel = NotificationService.calculerDateRappel(
-              rdv.rendezVous.dateHeure,
-              joursActuels,
+            final DateTime date = rdv.rendezVous.dateHeure;
+            final DateTime limite = maintenant.add(
+              Duration(days: joursActuels),
             );
-            return dateRappel.isAfter(maintenant);
+            return date.isAfter(maintenant) && date.isBefore(limite);
           }).toList();
 
     return Container(
