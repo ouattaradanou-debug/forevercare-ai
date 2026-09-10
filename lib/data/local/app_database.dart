@@ -150,6 +150,38 @@ class Photos extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Cache local de la table `commandes`. Le « solde » financier d'un client
+/// (voir supabase/schema.sql) : montant total convenu et avance déjà
+/// versée. Réservé au propriétaire — un apprenti n'a jamais accès aux
+/// finances, y compris localement (voir PermissionsApprenti).
+@DataClassName('CommandeLocal')
+class Commandes extends Table {
+  TextColumn get id => text()();
+  TextColumn get clientId => text()();
+  RealColumn get montantTotal => real()();
+  RealColumn get avance => real().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local de la table `paiements`. Historisée : un paiement enregistré
+/// est définitif, jamais modifié ni supprimé (une correction se fait par un
+/// nouveau paiement).
+@DataClassName('PaiementLocal')
+class Paiements extends Table {
+  TextColumn get id => text()();
+  TextColumn get commandeId => text()();
+  RealColumn get montant => real()();
+  DateTimeColumn get datePaiement => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Brouillon de fiche client en cours de saisie.
 ///
 /// Un seul brouillon actif par utilisateur : `utilisateurId` est la clé
@@ -212,13 +244,15 @@ class RendezVousTable extends Table {
     Photos,
     BrouillonsClient,
     RendezVousTable,
+    Commandes,
+    Paiements,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -235,6 +269,10 @@ class AppDatabase extends _$AppDatabase {
       if (depuis < 3) {
         await m.createTable(rendezVousTable);
         await m.addColumn(brouillonsClient, brouillonsClient.rendezVousJson);
+      }
+      if (depuis < 4) {
+        await m.createTable(commandes);
+        await m.createTable(paiements);
       }
     },
   );

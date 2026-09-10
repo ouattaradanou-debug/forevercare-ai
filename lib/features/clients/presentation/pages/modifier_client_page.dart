@@ -10,9 +10,12 @@ import '../../../../core/utils/image_utils.dart';
 import '../../../../data/models/brouillon_client.dart' show RendezVousBrouillon;
 import '../../../../data/models/client.dart';
 import '../../../../data/models/mesure.dart';
+import '../../../../data/models/utilisateur.dart';
 import '../../../../shared/widgets/selecteur_photo.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../providers/clients_providers.dart';
+import '../providers/finances_providers.dart';
+import '../widgets/section_finances.dart';
 import '../widgets/section_infos_client.dart';
 import '../widgets/section_mesures.dart';
 import '../widgets/section_photos.dart';
@@ -43,6 +46,7 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
   late final TextEditingController _telephoneCtrl = TextEditingController(
     text: widget.client.telephone ?? '',
   );
+  final TextEditingController _montantConvenuCtrl = TextEditingController();
 
   late String? _sexe = widget.client.sexe;
   late DateTime? _datePriseMesures = widget.client.datePriseMesures;
@@ -66,6 +70,7 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
     _nomCtrl.dispose();
     _prenomCtrl.dispose();
     _telephoneCtrl.dispose();
+    _montantConvenuCtrl.dispose();
     super.dispose();
   }
 
@@ -81,6 +86,19 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
         .first;
     if (mesures.isNotEmpty && mounted) {
       setState(() => _valeursMesures = Map.of(mesures.first.valeurs));
+    }
+    final Utilisateur? utilisateur = ref
+        .read(utilisateurCourantProvider)
+        .asData
+        ?.value;
+    if (utilisateur?.estProprietaire ?? false) {
+      final commande = await ref
+          .read(financesRepositoryProvider)
+          .observerCommandeClient(widget.client.id)
+          .first;
+      if (commande != null && mounted) {
+        _montantConvenuCtrl.text = commande.montantTotal.toStringAsFixed(0);
+      }
     }
     await _resoudreTypeTenue();
     if (mounted) setState(() => _chargementInitial = false);
@@ -190,6 +208,24 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
             cheminsPhotosModele: List.of(_nouvellesPhotosModele),
             rendezVous: List.of(_nouveauxRendezVous),
           );
+
+      final double? montantConvenu = double.tryParse(
+        _montantConvenuCtrl.text.trim(),
+      );
+      if (montantConvenu != null && montantConvenu > 0) {
+        try {
+          await ref
+              .read(financesRepositoryProvider)
+              .definirMontantTotal(
+                clientId: widget.client.id,
+                montantTotal: montantConvenu,
+              );
+        } catch (_) {
+          // Les autres modifications sont déjà enregistrées : ne pas
+          // bloquer sur un échec de l'écriture financière.
+        }
+      }
+
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
@@ -204,6 +240,10 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool estProprietaire =
+        ref.watch(utilisateurCourantProvider).asData?.value?.estProprietaire ??
+        false;
+
     if (_chargementInitial) {
       return Scaffold(
         appBar: AppBar(title: Text('Modifier ${widget.client.nomComplet}')),
@@ -263,6 +303,10 @@ class _ModifierClientPageState extends ConsumerState<ModifierClientPage> {
               onAjouter: _ajouterPhotoModele,
               onSupprimer: _supprimerPhotoModele,
             ),
+            if (estProprietaire) ...[
+              const SizedBox(height: AppSpacing.xl),
+              SectionFinances(montantConvenuCtrl: _montantConvenuCtrl),
+            ],
             const SizedBox(height: AppSpacing.xl),
             SectionRendezVous(
               rendezVous: _nouveauxRendezVous,

@@ -14,6 +14,7 @@ import '../../../../shared/widgets/selecteur_photo.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../permissions/presentation/providers/apprentis_providers.dart';
 import '../providers/clients_providers.dart';
+import '../providers/finances_providers.dart';
 import '../widgets/indicateur_sauvegarde.dart';
 import '../widgets/section_finances.dart';
 import '../widgets/section_infos_client.dart';
@@ -40,6 +41,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
   final TextEditingController _nomCtrl = TextEditingController();
   final TextEditingController _prenomCtrl = TextEditingController();
   final TextEditingController _telephoneCtrl = TextEditingController();
+  final TextEditingController _montantConvenuCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
   final GlobalKey _mesuresKey = GlobalKey();
 
@@ -78,6 +80,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
     _nomCtrl.dispose();
     _prenomCtrl.dispose();
     _telephoneCtrl.dispose();
+    _montantConvenuCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
@@ -373,7 +376,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
 
     setState(() => _enregistrementEnCours = true);
     try {
-      await ref
+      final client = await ref
           .read(clientRepositoryProvider)
           .finaliserClient(
             atelierId: atelierId,
@@ -389,6 +392,24 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
             cheminsPhotosModele: List.of(_photosModele),
             rendezVous: List.of(_rendezVous),
           );
+
+      final double? montantConvenu = double.tryParse(
+        _montantConvenuCtrl.text.trim(),
+      );
+      if (montantConvenu != null && montantConvenu > 0) {
+        try {
+          await ref
+              .read(financesRepositoryProvider)
+              .definirMontantTotal(
+                clientId: client.id,
+                montantTotal: montantConvenu,
+              );
+        } catch (_) {
+          // Le client est déjà enregistré : ne pas bloquer sur un échec de
+          // l'écriture financière, qui peut être ressaisie depuis sa fiche.
+        }
+      }
+
       await ref.read(brouillonRepositoryProvider).supprimer(utilisateurId);
       if (mounted) context.pop();
     } catch (e) {
@@ -523,8 +544,10 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
               onAjouter: _ajouterPhotoModele,
               onSupprimer: _supprimerPhotoModele,
             ),
-            const SizedBox(height: AppSpacing.xl),
-            const SectionFinances(),
+            if (utilisateur?.estProprietaire ?? false) ...[
+              const SizedBox(height: AppSpacing.xl),
+              SectionFinances(montantConvenuCtrl: _montantConvenuCtrl),
+            ],
             const SizedBox(height: AppSpacing.xl),
             SectionRendezVous(
               rendezVous: _rendezVous,

@@ -16,6 +16,7 @@ import '../../../../shared/widgets/visionneuse_photo.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../permissions/presentation/providers/apprentis_providers.dart';
 import '../providers/clients_providers.dart';
+import '../widgets/carte_finances_client.dart';
 import '../widgets/section_titre.dart';
 
 /// Fiche client (lecture seule, avec accès à la modification) : toutes les
@@ -46,7 +47,8 @@ class ClientDetailPage extends ConsumerWidget {
         .watch(utilisateurCourantProvider)
         .asData
         ?.value;
-    bool peutModifier = utilisateur?.estProprietaire ?? false;
+    final bool estProprietaire = utilisateur?.estProprietaire ?? false;
+    bool peutModifier = estProprietaire;
     if (utilisateur != null && !utilisateur.estProprietaire) {
       final permissions = ref
           .watch(permissionsApprentiProvider(utilisateur.id))
@@ -177,6 +179,10 @@ class ClientDetailPage extends ConsumerWidget {
                   ),
                 ),
               ),
+          if (estProprietaire) ...[
+            const SizedBox(height: AppSpacing.xl),
+            CarteFinancesClient(clientId: client.id),
+          ],
         ],
       ),
     );
