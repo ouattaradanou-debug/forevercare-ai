@@ -63,5 +63,8 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
         </intent>
+        <!-- Cible explicitement l'appli WhatsApp standard (et non
+             WhatsApp Business) quand les deux sont installées. -->
+        <package android:name="com.whatsapp"/>
     </queries>
 </manifest>

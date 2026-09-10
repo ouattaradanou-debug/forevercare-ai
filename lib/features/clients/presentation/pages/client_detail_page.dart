@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -284,7 +285,29 @@ class _CarteInfos extends StatelessWidget {
 
   Future<void> _ouvrirWhatsApp(BuildContext context, String telephone) async {
     final Uri uri = TelephoneUtils.lienWhatsApp(telephone);
-    final bool ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    bool ok = false;
+
+    // Cible explicitement le paquet de l'appli WhatsApp standard, pour ne
+    // pas laisser Android ouvrir WhatsApp Business à la place quand les
+    // deux sont installées. Si l'appli standard n'est pas installée (ou
+    // hors Android), on retombe sur le lancement générique ci-dessous.
+    if (Platform.isAndroid) {
+      try {
+        await AndroidIntent(
+          action: 'android.intent.action.VIEW',
+          data: uri.toString(),
+          package: 'com.whatsapp',
+        ).launch();
+        ok = true;
+      } catch (_) {
+        ok = false;
+      }
+    }
+
+    if (!ok) {
+      ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

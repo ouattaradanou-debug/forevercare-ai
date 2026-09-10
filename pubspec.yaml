@@ -45,6 +45,9 @@ dependencies:
 
   # Appeler ou contacter un client par WhatsApp directement depuis sa fiche
   url_launcher: ^6.3.1
+  # Cible explicitement l'appli WhatsApp standard plutôt que WhatsApp
+  # Business quand les deux sont installées (Android uniquement)
+  android_intent_plus: ^5.3.0
 
   # Dates, formats et localisation française
   intl: ^0.20.3
