@@ -37,40 +37,54 @@ class RecuperationCompteService {
     );
     await _utilisateurs.enregistrerLocalement(utilisateur);
 
-    final atelier = await _ateliers.recupererDepuisSupabase(
-      utilisateur.atelierId,
-    );
-    await _ateliers.enregistrerLocalement(atelier);
+    final String atelierId = utilisateur.atelierId;
 
-    try {
-      await _ateliers.synchroniserAbonnement(utilisateur.atelierId);
-    } catch (_) {
-      // Best-effort : voir AtelierRepository.synchroniserAbonnement.
-    }
+    // Aucun de ces appels ne dépend du résultat d'un autre (tous ne
+    // dépendent que de `atelierId`, déjà connu) : les lancer en parallèle
+    // plutôt qu'un par un réduit d'autant le temps total avant que
+    // l'application ait fini de se mettre à jour — c'était l'un des
+    // principaux points de lenteur au démarrage/à la connexion, chaque
+    // aller-retour réseau s'ajoutant en plus des précédents sur une
+    // connexion mobile.
+    final Future<void> futureAtelier = _ateliers
+        .recupererDepuisSupabase(atelierId)
+        .then(_ateliers.enregistrerLocalement);
+    final Future<void> futureAbonnement = _ateliers
+        .synchroniserAbonnement(atelierId)
+        .catchError((Object _) {
+          // Best-effort : voir AtelierRepository.synchroniserAbonnement.
+        });
+    final Future<void> futureGabarits = _gabarits.synchroniserGabarits(
+      atelierId,
+    );
+    // Ne dépend pas non plus de l'atelier : porte uniquement sur ce qui
+    // est déjà en attente localement.
+    final Future<void> futurePush = _sync.pousserModificationsEnAttente();
 
     // Visible par tous les membres de l'atelier (voir RLS utilisateurs).
-    final equipe = await _utilisateurs.recupererEquipeAtelier(
-      utilisateur.atelierId,
-    );
+    final equipe = await _utilisateurs.recupererEquipeAtelier(atelierId);
 
     if (utilisateur.estProprietaire) {
-      // Un propriétaire peut lire les permissions de tous ses apprentis.
-      for (final membre in equipe) {
-        if (!membre.estProprietaire) {
-          await _utilisateurs.recupererPermissions(membre.id);
-        }
-      }
+      // Un propriétaire peut lire les permissions de tous ses apprentis —
+      // là aussi en parallèle plutôt qu'un par un.
+      await Future.wait([
+        for (final membre in equipe)
+          if (!membre.estProprietaire)
+            _utilisateurs.recupererPermissions(membre.id),
+      ]);
     } else {
       // Un apprenti ne peut lire que ses propres permissions (RLS).
       await _utilisateurs.recupererPermissions(utilisateur.id);
     }
 
-    await _gabarits.synchroniserGabarits(utilisateur.atelierId);
+    await Future.wait([futureAtelier, futureAbonnement, futureGabarits]);
 
     // Pousser d'abord ce qui a été écrit hors-ligne depuis la dernière
     // session (évite d'écraser une modification locale pas encore
-    // envoyée lors du tirage qui suit), puis tirer l'état de l'atelier.
-    await _sync.pousserModificationsEnAttente();
-    await _sync.tirerDonneesAtelier(utilisateur.atelierId);
+    // envoyée lors du tirage qui suit), puis tirer l'état de l'atelier —
+    // ce dernier appel doit rester après `futurePush`, contrairement aux
+    // autres ci-dessus.
+    await futurePush;
+    await _sync.tirerDonneesAtelier(atelierId);
   }
 }

@@ -17,15 +17,6 @@ Future<void> main() async {
   // dates de rendez-vous, de mesures, etc. dans toute l'application).
   await initializeDateFormatting('fr_FR');
 
-  // Rappels locaux de rendez-vous : best-effort, ne doit jamais empêcher le
-  // démarrage de l'application (permission refusée, plateforme sans
-  // notifications, etc.).
-  try {
-    await NotificationService.instance.initialiser();
-  } catch (e) {
-    debugPrint("Échec de l'initialisation des notifications : $e");
-  }
-
   // Connexion au projet Supabase (voir lib/core/config/supabase_config.dart
   // pour la marche à suivre de configuration).
   await Supabase.initialize(
@@ -33,25 +24,46 @@ Future<void> main() async {
     anonKey: SupabaseConfig.anonKey,
   );
 
+  final ProviderContainer container = ProviderContainer();
+
+  // Affiche l'application tout de suite avec le cache local déjà présent
+  // (lecture hors-ligne d'abord, voir tous les repositories) au lieu
+  // d'attendre la fin des appels réseau ci-dessous : sur une connexion
+  // mobile lente, ceux-ci pouvaient à eux seuls retarder le tout premier
+  // affichage de plusieurs secondes, écran figé, à chaque démarrage.
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const AtelierPlusApp(),
+    ),
+  );
+
+  // Rappels locaux de rendez-vous : best-effort, ne doit jamais retarder
+  // l'affichage de l'application (permission refusée, plateforme sans
+  // notifications, etc.).
+  NotificationService.instance.initialiser().catchError((Object e) {
+    debugPrint("Échec de l'initialisation des notifications : $e");
+  });
+
   // Rapatriement des données locales dès le démarrage si une session est
   // déjà active (reconnexion automatique de Supabase, sans repasser par
   // l'écran de connexion). Sans cette étape, un appareil dont le cache
   // local Drift a été vidé (réinstallation, `flutter clean`...) resterait
   // connecté mais sans aucune donnée locale — voir le même mécanisme
   // déclenché explicitement après une connexion manuelle dans
-  // ConnexionPage. Tentative silencieuse : si hors-ligne au démarrage,
-  // l'application continue avec le cache local existant, quel qu'il soit.
-  final ProviderContainer container = ProviderContainer();
+  // ConnexionPage. Lancé maintenant, après le premier affichage, plutôt
+  // qu'avant runApp : les écrans déjà à l'écran se mettent à jour tout
+  // seuls dès que chaque donnée arrive (flux Drift observés partout).
   final Session? session = Supabase.instance.client.auth.currentSession;
   if (session != null) {
-    try {
-      await container
-          .read(recuperationCompteServiceProvider)
-          .recupererDonneesCompte(session.user.id);
-    } catch (e) {
-      // Best-effort : voir commentaire ci-dessus.
-      debugPrint('Échec de la récupération des données au démarrage : $e');
-    }
+    container
+        .read(recuperationCompteServiceProvider)
+        .recupererDonneesCompte(session.user.id)
+        .catchError((Object e) {
+          // Best-effort : si hors-ligne au démarrage, l'application
+          // continue avec le cache local existant, quel qu'il soit.
+          debugPrint('Échec de la récupération des données au démarrage : $e');
+        });
   }
 
   // Dès que la connexion revient (l'app peut être restée ouverte
@@ -63,11 +75,4 @@ Future<void> main() async {
       container.read(syncEngineProvider).pousserModificationsEnAttente();
     }
   });
-
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const AtelierPlusApp(),
-    ),
-  );
 }
