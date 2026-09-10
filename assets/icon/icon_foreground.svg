@@ -1,25 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <g transform="translate(512,512) scale(0.82) translate(-512,-512)">
     <!-- socle / plateau -->
-    <rect x="170" y="600" width="684" height="72" rx="20" fill="#D1A438"/>
+    <rect x="170" y="600" width="684" height="72" rx="20" fill="#201E24"/>
+    <rect x="170" y="654" width="684" height="10" fill="#D1A438"/>
     <!-- colonne avant (porte-aiguille) -->
-    <rect x="330" y="440" width="90" height="170" rx="16" fill="#D1A438"/>
+    <rect x="330" y="440" width="90" height="170" rx="16" fill="#201E24"/>
+    <!-- petit badge doré décoratif -->
+    <ellipse cx="375" cy="500" rx="24" ry="16" fill="#D1A438"/>
     <!-- pied-de-biche -->
-    <rect x="355" y="592" width="40" height="24" rx="6" fill="#B4872A"/>
+    <rect x="355" y="592" width="40" height="24" rx="6" fill="#3A3742"/>
     <!-- bras -->
-    <rect x="330" y="350" width="415" height="90" rx="32" fill="#D1A438"/>
+    <rect x="330" y="350" width="415" height="90" rx="32" fill="#201E24"/>
+    <!-- reflet brillant sur le bras -->
+    <rect x="380" y="362" width="300" height="14" rx="7" fill="#3A3742" opacity="0.6"/>
     <!-- colonne arrière -->
-    <rect x="650" y="350" width="95" height="260" rx="20" fill="#D1A438"/>
+    <rect x="650" y="350" width="95" height="260" rx="20" fill="#201E24"/>
     <!-- volant -->
-    <circle cx="760" cy="420" r="58" fill="#D1A438"/>
-    <circle cx="760" cy="420" r="42" fill="#171A3A"/>
-    <circle cx="760" cy="420" r="16" fill="#FBF6EE"/>
+    <circle cx="760" cy="420" r="58" fill="#201E24"/>
+    <circle cx="760" cy="420" r="46" fill="#D1A438"/>
+    <circle cx="760" cy="420" r="34" fill="#201E24"/>
+    <circle cx="760" cy="420" r="14" fill="#EAE0CC"/>
     <!-- pied du fil -->
-    <rect x="690" y="292" width="12" height="60" rx="6" fill="#B4872A"/>
-    <!-- bobine de fil -->
-    <ellipse cx="696" cy="292" rx="34" ry="17" fill="#FBF6EE"/>
-    <ellipse cx="696" cy="292" rx="34" ry="17" fill="none" stroke="#B4872A" stroke-width="4"/>
+    <rect x="690" y="292" width="12" height="60" rx="6" fill="#3A3742"/>
+    <!-- bobine de fil rouge -->
+    <ellipse cx="696" cy="290" rx="36" ry="19" fill="#C1272D"/>
+    <ellipse cx="696" cy="290" rx="36" ry="19" fill="none" stroke="#8f1c21" stroke-width="4"/>
     <!-- fil -->
-    <path d="M672,300 C 620,380 470,420 372,592" fill="none" stroke="#FBF6EE" stroke-width="9" stroke-linecap="round"/>
+    <path d="M670,298 C 618,380 468,420 372,592" fill="none" stroke="#C1272D" stroke-width="8" stroke-linecap="round"/>
   </g>
 </svg>
