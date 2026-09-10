@@ -102,7 +102,7 @@ class _PermissionsApprentiPageState
                       ),
                     ),
                     _InterrupteurPermission(
-                      titre: 'Modifier les types de tenues',
+                      titre: 'Modifier les champs de mesure',
                       valeur: permissions.modifierGabarits,
                       onChanged: (v) => _basculer(
                         permissions.copierAvec(modifierGabarits: v),
