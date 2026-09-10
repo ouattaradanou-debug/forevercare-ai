@@ -20,6 +20,7 @@ import '../../../shared/widgets/stitched_divider.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
 import '../../clients/presentation/providers/clients_providers.dart';
 import '../../clients/presentation/providers/finances_providers.dart';
+import '../../permissions/presentation/providers/apprentis_providers.dart';
 import 'providers/rappel_rendez_vous_providers.dart';
 import 'widgets/home_action_card.dart';
 
@@ -45,6 +46,14 @@ class HomePage extends ConsumerWidget {
         .watch(utilisateurCourantProvider)
         .asData?.value;
     final bool estProprietaire = utilisateur?.estProprietaire ?? false;
+    bool peutGererChampsMesure = estProprietaire;
+    if (utilisateur != null && !utilisateur.estProprietaire) {
+      final permissions = ref
+          .watch(permissionsApprentiProvider(utilisateur.id))
+          .asData
+          ?.value;
+      peutGererChampsMesure = permissions?.modifierGabarits ?? false;
+    }
     final BrouillonClient? brouillon = ref
         .watch(brouillonActuelProvider)
         .asData
@@ -124,6 +133,13 @@ class HomePage extends ConsumerWidget {
                           libelle: 'Mon équipe',
                           couleurAccent: AppColors.indigo500,
                           onTap: () => context.push('/apprentis'),
+                        ),
+                      if (peutGererChampsMesure)
+                        HomeActionCard(
+                          icone: Icons.straighten,
+                          libelle: 'Champs de mesure',
+                          couleurAccent: AppColors.terracotta600,
+                          onTap: () => context.push('/champs-mesure'),
                         ),
                     ],
                   ),

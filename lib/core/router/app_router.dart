@@ -11,6 +11,7 @@ import '../../features/auth/presentation/pages/creation_compte_page.dart';
 import '../../features/clients/presentation/pages/client_detail_page.dart';
 import '../../features/clients/presentation/pages/clients_list_page.dart';
 import '../../features/clients/presentation/pages/formulaire_client_page.dart';
+import '../../features/clients/presentation/pages/gestion_champs_mesure_page.dart';
 import '../../features/clients/presentation/pages/modifier_client_page.dart';
 import '../../features/clients/presentation/pages/rendez_vous_list_page.dart';
 import '../../features/clients/presentation/pages/suivi_finances_page.dart';
@@ -105,6 +106,11 @@ final GoRouter appRouter = GoRouter(
       path: '/finances',
       name: 'finances',
       builder: (context, state) => const SuiviFinancesPage(),
+    ),
+    GoRoute(
+      path: '/champs-mesure',
+      name: 'champs-mesure',
+      builder: (context, state) => const GestionChampsMesurePage(),
     ),
     GoRoute(
       path: '/apprentis',

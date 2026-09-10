@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../local/app_database.dart';
 import '../models/champ_mesure.dart';
@@ -12,6 +13,7 @@ class GabaritRepository {
 
   final SupabaseClient _client;
   final AppDatabase _db;
+  static final Uuid _uuid = Uuid();
 
   /// Récupère les gabarits par défaut (`atelier_id` nul) et ceux propres à
   /// l'atelier, et les met en cache local. Appelé après connexion (voir
@@ -97,5 +99,183 @@ class GabaritRepository {
     return query.watch().map(
       (lignes) => lignes.map(ChampMesure.depuisLigneLocale).toList(),
     );
+  }
+
+  /// Tous les champs d'un gabarit, actifs ET masqués (pour l'écran de
+  /// gestion des champs — contrairement à [observerChampsActifs], utilisé
+  /// par le formulaire de mesures).
+  Stream<List<ChampMesure>> observerTousLesChamps(String typeTenueId) {
+    final query = _db.select(_db.champsMesure)
+      ..where((c) => c.typeTenueId.equals(typeTenueId))
+      ..orderBy([(c) => OrderingTerm.asc(c.ordre)]);
+    return query.watch().map(
+      (lignes) => lignes.map(ChampMesure.depuisLigneLocale).toList(),
+    );
+  }
+
+  /// S'assure qu'un gabarit propre à l'atelier existe pour ce sexe, et
+  /// retourne son identifiant. `types_tenue`/`champs_mesure` par défaut
+  /// (`atelier_id` nul) ne peuvent jamais être modifiés directement — les
+  /// policies RLS `..._insert_mon_atelier`/`..._update_mon_atelier`
+  /// exigent `atelier_id = mon_atelier_id()` (voir schema.sql). Masquer un
+  /// champ par défaut ou en ajouter un personnalisé passe donc toujours
+  /// par une copie préalable ("clone-on-customize") : au premier appel
+  /// pour un sexe donné, le gabarit par défaut et tous ses champs sont
+  /// dupliqués avec un nouvel identifiant et `atelier_id` renseigné ; les
+  /// appels suivants retrouvent directement cette copie (déjà préférée
+  /// par [resoudreTypeTenue], qui trie `atelier_id` non nul en premier).
+  Future<String> assurerGabaritPersonnalise({
+    required String sexe,
+    required String atelierId,
+  }) async {
+    final TypeTenueLocal? existant =
+        await (_db.select(_db.typesTenue)..where(
+              (t) => t.sexe.equals(sexe) & t.atelierId.equals(atelierId),
+            ))
+            .getSingleOrNull();
+    if (existant != null) return existant.id;
+
+    final TypeTenueLocal? defaut =
+        await (_db.select(_db.typesTenue)..where(
+              (t) => t.sexe.equals(sexe) & t.atelierId.isNull(),
+            ))
+            .getSingleOrNull();
+    if (defaut == null) {
+      throw StateError('Aucun gabarit par défaut pour le sexe "$sexe".');
+    }
+
+    final List<ChampMesureLocal> champsDefaut =
+        await (_db.select(_db.champsMesure)
+              ..where((c) => c.typeTenueId.equals(defaut.id)))
+            .get();
+
+    final DateTime maintenant = DateTime.now();
+    final TypeTenue nouveauType = TypeTenue(
+      id: _uuid.v4(),
+      atelierId: atelierId,
+      nom: defaut.nom,
+      sexe: sexe,
+      createdAt: maintenant,
+      updatedAt: maintenant,
+    );
+    await _db
+        .into(_db.typesTenue)
+        .insertOnConflictUpdate(nouveauType.versCompagnonLocal());
+
+    final List<ChampMesure> nouveauxChamps = [
+      for (final ChampMesureLocal c in champsDefaut)
+        ChampMesure(
+          id: _uuid.v4(),
+          typeTenueId: nouveauType.id,
+          nom: c.nom,
+          unite: c.unite,
+          statut: c.statut,
+          ordre: c.ordre,
+          createdAt: maintenant,
+          updatedAt: maintenant,
+        ),
+    ];
+    for (final ChampMesure c in nouveauxChamps) {
+      await _db
+          .into(_db.champsMesure)
+          .insertOnConflictUpdate(c.versCompagnonLocal());
+    }
+
+    try {
+      await _client.from('types_tenue').upsert({
+        'id': nouveauType.id,
+        'atelier_id': nouveauType.atelierId,
+        'nom': nouveauType.nom,
+        'sexe': nouveauType.sexe,
+      });
+      await _client.from('champs_mesure').upsert([
+        for (final ChampMesure c in nouveauxChamps)
+          {
+            'id': c.id,
+            'type_tenue_id': c.typeTenueId,
+            'nom': c.nom,
+            'unite': c.unite,
+            'statut': c.statut,
+            'ordre': c.ordre,
+          },
+      ]);
+    } catch (_) {
+      // Best-effort : la copie reste valide et utilisable localement même
+      // hors-ligne. Un second appareil de l'atelier ne la verra qu'après
+      // une prochaine synchronisation réussie sur celui-ci.
+    }
+
+    return nouveauType.id;
+  }
+
+  /// Masque ou réactive un champ (jamais de suppression, voir
+  /// `champs_mesure.statut` dans schema.sql). Ne doit être appelé que sur
+  /// un champ appartenant à un gabarit propre à l'atelier — voir
+  /// [assurerGabaritPersonnalise].
+  Future<void> definirStatutChamp({
+    required String champId,
+    required bool actif,
+  }) async {
+    final String statut = actif ? 'actif' : 'masque';
+    final DateTime maintenant = DateTime.now();
+    await (_db.update(_db.champsMesure)..where((c) => c.id.equals(champId)))
+        .write(
+          ChampsMesureCompanion(
+            statut: Value(statut),
+            updatedAt: Value(maintenant),
+          ),
+        );
+    try {
+      await _client
+          .from('champs_mesure')
+          .update({'statut': statut})
+          .eq('id', champId);
+    } catch (_) {
+      // Best-effort, voir assurerGabaritPersonnalise.
+    }
+  }
+
+  /// Ajoute un champ personnalisé à la fin d'un gabarit (propre à
+  /// l'atelier, voir [assurerGabaritPersonnalise]).
+  Future<void> ajouterChamp({
+    required String typeTenueId,
+    required String nom,
+    String? unite,
+  }) async {
+    final List<ChampMesureLocal> existants =
+        await (_db.select(_db.champsMesure)
+              ..where((c) => c.typeTenueId.equals(typeTenueId)))
+            .get();
+    final int ordre = existants.isEmpty
+        ? 1
+        : existants.map((c) => c.ordre).reduce((a, b) => a > b ? a : b) + 1;
+
+    final DateTime maintenant = DateTime.now();
+    final ChampMesure champ = ChampMesure(
+      id: _uuid.v4(),
+      typeTenueId: typeTenueId,
+      nom: nom,
+      unite: unite,
+      statut: 'actif',
+      ordre: ordre,
+      createdAt: maintenant,
+      updatedAt: maintenant,
+    );
+    await _db
+        .into(_db.champsMesure)
+        .insertOnConflictUpdate(champ.versCompagnonLocal());
+
+    try {
+      await _client.from('champs_mesure').upsert({
+        'id': champ.id,
+        'type_tenue_id': champ.typeTenueId,
+        'nom': champ.nom,
+        'unite': champ.unite,
+        'statut': champ.statut,
+        'ordre': champ.ordre,
+      });
+    } catch (_) {
+      // Best-effort, voir assurerGabaritPersonnalise.
+    }
   }
 }
