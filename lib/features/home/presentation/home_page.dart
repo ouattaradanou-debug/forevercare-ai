@@ -507,6 +507,15 @@ class _SelecteurRappel extends ConsumerWidget {
             spacing: AppSpacing.s,
             runSpacing: AppSpacing.s,
             children: [
+              ChoiceChip(
+                label: const Text('Aucun rappel'),
+                selected: joursActuels == 0,
+                onSelected: (selectionne) {
+                  if (selectionne) {
+                    ref.read(rappelJoursProvider.notifier).definir(0);
+                  }
+                },
+              ),
               for (final int jours in _options)
                 ChoiceChip(
                   label: Text('$jours jours avant'),
@@ -520,42 +529,55 @@ class _SelecteurRappel extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.m),
-          Text(
-            'Clients concernés par ce rappel',
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          const SizedBox(height: AppSpacing.s),
-          if (concernes.isEmpty)
+          if (joursActuels == 0)
             Text(
-              'Aucun rendez-vous à venir pour le moment.',
+              'Les rappels sont désactivés.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: scheme.onSurface.withValues(alpha: 0.7),
               ),
             )
-          else
-            for (final RendezVousAvecClient rdv in concernes)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.person_outline,
-                      size: 18,
-                      color: AppColors.terracotta600,
-                    ),
-                    const SizedBox(width: AppSpacing.s),
-                    Expanded(child: Text(rdv.client.nomComplet)),
-                    Text(
-                      DateFormat('d MMM', 'fr_FR').format(
-                        rdv.rendezVous.dateHeure,
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
+          else ...[
+            Text(
+              'Clients concernés par ce rappel',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: AppSpacing.s),
+            if (concernes.isEmpty)
+              Text(
+                'Aucun rendez-vous à venir pour le moment.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurface.withValues(alpha: 0.7),
                 ),
-              ),
+              )
+            else
+              for (final RendezVousAvecClient rdv in concernes)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.person_outline,
+                        size: 18,
+                        color: AppColors.terracotta600,
+                      ),
+                      const SizedBox(width: AppSpacing.s),
+                      Expanded(child: Text(rdv.client.nomComplet)),
+                      Text(
+                        DateFormat('d MMM', 'fr_FR').format(
+                          rdv.rendezVous.dateHeure,
+                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+          ],
           const SizedBox(height: AppSpacing.s),
           Align(
             alignment: Alignment.centerLeft,

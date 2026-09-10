@@ -112,12 +112,17 @@ class NotificationService {
   /// trop proche pour avoir encore `joursAvant` jours devant lui) n'a
   /// simplement pas de rappel planifié, plutôt que d'en déclencher un
   /// immédiatement.
+  ///
+  /// `joursAvant` à 0 signifie que le tailleur a désactivé les rappels
+  /// (voir rappelJoursProvider) : tout ce qui était planifié est annulé et
+  /// rien n'est reprogrammé.
   Future<void> planifierRappelsRendezVous({
     required List<RendezVousAvecClient> rendezVous,
     required int joursAvant,
   }) async {
     if (!_initialise) await initialiser();
     await _plugin.cancelAll();
+    if (joursAvant <= 0) return;
 
     final tz.TZDateTime maintenant = tz.TZDateTime.now(tz.local);
     for (final RendezVousAvecClient rdv in rendezVous) {
