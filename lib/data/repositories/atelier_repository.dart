@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/utils/image_utils.dart';
 import '../local/app_database.dart';
+import '../models/abonnement.dart';
 import '../models/atelier.dart';
 
 /// Accès à l'atelier : création, logo, lecture distante et cache local.
@@ -97,6 +98,31 @@ class AtelierRepository {
       ..where((t) => t.id.equals(atelierId));
     return query.watchSingleOrNull().map(
       (ligne) => ligne == null ? null : Atelier.depuisLigneLocale(ligne),
+    );
+  }
+
+  /// L'abonnement (essai gratuit ou payant) de l'atelier — toujours
+  /// exactement une ligne par atelier, créée automatiquement côté serveur
+  /// (voir Abonnement). Erreurs silencieuses au lieu de propager : sans
+  /// abonnement en cache, le bandeau "Essai gratuit" de l'accueil reste
+  /// simplement masqué plutôt que de bloquer toute l'application.
+  Future<void> synchroniserAbonnement(String atelierId) async {
+    final Map<String, dynamic> ligne = await _client
+        .from('abonnements')
+        .select()
+        .eq('atelier_id', atelierId)
+        .single();
+    final Abonnement abonnement = Abonnement.depuisSupabase(ligne);
+    await _db
+        .into(_db.abonnements)
+        .insertOnConflictUpdate(abonnement.versCompagnonLocal());
+  }
+
+  Stream<Abonnement?> observerAbonnementLocal(String atelierId) {
+    final query = _db.select(_db.abonnements)
+      ..where((t) => t.atelierId.equals(atelierId));
+    return query.watchSingleOrNull().map(
+      (ligne) => ligne == null ? null : Abonnement.depuisLigneLocale(ligne),
     );
   }
 }

@@ -42,6 +42,12 @@ class RecuperationCompteService {
     );
     await _ateliers.enregistrerLocalement(atelier);
 
+    try {
+      await _ateliers.synchroniserAbonnement(utilisateur.atelierId);
+    } catch (_) {
+      // Best-effort : voir AtelierRepository.synchroniserAbonnement.
+    }
+
     // Visible par tous les membres de l'atelier (voir RLS utilisateurs).
     final equipe = await _utilisateurs.recupererEquipeAtelier(
       utilisateur.atelierId,

@@ -21,6 +21,22 @@ class Ateliers extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Cache local de la table `abonnements` — lecture seule (jamais écrite
+/// depuis l'application, voir supabase/schema.sql décision 6).
+@DataClassName('AbonnementLocal')
+class Abonnements extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get statut => text()();
+  DateTimeColumn get dateFinEssai => dateTime()();
+  DateTimeColumn get dateRenouvellement => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Cache local de la table `utilisateurs`.
 @DataClassName('UtilisateurLocal')
 class Utilisateurs extends Table {
@@ -267,6 +283,7 @@ class RendezVousTable extends Table {
 @DriftDatabase(
   tables: [
     Ateliers,
+    Abonnements,
     Utilisateurs,
     PermissionsApprenti,
     TypesTenue,
@@ -285,7 +302,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -322,6 +339,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (depuis < 8) {
         await m.createTable(depenses);
+      }
+      if (depuis < 9) {
+        await m.createTable(abonnements);
       }
     },
   );

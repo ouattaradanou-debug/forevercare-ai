@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
+import '../../../data/models/abonnement.dart';
 import '../../../data/models/atelier.dart';
 import '../../../data/models/brouillon_client.dart';
 import '../../../data/models/commande.dart';
@@ -42,6 +43,8 @@ class HomePage extends ConsumerWidget {
     );
 
     final Atelier? atelier = ref.watch(atelierCourantProvider).asData?.value;
+    final Abonnement? abonnement =
+        ref.watch(abonnementCourantProvider).asData?.value;
     final Utilisateur? utilisateur = ref
         .watch(utilisateurCourantProvider)
         .asData?.value;
@@ -90,7 +93,10 @@ class HomePage extends ConsumerWidget {
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  const _BandeauEssaiGratuit(joursRestants: 30),
+                  if (abonnement != null)
+                    _BandeauEssaiGratuit(
+                      joursRestants: abonnement.joursRestantsEssai,
+                    ),
                   if (aUnBrouillon) ...[
                     const SizedBox(height: AppSpacing.m),
                     _CarteFicheACompleter(
@@ -342,11 +348,15 @@ class _EnTeteAtelier extends ConsumerWidget {
 class _BandeauEssaiGratuit extends StatelessWidget {
   const _BandeauEssaiGratuit({required this.joursRestants});
 
+  /// Calculé en direct à partir de `Abonnement.dateFinEssai` (voir
+  /// HomePage) — corrige un bandeau qui affichait auparavant "30 jours
+  /// restants" en dur, sans jamais varier.
   final int joursRestants;
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
+    final bool expire = joursRestants <= 0;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.m),
@@ -372,11 +382,13 @@ class _BandeauEssaiGratuit extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Essai gratuit en cours',
+                  expire ? 'Essai gratuit terminé' : 'Essai gratuit en cours',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 Text(
-                  '$joursRestants jours restants',
+                  expire
+                      ? 'Contacte-nous pour continuer à utiliser Atelier+.'
+                      : '$joursRestants jours restants',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurface.withValues(alpha: 0.7),
                   ),

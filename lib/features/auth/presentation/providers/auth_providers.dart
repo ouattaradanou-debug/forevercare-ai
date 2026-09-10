@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/services/sync_providers.dart';
 import '../../../../data/local/database_provider.dart';
+import '../../../../data/models/abonnement.dart';
 import '../../../../data/models/atelier.dart';
 import '../../../../data/models/utilisateur.dart';
 import '../../../../data/repositories/atelier_repository.dart';
@@ -85,4 +86,17 @@ final StreamProvider<Atelier?> atelierCourantProvider =
       return ref
           .watch(atelierRepositoryProvider)
           .observerAtelierLocal(utilisateur.atelierId);
+    });
+
+/// Abonnement (essai gratuit ou payant) de l'atelier courant — voir
+/// HomePage, bandeau "Essai gratuit".
+final StreamProvider<Abonnement?> abonnementCourantProvider =
+    StreamProvider<Abonnement?>((ref) {
+      final Utilisateur? utilisateur = ref
+          .watch(utilisateurCourantProvider)
+          .asData?.value;
+      if (utilisateur == null) return Stream<Abonnement?>.value(null);
+      return ref
+          .watch(atelierRepositoryProvider)
+          .observerAbonnementLocal(utilisateur.atelierId);
     });
