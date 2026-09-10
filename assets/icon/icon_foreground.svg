@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <g transform="translate(512,512) scale(0.82) translate(-512,-512)">
+  <g transform="translate(512,512) scale(0.95) translate(-494,-471)">
     <!-- socle / plateau -->
     <rect x="170" y="600" width="684" height="72" rx="20" fill="#201E24"/>
     <rect x="170" y="654" width="684" height="10" fill="#D1A438"/>

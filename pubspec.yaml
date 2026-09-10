@@ -81,14 +81,15 @@ flutter:
   assets:
     - assets/icon/
 
-# Icône de l'application : une machine à coudre dorée sur fond indigo,
-# pour que les tailleurs (parfois non-lettrés) la reconnaissent visuellement
-# parmi leurs autres applications sans avoir à lire son nom.
+# Icône de l'application : une machine à coudre noire et dorée sur un
+# fond dégradé chaleureux, pour que les tailleurs (parfois non-lettrés)
+# la reconnaissent visuellement parmi leurs autres applications sans avoir
+# à lire son nom.
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon/icon.png"
-  adaptive_icon_background: "#F5EDE0"
+  adaptive_icon_background: "assets/icon/icon_background.png"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   min_sdk_android: 21
   remove_alpha_ios: true
