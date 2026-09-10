@@ -31,7 +31,7 @@ class NotificationService {
     const DarwinInitializationSettings parametresIOS =
         DarwinInitializationSettings();
     await _plugin.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: parametresAndroid,
         iOS: parametresIOS,
       ),
@@ -43,9 +43,9 @@ class NotificationService {
         >();
     await pluginAndroid?.requestNotificationsPermission();
 
-    final DarwinFlutterLocalNotificationsPlugin? pluginIOS = _plugin
+    final IOSFlutterLocalNotificationsPlugin? pluginIOS = _plugin
         .resolvePlatformSpecificImplementation<
-          DarwinFlutterLocalNotificationsPlugin
+          IOSFlutterLocalNotificationsPlugin
         >();
     await pluginIOS?.requestPermissions(alert: true, badge: true, sound: true);
 
@@ -73,11 +73,12 @@ class NotificationService {
   Future<void> envoyerNotificationTest() async {
     if (!_initialise) await initialiser();
     await _plugin.show(
-      999999999,
-      'Rappel de rendez-vous',
-      "Ceci est un rappel test : c'est ainsi que s'affichera un vrai "
+      id: 999999999,
+      title: 'Rappel de rendez-vous',
+      body:
+          "Ceci est un rappel test : c'est ainsi que s'affichera un vrai "
           'rappel avant un rendez-vous.',
-      _details,
+      notificationDetails: _details,
     );
   }
 
@@ -115,11 +116,11 @@ class NotificationService {
           ? '1 jour'
           : '$joursAvant jours';
       await _plugin.zonedSchedule(
-        id,
-        'Rappel de rendez-vous',
-        'Rendez-vous avec ${rdv.client.nomComplet} dans $jourLibelle.',
-        dateRappel,
-        _details,
+        id: id,
+        title: 'Rappel de rendez-vous',
+        body: 'Rendez-vous avec ${rdv.client.nomComplet} dans $jourLibelle.',
+        scheduledDate: dateRappel,
+        notificationDetails: _details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     }
