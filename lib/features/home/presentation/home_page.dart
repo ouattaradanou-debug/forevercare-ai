@@ -12,6 +12,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../data/models/atelier.dart';
 import '../../../data/models/brouillon_client.dart';
+import '../../../data/models/rendez_vous.dart';
 import '../../../data/models/utilisateur.dart';
 import '../../../shared/widgets/selecteur_photo.dart';
 import '../../../shared/widgets/stitched_divider.dart';
@@ -458,7 +459,20 @@ class _SelecteurRappel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final int? joursActuels = ref.watch(rappelJoursProvider).asData?.value;
+    final List<RendezVousAvecClient> rendezVous =
+        ref.watch(rendezVousAtelierProvider).asData?.value ?? const [];
     final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    final DateTime maintenant = DateTime.now();
+    final List<RendezVousAvecClient> concernes = joursActuels == null
+        ? const []
+        : rendezVous.where((rdv) {
+            final DateTime dateRappel = NotificationService.calculerDateRappel(
+              rdv.rendezVous.dateHeure,
+              joursActuels,
+            );
+            return dateRappel.isAfter(maintenant);
+          }).toList();
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.m),
@@ -502,6 +516,43 @@ class _SelecteurRappel extends ConsumerWidget {
                 ),
             ],
           ),
+          const SizedBox(height: AppSpacing.m),
+          Text(
+            'Clients concernés par ce rappel',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: AppSpacing.s),
+          if (concernes.isEmpty)
+            Text(
+              'Aucun rendez-vous à venir pour le moment.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurface.withValues(alpha: 0.7),
+              ),
+            )
+          else
+            for (final RendezVousAvecClient rdv in concernes)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.person_outline,
+                      size: 18,
+                      color: AppColors.terracotta600,
+                    ),
+                    const SizedBox(width: AppSpacing.s),
+                    Expanded(child: Text(rdv.client.nomComplet)),
+                    Text(
+                      DateFormat('d MMM', 'fr_FR').format(
+                        rdv.rendezVous.dateHeure,
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           const SizedBox(height: AppSpacing.s),
           Align(
             alignment: Alignment.centerLeft,

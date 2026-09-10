@@ -75,6 +75,18 @@ class NotificationService {
     ),
   );
 
+  /// Date/heure à laquelle un rendez-vous donné déclenche son rappel (le
+  /// jour choisi avant le rendez-vous, à 8h). Exposée pour que l'écran
+  /// d'accueil puisse afficher, sans dupliquer cette règle, quels clients
+  /// sont réellement couverts par un rappel encore à venir.
+  static DateTime calculerDateRappel(DateTime dateRendezVous, int joursAvant) {
+    return DateTime(
+      dateRendezVous.year,
+      dateRendezVous.month,
+      dateRendezVous.day,
+    ).subtract(Duration(days: joursAvant)).add(const Duration(hours: 8));
+  }
+
   /// Envoie immédiatement une notification factice, pour que le tailleur
   /// puisse vérifier que les rappels s'affichent bien sur son téléphone
   /// sans attendre plusieurs jours qu'un vrai rappel se déclenche.
@@ -109,13 +121,17 @@ class NotificationService {
 
     final tz.TZDateTime maintenant = tz.TZDateTime.now(tz.local);
     for (final RendezVousAvecClient rdv in rendezVous) {
-      final DateTime dateRdv = rdv.rendezVous.dateHeure;
+      final DateTime brut = calculerDateRappel(
+        rdv.rendezVous.dateHeure,
+        joursAvant,
+      );
       final tz.TZDateTime dateRappel = tz.TZDateTime(
         tz.local,
-        dateRdv.year,
-        dateRdv.month,
-        dateRdv.day,
-      ).subtract(Duration(days: joursAvant)).add(const Duration(hours: 8));
+        brut.year,
+        brut.month,
+        brut.day,
+        brut.hour,
+      );
 
       if (!dateRappel.isAfter(maintenant)) continue;
 
