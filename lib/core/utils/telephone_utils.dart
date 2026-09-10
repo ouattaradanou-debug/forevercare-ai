@@ -18,6 +18,12 @@ class TelephoneUtils {
 
   static const String _domaineSynthetique = 'atelierplus.app';
 
+  /// Indicatif pays utilisé pour compléter automatiquement les numéros
+  /// locaux avant de les passer à WhatsApp (voir [lienWhatsApp]). Les
+  /// ateliers utilisant cette version de l'app sont au Burkina Faso — à
+  /// ajuster si l'app est un jour utilisée dans un autre pays.
+  static const String _indicatifPays = '226';
+
   /// Ne garde que les chiffres du numéro saisi (retire espaces, tirets...).
   static String normaliser(String telephone) {
     return telephone.replaceAll(RegExp(r'[^0-9]'), '');
@@ -42,13 +48,18 @@ class TelephoneUtils {
 
   /// Lien "wa.me" pour ouvrir une discussion WhatsApp avec ce numéro.
   ///
-  /// Limite connue : WhatsApp exige un numéro complet avec indicatif pays
-  /// (ex. 225XXXXXXXXXX pour la Côte d'Ivoire) pour retrouver le bon
-  /// contact. L'application ne demandant aujourd'hui qu'un numéro local
-  /// sans indicatif, WhatsApp peut ne pas trouver le contact si le
-  /// tailleur ne l'a pas saisi avec l'indicatif — WhatsApp affiche alors
-  /// son propre message d'erreur plutôt qu'un échec silencieux.
+  /// WhatsApp exige un numéro complet avec indicatif pays pour retrouver
+  /// le bon contact. Les numéros saisis dans l'app sont locaux (8 chiffres
+  /// au Burkina Faso, sans indicatif) : on ajoute donc automatiquement
+  /// [_indicatifPays] devant un numéro à 8 chiffres qui ne l'a pas déjà.
+  /// Un numéro d'une autre longueur (déjà saisi avec un indicatif, par
+  /// exemple) n'est pas modifié.
   static Uri lienWhatsApp(String telephone) {
-    return Uri.parse('https://wa.me/${normaliser(telephone)}');
+    final String chiffres = normaliser(telephone);
+    final String numeroComplet =
+        chiffres.length == 8 && !chiffres.startsWith(_indicatifPays)
+        ? '$_indicatifPays$chiffres'
+        : chiffres;
+    return Uri.parse('https://wa.me/$numeroComplet');
   }
 }

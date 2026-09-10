@@ -290,7 +290,7 @@ class _CarteInfos extends StatelessWidget {
         const SnackBar(
           content: Text(
             "Impossible d'ouvrir WhatsApp. Vérifie que WhatsApp est "
-            "installé et que le numéro inclut l'indicatif du pays.",
+            'installé sur ce téléphone.',
           ),
         ),
       );
