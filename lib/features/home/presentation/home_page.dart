@@ -141,6 +141,13 @@ class HomePage extends ConsumerWidget {
                           couleurAccent: AppColors.terracotta600,
                           onTap: () => context.push('/champs-mesure'),
                         ),
+                      if (estProprietaire)
+                        HomeActionCard(
+                          icone: Icons.remove_circle_outline,
+                          libelle: 'Enregistrer dépenses',
+                          couleurAccent: AppColors.erreur,
+                          onTap: () => context.push('/depenses'),
+                        ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xl),
@@ -157,8 +164,6 @@ class HomePage extends ConsumerWidget {
                   if (estProprietaire) ...[
                     const SizedBox(height: AppSpacing.m),
                     const _CarteSuiviFinances(),
-                    const SizedBox(height: AppSpacing.m),
-                    const _CarteSuiviDepenses(),
                   ],
                 ]),
               ),
@@ -667,43 +672,6 @@ class _CarteSuiviFinances extends StatelessWidget {
             Expanded(
               child: Text(
                 'Suivi des finances',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            const Icon(Icons.chevron_right),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Accès au suivi des dépenses (journalier, hebdomadaire, mensuel, annuel)
-/// — voir SuiviDepensesPage. Propriétaire uniquement, comme
-/// _CarteSuiviFinances.
-class _CarteSuiviDepenses extends StatelessWidget {
-  const _CarteSuiviDepenses();
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: () => context.push('/depenses'),
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.m),
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: scheme.outline.withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.trending_down_outlined, color: AppColors.erreur),
-            const SizedBox(width: AppSpacing.s),
-            Expanded(
-              child: Text(
-                'Suivi des dépenses',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
