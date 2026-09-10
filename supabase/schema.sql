@@ -325,6 +325,7 @@ create table if not exists public.commandes (
   client_id      uuid not null references public.clients (id) on delete cascade,
   montant_total  numeric(12, 2) not null check (montant_total >= 0),
   avance         numeric(12, 2) not null default 0 check (avance >= 0),
+  tenue_retiree  boolean not null default false,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
   constraint avance_ne_depasse_pas_total check (avance <= montant_total)

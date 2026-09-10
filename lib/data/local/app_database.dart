@@ -160,6 +160,8 @@ class Commandes extends Table {
   TextColumn get clientId => text()();
   RealColumn get montantTotal => real()();
   RealColumn get avance => real().withDefault(const Constant(0))();
+  BoolColumn get tenueRetiree =>
+      boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -252,7 +254,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -273,6 +275,9 @@ class AppDatabase extends _$AppDatabase {
       if (depuis < 4) {
         await m.createTable(commandes);
         await m.createTable(paiements);
+      }
+      if (depuis < 5) {
+        await m.addColumn(commandes, commandes.tenueRetiree);
       }
     },
   );

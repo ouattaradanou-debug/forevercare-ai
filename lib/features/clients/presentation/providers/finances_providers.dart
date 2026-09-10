@@ -31,3 +31,15 @@ final paiementsCommandeProvider = StreamProvider.family<List<Paiement>, String>(
         .observerPaiementsCommande(commandeId);
   },
 );
+
+/// Toutes les commandes de l'atelier — pour savoir, sur l'accueil, quels
+/// clients ont une commande soldée (voir Commande.estSoldee) et ne plus
+/// les afficher parmi les rendez-vous à suivre.
+final StreamProvider<List<Commande>> commandesAtelierProvider =
+    StreamProvider<List<Commande>>((ref) {
+      final atelier = ref.watch(atelierCourantProvider).asData?.value;
+      if (atelier == null) return Stream<List<Commande>>.value(const []);
+      return ref
+          .watch(financesRepositoryProvider)
+          .observerCommandesAtelier(atelier.id);
+    });

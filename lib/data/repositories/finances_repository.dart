@@ -46,6 +46,27 @@ class FinancesRepository {
     );
   }
 
+  /// Toutes les commandes de l'atelier (tous clients confondus) — pour
+  /// savoir, sur l'accueil, quels clients ont une commande soldée (voir
+  /// Commande.estSoldee) et ne plus les afficher parmi les rendez-vous à
+  /// suivre.
+  Stream<List<Commande>> observerCommandesAtelier(String atelierId) {
+    final query = _db.select(_db.commandes).join([
+      innerJoin(
+        _db.clients,
+        _db.clients.id.equalsExp(_db.commandes.clientId),
+      ),
+    ])..where(_db.clients.atelierId.equals(atelierId));
+    return query.watch().map(
+      (lignes) => lignes
+          .map(
+            (ligne) =>
+                Commande.depuisLigneLocale(ligne.readTable(_db.commandes)),
+          )
+          .toList(),
+    );
+  }
+
   Stream<List<Paiement>> observerPaiementsCommande(String commandeId) {
     final query = _db.select(_db.paiements)
       ..where((t) => t.commandeId.equals(commandeId))
@@ -78,6 +99,7 @@ class FinancesRepository {
       clientId: clientId,
       montantTotal: montantTotal,
       avance: existante?.avance ?? 0,
+      tenueRetiree: existante?.tenueRetiree ?? false,
       createdAt: existante?.createdAt ?? maintenant,
       updatedAt: maintenant,
     );
@@ -146,6 +168,7 @@ class FinancesRepository {
       clientId: commande.clientId,
       montantTotal: commande.montantTotal,
       avance: nouvelleAvance,
+      tenueRetiree: commande.tenueRetiree,
       createdAt: commande.createdAt,
       updatedAt: maintenant,
     );
@@ -170,6 +193,40 @@ class FinancesRepository {
         await _client
             .from('commandes')
             .update({'avance': commandeMiseAJour.avance})
+            .eq('id', commande.id);
+      } catch (_) {
+        // Best-effort : voir ClientRepository.
+      }
+    }
+  }
+
+  /// Marque (ou démarque) la tenue d'un client comme retirée. Sans effet
+  /// si le client n'a pas encore de commande (rien à marquer).
+  Future<void> definirTenueRetiree({
+    required String clientId,
+    required bool retiree,
+  }) async {
+    final Commande? commande = await _commandeClient(clientId);
+    if (commande == null) return;
+
+    final Commande commandeMiseAJour = Commande(
+      id: commande.id,
+      clientId: commande.clientId,
+      montantTotal: commande.montantTotal,
+      avance: commande.avance,
+      tenueRetiree: retiree,
+      createdAt: commande.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    await _db
+        .into(_db.commandes)
+        .insertOnConflictUpdate(commandeMiseAJour.versCompagnonLocal());
+
+    if (await _estEnLigne()) {
+      try {
+        await _client
+            .from('commandes')
+            .update({'tenue_retiree': retiree})
             .eq('id', commande.id);
       } catch (_) {
         // Best-effort : voir ClientRepository.

@@ -114,6 +114,18 @@ class CarteFinancesClient extends ConsumerWidget {
                     commande.resteAPayer,
                     accent: true,
                   ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: const Text('Tenue retirée'),
+                    value: commande.tenueRetiree,
+                    onChanged: (valeur) => ref
+                        .read(financesRepositoryProvider)
+                        .definirTenueRetiree(
+                          clientId: clientId,
+                          retiree: valeur ?? false,
+                        ),
+                  ),
                   const SizedBox(height: AppSpacing.m),
                   if (commande.resteAPayer > 0)
                     Align(

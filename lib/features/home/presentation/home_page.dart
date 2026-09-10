@@ -12,12 +12,14 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../data/models/atelier.dart';
 import '../../../data/models/brouillon_client.dart';
+import '../../../data/models/commande.dart';
 import '../../../data/models/rendez_vous.dart';
 import '../../../data/models/utilisateur.dart';
 import '../../../shared/widgets/selecteur_photo.dart';
 import '../../../shared/widgets/stitched_divider.dart';
 import '../../auth/presentation/providers/auth_providers.dart';
 import '../../clients/presentation/providers/clients_providers.dart';
+import '../../clients/presentation/providers/finances_providers.dart';
 import 'providers/rappel_rendez_vous_providers.dart';
 import 'widgets/home_action_card.dart';
 
@@ -461,7 +463,16 @@ class _SelecteurRappel extends ConsumerWidget {
     final int? joursActuels = ref.watch(rappelJoursProvider).asData?.value;
     final List<RendezVousAvecClient> rendezVous =
         ref.watch(rendezVousAtelierProvider).asData?.value ?? const [];
+    final List<Commande> commandes =
+        ref.watch(commandesAtelierProvider).asData?.value ?? const [];
     final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    // Un client dont la tenue est retirée et le solde réglé n'a plus rien
+    // à suivre : il ne doit plus apparaître ici, même si son rendez-vous
+    // (déjà passé, ex. essayage) tombe encore dans la fenêtre choisie.
+    final Map<String, Commande> commandeParClient = {
+      for (final Commande c in commandes) c.clientId: c,
+    };
 
     // Clients dont le rendez-vous tombe dans la fenêtre choisie (les N
     // prochains jours) — pas simplement "tous les rendez-vous à venir" :
@@ -474,7 +485,11 @@ class _SelecteurRappel extends ConsumerWidget {
             final DateTime limite = maintenant.add(
               Duration(days: joursActuels),
             );
-            return date.isAfter(maintenant) && date.isBefore(limite);
+            final bool dansLaFenetre =
+                date.isAfter(maintenant) && date.isBefore(limite);
+            final bool soldee =
+                commandeParClient[rdv.client.id]?.estSoldee ?? false;
+            return dansLaFenetre && !soldee;
           }).toList();
 
     return Container(
