@@ -12,6 +12,7 @@ class Paiement {
     required this.montant,
     required this.datePaiement,
     required this.createdAt,
+    this.synced = true,
   });
 
   final String id;
@@ -20,6 +21,10 @@ class Paiement {
   final DateTime datePaiement;
   final DateTime createdAt;
 
+  /// Faux tant que ce paiement n'a pas été confirmé reçu par Supabase —
+  /// voir SyncEngine.
+  final bool synced;
+
   factory Paiement.depuisSupabase(Map<String, dynamic> json) {
     return Paiement(
       id: json['id'] as String,
@@ -27,6 +32,7 @@ class Paiement {
       montant: (json['montant'] as num).toDouble(),
       datePaiement: DateTime.parse(json['date_paiement'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
+      synced: true,
     );
   }
 
@@ -37,6 +43,7 @@ class Paiement {
       montant: ligne.montant,
       datePaiement: ligne.datePaiement,
       createdAt: ligne.createdAt,
+      synced: ligne.synced,
     );
   }
 
@@ -47,6 +54,7 @@ class Paiement {
       montant: Value(montant),
       datePaiement: Value(datePaiement),
       createdAt: Value(createdAt),
+      synced: Value(synced),
     );
   }
 }

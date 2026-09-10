@@ -20,6 +20,13 @@ import '../models/rendez_vous.dart';
 /// synchronisé" est ainsi garantie structurellement, sans filtre à
 /// appliquer à la lecture. Tant qu'une fiche n'a pas de mesure, elle ne
 /// vit que dans `brouillons_client` (voir BrouillonRepository).
+///
+/// Chaque écriture est enregistrée localement d'abord (`synced: false`),
+/// puis poussée vers Supabase immédiatement si une connexion est
+/// disponible (`synced: true` en cas de succès). En cas d'échec ou
+/// d'absence de connexion, la ligne reste marquée `synced: false` : c'est
+/// SyncEngine qui se charge de retenter l'envoi plus tard, dès que la
+/// connexion revient — voir lib/core/services/sync_engine.dart.
 class ClientRepository {
   ClientRepository(this._client, this._db);
 
@@ -59,6 +66,7 @@ class ClientRepository {
       datePriseMesures: datePriseMesures,
       createdAt: maintenant,
       updatedAt: maintenant,
+      synced: false,
     );
     await _db
         .into(_db.clients)
@@ -72,6 +80,7 @@ class ClientRepository {
       valeurs: valeursMesures,
       prisePar: utilisateurId,
       createdAt: maintenant,
+      synced: false,
     );
     await _db
         .into(_db.mesures)
@@ -112,6 +121,7 @@ class ClientRepository {
           type: TypeRendezVous.depuisTexte(r.type),
           createdAt: maintenant,
           updatedAt: maintenant,
+          synced: false,
         ),
     ];
     for (final RendezVous rdv in rendezVousCrees) {
@@ -122,10 +132,14 @@ class ClientRepository {
 
     if (await _estEnLigne()) {
       try {
-        await _synchroniserVersSupabase(client, mesure, rendezVousCrees);
+        await pousserClient(client);
+        await pousserMesure(mesure);
+        if (rendezVousCrees.isNotEmpty) {
+          await pousserRendezVous(rendezVousCrees);
+        }
       } catch (_) {
-        // Best-effort : les données restent valides localement et seront
-        // resynchronisées par le moteur de synchronisation de la Phase 3.
+        // Best-effort : les données restent valides localement (synced
+        // reste à false) et seront retentées par SyncEngine.
       }
     }
 
@@ -167,6 +181,7 @@ class ClientRepository {
       datePriseMesures: datePriseMesures,
       createdAt: client.createdAt,
       updatedAt: maintenant,
+      synced: false,
     );
     await _db
         .into(_db.clients)
@@ -185,6 +200,7 @@ class ClientRepository {
             valeurs: valeursMesures,
             prisePar: utilisateurId,
             createdAt: maintenant,
+            synced: false,
           );
     if (mesure != null) {
       await _db
@@ -227,6 +243,7 @@ class ClientRepository {
           type: TypeRendezVous.depuisTexte(r.type),
           createdAt: maintenant,
           updatedAt: maintenant,
+          synced: false,
         ),
     ];
     for (final RendezVous rdv in rendezVousCrees) {
@@ -237,56 +254,27 @@ class ClientRepository {
 
     if (await _estEnLigne()) {
       try {
-        await _client
-            .from('clients')
-            .update({
-              'nom': clientMisAJour.nom,
-              'prenom': clientMisAJour.prenom,
-              'telephone': clientMisAJour.telephone,
-              'sexe': clientMisAJour.sexe,
-              'date_prise_mesures': clientMisAJour.datePriseMesures
-                  ?.toIso8601String(),
-            })
-            .eq('id', client.id);
-        if (mesure != null) {
-          await _client.from('mesures').insert({
-            'id': mesure.id,
-            'client_id': mesure.clientId,
-            'type_tenue_id': mesure.typeTenueId,
-            'valeurs': mesure.valeurs,
-            'prise_par': mesure.prisePar,
-          });
-        }
-        // Les photos restent locales pour l'instant, comme dans
-        // finaliserClient (envoi vers Supabase Storage prévu avec le
-        // reste du moteur de synchronisation, voir Photo dans
+        await pousserClient(clientMisAJour);
+        if (mesure != null) await pousserMesure(mesure);
+        // Les photos restent locales pour l'instant (envoi vers Supabase
+        // Storage non encore implémenté — voir Photo dans
         // app_database.dart).
         if (rendezVousCrees.isNotEmpty) {
-          await _client
-              .from('rendez_vous')
-              .insert([
-                for (final RendezVous rdv in rendezVousCrees)
-                  {
-                    'id': rdv.id,
-                    'client_id': rdv.clientId,
-                    'date_heure': rdv.dateHeure.toIso8601String(),
-                    'type': rdv.type.name,
-                  },
-              ]);
+          await pousserRendezVous(rendezVousCrees);
         }
       } catch (_) {
-        // Best-effort : les données restent valides localement et seront
-        // resynchronisées par le moteur de synchronisation de la Phase 3.
+        // Best-effort : les données restent valides localement (synced
+        // reste à false) et seront retentées par SyncEngine.
       }
     }
   }
 
-  Future<void> _synchroniserVersSupabase(
-    Client client,
-    Mesure mesure,
-    List<RendezVous> rendezVous,
-  ) async {
-    await _client.from('clients').insert({
+  /// Envoie (ou met à jour) une fiche client sur Supabase, puis marque la
+  /// ligne locale correspondante comme synchronisée. `upsert` gère aussi
+  /// bien la création que la modification en un seul appel : plus besoin
+  /// de savoir si la ligne distante existe déjà.
+  Future<void> pousserClient(Client client) async {
+    await _client.from('clients').upsert({
       'id': client.id,
       'atelier_id': client.atelierId,
       'nom': client.nom,
@@ -295,25 +283,38 @@ class ClientRepository {
       'sexe': client.sexe,
       'date_prise_mesures': client.datePriseMesures?.toIso8601String(),
     });
-    await _client.from('mesures').insert({
+    await (_db.update(_db.clients)..where((t) => t.id.equals(client.id)))
+        .write(const ClientsCompanion(synced: Value(true)));
+  }
+
+  Future<void> pousserMesure(Mesure mesure) async {
+    await _client.from('mesures').upsert({
       'id': mesure.id,
       'client_id': mesure.clientId,
       'type_tenue_id': mesure.typeTenueId,
       'valeurs': mesure.valeurs,
       'prise_par': mesure.prisePar,
     });
-    if (rendezVous.isNotEmpty) {
-      await _client
-          .from('rendez_vous')
-          .insert([
-            for (final RendezVous rdv in rendezVous)
-              {
-                'id': rdv.id,
-                'client_id': rdv.clientId,
-                'date_heure': rdv.dateHeure.toIso8601String(),
-                'type': rdv.type.name,
-              },
-          ]);
+    await (_db.update(_db.mesures)..where((t) => t.id.equals(mesure.id)))
+        .write(const MesuresCompanion(synced: Value(true)));
+  }
+
+  Future<void> pousserRendezVous(List<RendezVous> rendezVous) async {
+    await _client.from('rendez_vous').upsert([
+      for (final RendezVous rdv in rendezVous)
+        {
+          'id': rdv.id,
+          'client_id': rdv.clientId,
+          'date_heure': rdv.dateHeure.toIso8601String(),
+          'type': rdv.type.name,
+        },
+    ]);
+    for (final RendezVous rdv in rendezVous) {
+      await (_db.update(
+        _db.rendezVousTable,
+      )..where((t) => t.id.equals(rdv.id))).write(
+        const RendezVousTableCompanion(synced: Value(true)),
+      );
     }
   }
 

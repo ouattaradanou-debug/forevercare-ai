@@ -16,6 +16,7 @@ class Client {
     this.datePriseMesures,
     required this.createdAt,
     required this.updatedAt,
+    this.synced = true,
   });
 
   final String id;
@@ -27,6 +28,10 @@ class Client {
   final DateTime? datePriseMesures;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Faux tant que cette fiche n'a pas été confirmée reçue par Supabase —
+  /// voir SyncEngine.
+  final bool synced;
 
   String get nomComplet {
     final String texte = [
@@ -49,6 +54,7 @@ class Client {
           : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      synced: true,
     );
   }
 
@@ -63,6 +69,7 @@ class Client {
       datePriseMesures: ligne.datePriseMesures,
       createdAt: ligne.createdAt,
       updatedAt: ligne.updatedAt,
+      synced: ligne.synced,
     );
   }
 
@@ -77,6 +84,7 @@ class Client {
       datePriseMesures: Value(datePriseMesures),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      synced: Value(synced),
     );
   }
 }

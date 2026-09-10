@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/services/sync_providers.dart';
 import '../../../../data/local/database_provider.dart';
 import '../../../../data/models/atelier.dart';
 import '../../../../data/models/utilisateur.dart';
@@ -48,6 +49,7 @@ final Provider<RecuperationCompteService> recuperationCompteServiceProvider =
         ref.watch(atelierRepositoryProvider),
         ref.watch(utilisateurRepositoryProvider),
         ref.watch(gabaritRepositoryProvider),
+        ref.watch(syncEngineProvider),
       ),
     );
 

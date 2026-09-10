@@ -35,6 +35,7 @@ class RendezVous {
     this.statut = 'planifie',
     required this.createdAt,
     required this.updatedAt,
+    this.synced = true,
   });
 
   final String id;
@@ -45,6 +46,10 @@ class RendezVous {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Faux tant que ce rendez-vous n'a pas été confirmé reçu par Supabase
+  /// — voir SyncEngine.
+  final bool synced;
+
   factory RendezVous.depuisSupabase(Map<String, dynamic> json) {
     return RendezVous(
       id: json['id'] as String,
@@ -54,6 +59,7 @@ class RendezVous {
       statut: json['statut'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      synced: true,
     );
   }
 
@@ -66,6 +72,7 @@ class RendezVous {
       statut: ligne.statut,
       createdAt: ligne.createdAt,
       updatedAt: ligne.updatedAt,
+      synced: ligne.synced,
     );
   }
 
@@ -78,6 +85,7 @@ class RendezVous {
       statut: Value(statut),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      synced: Value(synced),
     );
   }
 }

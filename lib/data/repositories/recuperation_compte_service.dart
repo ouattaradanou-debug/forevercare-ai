@@ -1,3 +1,4 @@
+import '../../core/services/sync_engine.dart';
 import 'atelier_repository.dart';
 import 'gabarit_repository.dart';
 import 'utilisateur_repository.dart';
@@ -12,12 +13,23 @@ import 'utilisateur_repository.dart';
 /// gabarits (types de tenue + champs de mesure), pour qu'ils restent
 /// disponibles hors-ligne dès la prochaine ouverture de l'application, y
 /// compris pour la toute première prise de mesure d'un client.
+///
+/// Depuis SyncEngine (Phase 3), inclut aussi les clients et tout ce qui
+/// leur est rattaché (mesures, rendez-vous, finances) : sans ça, le
+/// téléphone d'un apprenti ou une réinstallation ne voyait jamais les
+/// clients déjà créés sur un autre appareil de l'atelier.
 class RecuperationCompteService {
-  RecuperationCompteService(this._ateliers, this._utilisateurs, this._gabarits);
+  RecuperationCompteService(
+    this._ateliers,
+    this._utilisateurs,
+    this._gabarits,
+    this._sync,
+  );
 
   final AtelierRepository _ateliers;
   final UtilisateurRepository _utilisateurs;
   final GabaritRepository _gabarits;
+  final SyncEngine _sync;
 
   Future<void> recupererDonneesCompte(String utilisateurId) async {
     final utilisateur = await _utilisateurs.recupererDepuisSupabase(
@@ -48,5 +60,11 @@ class RecuperationCompteService {
     }
 
     await _gabarits.synchroniserGabarits(utilisateur.atelierId);
+
+    // Pousser d'abord ce qui a été écrit hors-ligne depuis la dernière
+    // session (évite d'écraser une modification locale pas encore
+    // envoyée lors du tirage qui suit), puis tirer l'état de l'atelier.
+    await _sync.pousserModificationsEnAttente();
+    await _sync.tirerDonneesAtelier(utilisateur.atelierId);
   }
 }

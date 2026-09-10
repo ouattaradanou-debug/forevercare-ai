@@ -17,6 +17,10 @@ import '../models/paiement.dart';
 /// Un seul enregistrement `commandes` par client (voir décision produit :
 /// "un solde par client" plutôt que plusieurs commandes distinctes dans le
 /// temps).
+///
+/// Comme ClientRepository, chaque écriture locale part avec `synced:
+/// false` et n'est marquée `true` qu'après confirmation de Supabase —
+/// SyncEngine retente le reste plus tard.
 class FinancesRepository {
   FinancesRepository(this._client, this._db);
 
@@ -128,6 +132,7 @@ class FinancesRepository {
       tenueRetiree: existante?.tenueRetiree ?? false,
       createdAt: existante?.createdAt ?? maintenant,
       updatedAt: maintenant,
+      synced: false,
     );
     await _db
         .into(_db.commandes)
@@ -135,22 +140,10 @@ class FinancesRepository {
 
     if (await _estEnLigne()) {
       try {
-        if (existante == null) {
-          await _client.from('commandes').insert({
-            'id': commande.id,
-            'client_id': commande.clientId,
-            'montant_total': commande.montantTotal,
-            'avance': commande.avance,
-          });
-        } else {
-          await _client
-              .from('commandes')
-              .update({'montant_total': commande.montantTotal})
-              .eq('id', commande.id);
-        }
+        await pousserCommande(commande);
       } catch (_) {
-        // Best-effort : voir ClientRepository pour la même approche —
-        // resynchronisé plus tard par le moteur de synchronisation.
+        // Best-effort : voir ClientRepository — resynchronisé plus tard
+        // par SyncEngine.
       }
     }
   }
@@ -188,6 +181,7 @@ class FinancesRepository {
       montant: montant,
       datePaiement: maintenant,
       createdAt: maintenant,
+      synced: false,
     );
     final Commande commandeMiseAJour = Commande(
       id: commande.id,
@@ -197,6 +191,7 @@ class FinancesRepository {
       tenueRetiree: commande.tenueRetiree,
       createdAt: commande.createdAt,
       updatedAt: maintenant,
+      synced: false,
     );
 
     await _db.transaction(() async {
@@ -210,16 +205,8 @@ class FinancesRepository {
 
     if (await _estEnLigne()) {
       try {
-        await _client.from('paiements').insert({
-          'id': paiement.id,
-          'commande_id': paiement.commandeId,
-          'montant': paiement.montant,
-          'date_paiement': paiement.datePaiement.toIso8601String(),
-        });
-        await _client
-            .from('commandes')
-            .update({'avance': commandeMiseAJour.avance})
-            .eq('id', commande.id);
+        await pousserPaiement(paiement);
+        await pousserCommande(commandeMiseAJour);
       } catch (_) {
         // Best-effort : voir ClientRepository.
       }
@@ -243,6 +230,7 @@ class FinancesRepository {
       tenueRetiree: retiree,
       createdAt: commande.createdAt,
       updatedAt: DateTime.now(),
+      synced: false,
     );
     await _db
         .into(_db.commandes)
@@ -250,13 +238,39 @@ class FinancesRepository {
 
     if (await _estEnLigne()) {
       try {
-        await _client
-            .from('commandes')
-            .update({'tenue_retiree': retiree})
-            .eq('id', commande.id);
+        await pousserCommande(commandeMiseAJour);
       } catch (_) {
         // Best-effort : voir ClientRepository.
       }
     }
+  }
+
+  /// Envoie (ou met à jour) une commande sur Supabase, puis marque la
+  /// ligne locale comme synchronisée. `upsert` gère aussi bien la
+  /// création que la modification en un seul appel.
+  Future<void> pousserCommande(Commande commande) async {
+    await _client.from('commandes').upsert({
+      'id': commande.id,
+      'client_id': commande.clientId,
+      'montant_total': commande.montantTotal,
+      'avance': commande.avance,
+      'tenue_retiree': commande.tenueRetiree,
+    });
+    await (_db.update(_db.commandes)..where((t) => t.id.equals(commande.id)))
+        .write(const CommandesCompanion(synced: Value(true)));
+  }
+
+  Future<void> pousserPaiement(Paiement paiement) async {
+    await _client.from('paiements').upsert({
+      'id': paiement.id,
+      'commande_id': paiement.commandeId,
+      'montant': paiement.montant,
+      'date_paiement': paiement.datePaiement.toIso8601String(),
+    });
+    await (_db.update(
+      _db.paiements,
+    )..where((t) => t.id.equals(paiement.id))).write(
+      const PaiementsCompanion(synced: Value(true)),
+    );
   }
 }

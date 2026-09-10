@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -6,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/sync_providers.dart';
 import 'features/auth/presentation/providers/auth_providers.dart';
 
 Future<void> main() async {
@@ -51,6 +53,16 @@ Future<void> main() async {
       debugPrint('Échec de la récupération des données au démarrage : $e');
     }
   }
+
+  // Dès que la connexion revient (l'app peut être restée ouverte
+  // longtemps hors-ligne, sans redémarrage ni reconnexion pour
+  // redéclencher recupererDonneesCompte), retente l'envoi de tout ce qui
+  // a été écrit localement en attendant — voir SyncEngine.
+  Connectivity().onConnectivityChanged.listen((resultats) {
+    if (!resultats.contains(ConnectivityResult.none)) {
+      container.read(syncEngineProvider).pousserModificationsEnAttente();
+    }
+  });
 
   runApp(
     UncontrolledProviderScope(

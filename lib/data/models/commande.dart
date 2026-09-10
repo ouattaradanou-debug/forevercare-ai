@@ -18,6 +18,7 @@ class Commande {
     this.tenueRetiree = false,
     required this.createdAt,
     required this.updatedAt,
+    this.synced = true,
   });
 
   final String id;
@@ -27,6 +28,10 @@ class Commande {
   final bool tenueRetiree;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Faux tant que cette ligne n'a pas été confirmée reçue par Supabase —
+  /// voir SyncEngine.
+  final bool synced;
 
   double get resteAPayer => montantTotal - avance;
 
@@ -45,6 +50,7 @@ class Commande {
       tenueRetiree: json['tenue_retiree'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      synced: true,
     );
   }
 
@@ -57,6 +63,7 @@ class Commande {
       tenueRetiree: ligne.tenueRetiree,
       createdAt: ligne.createdAt,
       updatedAt: ligne.updatedAt,
+      synced: ligne.synced,
     );
   }
 
@@ -69,6 +76,7 @@ class Commande {
       tenueRetiree: Value(tenueRetiree),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      synced: Value(synced),
     );
   }
 }

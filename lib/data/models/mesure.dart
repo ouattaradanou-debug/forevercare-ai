@@ -16,6 +16,7 @@ class Mesure {
     required this.valeurs,
     required this.prisePar,
     required this.createdAt,
+    this.synced = true,
   });
 
   final String id;
@@ -25,6 +26,10 @@ class Mesure {
   final Map<String, String> valeurs;
   final String prisePar;
   final DateTime createdAt;
+
+  /// Faux tant que cette prise n'a pas été confirmée reçue par Supabase —
+  /// voir SyncEngine.
+  final bool synced;
 
   bool get aAuMoinsUneValeurRenseignee =>
       valeurs.values.any((v) => v.trim().isNotEmpty);
@@ -40,6 +45,7 @@ class Mesure {
       valeurs: brut.map((k, v) => MapEntry(k, v.toString())),
       prisePar: json['prise_par'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
+      synced: true,
     );
   }
 
@@ -54,6 +60,7 @@ class Mesure {
       valeurs: decode.map((k, v) => MapEntry(k, v.toString())),
       prisePar: ligne.prisePar,
       createdAt: ligne.createdAt,
+      synced: ligne.synced,
     );
   }
 
@@ -66,6 +73,7 @@ class Mesure {
       valeursJson: Value(jsonEncode(valeurs)),
       prisePar: Value(prisePar),
       createdAt: Value(createdAt),
+      synced: Value(synced),
     );
   }
 }

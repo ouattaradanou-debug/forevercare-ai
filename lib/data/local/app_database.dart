@@ -110,6 +110,11 @@ class Clients extends Table {
   DateTimeColumn get datePriseMesures => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  // Faux tant que cette ligne n'a pas été confirmée reçue par Supabase —
+  // voir SyncEngine, qui relance l'envoi de tout ce qui reste à `false`
+  // dès que la connexion revient, au lieu de perdre silencieusement les
+  // écritures faites hors-ligne.
+  BoolColumn get synced => boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -128,6 +133,7 @@ class Mesures extends Table {
   TextColumn get valeursJson => text().withDefault(const Constant('{}'))();
   TextColumn get prisePar => text()();
   DateTimeColumn get createdAt => dateTime()();
+  BoolColumn get synced => boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -164,6 +170,7 @@ class Commandes extends Table {
       boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  BoolColumn get synced => boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -179,6 +186,7 @@ class Paiements extends Table {
   RealColumn get montant => real()();
   DateTimeColumn get datePaiement => dateTime()();
   DateTimeColumn get createdAt => dateTime()();
+  BoolColumn get synced => boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -228,6 +236,7 @@ class RendezVousTable extends Table {
   TextColumn get statut => text().withDefault(const Constant('planifie'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  BoolColumn get synced => boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -254,7 +263,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -278,6 +287,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (depuis < 5) {
         await m.addColumn(commandes, commandes.tenueRetiree);
+      }
+      if (depuis < 6) {
+        await m.addColumn(clients, clients.synced);
+        await m.addColumn(mesures, mesures.synced);
+        await m.addColumn(rendezVousTable, rendezVousTable.synced);
+        await m.addColumn(commandes, commandes.synced);
+        await m.addColumn(paiements, paiements.synced);
       }
     },
   );
