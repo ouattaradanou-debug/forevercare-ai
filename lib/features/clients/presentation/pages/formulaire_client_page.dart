@@ -42,6 +42,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
   final TextEditingController _prenomCtrl = TextEditingController();
   final TextEditingController _telephoneCtrl = TextEditingController();
   final TextEditingController _montantConvenuCtrl = TextEditingController();
+  final TextEditingController _avanceInitialeCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
   final GlobalKey _mesuresKey = GlobalKey();
 
@@ -81,6 +82,7 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
     _prenomCtrl.dispose();
     _telephoneCtrl.dispose();
     _montantConvenuCtrl.dispose();
+    _avanceInitialeCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
@@ -404,9 +406,29 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
                 clientId: client.id,
                 montantTotal: montantConvenu,
               );
-        } catch (_) {
+
+          final double? avanceInitiale = double.tryParse(
+            _avanceInitialeCtrl.text.trim(),
+          );
+          if (avanceInitiale != null && avanceInitiale > 0) {
+            await ref
+                .read(financesRepositoryProvider)
+                .ajouterPaiement(clientId: client.id, montant: avanceInitiale);
+          }
+        } catch (e) {
           // Le client est déjà enregistré : ne pas bloquer sur un échec de
-          // l'écriture financière, qui peut être ressaisie depuis sa fiche.
+          // l'écriture financière, seulement prévenir — elle peut être
+          // ressaisie depuis la fiche du client.
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  "Client enregistré, mais les finances n'ont pas pu être "
+                  'sauvegardées : $e',
+                ),
+              ),
+            );
+          }
         }
       }
 
@@ -546,7 +568,10 @@ class _FormulaireClientPageState extends ConsumerState<FormulaireClientPage>
             ),
             if (utilisateur?.estProprietaire ?? false) ...[
               const SizedBox(height: AppSpacing.xl),
-              SectionFinances(montantConvenuCtrl: _montantConvenuCtrl),
+              SectionFinances(
+                montantConvenuCtrl: _montantConvenuCtrl,
+                avanceInitialeCtrl: _avanceInitialeCtrl,
+              ),
             ],
             const SizedBox(height: AppSpacing.xl),
             SectionRendezVous(
