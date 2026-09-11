@@ -30,7 +30,14 @@ jobs:
 
       - run: dart run build_runner build --delete-conflicting-outputs
 
-      - run: flutter build apk --release
+      # --target-platform android-arm64 --split-per-abi : toutes les
+      # tailleuses et tailleurs visés utilisent des téléphones arm64
+      # (aucun appareil x86). Construire uniquement cette architecture,
+      # plutôt que l'APK "universel" (qui empile les trois architectures
+      # et dépasse la limite de taille de Supabase Storage), donne un
+      # fichier bien plus léger — plus rapide à télécharger sur une
+      # connexion mobile limitée.
+      - run: flutter build apk --release --target-platform android-arm64 --split-per-abi
 
       - name: Publier l'APK sur Supabase Storage
         env:
@@ -42,4 +49,4 @@ jobs:
             -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "x-upsert: true" \
-            --data-binary @build/app/outputs/flutter-apk/app-release.apk
+            --data-binary @build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
