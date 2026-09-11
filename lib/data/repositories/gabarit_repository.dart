@@ -50,6 +50,33 @@ class GabaritRepository {
           .into(_db.champsMesure)
           .insertOnConflictUpdate(c.versCompagnonLocal());
     }
+
+    await nettoyerChampsDupliques();
+  }
+
+  /// Supprime les doublons de champs (même gabarit, même nom à la casse et
+  /// aux espaces près) qui ont pu apparaître localement — ne garde que la
+  /// ligne la plus ancienne. Appelé à chaque synchronisation des gabarits,
+  /// en complément de la migration Supabase équivalente (voir
+  /// supabase/migration_phase6_dedoublonnage_champs.sql) qui nettoie le
+  /// côté serveur ; celle-ci ne suffit pas à elle seule car un doublon déjà
+  /// présent dans le cache local d'un appareil n'y disparaît pas tout seul.
+  Future<void> nettoyerChampsDupliques() async {
+    final List<ChampMesureLocal> tous = await _db.select(_db.champsMesure).get();
+    final Map<String, List<ChampMesureLocal>> groupes = {};
+    for (final ChampMesureLocal c in tous) {
+      final String cle = '${c.typeTenueId}|${c.nom.trim().toLowerCase()}';
+      (groupes[cle] ??= []).add(c);
+    }
+    for (final List<ChampMesureLocal> groupe in groupes.values) {
+      if (groupe.length <= 1) continue;
+      groupe.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      for (final ChampMesureLocal doublon in groupe.skip(1)) {
+        await (_db.delete(
+          _db.champsMesure,
+        )..where((c) => c.id.equals(doublon.id))).go();
+      }
+    }
   }
 
   /// Résout le gabarit à utiliser pour un sexe donné : celui propre à
@@ -237,6 +264,11 @@ class GabaritRepository {
 
   /// Ajoute un champ personnalisé à la fin d'un gabarit (propre à
   /// l'atelier, voir [assurerGabaritPersonnalise]).
+  ///
+  /// Refuse silencieusement de créer un doublon : si un champ du même nom
+  /// (à la casse et aux espaces près) existe déjà pour ce gabarit, il est
+  /// simplement réactivé s'il était masqué, sans qu'une seconde ligne ne
+  /// soit créée.
   Future<void> ajouterChamp({
     required String typeTenueId,
     required String nom,
@@ -246,6 +278,17 @@ class GabaritRepository {
         await (_db.select(_db.champsMesure)
               ..where((c) => c.typeTenueId.equals(typeTenueId)))
             .get();
+
+    final String nomNormalise = nom.trim().toLowerCase();
+    for (final ChampMesureLocal c in existants) {
+      if (c.nom.trim().toLowerCase() == nomNormalise) {
+        if (c.statut == 'masque') {
+          await definirStatutChamp(champId: c.id, actif: true);
+        }
+        return;
+      }
+    }
+
     final int ordre = existants.isEmpty
         ? 1
         : existants.map((c) => c.ordre).reduce((a, b) => a > b ? a : b) + 1;

@@ -557,30 +557,31 @@ class _SelecteurRappel extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.s),
-          Wrap(
-            spacing: AppSpacing.s,
-            runSpacing: AppSpacing.s,
-            children: [
-              ChoiceChip(
-                label: const Text('Aucun rappel'),
-                selected: joursActuels == 0,
-                onSelected: (selectionne) {
-                  if (selectionne) {
-                    ref.read(rappelJoursProvider.notifier).definir(0);
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.champ),
+              border: Border.all(color: scheme.outline),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<int>(
+                value: joursActuels,
+                isExpanded: true,
+                items: [
+                  const DropdownMenuItem(value: 0, child: Text('Aucun rappel')),
+                  for (final int jours in _options)
+                    DropdownMenuItem(
+                      value: jours,
+                      child: Text('$jours jours avant'),
+                    ),
+                ],
+                onChanged: (valeur) {
+                  if (valeur != null) {
+                    ref.read(rappelJoursProvider.notifier).definir(valeur);
                   }
                 },
               ),
-              for (final int jours in _options)
-                ChoiceChip(
-                  label: Text('$jours jours avant'),
-                  selected: joursActuels == jours,
-                  onSelected: (selectionne) {
-                    if (selectionne) {
-                      ref.read(rappelJoursProvider.notifier).definir(jours);
-                    }
-                  },
-                ),
-            ],
+            ),
           ),
           const SizedBox(height: AppSpacing.m),
           if (joursActuels == 0)
