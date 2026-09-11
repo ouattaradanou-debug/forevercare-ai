@@ -154,6 +154,12 @@ class _ConnexionPageState extends ConsumerState<ConnexionPage> {
                             : () => context.go('/creation-compte'),
                         child: const Text('Créer un compte atelier'),
                       ),
+                      TextButton(
+                        onPressed: _enCours
+                            ? null
+                            : () => context.go('/code-oublie'),
+                        child: const Text('Code PIN oublié ?'),
+                      ),
                     ],
                   ),
                 ),

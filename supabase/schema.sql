@@ -188,6 +188,32 @@ create trigger trg_permissions_apprenti_updated_at
 
 
 -- =============================================================================
+-- TABLE : recuperation_compte — code PIN oublié
+-- =============================================================================
+-- Question secrète + réponse (hachée, jamais en clair) pour un compte
+-- propriétaire, permettant de réinitialiser son code PIN sans email réel
+-- (voir TelephoneUtils) ni fournisseur SMS payant. AUCUNE policy RLS n'est
+-- accordée ici : ni le client "anon", ni un utilisateur authentifié ne
+-- peut lire ou écrire cette table directement — seules les Edge Functions
+-- (clé service_role) le peuvent (supabase/functions/definir-recuperation,
+-- recuperer-question, reinitialiser-code). Sans ça, n'importe quel membre
+-- de l'atelier pourrait lire la question/réponse du propriétaire via un
+-- simple appel à l'API, les policies RLS de `utilisateurs` étant au
+-- niveau de la ligne, pas de la colonne.
+create table if not exists public.recuperation_compte (
+  utilisateur_id  uuid primary key references public.utilisateurs (id) on delete cascade,
+  question        text not null,
+  reponse_hash    text not null,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create trigger trg_recuperation_compte_updated_at
+  before update on public.recuperation_compte
+  for each row execute function public.definir_horodatage_modification();
+
+
+-- =============================================================================
 -- TABLE : clients
 -- =============================================================================
 -- Remarque (correctif formulaire continu) : aucun champ d'identité n'est
@@ -432,6 +458,7 @@ create trigger trg_ateliers_creer_essai_gratuit
 alter table public.ateliers            enable row level security;
 alter table public.utilisateurs        enable row level security;
 alter table public.permissions_apprenti enable row level security;
+alter table public.recuperation_compte enable row level security;
 alter table public.clients             enable row level security;
 alter table public.types_tenue         enable row level security;
 alter table public.champs_mesure       enable row level security;

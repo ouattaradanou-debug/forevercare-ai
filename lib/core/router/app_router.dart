@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/models/client.dart';
 import '../../data/models/utilisateur.dart';
+import '../../features/auth/presentation/pages/code_oublie_page.dart';
 import '../../features/auth/presentation/pages/connexion_page.dart';
 import '../../features/auth/presentation/pages/creation_compte_page.dart';
 import '../../features/clients/presentation/pages/client_detail_page.dart';
@@ -39,7 +40,11 @@ class _FluxAuthGoRouter extends ChangeNotifier {
   }
 }
 
-const List<String> _ecransSansConnexion = ['/connexion', '/creation-compte'];
+const List<String> _ecransSansConnexion = [
+  '/connexion',
+  '/creation-compte',
+  '/code-oublie',
+];
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -71,6 +76,11 @@ final GoRouter appRouter = GoRouter(
       path: '/creation-compte',
       name: 'creation-compte',
       builder: (context, state) => const CreationComptePage(),
+    ),
+    GoRoute(
+      path: '/code-oublie',
+      name: 'code-oublie',
+      builder: (context, state) => const CodeOubliePage(),
     ),
     GoRoute(
       path: '/clients',

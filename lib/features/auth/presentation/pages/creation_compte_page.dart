@@ -29,6 +29,8 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
   final TextEditingController _telephoneCtrl = TextEditingController();
   final TextEditingController _pinCtrl = TextEditingController();
   final TextEditingController _pinConfirmationCtrl = TextEditingController();
+  final TextEditingController _questionSecreteCtrl = TextEditingController();
+  final TextEditingController _reponseSecreteCtrl = TextEditingController();
 
   XFile? _logoChoisi;
   bool _enCours = false;
@@ -41,6 +43,8 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
     _telephoneCtrl.dispose();
     _pinCtrl.dispose();
     _pinConfirmationCtrl.dispose();
+    _questionSecreteCtrl.dispose();
+    _reponseSecreteCtrl.dispose();
     super.dispose();
   }
 
@@ -147,7 +151,20 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
       await gabaritRepo.synchroniserGabarits(atelier.id);
       debugPrint('[creation-compte] 5/6 OK');
 
-      debugPrint('[creation-compte] 6/6 navigation vers /');
+      // Best-effort : sans ça, "Code oublié ?" ne fonctionnera pas pour ce
+      // compte, mais ça ne doit pas empêcher de terminer l'inscription.
+      try {
+        debugPrint('[creation-compte] 6/6 appel authRepo.definirRecuperation...');
+        await authRepo.definirRecuperation(
+          question: _questionSecreteCtrl.text.trim(),
+          reponse: _reponseSecreteCtrl.text.trim(),
+        );
+        debugPrint('[creation-compte] 6/6 OK');
+      } catch (e) {
+        debugPrint('[creation-compte] 6/6 ÉCHEC (non bloquant) : $e');
+      }
+
+      debugPrint('[creation-compte] navigation vers /');
       if (mounted) context.go('/');
     } on AuthException catch (e) {
       debugPrint('[creation-compte] ÉCHEC (AuthException) : ${e.message}');
@@ -285,6 +302,42 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
                         ),
                         validator: (v) => (v == null || v.length != 6)
                             ? 'Confirme ton code PIN'
+                            : null,
+                      ),
+                      const SizedBox(height: AppSpacing.l),
+                      Text(
+                        'En cas de code PIN oublié',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Si tu oublies ton code, cette question permettra '
+                        'de le réinitialiser toi-même, sans aide extérieure.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.m),
+                      TextFormField(
+                        controller: _questionSecreteCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Ta question secrète',
+                          hintText: 'Ex. Le nom de mon premier client ?',
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'La question secrète est obligatoire'
+                            : null,
+                      ),
+                      const SizedBox(height: AppSpacing.m),
+                      TextFormField(
+                        controller: _reponseSecreteCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Ta réponse',
+                        ),
+                        validator: (v) => (v == null || v.trim().length < 2)
+                            ? 'La réponse est obligatoire'
                             : null,
                       ),
                       if (_erreur != null) ...[
