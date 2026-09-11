@@ -1,0 +1,45 @@
+name: Construire l'APK de test
+
+# Construit automatiquement une version installable (.apk) de l'application
+# à chaque envoi sur cette branche, et la publie à une adresse fixe sur
+# Supabase Storage (bucket public "installations", voir
+# supabase/storage_policies_installations.sql) — un tailleur n'a besoin que
+# de ce seul lien, sans jamais toucher à GitHub.
+#
+# Nécessite un secret de dépôt "SUPABASE_SERVICE_ROLE_KEY" (Supabase :
+# Project Settings > API > clé "service_role") ajouté dans GitHub :
+# Settings > Secrets and variables > Actions > New repository secret.
+
+on:
+  push:
+    branches:
+      - claude/atelier-plus-flutter-app-04mwuq
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      - run: dart run build_runner build --delete-conflicting-outputs
+
+      - run: flutter build apk --release
+
+      - name: Publier l'APK sur Supabase Storage
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          curl -sS --fail-with-body -X POST \
+            "https://jykjxstnctjkzjrtoyye.supabase.co/storage/v1/object/installations/atelier-plus.apk" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            -H "x-upsert: true" \
+            --data-binary @build/app/outputs/flutter-apk/app-release.apk
