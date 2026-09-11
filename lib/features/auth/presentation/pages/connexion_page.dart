@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/utils/identifiants_memorises.dart';
 import '../../../../core/utils/telephone_utils.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/entete_auth.dart';
@@ -22,7 +23,25 @@ class _ConnexionPageState extends ConsumerState<ConnexionPage> {
   final TextEditingController _pinCtrl = TextEditingController();
 
   bool _enCours = false;
+  bool _pinVisible = false;
   String? _erreur;
+
+  @override
+  void initState() {
+    super.initState();
+    _preremplirIdentifiants();
+  }
+
+  Future<void> _preremplirIdentifiants() async {
+    final identifiants = await IdentifiantsMemorises.lire();
+    if (!mounted) return;
+    if (identifiants.telephone != null) {
+      _telephoneCtrl.text = identifiants.telephone!;
+    }
+    if (identifiants.pin != null) {
+      _pinCtrl.text = identifiants.pin!;
+    }
+  }
 
   @override
   void dispose() {
@@ -56,6 +75,11 @@ class _ConnexionPageState extends ConsumerState<ConnexionPage> {
           .read(recuperationCompteServiceProvider)
           .recupererDonneesCompte(id);
       debugPrint('[connexion] récupération OK, navigation vers /');
+
+      await IdentifiantsMemorises.enregistrer(
+        telephone: _telephoneCtrl.text,
+        pin: _pinCtrl.text,
+      );
 
       if (mounted) context.go('/');
     } on AuthException catch (e) {
@@ -109,14 +133,23 @@ class _ConnexionPageState extends ConsumerState<ConnexionPage> {
                       const SizedBox(height: AppSpacing.m),
                       TextFormField(
                         controller: _pinCtrl,
-                        obscureText: true,
+                        obscureText: !_pinVisible,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(6),
                         ],
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Code PIN (6 chiffres)',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _pinVisible
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                            onPressed: () =>
+                                setState(() => _pinVisible = !_pinVisible),
+                          ),
                         ),
                         validator: (valeur) {
                           if (valeur == null || valeur.length != 6) {

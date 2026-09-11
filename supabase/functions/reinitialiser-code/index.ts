@@ -27,8 +27,21 @@ function reponseJson(corps: unknown, statut: number): Response {
   });
 }
 
+// Insensible à la casse ET aux accents (ex. "Bénédicte" == "benedicte") :
+// normalise en décomposant les caractères accentués (NFD), puis retire les
+// marques diacritiques ainsi isolées, avant de hacher. Doit rester
+// identique à la normalisation faite dans definir-recuperation, sans quoi
+// la comparaison des hachages ne correspondrait jamais.
+function normaliser(texte: string): string {
+  return texte
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 async function hacher(texte: string): Promise<string> {
-  const donnees = new TextEncoder().encode(texte.trim().toLowerCase());
+  const donnees = new TextEncoder().encode(normaliser(texte));
   const hachage = await crypto.subtle.digest('SHA-256', donnees);
   return Array.from(new Uint8Array(hachage))
     .map((b) => b.toString(16).padStart(2, '0'))

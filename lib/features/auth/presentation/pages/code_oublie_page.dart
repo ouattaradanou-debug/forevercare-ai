@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/utils/identifiants_memorises.dart';
 import '../../../../core/utils/telephone_utils.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/entete_auth.dart';
@@ -37,6 +38,8 @@ class _CodeOubliePageState extends ConsumerState<CodeOubliePage> {
 
   String? _question;
   bool _enCours = false;
+  bool _nouveauPinVisible = false;
+  bool _nouveauPinConfirmationVisible = false;
   String? _erreur;
 
   @override
@@ -90,6 +93,10 @@ class _CodeOubliePageState extends ConsumerState<CodeOubliePage> {
             reponse: _reponseCtrl.text,
             nouveauPin: _nouveauPinCtrl.text,
           );
+      await IdentifiantsMemorises.enregistrer(
+        telephone: _telephoneCtrl.text,
+        pin: _nouveauPinCtrl.text,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -198,14 +205,24 @@ class _CodeOubliePageState extends ConsumerState<CodeOubliePage> {
           const SizedBox(height: AppSpacing.m),
           TextFormField(
             controller: _nouveauPinCtrl,
-            obscureText: true,
+            obscureText: !_nouveauPinVisible,
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(6),
             ],
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Nouveau code PIN (6 chiffres)',
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _nouveauPinVisible
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+                onPressed: () => setState(
+                  () => _nouveauPinVisible = !_nouveauPinVisible,
+                ),
+              ),
             ),
             validator: (v) => (v == null || v.length != 6)
                 ? 'Le code PIN doit contenir 6 chiffres'
@@ -214,14 +231,25 @@ class _CodeOubliePageState extends ConsumerState<CodeOubliePage> {
           const SizedBox(height: AppSpacing.m),
           TextFormField(
             controller: _nouveauPinConfirmationCtrl,
-            obscureText: true,
+            obscureText: !_nouveauPinConfirmationVisible,
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(6),
             ],
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Confirmer le nouveau code PIN',
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _nouveauPinConfirmationVisible
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+                onPressed: () => setState(
+                  () => _nouveauPinConfirmationVisible =
+                      !_nouveauPinConfirmationVisible,
+                ),
+              ),
             ),
             validator: (v) => (v == null || v.length != 6)
                 ? 'Confirme ton nouveau code PIN'

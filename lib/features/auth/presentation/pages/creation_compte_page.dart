@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/utils/identifiants_memorises.dart';
 import '../../../../core/utils/telephone_utils.dart';
 import '../../../../shared/widgets/selecteur_photo.dart';
 import '../providers/auth_providers.dart';
@@ -34,6 +35,8 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
 
   XFile? _logoChoisi;
   bool _enCours = false;
+  bool _pinVisible = false;
+  bool _pinConfirmationVisible = false;
   String? _erreur;
 
   @override
@@ -164,6 +167,11 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
         debugPrint('[creation-compte] 6/6 ÉCHEC (non bloquant) : $e');
       }
 
+      await IdentifiantsMemorises.enregistrer(
+        telephone: _telephoneCtrl.text,
+        pin: _pinCtrl.text,
+      );
+
       debugPrint('[creation-compte] navigation vers /');
       if (mounted) context.go('/');
     } on AuthException catch (e) {
@@ -275,14 +283,23 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
                       const SizedBox(height: AppSpacing.m),
                       TextFormField(
                         controller: _pinCtrl,
-                        obscureText: true,
+                        obscureText: !_pinVisible,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(6),
                         ],
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Code PIN (6 chiffres)',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _pinVisible
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                            onPressed: () =>
+                                setState(() => _pinVisible = !_pinVisible),
+                          ),
                         ),
                         validator: (v) => (v == null || v.length != 6)
                             ? 'Le code PIN doit contenir 6 chiffres'
@@ -291,14 +308,25 @@ class _CreationComptePageState extends ConsumerState<CreationComptePage> {
                       const SizedBox(height: AppSpacing.m),
                       TextFormField(
                         controller: _pinConfirmationCtrl,
-                        obscureText: true,
+                        obscureText: !_pinConfirmationVisible,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(6),
                         ],
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Confirmer le code PIN',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _pinConfirmationVisible
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                            onPressed: () => setState(
+                              () => _pinConfirmationVisible =
+                                  !_pinConfirmationVisible,
+                            ),
+                          ),
                         ),
                         validator: (v) => (v == null || v.length != 6)
                             ? 'Confirme ton code PIN'
