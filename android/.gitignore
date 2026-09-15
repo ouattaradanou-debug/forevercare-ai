@@ -12,3 +12,10 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Exception : app/debug.keystore EST suivi par git (voir
+# app/build.gradle.kts) — une clé de debug n'a rien de secret, et la
+# garder identique entre machines évite qu'un nouvel APK de test ne
+# puisse plus s'installer par-dessus le précédent (clé de signature
+# différente à chaque machine sinon).
+!app/debug.keystore
