@@ -276,6 +276,12 @@ class _CarteMembre extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.s),
       child: ListTile(
         contentPadding: const EdgeInsets.all(AppSpacing.m),
+        // Toute la ligne est cliquable (pas seulement un bouton à droite) :
+        // appuyer sur le nom du membre ouvre directement ses mesures.
+        onTap: () => context.push(
+          '/uniformes/${groupe.id}/membres/${membre.id}/mesures',
+          extra: (groupe: groupe, membre: membre),
+        ),
         leading: CircleAvatar(
           backgroundColor: mesurePrise
               ? AppColors.succes.withValues(alpha: 0.15)
@@ -287,15 +293,9 @@ class _CarteMembre extends ConsumerWidget {
         ),
         title: Text(membre.nomComplet),
         subtitle: Text(
-          mesurePrise ? 'Mesures prises' : 'Mesures non prises',
+          mesurePrise ? 'Mesures prises — appuyer pour consulter' : 'Mesures non prises',
         ),
-        trailing: TextButton(
-          onPressed: () => context.push(
-            '/uniformes/${groupe.id}/membres/${membre.id}/mesures',
-            extra: (groupe: groupe, membre: membre),
-          ),
-          child: Text(mesurePrise ? 'Consulter' : 'Prendre les mesures'),
-        ),
+        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
