@@ -171,6 +171,8 @@ class HomePage extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.m),
                     const _CarteSuiviFinances(),
                   ],
+                  const SizedBox(height: AppSpacing.m),
+                  const _CarteMesuresUniformes(),
                 ]),
               ),
             ),
@@ -685,6 +687,44 @@ class _CarteSuiviFinances extends StatelessWidget {
             Expanded(
               child: Text(
                 'Suivi des finances',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Accès au module "Mesures des uniformes" — voir
+/// GroupesUniformesListPage. Placée juste sous "Suivi des finances" comme
+/// demandé, mais visible de tout le monde (propriétaire et apprenti,
+/// comme "Clients"/"Rendez-vous") : ce n'est pas une donnée financière.
+class _CarteMesuresUniformes extends StatelessWidget {
+  const _CarteMesuresUniformes();
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => context.push('/uniformes'),
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: scheme.outline.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.groups_outlined, color: AppColors.indigo700),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Text(
+                'Mesures des uniformes',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),

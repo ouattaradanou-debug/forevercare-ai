@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/local/database_provider.dart';
 import '../../features/clients/presentation/providers/clients_providers.dart';
 import '../../features/clients/presentation/providers/finances_providers.dart';
+import '../../features/uniformes/presentation/providers/uniformes_providers.dart';
 import 'sync_engine.dart';
 
 final Provider<SyncEngine> syncEngineProvider = Provider<SyncEngine>(
@@ -12,5 +13,6 @@ final Provider<SyncEngine> syncEngineProvider = Provider<SyncEngine>(
     ref.watch(appDatabaseProvider),
     ref.watch(clientRepositoryProvider),
     ref.watch(financesRepositoryProvider),
+    ref.watch(uniformeRepositoryProvider),
   ),
 );

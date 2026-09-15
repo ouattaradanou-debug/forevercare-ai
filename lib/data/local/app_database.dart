@@ -291,6 +291,76 @@ class RendezVousTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Cache local de la table `groupes_uniformes` — voir
+/// supabase/migration_phase8_uniformes.sql. Module "Mesures des uniformes",
+/// entièrement indépendant des clients classiques.
+@DataClassName('GroupeUniformeLocal')
+class GroupesUniformes extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get nom => text()();
+  TextColumn get repondantNom => text().nullable()();
+  TextColumn get repondantTelephone => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  BoolColumn get synced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local de la table `membres_groupe_uniforme`.
+@DataClassName('MembreGroupeUniformeLocal')
+class MembresGroupeUniforme extends Table {
+  TextColumn get id => text()();
+  TextColumn get groupeId => text()();
+  TextColumn get nom => text().nullable()();
+  TextColumn get prenom => text().nullable()();
+  TextColumn get sexe => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  BoolColumn get synced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local de la table `mesures_uniforme`. Historisée comme `Mesures` :
+/// jamais mise à jour après écriture.
+@DataClassName('MesureUniformeLocal')
+class MesuresUniforme extends Table {
+  TextColumn get id => text()();
+  TextColumn get membreId => text()();
+  TextColumn get typeTenueId => text()();
+  DateTimeColumn get datePrise => dateTime()();
+  TextColumn get valeursJson => text().withDefault(const Constant('{}'))();
+  TextColumn get prisePar => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  BoolColumn get synced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local de la table `photos_groupe_uniforme`. Mêmes conventions que
+/// `Photos` : `cheminLocal` vide + `url` pour une photo reçue d'un autre
+/// appareil, `synced` à `false` par défaut (voir doc de `Photos` ci-dessus).
+@DataClassName('PhotoGroupeUniformeLocal')
+class PhotosGroupeUniforme extends Table {
+  TextColumn get id => text()();
+  TextColumn get groupeId => text()();
+  TextColumn get type => text()();
+  TextColumn get cheminLocal => text()();
+  TextColumn get source => text()();
+  TextColumn get commentaire => text().nullable()();
+  TextColumn get url => text().nullable()();
+  BoolColumn get synced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Base de données locale (SQLite via Drift), cache hors-ligne d'Atelier+.
 @DriftDatabase(
   tables: [
@@ -308,13 +378,17 @@ class RendezVousTable extends Table {
     Commandes,
     Paiements,
     Depenses,
+    GroupesUniformes,
+    MembresGroupeUniforme,
+    MesuresUniforme,
+    PhotosGroupeUniforme,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -358,6 +432,12 @@ class AppDatabase extends _$AppDatabase {
       if (depuis < 10) {
         await m.addColumn(photos, photos.url);
         await m.addColumn(photos, photos.synced);
+      }
+      if (depuis < 11) {
+        await m.createTable(groupesUniformes);
+        await m.createTable(membresGroupeUniforme);
+        await m.createTable(mesuresUniforme);
+        await m.createTable(photosGroupeUniforme);
       }
     },
   );

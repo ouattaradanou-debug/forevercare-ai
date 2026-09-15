@@ -9,9 +9,14 @@ import '../../data/models/depense.dart';
 import '../../data/models/mesure.dart';
 import '../../data/models/paiement.dart';
 import '../../data/models/photo.dart';
+import '../../data/models/groupe_uniforme.dart';
+import '../../data/models/membre_groupe_uniforme.dart';
+import '../../data/models/mesure_uniforme.dart';
+import '../../data/models/photo_groupe_uniforme.dart';
 import '../../data/models/rendez_vous.dart';
 import '../../data/repositories/client_repository.dart';
 import '../../data/repositories/finances_repository.dart';
+import '../../data/repositories/uniforme_repository.dart';
 
 /// Synchronisation robuste entre le cache local (Drift) et Supabase, dans
 /// les deux sens :
@@ -32,12 +37,19 @@ import '../../data/repositories/finances_repository.dart';
 /// Appelée après connexion (voir RecuperationCompteService) et dès que la
 /// connectivité revient (voir main.dart).
 class SyncEngine {
-  SyncEngine(this._supabase, this._db, this._clients, this._finances);
+  SyncEngine(
+    this._supabase,
+    this._db,
+    this._clients,
+    this._finances,
+    this._uniformes,
+  );
 
   final SupabaseClient _supabase;
   final AppDatabase _db;
   final ClientRepository _clients;
   final FinancesRepository _finances;
+  final UniformeRepository _uniformes;
 
   Future<bool> _estEnLigne() async {
     final List<ConnectivityResult> resultats = await Connectivity()
@@ -119,6 +131,50 @@ class SyncEngine {
     for (final DepenseLocal ligne in depenses) {
       await _tenter(
         () => _finances.pousserDepense(Depense.depuisLigneLocale(ligne)),
+      );
+    }
+
+    final List<GroupeUniformeLocal> groupesUniformes =
+        await (_db.select(_db.groupesUniformes)
+              ..where((t) => t.synced.equals(false)))
+            .get();
+    for (final GroupeUniformeLocal ligne in groupesUniformes) {
+      await _tenter(
+        () => _uniformes.pousserGroupe(GroupeUniforme.depuisLigneLocale(ligne)),
+      );
+    }
+
+    final List<MembreGroupeUniformeLocal> membresGroupeUniforme =
+        await (_db.select(_db.membresGroupeUniforme)
+              ..where((t) => t.synced.equals(false)))
+            .get();
+    for (final MembreGroupeUniformeLocal ligne in membresGroupeUniforme) {
+      await _tenter(
+        () => _uniformes.pousserMembre(
+          MembreGroupeUniforme.depuisLigneLocale(ligne),
+        ),
+      );
+    }
+
+    final List<PhotoGroupeUniformeLocal> photosGroupeUniforme =
+        await (_db.select(_db.photosGroupeUniforme)
+              ..where((t) => t.synced.equals(false)))
+            .get();
+    for (final PhotoGroupeUniformeLocal ligne in photosGroupeUniforme) {
+      await _tenter(
+        () => _uniformes.pousserPhoto(
+          PhotoGroupeUniforme.depuisLigneLocale(ligne),
+        ),
+      );
+    }
+
+    final List<MesureUniformeLocal> mesuresUniforme =
+        await (_db.select(_db.mesuresUniforme)
+              ..where((t) => t.synced.equals(false)))
+            .get();
+    for (final MesureUniformeLocal ligne in mesuresUniforme) {
+      await _tenter(
+        () => _uniformes.pousserMesure(MesureUniforme.depuisLigneLocale(ligne)),
       );
     }
   }
@@ -248,6 +304,80 @@ class SyncEngine {
         await _db
             .into(_db.depenses)
             .insertOnConflictUpdate(depense.versCompagnonLocal());
+      }
+
+      // Module "Mesures des uniformes" (voir UniformeRepository) : même
+      // logique que clients/mesures/photos, tables entièrement séparées.
+      final Set<String> groupesEnAttente = (await (_db.select(
+        _db.groupesUniformes,
+      )..where((t) => t.synced.equals(false))).get()).map((l) => l.id).toSet();
+      final List<Map<String, dynamic>> groupesDistants = await _supabase
+          .from('groupes_uniformes')
+          .select()
+          .eq('atelier_id', atelierId);
+      for (final Map<String, dynamic> json in groupesDistants) {
+        final GroupeUniforme groupe = GroupeUniforme.depuisSupabase(json);
+        if (groupesEnAttente.contains(groupe.id)) continue;
+        await _db
+            .into(_db.groupesUniformes)
+            .insertOnConflictUpdate(groupe.versCompagnonLocal());
+      }
+
+      final Set<String> membresEnAttente = (await (_db.select(
+        _db.membresGroupeUniforme,
+      )..where((t) => t.synced.equals(false))).get()).map((l) => l.id).toSet();
+      final List<Map<String, dynamic>> membresDistants = await _supabase
+          .from('membres_groupe_uniforme')
+          .select();
+      for (final Map<String, dynamic> json in membresDistants) {
+        final MembreGroupeUniforme membre =
+            MembreGroupeUniforme.depuisSupabase(json);
+        if (membresEnAttente.contains(membre.id)) continue;
+        await _db
+            .into(_db.membresGroupeUniforme)
+            .insertOnConflictUpdate(membre.versCompagnonLocal());
+      }
+
+      final List<PhotoGroupeUniformeLocal> photosUniformeLocales =
+          await _db.select(_db.photosGroupeUniforme).get();
+      final Map<String, String> cheminsLocauxUniformeExistants = {
+        for (final PhotoGroupeUniformeLocal l in photosUniformeLocales)
+          l.id: l.cheminLocal,
+      };
+      final Set<String> photosUniformeEnAttente = photosUniformeLocales
+          .where((l) => !l.synced)
+          .map((l) => l.id)
+          .toSet();
+      final List<Map<String, dynamic>> photosUniformeDistantes =
+          await _supabase.from('photos_groupe_uniforme').select();
+      for (final Map<String, dynamic> json in photosUniformeDistantes) {
+        final PhotoGroupeUniforme photo = PhotoGroupeUniforme.depuisSupabase(
+          json,
+        );
+        if (photosUniformeEnAttente.contains(photo.id)) continue;
+        final PhotosGroupeUniformeCompanion compagnon = photo
+            .versCompagnonLocal()
+            .copyWith(
+              cheminLocal: Value(
+                cheminsLocauxUniformeExistants[photo.id] ?? '',
+              ),
+            );
+        await _db
+            .into(_db.photosGroupeUniforme)
+            .insertOnConflictUpdate(compagnon);
+      }
+
+      final Set<String> mesuresUniformeEnAttente = (await (_db.select(
+        _db.mesuresUniforme,
+      )..where((t) => t.synced.equals(false))).get()).map((l) => l.id).toSet();
+      final List<Map<String, dynamic>> mesuresUniformeDistantes =
+          await _supabase.from('mesures_uniforme').select();
+      for (final Map<String, dynamic> json in mesuresUniformeDistantes) {
+        final MesureUniforme mesure = MesureUniforme.depuisSupabase(json);
+        if (mesuresUniformeEnAttente.contains(mesure.id)) continue;
+        await _db
+            .into(_db.mesuresUniforme)
+            .insertOnConflictUpdate(mesure.versCompagnonLocal());
       }
     } catch (_) {
       // Best-effort : l'application continue avec le cache local déjà

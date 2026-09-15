@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/models/client.dart';
+import '../../data/models/groupe_uniforme.dart';
+import '../../data/models/membre_groupe_uniforme.dart';
 import '../../data/models/utilisateur.dart';
 import '../../features/auth/presentation/pages/code_oublie_page.dart';
 import '../../features/auth/presentation/pages/connexion_page.dart';
@@ -21,6 +23,11 @@ import '../../features/home/presentation/home_page.dart';
 import '../../features/permissions/presentation/pages/apprentis_page.dart';
 import '../../features/permissions/presentation/pages/nouvel_apprenti_page.dart';
 import '../../features/permissions/presentation/pages/permissions_apprenti_page.dart';
+import '../../features/uniformes/presentation/pages/ajouter_membre_page.dart';
+import '../../features/uniformes/presentation/pages/groupe_uniforme_detail_page.dart';
+import '../../features/uniformes/presentation/pages/groupes_uniformes_list_page.dart';
+import '../../features/uniformes/presentation/pages/mesures_membre_page.dart';
+import '../../features/uniformes/presentation/pages/nouveau_groupe_uniforme_page.dart';
 
 /// Relie les changements d'état d'authentification Supabase à go_router,
 /// pour que la redirection se réévalue automatiquement à chaque connexion
@@ -127,6 +134,45 @@ final GoRouter appRouter = GoRouter(
       path: '/champs-mesure',
       name: 'champs-mesure',
       builder: (context, state) => const GestionChampsMesurePage(),
+    ),
+    GoRoute(
+      path: '/uniformes',
+      name: 'uniformes',
+      builder: (context, state) => const GroupesUniformesListPage(),
+      routes: [
+        GoRoute(
+          path: 'nouveau',
+          name: 'nouveau-groupe-uniforme',
+          builder: (context, state) => const NouveauGroupeUniformePage(),
+        ),
+        GoRoute(
+          path: ':id',
+          name: 'groupe-uniforme-detail',
+          builder: (context, state) =>
+              GroupeUniformeDetailPage(groupe: state.extra as GroupeUniforme),
+          routes: [
+            GoRoute(
+              path: 'membres/nouveau',
+              name: 'ajouter-membre-uniforme',
+              builder: (context, state) =>
+                  AjouterMembrePage(groupe: state.extra as GroupeUniforme),
+            ),
+            GoRoute(
+              path: 'membres/:membreId/mesures',
+              name: 'mesures-membre-uniforme',
+              builder: (context, state) {
+                final extra =
+                    state.extra
+                        as ({GroupeUniforme groupe, MembreGroupeUniforme membre});
+                return MesuresMembrePage(
+                  groupe: extra.groupe,
+                  membre: extra.membre,
+                );
+              },
+            ),
+          ],
+        ),
+      ],
     ),
     GoRoute(
       path: '/apprentis',
