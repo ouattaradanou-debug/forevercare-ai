@@ -26,6 +26,7 @@ class _AjouterMembrePageState extends ConsumerState<AjouterMembrePage> {
   final TextEditingController _prenomCtrl = TextEditingController();
   String? _sexe;
   bool _enregistrementEnCours = false;
+  bool _erreurSexe = false;
 
   @override
   void dispose() {
@@ -35,6 +36,14 @@ class _AjouterMembrePageState extends ConsumerState<AjouterMembrePage> {
   }
 
   Future<void> _enregistrer() async {
+    // Le sexe est indispensable pour savoir quel gabarit de mesures
+    // afficher ensuite (Homme ou Femme) — sans lui, l'écran suivant ne
+    // pourrait montrer aucun champ de mesure (voir MesuresMembrePage).
+    if (_sexe == null) {
+      setState(() => _erreurSexe = true);
+      return;
+    }
+
     setState(() => _enregistrementEnCours = true);
     try {
       final MembreGroupeUniforme membre = await ref
@@ -87,8 +96,19 @@ class _AjouterMembrePageState extends ConsumerState<AjouterMembrePage> {
           const SizedBox(height: AppSpacing.s),
           SelecteurSexe(
             sexe: _sexe,
-            onChange: (valeur) => setState(() => _sexe = valeur),
+            onChange: (valeur) => setState(() {
+              _sexe = valeur;
+              _erreurSexe = false;
+            }),
           ),
+          if (_erreurSexe) ...[
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              'Choisis le sexe du membre : les champs de mesure Homme ou '
+              'Femme en dépendent.',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
           const SizedBox(height: AppSpacing.xl),
           ElevatedButton(
             onPressed: _enregistrementEnCours ? null : _enregistrer,
