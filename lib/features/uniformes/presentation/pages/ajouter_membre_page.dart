@@ -4,14 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../data/models/groupe_uniforme.dart';
-import '../../../../data/models/membre_groupe_uniforme.dart';
 import '../../../../shared/widgets/selecteur_sexe.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../clients/presentation/widgets/section_mesures.dart';
 import '../providers/uniformes_providers.dart';
 
-/// Ajout d'un membre à un groupe d'uniformes : identité minimale (nom,
-/// prénom, sexe). Une fois enregistré, ouvre directement la prise de
-/// mesures de ce membre — voir la demande : "Ajouter un membre ↓ Prendre
-/// ses mesures ↓ Enregistrer les mesures ↓ Retour à la liste des membres".
+/// Ajout d'un membre à un groupe d'uniformes : identité (nom, prénom,
+/// sexe) et mesures, sur un seul écran continu — comme pour un client
+/// classique (voir FormulaireClientPage/SectionInfosClient) : les champs
+/// de mesure se déroulent automatiquement dès que le sexe est choisi,
+/// sans avoir à passer par un second écran.
 class AjouterMembrePage extends ConsumerStatefulWidget {
   const AjouterMembrePage({super.key, required this.groupe});
 
@@ -25,6 +27,8 @@ class _AjouterMembrePageState extends ConsumerState<AjouterMembrePage> {
   final TextEditingController _nomCtrl = TextEditingController();
   final TextEditingController _prenomCtrl = TextEditingController();
   String? _sexe;
+  String? _typeTenueId;
+  Map<String, String> _valeursMesures = {};
   bool _enregistrementEnCours = false;
   bool _erreurSexe = false;
 
@@ -35,18 +39,46 @@ class _AjouterMembrePageState extends ConsumerState<AjouterMembrePage> {
     super.dispose();
   }
 
+  /// Résout automatiquement le gabarit de mesures (Homme ou Femme) dès
+  /// que le sexe est choisi — même mécanisme que pour un client, voir
+  /// GabaritRepository.resoudreTypeTenue.
+  Future<void> _resoudreTypeTenue(String sexe) async {
+    final String? atelierId = ref.read(atelierCourantProvider).asData?.value?.id;
+    if (atelierId == null) return;
+    final String? typeTenueId = await ref
+        .read(gabaritRepositoryProvider)
+        .resoudreTypeTenue(sexe: sexe, atelierId: atelierId);
+    if (mounted) setState(() => _typeTenueId = typeTenueId);
+  }
+
+  void _onSexeChange(String? valeur) {
+    setState(() {
+      _sexe = valeur;
+      _erreurSexe = false;
+      _typeTenueId = null;
+      _valeursMesures = {};
+    });
+    if (valeur != null) _resoudreTypeTenue(valeur);
+  }
+
+  void _onValeurMesureChange(String nomChamp, String valeur) {
+    setState(() => _valeursMesures[nomChamp] = valeur);
+  }
+
   Future<void> _enregistrer() async {
     // Le sexe est indispensable pour savoir quel gabarit de mesures
-    // afficher ensuite (Homme ou Femme) — sans lui, l'écran suivant ne
-    // pourrait montrer aucun champ de mesure (voir MesuresMembrePage).
+    // afficher (Homme ou Femme).
     if (_sexe == null) {
       setState(() => _erreurSexe = true);
       return;
     }
 
+    final String? utilisateurId = ref.read(idUtilisateurConnecteProvider);
+    if (utilisateurId == null) return;
+
     setState(() => _enregistrementEnCours = true);
     try {
-      final MembreGroupeUniforme membre = await ref
+      final membre = await ref
           .read(uniformeRepositoryProvider)
           .ajouterMembre(
             groupeId: widget.groupe.id,
@@ -54,12 +86,22 @@ class _AjouterMembrePageState extends ConsumerState<AjouterMembrePage> {
             prenom: _texteOuNull(_prenomCtrl.text),
             sexe: _sexe,
           );
-      if (mounted) {
-        context.pushReplacement(
-          '/uniformes/${widget.groupe.id}/membres/${membre.id}/mesures',
-          extra: (groupe: widget.groupe, membre: membre),
-        );
+
+      final bool aDesValeurs = _valeursMesures.values.any(
+        (v) => v.trim().isNotEmpty,
+      );
+      if (_typeTenueId != null && aDesValeurs) {
+        await ref
+            .read(uniformeRepositoryProvider)
+            .enregistrerMesuresMembre(
+              membreId: membre.id,
+              typeTenueId: _typeTenueId!,
+              valeursMesures: Map.of(_valeursMesures),
+              prisePar: utilisateurId,
+            );
       }
+
+      if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -78,7 +120,12 @@ class _AjouterMembrePageState extends ConsumerState<AjouterMembrePage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Ajouter un membre')),
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.l),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.l,
+          AppSpacing.l,
+          AppSpacing.l,
+          AppSpacing.xxl,
+        ),
         children: [
           TextFormField(
             controller: _nomCtrl,
@@ -94,19 +141,22 @@ class _AjouterMembrePageState extends ConsumerState<AjouterMembrePage> {
           const SizedBox(height: AppSpacing.m),
           Text('Sexe', style: Theme.of(context).textTheme.labelMedium),
           const SizedBox(height: AppSpacing.s),
-          SelecteurSexe(
-            sexe: _sexe,
-            onChange: (valeur) => setState(() {
-              _sexe = valeur;
-              _erreurSexe = false;
-            }),
-          ),
+          SelecteurSexe(sexe: _sexe, onChange: _onSexeChange),
           if (_erreurSexe) ...[
             const SizedBox(height: AppSpacing.s),
             Text(
               'Choisis le sexe du membre : les champs de mesure Homme ou '
               'Femme en dépendent.',
               style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+          if (_sexe != null) ...[
+            const SizedBox(height: AppSpacing.xl),
+            SectionMesures(
+              sexe: _sexe,
+              typeTenueId: _typeTenueId,
+              valeursMesures: _valeursMesures,
+              onValeurChange: _onValeurMesureChange,
             ),
           ],
           const SizedBox(height: AppSpacing.xl),
@@ -118,7 +168,7 @@ class _AjouterMembrePageState extends ConsumerState<AjouterMembrePage> {
                     height: 22,
                     child: CircularProgressIndicator(strokeWidth: 2.5),
                   )
-                : const Text('Enregistrer et prendre les mesures'),
+                : const Text('Enregistrer le membre'),
           ),
         ],
       ),
