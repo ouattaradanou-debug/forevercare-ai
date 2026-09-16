@@ -44,6 +44,11 @@ class AppColors {
   static const Color alerte = Color(0xFFC7973A);
   static const Color erreur = Color(0xFFB4432F);
 
+  // Vert foncé — met en évidence un membre de groupe d'uniformes dont la
+  // tenue est confectionnée (voir GroupeUniformeDetailPage). Plus sombre
+  // que `succes`, pour un signal fort et sans ambiguïté.
+  static const Color vertFonce = Color(0xFF1B4332);
+
   // Neutres.
   static const Color blanc = Color(0xFFFFFFFF);
   static const Color bordure = Color(0xFFDED2BC);

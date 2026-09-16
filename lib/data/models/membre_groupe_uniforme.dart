@@ -11,6 +11,7 @@ class MembreGroupeUniforme {
     this.nom,
     this.prenom,
     this.sexe,
+    this.tenueTerminee = false,
     required this.createdAt,
     required this.updatedAt,
     this.synced = true,
@@ -21,6 +22,10 @@ class MembreGroupeUniforme {
   final String? nom;
   final String? prenom;
   final String? sexe;
+
+  /// Coché par le tailleur une fois la tenue de ce membre confectionnée —
+  /// voir GroupeUniformeDetailPage.
+  final bool tenueTerminee;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -43,6 +48,7 @@ class MembreGroupeUniforme {
       nom: json['nom'] as String?,
       prenom: json['prenom'] as String?,
       sexe: json['sexe'] as String?,
+      tenueTerminee: json['tenue_terminee'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       synced: true,
@@ -58,6 +64,7 @@ class MembreGroupeUniforme {
       nom: ligne.nom,
       prenom: ligne.prenom,
       sexe: ligne.sexe,
+      tenueTerminee: ligne.tenueTerminee,
       createdAt: ligne.createdAt,
       updatedAt: ligne.updatedAt,
       synced: ligne.synced,
@@ -71,6 +78,7 @@ class MembreGroupeUniforme {
       nom: Value(nom),
       prenom: Value(prenom),
       sexe: Value(sexe),
+      tenueTerminee: Value(tenueTerminee),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       synced: Value(synced),

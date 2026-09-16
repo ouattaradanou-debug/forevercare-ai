@@ -27,6 +27,7 @@ import '../../features/uniformes/presentation/pages/ajouter_membre_page.dart';
 import '../../features/uniformes/presentation/pages/groupe_uniforme_detail_page.dart';
 import '../../features/uniformes/presentation/pages/groupes_uniformes_list_page.dart';
 import '../../features/uniformes/presentation/pages/mesures_membre_page.dart';
+import '../../features/uniformes/presentation/pages/modifier_groupe_uniforme_page.dart';
 import '../../features/uniformes/presentation/pages/nouveau_groupe_uniforme_page.dart';
 
 /// Relie les changements d'état d'authentification Supabase à go_router,
@@ -151,6 +152,13 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) =>
               GroupeUniformeDetailPage(groupe: state.extra as GroupeUniforme),
           routes: [
+            GoRoute(
+              path: 'modifier',
+              name: 'modifier-groupe-uniforme',
+              builder: (context, state) => ModifierGroupeUniformePage(
+                groupe: state.extra as GroupeUniforme,
+              ),
+            ),
             GoRoute(
               path: 'membres/nouveau',
               name: 'ajouter-membre-uniforme',

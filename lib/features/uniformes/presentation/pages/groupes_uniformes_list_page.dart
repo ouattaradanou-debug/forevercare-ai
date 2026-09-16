@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../data/models/groupe_uniforme.dart';
 import '../providers/uniformes_providers.dart';
@@ -64,6 +65,41 @@ class _CarteGroupe extends ConsumerWidget {
 
   final GroupeUniforme groupe;
 
+  Future<void> _confirmerSuppression(BuildContext context, WidgetRef ref) async {
+    final bool? confirme = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer ce groupe ?'),
+        content: Text(
+          '"${groupe.nom}", tous ses membres et leurs mesures seront '
+          'définitivement supprimés.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.erreur),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true) return;
+
+    try {
+      await ref.read(uniformeRepositoryProvider).supprimerGroupe(groupe.id);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Impossible de supprimer : $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final int nombreMembres = ref
@@ -83,6 +119,7 @@ class _CarteGroupe extends ConsumerWidget {
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => context.push('/uniformes/${groupe.id}', extra: groupe),
+        onLongPress: () => _confirmerSuppression(context, ref),
       ),
     );
   }

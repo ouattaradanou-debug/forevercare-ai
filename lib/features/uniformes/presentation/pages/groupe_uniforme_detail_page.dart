@@ -38,7 +38,19 @@ class GroupeUniformeDetailPage extends ConsumerWidget {
         const [];
 
     return Scaffold(
-      appBar: AppBar(title: Text(groupeActuel.nom)),
+      appBar: AppBar(
+        title: Text(groupeActuel.nom),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: 'Modifier',
+            onPressed: () => context.push(
+              '/uniformes/${groupeActuel.id}/modifier',
+              extra: groupeActuel,
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(
           '/uniformes/${groupeActuel.id}/membres/nouveau',
@@ -265,37 +277,99 @@ class _CarteMembre extends ConsumerWidget {
   final GroupeUniforme groupe;
   final MembreGroupeUniforme membre;
 
+  Future<void> _confirmerSuppression(BuildContext context, WidgetRef ref) async {
+    final bool? confirme = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer ce membre ?'),
+        content: Text(
+          '${membre.nomComplet} et son historique de mesures seront '
+          'définitivement supprimés.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.erreur),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true) return;
+
+    try {
+      await ref.read(uniformeRepositoryProvider).supprimerMembre(membre.id);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Impossible de supprimer : $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final List<MesureUniforme> mesures =
         ref.watch(mesuresMembreUniformeProvider(membre.id)).asData?.value ??
         const [];
     final bool mesurePrise = mesures.any((m) => m.aAuMoinsUneValeurRenseignee);
+    final bool termine = membre.tenueTerminee;
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.s),
+      color: termine ? AppColors.vertFonce : null,
       child: ListTile(
         contentPadding: const EdgeInsets.all(AppSpacing.m),
         // Toute la ligne est cliquable (pas seulement un bouton à droite) :
-        // appuyer sur le nom du membre ouvre directement ses mesures.
+        // appuyer sur le nom du membre ouvre directement ses mesures. Un
+        // appui long propose de le supprimer.
         onTap: () => context.push(
           '/uniformes/${groupe.id}/membres/${membre.id}/mesures',
           extra: (groupe: groupe, membre: membre),
         ),
+        onLongPress: () => _confirmerSuppression(context, ref),
         leading: CircleAvatar(
-          backgroundColor: mesurePrise
+          backgroundColor: termine
+              ? Colors.white.withValues(alpha: 0.2)
+              : mesurePrise
               ? AppColors.succes.withValues(alpha: 0.15)
               : AppColors.erreur.withValues(alpha: 0.15),
           child: Icon(
-            mesurePrise ? Icons.check_circle_outline : Icons.straighten,
-            color: mesurePrise ? AppColors.succes : AppColors.erreur,
+            termine
+                ? Icons.check_circle
+                : mesurePrise
+                ? Icons.check_circle_outline
+                : Icons.straighten,
+            color: termine
+                ? Colors.white
+                : mesurePrise
+                ? AppColors.succes
+                : AppColors.erreur,
           ),
         ),
-        title: Text(membre.nomComplet),
-        subtitle: Text(
-          mesurePrise ? 'Mesures prises — appuyer pour consulter' : 'Mesures non prises',
+        title: Text(
+          membre.nomComplet,
+          style: termine ? const TextStyle(color: Colors.white) : null,
         ),
-        trailing: const Icon(Icons.chevron_right),
+        subtitle: Text(
+          termine
+              ? 'Tenue confectionnée'
+              : mesurePrise
+              ? 'Mesures prises — appuyer pour consulter'
+              : 'Mesures non prises',
+          style: termine
+              ? TextStyle(color: Colors.white.withValues(alpha: 0.85))
+              : null,
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: termine ? Colors.white : null,
+        ),
       ),
     );
   }

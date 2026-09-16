@@ -1,26 +1,32 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../data/models/groupe_uniforme.dart';
 import '../../../../data/models/membre_groupe_uniforme.dart';
 import '../../../../data/models/mesure_uniforme.dart';
 import '../../../../shared/widgets/selecteur_sexe.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../clients/presentation/widgets/indicateur_sauvegarde.dart';
 import '../../../clients/presentation/widgets/section_mesures.dart';
 import '../providers/uniformes_providers.dart';
 
-/// Prise (ou consultation/modification) des mesures d'un membre de groupe
-/// d'uniformes. Réutilise SectionMesures telle quelle (même gabarit
-/// Homme/Femme que pour un client) : seule la destination de
-/// l'enregistrement diffère (UniformeRepository, table `mesures_uniforme`,
-/// séparée de `mesures`).
+/// Fiche complète d'un membre de groupe d'uniformes : identité (auto-
+/// enregistrée), sexe, "couture terminée" (auto-enregistrée), et prise ou
+/// consultation/modification de ses mesures. Réutilise SectionMesures
+/// telle quelle (même gabarit Homme/Femme que pour un client) : seule la
+/// destination de l'enregistrement diffère (UniformeRepository, table
+/// `mesures_uniforme`, séparée de `mesures`).
 ///
-/// Chaque enregistrement crée une nouvelle prise historisée (comme pour un
-/// client) : "modifier les mesures" d'un membre ajoute donc une nouvelle
-/// ligne plutôt que d'écraser la précédente, pré-remplie avec les dernières
-/// valeurs connues pour ne resaisir que ce qui change.
+/// Chaque enregistrement DE MESURES crée une nouvelle prise historisée
+/// (comme pour un client) : contrairement à l'identité et à "couture
+/// terminée" (simples attributs, auto-enregistrés), les mesures ne
+/// s'auto-enregistrent pas à chaque frappe — resterait sinon un
+/// enregistrement conservé pour de bon à chaque appui explicite.
 class MesuresMembrePage extends ConsumerStatefulWidget {
   const MesuresMembrePage({
     super.key,
@@ -37,16 +43,35 @@ class MesuresMembrePage extends ConsumerStatefulWidget {
 
 class _MesuresMembrePageState extends ConsumerState<MesuresMembrePage> {
   late MembreGroupeUniforme _membre;
+  late final TextEditingController _nomCtrl;
+  late final TextEditingController _prenomCtrl;
   bool _chargement = true;
   String? _typeTenueId;
   Map<String, String> _valeursMesures = {};
   bool _enregistrementEnCours = false;
 
+  Timer? _debounceIdentite;
+  Timer? _timerIndicateur;
+  bool _indicateurVisible = false;
+
   @override
   void initState() {
     super.initState();
     _membre = widget.membre;
+    _nomCtrl = TextEditingController(text: _membre.nom ?? '');
+    _prenomCtrl = TextEditingController(text: _membre.prenom ?? '');
+    _nomCtrl.addListener(_programmerSauvegardeIdentite);
+    _prenomCtrl.addListener(_programmerSauvegardeIdentite);
     WidgetsBinding.instance.addPostFrameCallback((_) => _charger());
+  }
+
+  @override
+  void dispose() {
+    _debounceIdentite?.cancel();
+    _timerIndicateur?.cancel();
+    _nomCtrl.dispose();
+    _prenomCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _charger() async {
@@ -79,15 +104,73 @@ class _MesuresMembrePageState extends ConsumerState<MesuresMembrePage> {
     });
   }
 
+  void _programmerSauvegardeIdentite() {
+    _debounceIdentite?.cancel();
+    _debounceIdentite = Timer(
+      const Duration(seconds: 1),
+      _sauvegarderIdentite,
+    );
+  }
+
+  Future<void> _sauvegarderIdentite() async {
+    final MembreGroupeUniforme misAJour = await ref
+        .read(uniformeRepositoryProvider)
+        .actualiserMembre(
+          membre: _membre,
+          nom: _texteOuNull(_nomCtrl.text),
+          prenom: _texteOuNull(_prenomCtrl.text),
+          sexe: _membre.sexe,
+        );
+    if (!mounted) return;
+    setState(() => _membre = misAJour);
+    _timerIndicateur?.cancel();
+    setState(() => _indicateurVisible = true);
+    _timerIndicateur = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _indicateurVisible = false);
+    });
+  }
+
+  String? _texteOuNull(String v) => v.trim().isEmpty ? null : v.trim();
+
   Future<void> _choisirSexe(String? sexe) async {
     if (sexe == null) return;
+    // Annule une éventuelle sauvegarde du nom/prénom déjà programmée pour
+    // éviter d'écraser une saisie toute récente avec l'ancienne valeur de
+    // `_membre` (voir _sauvegarderIdentite) : ce qui est déjà à l'écran
+    // dans les champs fait foi.
+    _debounceIdentite?.cancel();
     setState(() => _chargement = true);
     final MembreGroupeUniforme misAJour = await ref
         .read(uniformeRepositoryProvider)
-        .definirSexeMembre(membre: _membre, sexe: sexe);
+        .actualiserMembre(
+          membre: _membre,
+          nom: _texteOuNull(_nomCtrl.text),
+          prenom: _texteOuNull(_prenomCtrl.text),
+          sexe: sexe,
+        );
     if (!mounted) return;
     setState(() => _membre = misAJour);
     await _charger();
+  }
+
+  Future<void> _definirTenueTerminee(bool? terminee) async {
+    await ref
+        .read(uniformeRepositoryProvider)
+        .definirTenueTerminee(membre: _membre, terminee: terminee ?? false);
+    if (!mounted) return;
+    setState(
+      () => _membre = MembreGroupeUniforme(
+        id: _membre.id,
+        groupeId: _membre.groupeId,
+        nom: _membre.nom,
+        prenom: _membre.prenom,
+        sexe: _membre.sexe,
+        tenueTerminee: terminee ?? false,
+        createdAt: _membre.createdAt,
+        updatedAt: DateTime.now(),
+        synced: false,
+      ),
+    );
   }
 
   void _onValeurChange(String nomChamp, String valeur) {
@@ -140,6 +223,20 @@ class _MesuresMembrePageState extends ConsumerState<MesuresMembrePage> {
                 AppSpacing.xxl,
               ),
               children: [
+                IndicateurSauvegarde(visible: _indicateurVisible),
+                const SizedBox(height: AppSpacing.s),
+                TextFormField(
+                  controller: _nomCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(labelText: 'Nom'),
+                ),
+                const SizedBox(height: AppSpacing.m),
+                TextFormField(
+                  controller: _prenomCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(labelText: 'Prénom'),
+                ),
+                const SizedBox(height: AppSpacing.m),
                 if (_membre.sexe == null) ...[
                   Text(
                     'Sexe',
@@ -159,6 +256,38 @@ class _MesuresMembrePageState extends ConsumerState<MesuresMembrePage> {
                     typeTenueId: _typeTenueId,
                     valeursMesures: _valeursMesures,
                     onValeurChange: _onValeurChange,
+                  ),
+                  const SizedBox(height: AppSpacing.m),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _membre.tenueTerminee
+                          ? AppColors.vertFonce
+                          : null,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.champ),
+                    ),
+                    child: CheckboxListTile(
+                      value: _membre.tenueTerminee,
+                      onChanged: _definirTenueTerminee,
+                      title: Text(
+                        'Couture terminée',
+                        style: _membre.tenueTerminee
+                            ? const TextStyle(color: Colors.white)
+                            : null,
+                      ),
+                      subtitle: Text(
+                        'La tenue de ce membre est confectionnée',
+                        style: TextStyle(
+                          color: _membre.tenueTerminee
+                              ? Colors.white.withValues(alpha: 0.85)
+                              : null,
+                        ),
+                      ),
+                      checkColor: AppColors.vertFonce,
+                      activeColor: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   ElevatedButton(

@@ -114,6 +114,122 @@ class UniformeRepository {
     );
   }
 
+  /// Modifie les informations générales d'un groupe déjà créé (nom,
+  /// répondant, contact) — utilisé par l'auto-sauvegarde de
+  /// ModifierGroupeUniformePage.
+  Future<void> actualiserGroupe({
+    required String groupeId,
+    required String nom,
+    String? repondantNom,
+    String? repondantTelephone,
+  }) async {
+    final GroupeUniformeLocal existant = await (_db.select(
+      _db.groupesUniformes,
+    )..where((t) => t.id.equals(groupeId))).getSingle();
+
+    final GroupeUniforme misAJour = GroupeUniforme(
+      id: groupeId,
+      atelierId: existant.atelierId,
+      nom: nom,
+      repondantNom: repondantNom,
+      repondantTelephone: repondantTelephone,
+      createdAt: existant.createdAt,
+      updatedAt: DateTime.now(),
+      synced: false,
+    );
+    await _db
+        .into(_db.groupesUniformes)
+        .insertOnConflictUpdate(misAJour.versCompagnonLocal());
+
+    if (await _estEnLigne()) {
+      try {
+        await pousserGroupe(misAJour);
+      } catch (_) {
+        // Best-effort, voir creerGroupe.
+      }
+    }
+  }
+
+  /// Supprime un groupe et tout ce qui lui est rattaché (membres, mesures,
+  /// photos). Nécessite une connexion : voir la doc de [supprimerMembre]
+  /// pour l'explication (aucun mécanisme de suppression différée n'existe
+  /// dans l'application, contrairement aux écritures).
+  Future<void> supprimerGroupe(String groupeId) async {
+    if (!await _estEnLigne()) {
+      throw Exception(
+        'Une connexion internet est nécessaire pour supprimer un groupe.',
+      );
+    }
+
+    await _client.from('groupes_uniformes').delete().eq('id', groupeId);
+
+    // Postgres cascade déjà la suppression côté serveur (on delete
+    // cascade) ; le cache local Drift n'a lui aucune contrainte de clé
+    // étrangère, ces lignes doivent donc être nettoyées explicitement ici.
+    final List<MembreGroupeUniformeLocal> membres =
+        await (_db.select(_db.membresGroupeUniforme)
+              ..where((t) => t.groupeId.equals(groupeId)))
+            .get();
+    for (final MembreGroupeUniformeLocal membre in membres) {
+      await (_db.delete(
+        _db.mesuresUniforme,
+      )..where((t) => t.membreId.equals(membre.id))).go();
+    }
+    await (_db.delete(
+      _db.membresGroupeUniforme,
+    )..where((t) => t.groupeId.equals(groupeId))).go();
+    await (_db.delete(
+      _db.photosGroupeUniforme,
+    )..where((t) => t.groupeId.equals(groupeId))).go();
+    await (_db.delete(
+      _db.groupesUniformes,
+    )..where((t) => t.id.equals(groupeId))).go();
+  }
+
+  /// Ajoute une seule photo à un groupe déjà créé (contrairement à
+  /// [creerGroupe], appelé au moment de sa création).
+  Future<void> ajouterPhotoGroupe({
+    required String groupeId,
+    required String type,
+    required String cheminLocal,
+    String? commentaire,
+  }) async {
+    final PhotoGroupeUniforme photo = PhotoGroupeUniforme(
+      id: _uuid.v4(),
+      groupeId: groupeId,
+      type: type,
+      cheminLocal: cheminLocal,
+      source: 'galerie',
+      createdAt: DateTime.now(),
+      commentaire: commentaire,
+    );
+    await _db
+        .into(_db.photosGroupeUniforme)
+        .insertOnConflictUpdate(photo.versCompagnonLocal());
+
+    if (await _estEnLigne()) {
+      try {
+        await pousserPhoto(photo);
+      } catch (_) {
+        // Best-effort, voir creerGroupe.
+      }
+    }
+  }
+
+  /// Supprime une photo de groupe. Nécessite une connexion (voir
+  /// [supprimerMembre]).
+  Future<void> supprimerPhotoGroupe(String photoId) async {
+    if (!await _estEnLigne()) {
+      throw Exception(
+        'Une connexion internet est nécessaire pour supprimer une photo.',
+      );
+    }
+    await _client.from('photos_groupe_uniforme').delete().eq('id', photoId);
+    await (_db.delete(
+      _db.photosGroupeUniforme,
+    )..where((t) => t.id.equals(photoId))).go();
+  }
+
   /// Envoie une photo de groupe vers Supabase : le fichier dans Supabase
   /// Storage (bucket `photos-uniformes`), puis sa ligne dans
   /// `photos_groupe_uniforme`. Voir ClientRepository.pousserPhoto (même
@@ -231,6 +347,7 @@ class UniformeRepository {
       'nom': membre.nom,
       'prenom': membre.prenom,
       'sexe': membre.sexe,
+      'tenue_terminee': membre.tenueTerminee,
     });
     await (_db.update(
       _db.membresGroupeUniforme,
@@ -239,20 +356,23 @@ class UniformeRepository {
     );
   }
 
-  /// Renseigne (ou change) le sexe d'un membre déjà créé — utile quand il
-  /// n'a pas été précisé lors de [ajouterMembre], puisqu'il conditionne le
-  /// gabarit de mesures à afficher (voir GabaritRepository.resoudreTypeTenue
-  /// et MesuresMembrePage).
-  Future<MembreGroupeUniforme> definirSexeMembre({
+  /// Modifie l'identité d'un membre déjà créé (nom, prénom, sexe) —
+  /// utilisé par l'auto-sauvegarde de MesuresMembrePage. Le sexe ne doit
+  /// être changé qu'à dessein : cela peut faire basculer le gabarit de
+  /// mesures affiché (voir GabaritRepository.resoudreTypeTenue).
+  Future<MembreGroupeUniforme> actualiserMembre({
     required MembreGroupeUniforme membre,
-    required String sexe,
+    String? nom,
+    String? prenom,
+    String? sexe,
   }) async {
     final MembreGroupeUniforme misAJour = MembreGroupeUniforme(
       id: membre.id,
       groupeId: membre.groupeId,
-      nom: membre.nom,
-      prenom: membre.prenom,
+      nom: nom,
+      prenom: prenom,
       sexe: sexe,
+      tenueTerminee: membre.tenueTerminee,
       createdAt: membre.createdAt,
       updatedAt: DateTime.now(),
       synced: false,
@@ -270,6 +390,56 @@ class UniformeRepository {
     }
 
     return misAJour;
+  }
+
+  /// Coche (ou décoche) la tenue d'un membre comme confectionnée — met en
+  /// évidence son nom (fond vert foncé) dans la liste du groupe, voir
+  /// GroupeUniformeDetailPage.
+  Future<void> definirTenueTerminee({
+    required MembreGroupeUniforme membre,
+    required bool terminee,
+  }) async {
+    final MembreGroupeUniforme misAJour = MembreGroupeUniforme(
+      id: membre.id,
+      groupeId: membre.groupeId,
+      nom: membre.nom,
+      prenom: membre.prenom,
+      sexe: membre.sexe,
+      tenueTerminee: terminee,
+      createdAt: membre.createdAt,
+      updatedAt: DateTime.now(),
+      synced: false,
+    );
+    await _db
+        .into(_db.membresGroupeUniforme)
+        .insertOnConflictUpdate(misAJour.versCompagnonLocal());
+
+    if (await _estEnLigne()) {
+      try {
+        await pousserMembre(misAJour);
+      } catch (_) {
+        // Best-effort, voir creerGroupe.
+      }
+    }
+  }
+
+  /// Supprime un membre et son historique de mesures. Nécessite une
+  /// connexion : sans mécanisme de suppression différée (contrairement
+  /// aux écritures, qui retentent via SyncEngine), une suppression hors
+  /// ligne laisserait la ligne distante orpheline pour de bon.
+  Future<void> supprimerMembre(String membreId) async {
+    if (!await _estEnLigne()) {
+      throw Exception(
+        'Une connexion internet est nécessaire pour supprimer un membre.',
+      );
+    }
+    await _client.from('membres_groupe_uniforme').delete().eq('id', membreId);
+    await (_db.delete(
+      _db.mesuresUniforme,
+    )..where((t) => t.membreId.equals(membreId))).go();
+    await (_db.delete(
+      _db.membresGroupeUniforme,
+    )..where((t) => t.id.equals(membreId))).go();
   }
 
   Stream<List<MembreGroupeUniforme>> observerMembresGroupe(String groupeId) {

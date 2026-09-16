@@ -317,6 +317,10 @@ class MembresGroupeUniforme extends Table {
   TextColumn get nom => text().nullable()();
   TextColumn get prenom => text().nullable()();
   TextColumn get sexe => text().nullable()();
+  // Coché une fois la tenue de ce membre confectionnée — voir
+  // GroupeUniformeDetailPage (fond vert foncé sur son nom).
+  BoolColumn get tenueTerminee =>
+      boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   BoolColumn get synced => boolean().withDefault(const Constant(true))();
@@ -388,7 +392,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -438,6 +442,12 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(membresGroupeUniforme);
         await m.createTable(mesuresUniforme);
         await m.createTable(photosGroupeUniforme);
+      }
+      if (depuis < 12) {
+        await m.addColumn(
+          membresGroupeUniforme,
+          membresGroupeUniforme.tenueTerminee,
+        );
       }
     },
   );

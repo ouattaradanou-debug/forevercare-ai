@@ -348,13 +348,16 @@ create trigger trg_groupes_uniformes_updated_at
   for each row execute function public.definir_horodatage_modification();
 
 create table if not exists public.membres_groupe_uniforme (
-  id          uuid primary key default gen_random_uuid(),
-  groupe_id   uuid not null references public.groupes_uniformes (id) on delete cascade,
-  nom         text,
-  prenom      text,
-  sexe        text check (sexe in ('Homme', 'Femme')),
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+  id             uuid primary key default gen_random_uuid(),
+  groupe_id      uuid not null references public.groupes_uniformes (id) on delete cascade,
+  nom            text,
+  prenom         text,
+  sexe           text check (sexe in ('Homme', 'Femme')),
+  -- Coché par le tailleur une fois la tenue de ce membre confectionnée —
+  -- met son nom en évidence (fond vert foncé) dans la liste du groupe.
+  tenue_terminee boolean not null default false,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
 );
 
 create index if not exists idx_membres_groupe_uniforme_groupe on public.membres_groupe_uniforme (groupe_id);
