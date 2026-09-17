@@ -262,6 +262,40 @@ class GabaritRepository {
     }
   }
 
+  /// Masque un champ de mesure identifié par son nom, quel que soit le
+  /// gabarit auquel il appartient actuellement (par défaut ou déjà propre
+  /// à l'atelier) — utilisé par l'appui long sur un champ depuis
+  /// SectionMesures. S'assure d'abord qu'un gabarit personnalisé existe
+  /// (voir [assurerGabaritPersonnalise]) puisqu'un champ par défaut ne
+  /// peut jamais être modifié directement (RLS) : le champ y est déjà
+  /// présent (copié) sous le même nom, c'est celui-là qui est masqué.
+  Future<void> masquerChampParNom({
+    required String sexe,
+    required String atelierId,
+    required String nom,
+  }) async {
+    final String typeTenueId = await assurerGabaritPersonnalise(
+      sexe: sexe,
+      atelierId: atelierId,
+    );
+
+    final String nomNormalise = nom.trim().toLowerCase();
+    final List<ChampMesureLocal> champs =
+        await (_db.select(_db.champsMesure)
+              ..where((c) => c.typeTenueId.equals(typeTenueId)))
+            .get();
+    ChampMesureLocal? champ;
+    for (final ChampMesureLocal c in champs) {
+      if (c.nom.trim().toLowerCase() == nomNormalise) {
+        champ = c;
+        break;
+      }
+    }
+    if (champ == null) return;
+
+    await definirStatutChamp(champId: champ.id, actif: false);
+  }
+
   /// Ajoute un champ personnalisé à la fin d'un gabarit (propre à
   /// l'atelier, voir [assurerGabaritPersonnalise]).
   ///

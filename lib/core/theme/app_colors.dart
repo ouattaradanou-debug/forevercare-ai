@@ -49,6 +49,11 @@ class AppColors {
   // que `succes`, pour un signal fort et sans ambiguïté.
   static const Color vertFonce = Color(0xFF1B4332);
 
+  // Vert clair — couleur de la case à cocher "Couture terminée" elle-même
+  // (voir MesuresMembrePage), pour la distinguer du fond vert foncé une
+  // fois cochée.
+  static const Color vertClair = Color(0xFF6FCF97);
+
   // Neutres.
   static const Color blanc = Color(0xFFFFFFFF);
   static const Color bordure = Color(0xFFDED2BC);

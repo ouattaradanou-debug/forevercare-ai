@@ -61,6 +61,43 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
         : ref.read(gabaritRepositoryProvider).observerChampsActifs(typeTenueId);
   }
 
+  /// Supprime (masque) un champ de mesure depuis un appui long — même
+  /// action que la case à décocher dans GestionChampsMesurePage, mais
+  /// accessible directement depuis le formulaire de mesures.
+  Future<void> _supprimerChamp(ChampMesure champ) async {
+    final bool? confirme = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer ce champ ?'),
+        content: Text(
+          '"${champ.nom}" ne sera plus proposé, ni pour les clients ni '
+          "pour les groupes d'uniformes. Tu pourras le rajouter plus tard "
+          'depuis "Champs de mesure".',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.erreur),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true) return;
+
+    final String? sexe = widget.sexe;
+    final String? atelierId = ref.read(atelierCourantProvider).asData?.value?.id;
+    if (sexe == null || atelierId == null) return;
+
+    await ref
+        .read(gabaritRepositoryProvider)
+        .masquerChampParNom(sexe: sexe, atelierId: atelierId, nom: champ.nom);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -91,23 +128,27 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
                   for (final ChampMesure c in champs)
                     Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.m),
-                      child: TextFormField(
-                        key: ValueKey(c.id),
-                        initialValue: widget.valeursMesures[c.nom],
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[0-9.,]'),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onLongPress: () => _supprimerChamp(c),
+                        child: TextFormField(
+                          key: ValueKey(c.id),
+                          initialValue: widget.valeursMesures[c.nom],
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
                           ),
-                        ],
-                        decoration: InputDecoration(
-                          labelText: c.unite != null
-                              ? '${c.nom} (${c.unite})'
-                              : c.nom,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[0-9.,]'),
+                            ),
+                          ],
+                          decoration: InputDecoration(
+                            labelText: c.unite != null
+                                ? '${c.nom} (${c.unite})'
+                                : c.nom,
+                          ),
+                          onChanged: (v) => widget.onValeurChange(c.nom, v),
                         ),
-                        onChanged: (v) => widget.onValeurChange(c.nom, v),
                       ),
                     ),
                 ],
