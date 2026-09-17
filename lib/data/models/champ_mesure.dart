@@ -11,6 +11,7 @@ class ChampMesure {
     this.unite,
     required this.statut,
     required this.ordre,
+    this.estPersonnalise = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -21,6 +22,7 @@ class ChampMesure {
   final String? unite;
   final String statut;
   final int ordre;
+  final bool estPersonnalise;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -34,6 +36,7 @@ class ChampMesure {
       unite: json['unite'] as String?,
       statut: json['statut'] as String,
       ordre: (json['ordre'] as num?)?.toInt() ?? 0,
+      estPersonnalise: json['est_personnalise'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -47,6 +50,7 @@ class ChampMesure {
       unite: ligne.unite,
       statut: ligne.statut,
       ordre: ligne.ordre,
+      estPersonnalise: ligne.estPersonnalise,
       createdAt: ligne.createdAt,
       updatedAt: ligne.updatedAt,
     );
@@ -60,6 +64,7 @@ class ChampMesure {
       unite: Value(unite),
       statut: Value(statut),
       ordre: Value(ordre),
+      estPersonnalise: Value(estPersonnalise),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );

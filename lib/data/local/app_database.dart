@@ -100,6 +100,15 @@ class ChampsMesure extends Table {
   TextColumn get unite => text().nullable()();
   TextColumn get statut => text().withDefault(const Constant('actif'))();
   IntColumn get ordre => integer().withDefault(const Constant(0))();
+  // true uniquement pour un champ ajouté par le tailleur lui-même (bouton
+  // "Ajouter un champ" dans GestionChampsMesurePage) — false pour un champ
+  // par défaut (ou sa copie dans le gabarit propre à l'atelier, voir
+  // GabaritRepository.assurerGabaritPersonnalise). Détermine si l'icône de
+  // suppression apparaît dans SectionMesures : seuls les champs ajoutés
+  // par le tailleur doivent pouvoir être supprimés depuis le formulaire de
+  // mesures — les champs par défaut se masquent uniquement depuis l'écran
+  // "Champs de mesure".
+  BoolColumn get estPersonnalise => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -392,7 +401,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -448,6 +457,9 @@ class AppDatabase extends _$AppDatabase {
           membresGroupeUniforme,
           membresGroupeUniforme.tenueTerminee,
         );
+      }
+      if (depuis < 13) {
+        await m.addColumn(champsMesure, champsMesure.estPersonnalise);
       }
     },
   );

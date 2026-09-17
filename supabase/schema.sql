@@ -274,6 +274,11 @@ create table if not exists public.champs_mesure (
   unite          text,
   statut         text not null default 'actif' check (statut in ('actif', 'masque')),
   ordre          integer not null default 0,
+  -- true uniquement pour un champ ajouté par le tailleur lui-même (bouton
+  -- "Ajouter un champ") — false pour un champ par défaut ou sa copie dans
+  -- le gabarit propre à l'atelier (clone-on-customize). Détermine si le
+  -- champ peut être supprimé directement depuis le formulaire de mesures.
+  est_personnalise boolean not null default false,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
   unique (type_tenue_id, nom)

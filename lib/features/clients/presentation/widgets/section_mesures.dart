@@ -148,11 +148,17 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
                           labelText: c.unite != null
                               ? '${c.nom} (${c.unite})'
                               : c.nom,
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.close, size: 20),
-                            tooltip: 'Supprimer ce champ',
-                            onPressed: () => _supprimerChamp(c),
-                          ),
+                          // Seuls les champs ajoutés par le tailleur
+                          // lui-même sont supprimables ici — un champ par
+                          // défaut se masque uniquement depuis l'écran
+                          // "Champs de mesure" (GestionChampsMesurePage).
+                          suffixIcon: c.estPersonnalise
+                              ? IconButton(
+                                  icon: const Icon(Icons.close, size: 20),
+                                  tooltip: 'Supprimer ce champ',
+                                  onPressed: () => _supprimerChamp(c),
+                                )
+                              : null,
                         ),
                         onChanged: (v) => widget.onValeurChange(c.nom, v),
                       ),

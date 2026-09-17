@@ -198,6 +198,7 @@ class GabaritRepository {
           unite: c.unite,
           statut: c.statut,
           ordre: c.ordre,
+          estPersonnalise: false,
           createdAt: maintenant,
           updatedAt: maintenant,
         ),
@@ -224,6 +225,7 @@ class GabaritRepository {
             'unite': c.unite,
             'statut': c.statut,
             'ordre': c.ordre,
+            'est_personnalise': c.estPersonnalise,
           },
       ]);
     } catch (_) {
@@ -335,6 +337,7 @@ class GabaritRepository {
       unite: unite,
       statut: 'actif',
       ordre: ordre,
+      estPersonnalise: true,
       createdAt: maintenant,
       updatedAt: maintenant,
     );
@@ -350,6 +353,7 @@ class GabaritRepository {
         'unite': champ.unite,
         'statut': champ.statut,
         'ordre': champ.ordre,
+        'est_personnalise': champ.estPersonnalise,
       });
     } catch (_) {
       // Best-effort, voir assurerGabaritPersonnalise.
