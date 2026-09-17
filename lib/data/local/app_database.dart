@@ -401,7 +401,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -460,6 +460,42 @@ class AppDatabase extends _$AppDatabase {
       }
       if (depuis < 13) {
         await m.addColumn(champsMesure, champsMesure.estPersonnalise);
+      }
+      if (depuis < 14) {
+        // Rétro-marque localement les champs personnalisés créés avant que
+        // `estPersonnalise` n'existe (mis à `false` par défaut par l'étape
+        // ci-dessus, pour TOUTES les lignes déjà présentes) — même logique
+        // que le correctif serveur (voir
+        // supabase/migration_phase10_champs_personnalises.sql), appliquée
+        // ici directement en local plutôt que d'attendre une prochaine
+        // synchronisation réseau (hors-ligne d'abord : un appareil resté
+        // longtemps sans connexion doit voir le correctif tout de suite).
+        final List<TypeTenueLocal> tousLesTypes = await select(
+          typesTenue,
+        ).get();
+        final List<ChampMesureLocal> tousLesChamps = await select(
+          champsMesure,
+        ).get();
+
+        final Map<String, TypeTenueLocal> typesParId = {
+          for (final TypeTenueLocal t in tousLesTypes) t.id: t,
+        };
+        final Map<String, Set<String>> nomsDefautParSexe = {};
+        for (final ChampMesureLocal c in tousLesChamps) {
+          final TypeTenueLocal? t = typesParId[c.typeTenueId];
+          if (t == null || t.atelierId != null) continue;
+          (nomsDefautParSexe[t.sexe] ??= {}).add(c.nom.trim().toLowerCase());
+        }
+
+        for (final ChampMesureLocal c in tousLesChamps) {
+          final TypeTenueLocal? t = typesParId[c.typeTenueId];
+          if (t == null || t.atelierId == null) continue;
+          final Set<String> nomsDefaut = nomsDefautParSexe[t.sexe] ?? const {};
+          if (!nomsDefaut.contains(c.nom.trim().toLowerCase())) {
+            await (update(champsMesure)..where((tbl) => tbl.id.equals(c.id)))
+                .write(const ChampsMesureCompanion(estPersonnalise: Value(true)));
+          }
+        }
       }
     },
   );
