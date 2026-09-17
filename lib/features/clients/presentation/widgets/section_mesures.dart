@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,6 +42,15 @@ class SectionMesures extends ConsumerStatefulWidget {
 class _SectionMesuresState extends ConsumerState<SectionMesures> {
   Stream<List<ChampMesure>>? _fluxChamps;
 
+  // Détection manuelle de l'appui long (au lieu de GestureDetector.onLongPress)
+  // : un TextFormField a son propre reconnaisseur d'appui long intégré (pour
+  // la sélection de texte), qui gagne systématiquement l'arbitrage de gestes
+  // face à celui d'un GestureDetector englobant — l'appui long ne
+  // déclenchait donc jamais la suppression. Écouter les évènements de
+  // pointeur bruts (hors arbitrage de gestes) contourne ce conflit.
+  Timer? _minuteurAppuiLong;
+  Offset? _positionDepartAppui;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +63,35 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
     if (oldWidget.typeTenueId != widget.typeTenueId) {
       _reconstruireFluxChamps();
     }
+  }
+
+  @override
+  void dispose() {
+    _minuteurAppuiLong?.cancel();
+    super.dispose();
+  }
+
+  void _demarrerAppuiLong(ChampMesure champ, PointerDownEvent evenement) {
+    _minuteurAppuiLong?.cancel();
+    _positionDepartAppui = evenement.position;
+    _minuteurAppuiLong = Timer(const Duration(milliseconds: 450), () {
+      _minuteurAppuiLong = null;
+      _supprimerChamp(champ);
+    });
+  }
+
+  void _suivreDeplacementAppui(PointerMoveEvent evenement) {
+    final Offset? depart = _positionDepartAppui;
+    if (depart == null) return;
+    if ((evenement.position - depart).distance > 20) {
+      _annulerAppuiLong();
+    }
+  }
+
+  void _annulerAppuiLong([PointerEvent? evenement]) {
+    _minuteurAppuiLong?.cancel();
+    _minuteurAppuiLong = null;
+    _positionDepartAppui = null;
   }
 
   void _reconstruireFluxChamps() {
@@ -128,9 +168,11 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
                   for (final ChampMesure c in champs)
                     Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.m),
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onLongPress: () => _supprimerChamp(c),
+                      child: Listener(
+                        onPointerDown: (e) => _demarrerAppuiLong(c, e),
+                        onPointerUp: _annulerAppuiLong,
+                        onPointerMove: _suivreDeplacementAppui,
+                        onPointerCancel: _annulerAppuiLong,
                         child: TextFormField(
                           key: ValueKey(c.id),
                           initialValue: widget.valeursMesures[c.nom],

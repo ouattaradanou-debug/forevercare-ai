@@ -322,7 +322,7 @@ class _CarteMembre extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.s),
-      color: termine ? AppColors.vertFonce : null,
+      color: termine ? AppColors.vertClair : null,
       child: ListTile(
         contentPadding: const EdgeInsets.all(AppSpacing.m),
         // Toute la ligne est cliquable (pas seulement un bouton à droite) :
@@ -335,7 +335,7 @@ class _CarteMembre extends ConsumerWidget {
         onLongPress: () => _confirmerSuppression(context, ref),
         leading: CircleAvatar(
           backgroundColor: termine
-              ? Colors.white.withValues(alpha: 0.2)
+              ? Colors.white.withValues(alpha: 0.5)
               : mesurePrise
               ? AppColors.succes.withValues(alpha: 0.15)
               : AppColors.erreur.withValues(alpha: 0.15),
@@ -346,7 +346,7 @@ class _CarteMembre extends ConsumerWidget {
                 ? Icons.check_circle_outline
                 : Icons.straighten,
             color: termine
-                ? Colors.white
+                ? AppColors.vertFonce
                 : mesurePrise
                 ? AppColors.succes
                 : AppColors.erreur,
@@ -354,7 +354,12 @@ class _CarteMembre extends ConsumerWidget {
         ),
         title: Text(
           membre.nomComplet,
-          style: termine ? const TextStyle(color: Colors.white) : null,
+          style: termine
+              ? const TextStyle(
+                  color: AppColors.anthracite900,
+                  fontWeight: FontWeight.w600,
+                )
+              : null,
         ),
         subtitle: Text(
           termine
@@ -363,12 +368,12 @@ class _CarteMembre extends ConsumerWidget {
               ? 'Mesures prises — appuyer pour consulter'
               : 'Mesures non prises',
           style: termine
-              ? TextStyle(color: Colors.white.withValues(alpha: 0.85))
+              ? TextStyle(color: AppColors.anthracite900.withValues(alpha: 0.75))
               : null,
         ),
         trailing: Icon(
           Icons.chevron_right,
-          color: termine ? Colors.white : null,
+          color: termine ? AppColors.anthracite900 : null,
         ),
       ),
     );

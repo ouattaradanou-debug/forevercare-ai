@@ -261,7 +261,7 @@ class _MesuresMembrePageState extends ConsumerState<MesuresMembrePage> {
                   Container(
                     decoration: BoxDecoration(
                       color: _membre.tenueTerminee
-                          ? AppColors.vertFonce
+                          ? AppColors.vertClair
                           : null,
                       border: Border.all(
                         color: Theme.of(context).colorScheme.outline,
@@ -274,19 +274,22 @@ class _MesuresMembrePageState extends ConsumerState<MesuresMembrePage> {
                       title: Text(
                         'Couture terminée',
                         style: _membre.tenueTerminee
-                            ? const TextStyle(color: Colors.white)
+                            ? const TextStyle(
+                                color: AppColors.anthracite900,
+                                fontWeight: FontWeight.w600,
+                              )
                             : null,
                       ),
                       subtitle: Text(
                         'La tenue de ce membre est confectionnée',
                         style: TextStyle(
                           color: _membre.tenueTerminee
-                              ? Colors.white.withValues(alpha: 0.85)
+                              ? AppColors.anthracite900.withValues(alpha: 0.75)
                               : null,
                         ),
                       ),
                       checkColor: Colors.white,
-                      activeColor: AppColors.vertClair,
+                      activeColor: AppColors.vertFonce,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
