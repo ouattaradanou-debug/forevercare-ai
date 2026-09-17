@@ -101,6 +101,29 @@ class GabaritRepository {
     return ligne?.id;
   }
 
+  /// Noms (normalisés) des champs du gabarit PAR DÉFAUT (`atelier_id` nul)
+  /// pour ce sexe — sert à déterminer, à l'affichage, si un champ donné a
+  /// été ajouté par le tailleur lui-même (son nom n'y figure pas) plutôt
+  /// que de se fier à un indicateur stocké (`champs_mesure.est_personnalise`),
+  /// dont la mise à jour sur un champ déjà présent avant l'ajout de cette
+  /// colonne dépend d'une synchronisation complète qui peut tarder ou
+  /// échouer sur un appareil donné. Le gabarit par défaut est toujours
+  /// disponible localement (synchronisé dès la connexion), donc ce calcul
+  /// est fiable hors-ligne, sans dépendre du timing d'aucune migration.
+  Future<Set<String>> nomsChampsDefaut(String sexe) async {
+    final TypeTenueLocal? defaut =
+        await (_db.select(_db.typesTenue)..where(
+              (t) => t.sexe.equals(sexe) & t.atelierId.isNull(),
+            ))
+            .getSingleOrNull();
+    if (defaut == null) return const {};
+    final List<ChampMesureLocal> champs =
+        await (_db.select(_db.champsMesure)
+              ..where((c) => c.typeTenueId.equals(defaut.id)))
+            .get();
+    return {for (final ChampMesureLocal c in champs) c.nom.trim().toLowerCase()};
+  }
+
   Stream<List<TypeTenue>> observerTypesTenue({
     required String sexe,
     required String atelierId,

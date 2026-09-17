@@ -39,11 +39,13 @@ class SectionMesures extends ConsumerStatefulWidget {
 
 class _SectionMesuresState extends ConsumerState<SectionMesures> {
   Stream<List<ChampMesure>>? _fluxChamps;
+  Set<String>? _nomsChampsDefaut;
 
   @override
   void initState() {
     super.initState();
     _reconstruireFluxChamps();
+    _chargerNomsChampsDefaut();
   }
 
   @override
@@ -52,6 +54,9 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
     if (oldWidget.typeTenueId != widget.typeTenueId) {
       _reconstruireFluxChamps();
     }
+    if (oldWidget.sexe != widget.sexe) {
+      _chargerNomsChampsDefaut();
+    }
   }
 
   void _reconstruireFluxChamps() {
@@ -59,6 +64,28 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
     _fluxChamps = typeTenueId == null
         ? null
         : ref.read(gabaritRepositoryProvider).observerChampsActifs(typeTenueId);
+  }
+
+  Future<void> _chargerNomsChampsDefaut() async {
+    final String? sexe = widget.sexe;
+    if (sexe == null) {
+      setState(() => _nomsChampsDefaut = null);
+      return;
+    }
+    final Set<String> noms = await ref
+        .read(gabaritRepositoryProvider)
+        .nomsChampsDefaut(sexe);
+    if (!mounted) return;
+    setState(() => _nomsChampsDefaut = noms);
+  }
+
+  /// Un champ est "personnalisé" (donc supprimable) si son nom ne figure
+  /// pas parmi les champs du gabarit par défaut de ce sexe — voir
+  /// [GabaritRepository.nomsChampsDefaut].
+  bool _estPersonnalise(ChampMesure champ) {
+    final Set<String>? defaut = _nomsChampsDefaut;
+    if (defaut == null) return false;
+    return !defaut.contains(champ.nom.trim().toLowerCase());
   }
 
   /// Supprime (masque) un champ de mesure depuis l'icône de suppression du
@@ -152,7 +179,7 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
                           // lui-même sont supprimables ici — un champ par
                           // défaut se masque uniquement depuis l'écran
                           // "Champs de mesure" (GestionChampsMesurePage).
-                          suffixIcon: c.estPersonnalise
+                          suffixIcon: _estPersonnalise(c)
                               ? IconButton(
                                   icon: const Icon(Icons.close, size: 20),
                                   tooltip: 'Supprimer ce champ',
