@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,15 +40,6 @@ class SectionMesures extends ConsumerStatefulWidget {
 class _SectionMesuresState extends ConsumerState<SectionMesures> {
   Stream<List<ChampMesure>>? _fluxChamps;
 
-  // Détection manuelle de l'appui long (au lieu de GestureDetector.onLongPress)
-  // : un TextFormField a son propre reconnaisseur d'appui long intégré (pour
-  // la sélection de texte), qui gagne systématiquement l'arbitrage de gestes
-  // face à celui d'un GestureDetector englobant — l'appui long ne
-  // déclenchait donc jamais la suppression. Écouter les évènements de
-  // pointeur bruts (hors arbitrage de gestes) contourne ce conflit.
-  Timer? _minuteurAppuiLong;
-  Offset? _positionDepartAppui;
-
   @override
   void initState() {
     super.initState();
@@ -65,35 +54,6 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
     }
   }
 
-  @override
-  void dispose() {
-    _minuteurAppuiLong?.cancel();
-    super.dispose();
-  }
-
-  void _demarrerAppuiLong(ChampMesure champ, PointerDownEvent evenement) {
-    _minuteurAppuiLong?.cancel();
-    _positionDepartAppui = evenement.position;
-    _minuteurAppuiLong = Timer(const Duration(milliseconds: 450), () {
-      _minuteurAppuiLong = null;
-      _supprimerChamp(champ);
-    });
-  }
-
-  void _suivreDeplacementAppui(PointerMoveEvent evenement) {
-    final Offset? depart = _positionDepartAppui;
-    if (depart == null) return;
-    if ((evenement.position - depart).distance > 20) {
-      _annulerAppuiLong();
-    }
-  }
-
-  void _annulerAppuiLong([PointerEvent? evenement]) {
-    _minuteurAppuiLong?.cancel();
-    _minuteurAppuiLong = null;
-    _positionDepartAppui = null;
-  }
-
   void _reconstruireFluxChamps() {
     final String? typeTenueId = widget.typeTenueId;
     _fluxChamps = typeTenueId == null
@@ -101,9 +61,14 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
         : ref.read(gabaritRepositoryProvider).observerChampsActifs(typeTenueId);
   }
 
-  /// Supprime (masque) un champ de mesure depuis un appui long — même
-  /// action que la case à décocher dans GestionChampsMesurePage, mais
-  /// accessible directement depuis le formulaire de mesures.
+  /// Supprime (masque) un champ de mesure depuis l'icône de suppression du
+  /// champ — même action que la case à décocher dans
+  /// GestionChampsMesurePage, mais accessible directement depuis le
+  /// formulaire de mesures. (Un appui long sur le champ lui-même a été
+  /// essayé en premier lieu, mais un TextFormField capte toujours l'appui
+  /// long pour sa propre sélection de texte avant qu'il n'atteigne un
+  /// geste englobant, y compris en écoutant les évènements de pointeur
+  /// bruts — d'où cette icône, fiable quel que soit l'appareil.)
   Future<void> _supprimerChamp(ChampMesure champ) async {
     final bool? confirme = await showDialog<bool>(
       context: context,
@@ -168,29 +133,28 @@ class _SectionMesuresState extends ConsumerState<SectionMesures> {
                   for (final ChampMesure c in champs)
                     Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.m),
-                      child: Listener(
-                        onPointerDown: (e) => _demarrerAppuiLong(c, e),
-                        onPointerUp: _annulerAppuiLong,
-                        onPointerMove: _suivreDeplacementAppui,
-                        onPointerCancel: _annulerAppuiLong,
-                        child: TextFormField(
-                          key: ValueKey(c.id),
-                          initialValue: widget.valeursMesures[c.nom],
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'[0-9.,]'),
-                            ),
-                          ],
-                          decoration: InputDecoration(
-                            labelText: c.unite != null
-                                ? '${c.nom} (${c.unite})'
-                                : c.nom,
-                          ),
-                          onChanged: (v) => widget.onValeurChange(c.nom, v),
+                      child: TextFormField(
+                        key: ValueKey(c.id),
+                        initialValue: widget.valeursMesures[c.nom],
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
                         ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9.,]'),
+                          ),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: c.unite != null
+                              ? '${c.nom} (${c.unite})'
+                              : c.nom,
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.close, size: 20),
+                            tooltip: 'Supprimer ce champ',
+                            onPressed: () => _supprimerChamp(c),
+                          ),
+                        ),
+                        onChanged: (v) => widget.onValeurChange(c.nom, v),
                       ),
                     ),
                 ],
