@@ -61,8 +61,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Configurer ma cave'), findsOneWidget);
-    expect(find.text('Type de cave'), findsOneWidget);
+    expect(find.text('Cave à vin'), findsOneWidget);
     expect(find.text('Question secrète'), findsOneWidget);
     expect(find.text('Créer ma cave'), findsOneWidget);
+
+    await tester.tap(find.text('Cave à vin'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Type de cave et profil'), findsOneWidget);
+    expect(find.text('Votre profil'), findsOneWidget);
   });
 }

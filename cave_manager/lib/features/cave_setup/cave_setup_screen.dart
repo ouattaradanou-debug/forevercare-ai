@@ -55,6 +55,73 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
     super.dispose();
   }
 
+  Future<void> _choisirTypeEtProfil() async {
+    var typeChoisi = _typeCave;
+    var roleChoisi = _role;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Type de cave et profil'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Type de cave',
+                    style: Theme.of(context).textTheme.titleMedium),
+                RadioGroup<TypeCave>(
+                  groupValue: typeChoisi,
+                  onChanged: (v) => setDialogState(() => typeChoisi = v!),
+                  child: Column(
+                    children: TypeCave.values
+                        .map((type) => RadioListTile<TypeCave>(
+                            title: Text(type.libelle), value: type))
+                        .toList(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text('Votre profil',
+                    style: Theme.of(context).textTheme.titleMedium),
+                RadioGroup<RoleUtilisateur>(
+                  groupValue: roleChoisi,
+                  onChanged: (v) => setDialogState(() => roleChoisi = v!),
+                  child: const Column(
+                    children: [
+                      RadioListTile<RoleUtilisateur>(
+                        title: Text(
+                            'Propriétaire/Gérant (je gère seul(e) ma cave)'),
+                        value: RoleUtilisateur.proprietaireGerant,
+                      ),
+                      RadioListTile<RoleUtilisateur>(
+                        title: Text(
+                            'Propriétaire (je désignerai un Gérant séparé)'),
+                        value: RoleUtilisateur.proprietaire,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _typeCave = typeChoisi;
+                  _role = roleChoisi;
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Valider'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _creerLaCave() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -89,10 +156,21 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Retour à la connexion',
-          onPressed: () => context.go('/connexion'),
+        leadingWidth: 96,
+        leading: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              tooltip: 'Retour à la connexion',
+              onPressed: () => context.go('/connexion'),
+            ),
+            IconButton(
+              icon: const Icon(Icons.tune),
+              tooltip: 'Type de cave et profil',
+              onPressed: _choisirTypeEtProfil,
+            ),
+          ],
         ),
         title: const Text('Configurer ma cave'),
       ),
@@ -104,17 +182,15 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Type de cave',
-                    style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                RadioGroup<TypeCave>(
-                  groupValue: _typeCave,
-                  onChanged: (v) => setState(() => _typeCave = v!),
-                  child: Column(
-                    children: TypeCave.values
-                        .map((type) => RadioListTile<TypeCave>(
-                            title: Text(type.libelle), value: type))
-                        .toList(),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.tune),
+                    title: Text(_typeCave.libelle),
+                    subtitle: Text(_role == RoleUtilisateur.proprietaireGerant
+                        ? 'Propriétaire/Gérant'
+                        : 'Propriétaire'),
+                    trailing: const Icon(Icons.edit),
+                    onTap: _choisirTypeEtProfil,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -137,28 +213,6 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
                   controller: _localisationCtrl,
                   decoration: const InputDecoration(labelText: 'Localisation'),
                   validator: _valideurObligatoire,
-                ),
-                const SizedBox(height: 24),
-                Text('Votre profil',
-                    style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                RadioGroup<RoleUtilisateur>(
-                  groupValue: _role,
-                  onChanged: (v) => setState(() => _role = v!),
-                  child: const Column(
-                    children: [
-                      RadioListTile<RoleUtilisateur>(
-                        title: Text(
-                            'Propriétaire/Gérant (je gère seul(e) ma cave)'),
-                        value: RoleUtilisateur.proprietaireGerant,
-                      ),
-                      RadioListTile<RoleUtilisateur>(
-                        title: Text(
-                            'Propriétaire (je désignerai un Gérant séparé)'),
-                        value: RoleUtilisateur.proprietaire,
-                      ),
-                    ],
-                  ),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
