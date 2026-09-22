@@ -44,6 +44,9 @@ dev_dependencies:
   # Client Dart pur (sans dépendance Flutter), utilisé uniquement par le
   # test d'intégration RLS pour pouvoir tourner via `dart test`.
   supabase: ^2.3.4
+  # Utilisé explicitement par test/widget_test.dart pour fournir un
+  # stockage en mémoire à supabase_flutter pendant les tests.
+  shared_preferences: ^2.2.3
 
 flutter:
   uses-material-design: true

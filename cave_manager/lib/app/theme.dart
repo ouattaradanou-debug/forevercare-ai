@@ -15,7 +15,12 @@ ThemeData construireTheme() {
   );
 
   return base.copyWith(
-    textTheme: base.textTheme.apply(fontSizeFactor: 1.1),
+    // NB : l'agrandissement global du texte n'est PAS fait ici via
+    // `textTheme.apply(fontSizeFactor: ...)` — ce plante avec Material 3
+    // car certains styles du TextTheme par défaut ont `fontSize == null`
+    // (bug reproduit par `test/widget_test.dart`, un crash immédiat au
+    // démarrage). Il est appliqué sans risque au niveau de `MaterialApp`
+    // via `MediaQuery`/`TextScaler` — voir `app.dart`.
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         minimumSize: const Size.fromHeight(64),
