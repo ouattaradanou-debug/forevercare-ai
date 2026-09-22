@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/roles.dart';
@@ -105,16 +107,25 @@ class AuthService {
 
   /// Charge le profil de l'utilisateur actuellement authentifié.
   /// Retourne `null` si aucune session n'est active.
+  ///
+  /// Délai maximum de 15s : sans ça, une requête réseau lente (signal
+  /// faible) bloque l'app indéfiniment sur l'écran de démarrage, sans
+  /// jamais afficher d'erreur ni rediriger vers la connexion.
   Future<Profil?> profilActuel() async {
     final utilisateur = _client.auth.currentUser;
     if (utilisateur == null) return null;
 
-    final ligne = await _client
-        .from('profiles')
-        .select()
-        .eq('id', utilisateur.id)
-        .maybeSingle();
-    if (ligne == null) return null;
-    return Profil.depuisJson(ligne);
+    try {
+      final ligne = await _client
+          .from('profiles')
+          .select()
+          .eq('id', utilisateur.id)
+          .maybeSingle()
+          .timeout(const Duration(seconds: 15));
+      if (ligne == null) return null;
+      return Profil.depuisJson(ligne);
+    } on TimeoutException {
+      return null;
+    }
   }
 }
