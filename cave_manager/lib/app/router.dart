@@ -20,6 +20,10 @@ GoRouter construireRouteur(Ref ref) {
     refreshListenable: _RiverpodRefreshListenable(ref, profilActuelProvider),
     redirect: (context, state) {
       final profilAsync = ref.read(profilActuelProvider);
+      debugPrint(
+          '[DIAG] redirect() appelé, location=${state.matchedLocation}, '
+          'isLoading=${profilAsync.isLoading}, '
+          'value=${profilAsync.valueOrNull}');
 
       if (profilAsync.isLoading) return null;
 
@@ -31,10 +35,16 @@ GoRouter construireRouteur(Ref ref) {
           surConnexion || surConfiguration || surPinOublie;
 
       if (profil == null) {
-        return accessibleSansSession ? null : '/connexion';
+        final destination = accessibleSansSession ? null : '/connexion';
+        debugPrint('[DIAG] redirect() décide -> $destination');
+        return destination;
       }
 
-      if (accessibleSansSession) return '/';
+      if (accessibleSansSession) {
+        debugPrint('[DIAG] redirect() décide -> /');
+        return '/';
+      }
+      debugPrint('[DIAG] redirect() décide -> pas de redirection');
       return null;
     },
     routes: [
@@ -42,6 +52,7 @@ GoRouter construireRouteur(Ref ref) {
           path: '/',
           builder: (context, state) {
             final profil = ref.read(profilActuelProvider).valueOrNull;
+            debugPrint('[DIAG] builder("/") appelé, profil=$profil');
             if (profil == null) return const SplashScreen();
             return HomeScreen(profil: profil);
           }),
