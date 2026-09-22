@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/auth/auth_providers.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/mot_de_passe_oublie_screen.dart';
 import '../features/cave_setup/cave_setup_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/splash/splash_screen.dart';
@@ -25,12 +26,15 @@ GoRouter construireRouteur(Ref ref) {
       final profil = profilAsync.valueOrNull;
       final surConfiguration = state.matchedLocation == '/configuration-cave';
       final surConnexion = state.matchedLocation == '/connexion';
+      final surPinOublie = state.matchedLocation == '/pin-oublie';
+      final accessibleSansSession =
+          surConnexion || surConfiguration || surPinOublie;
 
       if (profil == null) {
-        return (surConnexion || surConfiguration) ? null : '/connexion';
+        return accessibleSansSession ? null : '/connexion';
       }
 
-      if (surConnexion || surConfiguration) return '/';
+      if (accessibleSansSession) return '/';
       return null;
     },
     routes: [
@@ -46,6 +50,9 @@ GoRouter construireRouteur(Ref ref) {
       GoRoute(
           path: '/configuration-cave',
           builder: (context, state) => const CaveSetupScreen()),
+      GoRoute(
+          path: '/pin-oublie',
+          builder: (context, state) => const MotDePasseOublieScreen()),
     ],
   );
 }

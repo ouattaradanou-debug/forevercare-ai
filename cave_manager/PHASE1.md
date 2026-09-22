@@ -308,6 +308,53 @@ fourni.
 
 ---
 
+## 10bis. Ajout demandé en cours de Phase 1 : récupération de code PIN
+
+Demandé explicitement par vous après le premier test sur téléphone (pas une
+initiative de ma part — donc pas signalé au format ⚠️ AJOUT PROPOSÉ, qui
+concerne mes propres décisions). Résumé pour que la matrice et le schéma
+restent cohérents avec le code :
+
+- **Mécanisme retenu, choisi ensemble** : question secrète définie à la
+  création de chaque compte (les 4 rôles), plutôt qu'un email de
+  récupération (nos comptes utilisent un email technique
+  `<téléphone>@cave.internal` que personne ne consulte réellement).
+- **Schéma** : `supabase/migrations/0002_recuperation_pin.sql` — colonnes
+  `question_secrete`, `reponse_secrete_hash` (bcrypt, jamais en clair),
+  `tentatives_reponse_secrete`, `bloque_jusqu_a` sur `profiles` ; RPC
+  `obtenir_question_secrete` (ouverte à `anon`, nécessaire puisque
+  l'utilisateur est justement déconnecté) et `reinitialiser_pin`
+  (anti-brute-force : blocage 30 min après 5 échecs).
+- **Bug réel trouvé et corrigé pendant les tests locaux** : la première
+  version de `reinitialiser_pin` faisait `RAISE EXCEPTION` sur mauvaise
+  réponse, ce qui annulait aussi la mise à jour du compteur de tentatives
+  dans la même transaction (Postgres : une exception non interceptée
+  annule tout le travail de l'appel) — l'anti-brute-force était donc
+  totalement inopérant. Corrigé en renvoyant un statut texte
+  (`'ok'` / `'reponse_incorrecte'` / `'bloque'`) plutôt qu'en levant une
+  exception pour ce cas métier normal. Revérifié : 5 échecs → blocage
+  effectif même avec la bonne réponse au 6ᵉ essai.
+- **Écrans** : `LoginScreen` restylé (libellé "Code PIN (6 chiffres)",
+  icône œil, lien "Code PIN oublié ?") ; nouvel écran
+  `MotDePasseOublieScreen` (téléphone → question → réponse + nouveau PIN) ;
+  `CaveSetupScreen` demande désormais la question/réponse secrète du
+  premier compte. L'Edge Function `create-team-member` a été mise à jour
+  en cohérence (même hachage bcrypt) pour les comptes Gérant/Agent, même
+  si aucun écran ne l'appelle encore en Phase 1.
+- **Compromis sécurité assumé, signalé** : `obtenir_question_secrete`
+  révèle si un numéro est associé à un compte (question renvoyée ou non).
+  Choix délibéré de simplicité (point 29) plutôt qu'une question décoy ; à
+  reconsidérer si un usage réel montre un risque d'énumération
+  problématique.
+- **Non couvert par un test automatisé** faute de projet Supabase de test
+  branché sur cette session : la logique a été vérifiée manuellement, de
+  bout en bout, sur PostgreSQL 16 local (bonne réponse, mauvaise réponse,
+  blocage après 5 essais, ancien PIN invalidé/nouveau PIN actif) — voir
+  historique de session. Un test d'intégration dédié serait à ajouter en
+  Phase 2 sur le modèle de `rls_agent_vente_test.dart`.
+
+---
+
 ## 11. Auto-évaluation finale obligatoire
 
 1. **Un agent de vente peut-il, par un moyen quelconque, accéder à une

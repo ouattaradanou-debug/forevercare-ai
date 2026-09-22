@@ -13,6 +13,7 @@
 // Déploiement : supabase functions deploy create-team-member
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import bcrypt from 'npm:bcryptjs@2.4.3';
 
 interface Requete {
   nom: string;
@@ -20,6 +21,8 @@ interface Requete {
   telephone: string;
   role: 'gerant' | 'agent_vente';
   motDePasseInitial: string;
+  questionSecrete: string;
+  reponseSecrete: string;
 }
 
 Deno.serve(async (req) => {
@@ -66,8 +69,14 @@ Deno.serve(async (req) => {
 
     const body: Requete = await req.json();
 
-    if (!body.nom || !body.prenom || !body.telephone || !body.role || !body.motDePasseInitial) {
-      return reponseErreur('Champs manquants (nom, prenom, telephone, role, motDePasseInitial).', 400);
+    if (
+      !body.nom || !body.prenom || !body.telephone || !body.role || !body.motDePasseInitial ||
+      !body.questionSecrete || !body.reponseSecrete
+    ) {
+      return reponseErreur(
+        'Champs manquants (nom, prenom, telephone, role, motDePasseInitial, questionSecrete, reponseSecrete).',
+        400,
+      );
     }
 
     if (!['gerant', 'agent_vente'].includes(body.role)) {
@@ -91,6 +100,11 @@ Deno.serve(async (req) => {
       return reponseErreur(`Échec de création du compte : ${erreurCreation?.message ?? 'inconnue'}`, 500);
     }
 
+    // Même hachage bcrypt que côté SQL (pgcrypto crypt()/gen_salt('bf')),
+    // pour que reinitialiser_pin() puisse vérifier la réponse quelle que
+    // soit la voie de création du compte (bootstrap SQL ou cette fonction).
+    const reponseSecreteHash = bcrypt.hashSync(body.reponseSecrete.toLowerCase().trim(), 10);
+
     const { error: erreurInsertionProfil } = await clientAdmin.from('profiles').insert({
       id: nouvelUtilisateur.user.id,
       cave_id: profilAppelant.cave_id,
@@ -99,6 +113,8 @@ Deno.serve(async (req) => {
       telephone: body.telephone,
       role: body.role,
       created_by: appelant.id,
+      question_secrete: body.questionSecrete,
+      reponse_secrete_hash: reponseSecreteHash,
     });
 
     if (erreurInsertionProfil) {

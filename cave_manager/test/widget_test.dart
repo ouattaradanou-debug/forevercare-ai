@@ -32,8 +32,23 @@ void main() {
 
     expect(find.text('Ma Cave'), findsOneWidget);
     expect(find.text('Numéro de téléphone'), findsOneWidget);
-    expect(find.text('Code secret'), findsOneWidget);
+    expect(find.text('Code PIN (6 chiffres)'), findsOneWidget);
     expect(find.text('Se connecter'), findsOneWidget);
+    expect(find.text('Code PIN oublié ?'), findsOneWidget);
+  });
+
+  testWidgets('Le lien "Code PIN oublié ?" mène à l\'écran de récupération',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: CaveManagerApp()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Code PIN oublié ?'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Code PIN oublié'), findsOneWidget);
+    expect(find.text('Entrez le numéro de téléphone de votre compte.'),
+        findsOneWidget);
+    expect(find.text('Continuer'), findsOneWidget);
   });
 
   testWidgets(
@@ -47,6 +62,7 @@ void main() {
 
     expect(find.text('Configurer ma cave'), findsOneWidget);
     expect(find.text('Type de cave'), findsOneWidget);
+    expect(find.text('Question secrète'), findsOneWidget);
     expect(find.text('Créer ma cave'), findsOneWidget);
   });
 }

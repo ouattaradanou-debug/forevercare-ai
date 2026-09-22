@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/auth/auth_providers.dart';
 
-/// Connexion : téléphone + code secret. Une seule action principale
+/// Connexion : téléphone + code PIN. Une seule action principale
 /// ("Se connecter"). Le lien vers "Configurer ma cave" n'est affiché que
 /// pour le tout premier usage de l'appareil (voir router.dart).
 class LoginScreen extends ConsumerStatefulWidget {
@@ -19,6 +19,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _telephoneCtrl = TextEditingController();
   final _pinCtrl = TextEditingController();
 
+  bool _pinVisible = false;
   bool _enCours = false;
   String? _erreur;
 
@@ -44,7 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       ref.invalidate(profilActuelProvider);
     } catch (_) {
-      setState(() => _erreur = 'Numéro ou code secret incorrect.');
+      setState(() => _erreur = 'Numéro ou code PIN incorrect.');
     } finally {
       if (mounted) setState(() => _enCours = false);
     }
@@ -84,9 +85,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _pinCtrl,
-                    decoration: const InputDecoration(labelText: 'Code secret'),
+                    decoration: InputDecoration(
+                      labelText: 'Code PIN (6 chiffres)',
+                      suffixIcon: IconButton(
+                        icon: Icon(_pinVisible
+                            ? Icons.visibility_off
+                            : Icons.visibility),
+                        tooltip: _pinVisible
+                            ? 'Masquer le code'
+                            : 'Afficher le code',
+                        onPressed: () =>
+                            setState(() => _pinVisible = !_pinVisible),
+                      ),
+                    ),
                     keyboardType: TextInputType.number,
-                    obscureText: true,
+                    obscureText: !_pinVisible,
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? 'Champ obligatoire'
                         : null,
@@ -112,6 +125,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: () => context.go('/configuration-cave'),
                     child:
                         const Text('Première utilisation ? Configurer ma cave'),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/pin-oublie'),
+                    child: const Text('Code PIN oublié ?'),
                   ),
                 ],
               ),

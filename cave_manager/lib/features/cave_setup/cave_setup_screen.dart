@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_providers.dart';
+import '../../core/auth/questions_secretes.dart';
 import '../../core/constants/roles.dart';
 import '../../core/constants/type_cave.dart';
 
@@ -33,6 +34,9 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
   final _nomCtrl = TextEditingController();
   final _telephoneUtilisateurCtrl = TextEditingController();
   final _pinCtrl = TextEditingController();
+  final _reponseSecreteCtrl = TextEditingController();
+
+  String _questionSecrete = questionsSecretesDisponibles.first;
 
   bool _enCours = false;
   String? _erreur;
@@ -46,6 +50,7 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
     _nomCtrl.dispose();
     _telephoneUtilisateurCtrl.dispose();
     _pinCtrl.dispose();
+    _reponseSecreteCtrl.dispose();
     super.dispose();
   }
 
@@ -68,6 +73,8 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
             telephoneUtilisateur: _telephoneUtilisateurCtrl.text.trim(),
             role: _role,
             pin: _pinCtrl.text.trim(),
+            questionSecrete: _questionSecrete,
+            reponseSecrete: _reponseSecreteCtrl.text.trim(),
           );
       ref.invalidate(profilActuelProvider);
     } catch (e) {
@@ -168,13 +175,37 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _pinCtrl,
-                  decoration: const InputDecoration(
-                      labelText: 'Code secret (au moins 6 chiffres)'),
+                  decoration:
+                      const InputDecoration(labelText: 'Code PIN (6 chiffres)'),
                   keyboardType: TextInputType.number,
                   obscureText: true,
                   validator: (v) => (v == null || v.trim().length < 6)
                       ? 'Au moins 6 chiffres'
                       : null,
+                ),
+                const SizedBox(height: 24),
+                Text('En cas de code PIN oublié',
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  initialValue: _questionSecrete,
+                  isExpanded: true,
+                  decoration:
+                      const InputDecoration(labelText: 'Question secrète'),
+                  items: questionsSecretesDisponibles
+                      .map((q) => DropdownMenuItem(
+                            value: q,
+                            child: Text(q,
+                                maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setState(() => _questionSecrete = v!),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _reponseSecreteCtrl,
+                  decoration: const InputDecoration(labelText: 'Votre réponse'),
+                  validator: _valideurObligatoire,
                 ),
                 if (_erreur != null) ...[
                   const SizedBox(height: 12),
