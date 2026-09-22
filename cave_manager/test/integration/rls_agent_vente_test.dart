@@ -46,8 +46,11 @@ void main() {
   final agentPassword = _env('AGENT_TEST_PASSWORD');
   final caveId = _env('CAVE_TEST_ID');
 
-  final configureComplet =
-      url != null && anonKey != null && agentEmail != null && agentPassword != null && caveId != null;
+  final configureComplet = url != null &&
+      anonKey != null &&
+      agentEmail != null &&
+      agentPassword != null &&
+      caveId != null;
 
   group('RLS — Agent de vente bloqué sur les tables sensibles', () {
     late SupabaseClient client;
@@ -55,7 +58,8 @@ void main() {
     setUpAll(() async {
       if (!configureComplet) return;
       client = SupabaseClient(url, anonKey);
-      await client.auth.signInWithPassword(email: agentEmail, password: agentPassword);
+      await client.auth
+          .signInWithPassword(email: agentEmail, password: agentPassword);
     });
 
     test(
@@ -65,7 +69,9 @@ void main() {
         final lignes = await client.from('clotures').select();
         expect(lignes, isEmpty);
       },
-      skip: configureComplet ? false : 'Backend Supabase de test non configuré (voir en-tête du fichier).',
+      skip: configureComplet
+          ? false
+          : 'Backend Supabase de test non configuré (voir en-tête du fichier).',
     );
 
     test(
@@ -83,7 +89,9 @@ void main() {
           ),
         );
       },
-      skip: configureComplet ? false : 'Backend Supabase de test non configuré (voir en-tête du fichier).',
+      skip: configureComplet
+          ? false
+          : 'Backend Supabase de test non configuré (voir en-tête du fichier).',
     );
 
     test(
@@ -101,7 +109,9 @@ void main() {
           ),
         );
       },
-      skip: configureComplet ? false : 'Backend Supabase de test non configuré (voir en-tête du fichier).',
+      skip: configureComplet
+          ? false
+          : 'Backend Supabase de test non configuré (voir en-tête du fichier).',
     );
   });
 }

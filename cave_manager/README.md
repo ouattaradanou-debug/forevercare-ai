@@ -9,15 +9,18 @@ d'acceptation, auto-évaluation).
 
 ## Mise en route (première fois)
 
-Ce module a été écrit dans un environnement sans Flutter/Dart installé ;
-les commandes ci-dessous n'ont donc pas encore été exécutées. À faire côté
-développeur avant le premier lancement :
+Ce code a été vérifié avec Flutter 3.47.5 / Dart 3.13.4 : `flutter pub get`,
+`dart run build_runner build`, `flutter analyze` (0 issue) et
+`dart test test/unit` (14/14) ont tous été exécutés avec succès, et la
+migration SQL a été rejouée sur un vrai PostgreSQL 16 (voir PHASE1.md,
+section 6). Il manque uniquement les dossiers de plateforme (android/,
+ios/, ...), volontairement absents de ce commit comme dans tout projet
+Flutter, et un vrai projet Supabase pour aller plus loin :
 
 ```bash
 cd cave_manager
 
-# 1. Génère les dossiers de plateforme (android/, ios/, ...), absents de ce
-#    commit — ils sont exclus du dépôt comme dans tout projet Flutter.
+# 1. Génère les dossiers de plateforme (android/, ios/, ...)
 flutter create . --project-name cave_manager --org com.votrecave
 
 # 2. Récupère les dépendances déclarées dans pubspec.yaml

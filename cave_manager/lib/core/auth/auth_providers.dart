@@ -6,7 +6,8 @@ import '../sync/sync_service.dart';
 import 'auth_service.dart';
 import 'profil.dart';
 
-final supabaseClientProvider = Provider<SupabaseClient>((ref) => Supabase.instance.client);
+final supabaseClientProvider =
+    Provider<SupabaseClient>((ref) => Supabase.instance.client);
 
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService(ref.watch(supabaseClientProvider));

@@ -89,26 +89,31 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Type de cave', style: Theme.of(context).textTheme.titleLarge),
+                Text('Type de cave',
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 8),
-                ...TypeCave.values.map(
-                  (type) => RadioListTile<TypeCave>(
-                    title: Text(type.libelle),
-                    value: type,
-                    groupValue: _typeCave,
-                    onChanged: (v) => setState(() => _typeCave = v!),
+                RadioGroup<TypeCave>(
+                  groupValue: _typeCave,
+                  onChanged: (v) => setState(() => _typeCave = v!),
+                  child: Column(
+                    children: TypeCave.values
+                        .map((type) => RadioListTile<TypeCave>(
+                            title: Text(type.libelle), value: type))
+                        .toList(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _nomCaveCtrl,
-                  decoration: const InputDecoration(labelText: 'Nom de la cave'),
+                  decoration:
+                      const InputDecoration(labelText: 'Nom de la cave'),
                   validator: _valideurObligatoire,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _telephoneCaveCtrl,
-                  decoration: const InputDecoration(labelText: 'Numéro de téléphone de la cave'),
+                  decoration: const InputDecoration(
+                      labelText: 'Numéro de téléphone de la cave'),
                   keyboardType: TextInputType.phone,
                   validator: _valideurObligatoire,
                 ),
@@ -119,19 +124,26 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
                   validator: _valideurObligatoire,
                 ),
                 const SizedBox(height: 24),
-                Text('Votre profil', style: Theme.of(context).textTheme.titleLarge),
+                Text('Votre profil',
+                    style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 8),
-                RadioListTile<RoleUtilisateur>(
-                  title: const Text('Propriétaire/Gérant (je gère seul(e) ma cave)'),
-                  value: RoleUtilisateur.proprietaireGerant,
+                RadioGroup<RoleUtilisateur>(
                   groupValue: _role,
                   onChanged: (v) => setState(() => _role = v!),
-                ),
-                RadioListTile<RoleUtilisateur>(
-                  title: const Text('Propriétaire (je désignerai un Gérant séparé)'),
-                  value: RoleUtilisateur.proprietaire,
-                  groupValue: _role,
-                  onChanged: (v) => setState(() => _role = v!),
+                  child: const Column(
+                    children: [
+                      RadioListTile<RoleUtilisateur>(
+                        title: Text(
+                            'Propriétaire/Gérant (je gère seul(e) ma cave)'),
+                        value: RoleUtilisateur.proprietaireGerant,
+                      ),
+                      RadioListTile<RoleUtilisateur>(
+                        title: Text(
+                            'Propriétaire (je désignerai un Gérant séparé)'),
+                        value: RoleUtilisateur.proprietaire,
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -148,29 +160,36 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _telephoneUtilisateurCtrl,
-                  decoration: const InputDecoration(labelText: 'Votre numéro de téléphone'),
+                  decoration: const InputDecoration(
+                      labelText: 'Votre numéro de téléphone'),
                   keyboardType: TextInputType.phone,
                   validator: _valideurObligatoire,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _pinCtrl,
-                  decoration: const InputDecoration(labelText: 'Code secret (au moins 6 chiffres)'),
+                  decoration: const InputDecoration(
+                      labelText: 'Code secret (au moins 6 chiffres)'),
                   keyboardType: TextInputType.number,
                   obscureText: true,
-                  validator: (v) =>
-                      (v == null || v.trim().length < 6) ? 'Au moins 6 chiffres' : null,
+                  validator: (v) => (v == null || v.trim().length < 6)
+                      ? 'Au moins 6 chiffres'
+                      : null,
                 ),
                 if (_erreur != null) ...[
                   const SizedBox(height: 12),
-                  Text(_erreur!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  Text(_erreur!,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.error)),
                 ],
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _enCours ? null : _creerLaCave,
                   child: _enCours
                       ? const SizedBox(
-                          height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2))
                       : const Text('Créer ma cave'),
                 ),
               ],
@@ -181,5 +200,6 @@ class _CaveSetupScreenState extends ConsumerState<CaveSetupScreen> {
     );
   }
 
-  String? _valideurObligatoire(String? v) => (v == null || v.trim().isEmpty) ? 'Champ obligatoire' : null;
+  String? _valideurObligatoire(String? v) =>
+      (v == null || v.trim().isEmpty) ? 'Champ obligatoire' : null;
 }

@@ -39,9 +39,12 @@ class SyncEngine {
   /// un nouveau essai). L'ordre de création (`creeLe`) est respecté pour
   /// ne jamais rejouer les opérations dans le désordre.
   Future<List<SyncQueueEntry>> traiterFile(List<SyncQueueEntry> file) async {
-    final aTraiter = file.where(
-      (e) => e.statut == StatutSync.enAttente || e.statut == StatutSync.erreur,
-    ).toList()
+    final aTraiter = file
+        .where(
+          (e) =>
+              e.statut == StatutSync.enAttente || e.statut == StatutSync.erreur,
+        )
+        .toList()
       ..sort((a, b) => a.creeLe.compareTo(b.creeLe));
 
     final resultats = <SyncQueueEntry>[];

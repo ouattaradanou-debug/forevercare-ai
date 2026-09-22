@@ -34,13 +34,18 @@ GoRouter construireRouteur(Ref ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/', builder: (context, state) {
-        final profil = ref.read(profilActuelProvider).valueOrNull;
-        if (profil == null) return const SplashScreen();
-        return HomeScreen(profil: profil);
-      }),
-      GoRoute(path: '/connexion', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/configuration-cave', builder: (context, state) => const CaveSetupScreen()),
+      GoRoute(
+          path: '/',
+          builder: (context, state) {
+            final profil = ref.read(profilActuelProvider).valueOrNull;
+            if (profil == null) return const SplashScreen();
+            return HomeScreen(profil: profil);
+          }),
+      GoRoute(
+          path: '/connexion', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+          path: '/configuration-cave',
+          builder: (context, state) => const CaveSetupScreen()),
     ],
   );
 }

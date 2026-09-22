@@ -15,7 +15,8 @@ const _uuid = Uuid();
 /// Dart pur `SyncQueueEntry` utilisé par `SyncEngine` (voir
 /// `lib/core/sync/sync_engine.dart`).
 @DriftAccessor(tables: [SyncQueue])
-class SyncQueueDao extends DatabaseAccessor<AppDatabase> with _$SyncQueueDaoMixin {
+class SyncQueueDao extends DatabaseAccessor<AppDatabase>
+    with _$SyncQueueDaoMixin {
   SyncQueueDao(super.db);
 
   /// Enregistre localement une écriture à synchroniser plus tard. Appelée
@@ -61,7 +62,8 @@ class SyncQueueDao extends DatabaseAccessor<AppDatabase> with _$SyncQueueDaoMixi
   /// Purge les entrées synchronisées avec succès (nettoyage périodique,
   /// jamais avant confirmation d'écriture côté serveur).
   Future<void> purgerSynchronisees() {
-    return (delete(syncQueue)..where((t) => t.statut.equals('synchronise'))).go();
+    return (delete(syncQueue)..where((t) => t.statut.equals('synchronise')))
+        .go();
   }
 
   SyncQueueEntry _versModele(SyncQueueData ligne) {
@@ -69,7 +71,8 @@ class SyncQueueDao extends DatabaseAccessor<AppDatabase> with _$SyncQueueDaoMixi
       id: ligne.id,
       table: ligne.nomTable,
       entiteId: ligne.entiteId,
-      operation: OperationSync.values.firstWhere((o) => o.name == ligne.operation),
+      operation:
+          OperationSync.values.firstWhere((o) => o.name == ligne.operation),
       payload: jsonDecode(ligne.payload) as Map<String, dynamic>,
       creeLe: ligne.creeLe,
       statut: StatutSync.values.firstWhere((s) => s.name == ligne.statut),

@@ -37,7 +37,8 @@ class AuthService {
     required String pin,
   }) async {
     assert(
-      role == RoleUtilisateur.proprietaire || role == RoleUtilisateur.proprietaireGerant,
+      role == RoleUtilisateur.proprietaire ||
+          role == RoleUtilisateur.proprietaireGerant,
       'Le premier compte doit être Propriétaire ou Propriétaire/Gérant.',
     );
 
@@ -58,7 +59,8 @@ class AuthService {
     });
   }
 
-  Future<void> seConnecter({required String telephone, required String pin}) async {
+  Future<void> seConnecter(
+      {required String telephone, required String pin}) async {
     await _client.auth.signInWithPassword(
       email: telephoneVersEmailTechnique(telephone),
       password: pin,
@@ -73,7 +75,11 @@ class AuthService {
     final utilisateur = _client.auth.currentUser;
     if (utilisateur == null) return null;
 
-    final ligne = await _client.from('profiles').select().eq('id', utilisateur.id).maybeSingle();
+    final ligne = await _client
+        .from('profiles')
+        .select()
+        .eq('id', utilisateur.id)
+        .maybeSingle();
     if (ligne == null) return null;
     return Profil.depuisJson(ligne);
   }

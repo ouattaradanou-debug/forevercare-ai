@@ -35,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
 LazyDatabase _ouvrirConnexion() {
   return LazyDatabase(() async {
     if (Platform.isAndroid) {
-      await applyWorkaroundToOpenSqlite3OnOldAndroids();
+      await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
     }
     final dossier = await getApplicationDocumentsDirectory();
     final fichier = File(p.join(dossier.path, 'cave_manager.sqlite'));

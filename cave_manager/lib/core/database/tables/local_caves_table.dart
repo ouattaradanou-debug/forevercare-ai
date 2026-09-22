@@ -10,7 +10,8 @@ class LocalCaves extends Table {
   TextColumn get telephone => text()();
   TextColumn get localisation => text()();
   TextColumn get devise => text().withDefault(const Constant('FCFA'))();
-  BoolColumn get journeeOuverte => boolean().withDefault(const Constant(true))();
+  BoolColumn get journeeOuverte =>
+      boolean().withDefault(const Constant(true))();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override

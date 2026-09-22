@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../database/daos/sync_queue_dao.dart';
 import 'remote_writer.dart';
 import 'sync_engine.dart';
-import 'sync_queue_entry.dart';
 
 /// Implémentation réelle de [RemoteWriter] : envoie chaque entrée de la
 /// file vers Supabase (upsert pour insertion/modification, delete pour
@@ -32,7 +31,8 @@ class SupabaseRemoteWriter implements RemoteWriter {
         await _client.from(table).delete().eq('id', payload['id']);
         return;
       default:
-        throw ArgumentError('Opération de synchronisation inconnue : $operation');
+        throw ArgumentError(
+            'Opération de synchronisation inconnue : $operation');
     }
   }
 }

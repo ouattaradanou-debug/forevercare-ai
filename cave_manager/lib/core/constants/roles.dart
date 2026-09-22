@@ -33,7 +33,8 @@ enum RoleUtilisateur {
 
   /// Seuls ces rôles peuvent gérer les utilisateurs et les produits.
   bool get estAdministrateur =>
-      this == RoleUtilisateur.proprietaire || this == RoleUtilisateur.proprietaireGerant;
+      this == RoleUtilisateur.proprietaire ||
+      this == RoleUtilisateur.proprietaireGerant;
 
   /// Contrainte de sécurité non négociable : l'agent de vente ne doit
   /// jamais avoir accès au stock global, aux bénéfices, aux clôtures, aux

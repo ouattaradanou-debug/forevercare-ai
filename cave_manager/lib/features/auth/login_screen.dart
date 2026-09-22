@@ -63,7 +63,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.local_bar, size: 72, color: Theme.of(context).colorScheme.primary),
+                  Icon(Icons.local_bar,
+                      size: 72, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 16),
                   Text(
                     'Ma Cave',
@@ -73,9 +74,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: _telephoneCtrl,
-                    decoration: const InputDecoration(labelText: 'Numéro de téléphone'),
+                    decoration:
+                        const InputDecoration(labelText: 'Numéro de téléphone'),
                     keyboardType: TextInputType.phone,
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Champ obligatoire' : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Champ obligatoire'
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -83,24 +87,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     decoration: const InputDecoration(labelText: 'Code secret'),
                     keyboardType: TextInputType.number,
                     obscureText: true,
-                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Champ obligatoire' : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Champ obligatoire'
+                        : null,
                   ),
                   if (_erreur != null) ...[
                     const SizedBox(height: 12),
-                    Text(_erreur!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    Text(_erreur!,
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error)),
                   ],
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: _enCours ? null : _seConnecter,
                     child: _enCours
                         ? const SizedBox(
-                            height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2))
                         : const Text('Se connecter'),
                   ),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () => context.go('/configuration-cave'),
-                    child: const Text('Première utilisation ? Configurer ma cave'),
+                    child:
+                        const Text('Première utilisation ? Configurer ma cave'),
                   ),
                 ],
               ),

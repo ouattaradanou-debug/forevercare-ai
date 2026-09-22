@@ -21,7 +21,8 @@
 String telephoneVersEmailTechnique(String telephone) {
   final chiffres = telephone.replaceAll(RegExp(r'\D'), '');
   if (chiffres.isEmpty) {
-    throw ArgumentError.value(telephone, 'telephone', 'doit contenir au moins un chiffre');
+    throw ArgumentError.value(
+        telephone, 'telephone', 'doit contenir au moins un chiffre');
   }
   return '$chiffres@cave.internal';
 }

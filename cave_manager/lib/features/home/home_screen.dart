@@ -40,12 +40,15 @@ class HomeScreen extends ConsumerWidget {
               CircleAvatar(
                 radius: 36,
                 child: Text(
-                  profil.prenom.isNotEmpty ? profil.prenom[0].toUpperCase() : '?',
+                  profil.prenom.isNotEmpty
+                      ? profil.prenom[0].toUpperCase()
+                      : '?',
                   style: const TextStyle(fontSize: 28),
                 ),
               ),
               const SizedBox(height: 16),
-              Text('Bienvenue, ${profil.nomComplet}', style: Theme.of(context).textTheme.headlineSmall),
+              Text('Bienvenue, ${profil.nomComplet}',
+                  style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 8),
               Chip(label: Text(profil.role.libelle)),
               const SizedBox(height: 24),

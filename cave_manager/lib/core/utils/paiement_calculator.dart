@@ -40,13 +40,16 @@ ResultatPaiement calculerResteAPayer({
   int montantMobileMoney = 0,
 }) {
   if (totalACharger < 0) {
-    throw ArgumentError.value(totalACharger, 'totalACharger', 'ne peut pas être négatif');
+    throw ArgumentError.value(
+        totalACharger, 'totalACharger', 'ne peut pas être négatif');
   }
   if (montantEspeces < 0) {
-    throw ArgumentError.value(montantEspeces, 'montantEspeces', 'ne peut pas être négatif');
+    throw ArgumentError.value(
+        montantEspeces, 'montantEspeces', 'ne peut pas être négatif');
   }
   if (montantMobileMoney < 0) {
-    throw ArgumentError.value(montantMobileMoney, 'montantMobileMoney', 'ne peut pas être négatif');
+    throw ArgumentError.value(
+        montantMobileMoney, 'montantMobileMoney', 'ne peut pas être négatif');
   }
 
   final montantPaye = montantEspeces + montantMobileMoney;

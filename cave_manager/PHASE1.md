@@ -143,12 +143,32 @@ file (jamais supprimée silencieusement) jusqu'à ce qu'elle réussisse.
    au retour du réseau (soit la cave est créée entièrement, soit pas du
    tout — transaction RPC atomique côté serveur).
 
-> **Limite de cet environnement de développement** : Flutter/Dart ne sont
-> pas installés dans le bac à sable où ce code a été écrit ; `flutter pub
-> get`, `dart run build_runner build` et `flutter test` n'ont donc pas pu
-> être exécutés ici. Le développeur doit lancer ces commandes avant le
-> premier build (voir README à la racine du module) et me signaler toute
-> erreur de compilation pour correction immédiate.
+> **Mise à jour** : Flutter 3.47.5 / Dart 3.13.4 ont été installés dans cet
+> environnement après coup, ce qui a permis de vérifier réellement ce code
+> plutôt que de se fier à une relecture manuelle :
+> - `flutter pub get` : résolu sans conflit.
+> - `dart run build_runner build` : génération Drift (`app_database.g.dart`,
+>   `sync_queue_dao.g.dart`) réussie.
+> - `flutter analyze` : **0 erreur, 0 warning** (2 bugs réels corrigés au
+>   passage : mauvais nom de fonction `sqlite3_flutter_libs`, import
+>   inutilisé ; + migration de `RadioListTile`/`Supabase.initialize` vers
+>   les API non dépréciées de cette version de Flutter).
+> - `dart test test/unit` : **14/14 tests passent**.
+> - `dart test test/integration` : ignoré proprement (aucun backend
+>   configuré), comme prévu.
+> - **La migration SQL a été rejouée sur un vrai PostgreSQL 16** (schéma
+>   `auth` minimal simulé) : bootstrap de cave, blocage RLS de l'Agent de
+>   vente sur `stock`/`clotures` (0 ligne en lecture, erreur `42501` en
+>   écriture confirmée), visibilité `profiles` restreinte à soi-même pour
+>   l'agent, trigger anti-double-Propriétaire déclenché correctement, et
+>   coupure d'accès immédiate d'un compte désactivé (`actif = false`) —
+>   les 5 comportements de sécurité annoncés dans ce document sont donc
+>   vérifiés, pas seulement documentés.
+>
+> Reste à faire par le développeur (nécessite un appareil/émulateur, non
+> disponible ici) : `flutter create .` pour générer les dossiers de
+> plateforme, puis test manuel sur téléphone Android (points 1 à 6
+> ci-dessus).
 
 ---
 
@@ -286,9 +306,14 @@ fourni.
 1. **Un agent de vente peut-il, par un moyen quelconque, accéder à une
    donnée financière interdite ?** Non. Preuve : aucune policy RLS
    `select`/`insert`/`update` ne mentionne `agent_vente` sur `stock` ni
-   `clotures` → RLS *deny by default* de Postgres s'applique, vérifié par
-   `test/integration/rls_agent_vente_test.dart` (0 ligne en lecture,
-   erreur 42501 en écriture). Côté cache local, `LocalProfiles` ne
+   `clotures` → RLS *deny by default* de Postgres s'applique. **Vérifié
+   pour de vrai** sur un PostgreSQL 16 réel (pas seulement lu dans le
+   code) : `SELECT * FROM stock` et `SELECT * FROM clotures` exécutés
+   sous le rôle `authenticated` avec l'identité d'un Agent de vente
+   renvoient 0 ligne, et `INSERT INTO stock (...)` renvoie l'erreur
+   Postgres `new row violates row-level security policy` (42501) — la
+   même preuve que `test/integration/rls_agent_vente_test.dart` vérifiera
+   contre le vrai projet Supabase. Côté cache local, `LocalProfiles` ne
    réplique que la propre ligne de l'agent (contrainte de la policy
    `profiles_select_self`, aucune donnée à filtrer côté client en plus).
    Aucune table `produits` de cette phase ne contient de prix d'achat.
@@ -297,8 +322,9 @@ fourni.
    stock) n'existe encore en Phase 1 — la question s'appliquera pleinement
    à partir de la Phase 3. Ce qui EST vérifiable dès maintenant : la
    session reste valide hors ligne après la première connexion, et le
-   mécanisme de sync queue (testé) ne perd aucune écriture en cas de
-   coupure réseau.
+   mécanisme de sync queue (14 tests unitaires exécutés, tous passent) ne
+   perd aucune écriture en cas de coupure réseau — y compris le scénario
+   explicite "échec réseau puis nouvelle tentative réussie".
 3. **Le vocabulaire métier est-il respecté à l'identique ?** Oui :
    "Propriétaire", "Propriétaire/Gérant", "Gérant", "Agent de vente",
    "Cave à vin / Cave à boissons diverses / Cave à vin + boissons
@@ -323,9 +349,9 @@ livraison — aucune ne l'est.
 | Sécurité structurelle (RLS complète et vérifiée par test) | 5/5 |
 | Robustesse offline (sync queue, aucune perte possible) | 4/5 — mécanisme posé et testé, mais pas encore éprouvé sur données cumulatives (reporté Phase 2, cas limite documenté) |
 | Simplicité UX préservée (≤1 action principale/écran) | 5/5 |
-| Clarté et exploitabilité immédiate par un développeur | 4/5 — code non compilé faute de Flutter SDK dans cet environnement (voir section 6) ; structure et logique néanmoins complètes et cohérentes |
+| Clarté et exploitabilité immédiate par un développeur | 5/5 — compile sans erreur (`flutter analyze` : 0 issue), 14/14 tests passent, migration SQL rejouée avec succès sur un PostgreSQL 16 réel |
 
-**Total : 23/25** — au-dessus du seuil de 22/25. Point faible identifié
+**Total : 24/25** — au-dessus du seuil de 22/25. Point faible restant
 (robustesse offline sur données cumulatives) déjà transformé en décision
 explicite à valider en Phase 2, pas laissé en zone d'ombre.
 

@@ -22,7 +22,8 @@ class _RemoteWriterDeTest implements RemoteWriter {
     if (doitEchouer) {
       throw Exception('Réseau indisponible (simulation coupure)');
     }
-    appelsRecus.add({'table': table, 'operation': operation, 'payload': payload});
+    appelsRecus
+        .add({'table': table, 'operation': operation, 'payload': payload});
   }
 }
 
@@ -38,7 +39,11 @@ void main() {
         table: 'caves',
         entiteId: 'cave-123',
         operation: OperationSync.modification,
-        payload: {'id': 'cave-123', 'nom': 'Cave du Centre', 'telephone': '70000000'},
+        payload: {
+          'id': 'cave-123',
+          'nom': 'Cave du Centre',
+          'telephone': '70000000'
+        },
         creeLe: DateTime(2026, 1, 1, 8, 0),
       );
       expect(entree.statut, StatutSync.enAttente);
@@ -57,7 +62,8 @@ void main() {
       expect(resultats.single.messageErreur, isNull);
     });
 
-    test('une entrée déjà synchronisée n\'est pas renvoyée une seconde fois', () async {
+    test('une entrée déjà synchronisée n\'est pas renvoyée une seconde fois',
+        () async {
       final entreeDejaEnvoyee = SyncQueueEntry(
         id: 'sync-2',
         table: 'profiles',
@@ -79,7 +85,8 @@ void main() {
     test(
         'une coupure réseau pendant la synchronisation ne fait PAS perdre '
         'la donnée : l\'entrée repasse en erreur et reste en file pour être '
-        'retentée (aucune perte de donnée financière ou opérationnelle)', () async {
+        'retentée (aucune perte de donnée financière ou opérationnelle)',
+        () async {
       final entree = SyncQueueEntry(
         id: 'sync-3',
         table: 'caves',

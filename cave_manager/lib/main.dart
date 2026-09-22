@@ -15,7 +15,10 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: SupabaseConfig.url,
-    anonKey: SupabaseConfig.anonKey,
+    // `publishableKey` est le nouveau nom de l'ex-`anonKey` côté
+    // supabase_flutter ; la variable d'environnement reste SUPABASE_ANON_KEY
+    // car c'est encore le nom affiché sur le dashboard Supabase.
+    publishableKey: SupabaseConfig.anonKey,
   );
 
   runApp(const ProviderScope(child: CaveManagerApp()));
