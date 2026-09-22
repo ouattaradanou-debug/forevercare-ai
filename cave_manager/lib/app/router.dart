@@ -20,10 +20,6 @@ GoRouter construireRouteur(Ref ref) {
     refreshListenable: _RiverpodRefreshListenable(ref, profilActuelProvider),
     redirect: (context, state) {
       final profilAsync = ref.read(profilActuelProvider);
-      debugPrint(
-          '[DIAG] redirect() appelé, location=${state.matchedLocation}, '
-          'isLoading=${profilAsync.isLoading}, '
-          'value=${profilAsync.valueOrNull}');
 
       if (profilAsync.isLoading) return null;
 
@@ -35,27 +31,14 @@ GoRouter construireRouteur(Ref ref) {
           surConnexion || surConfiguration || surPinOublie;
 
       if (profil == null) {
-        final destination = accessibleSansSession ? null : '/connexion';
-        debugPrint('[DIAG] redirect() décide -> $destination');
-        return destination;
+        return accessibleSansSession ? null : '/connexion';
       }
 
-      if (accessibleSansSession) {
-        debugPrint('[DIAG] redirect() décide -> /');
-        return '/';
-      }
-      debugPrint('[DIAG] redirect() décide -> pas de redirection');
+      if (accessibleSansSession) return '/';
       return null;
     },
     routes: [
-      GoRoute(
-          path: '/',
-          builder: (context, state) {
-            final profil = ref.read(profilActuelProvider).valueOrNull;
-            debugPrint('[DIAG] builder("/") appelé, profil=$profil');
-            if (profil == null) return const SplashScreen();
-            return HomeScreen(profil: profil);
-          }),
+      GoRoute(path: '/', builder: (context, state) => const _AccueilGate()),
       GoRoute(
           path: '/connexion', builder: (context, state) => const LoginScreen()),
       GoRoute(
@@ -74,5 +57,25 @@ GoRouter construireRouteur(Ref ref) {
 class _RiverpodRefreshListenable extends ChangeNotifier {
   _RiverpodRefreshListenable(Ref ref, ProviderListenable listenable) {
     ref.listen(listenable, (_, __) => notifyListeners());
+  }
+}
+
+/// Contenu de la route "/" : un vrai widget réactif (`ConsumerWidget`), pas
+/// une simple lecture dans le `builder` de la route.
+///
+/// Bug corrigé ici : `redirect` de go_router ne redessine pas la page
+/// courante quand il décide de ne pas naviguer ailleurs (vérifié par
+/// instrumentation : son `builder` n'était appelé qu'une seule fois, avant
+/// même que le profil ne soit chargé). En utilisant `ref.watch` dans un
+/// widget dédié, c'est Flutter lui-même (pas go_router) qui reconstruit cet
+/// écran dès que `profilActuelProvider` change.
+class _AccueilGate extends ConsumerWidget {
+  const _AccueilGate();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profil = ref.watch(profilActuelProvider).valueOrNull;
+    if (profil == null) return const SplashScreen();
+    return HomeScreen(profil: profil);
   }
 }

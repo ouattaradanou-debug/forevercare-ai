@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/roles.dart';
@@ -113,31 +112,20 @@ class AuthService {
   /// faible) bloque l'app indéfiniment sur l'écran de démarrage, sans
   /// jamais afficher d'erreur ni rediriger vers la connexion.
   Future<Profil?> profilActuel() async {
-    debugPrint('[DIAG] profilActuel() démarre');
     final utilisateur = _client.auth.currentUser;
-    debugPrint('[DIAG] currentUser = ${utilisateur?.id}');
-    if (utilisateur == null) {
-      debugPrint('[DIAG] pas de session, retour null');
-      return null;
-    }
+    if (utilisateur == null) return null;
 
     try {
-      debugPrint('[DIAG] requête profiles envoyée');
       final ligne = await _client
           .from('profiles')
           .select()
           .eq('id', utilisateur.id)
           .maybeSingle()
           .timeout(const Duration(seconds: 15));
-      debugPrint('[DIAG] requête profiles terminée : $ligne');
       if (ligne == null) return null;
       return Profil.depuisJson(ligne);
     } on TimeoutException {
-      debugPrint('[DIAG] TIMEOUT sur la requête profiles');
       return null;
-    } catch (e) {
-      debugPrint('[DIAG] ERREUR sur la requête profiles : $e');
-      rethrow;
     }
   }
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -30,16 +29,11 @@ final syncServiceProvider = Provider<SyncService>((ref) {
 /// Ré-émet le profil courant à chaque changement d'état d'authentification
 /// (connexion, déconnexion, rafraîchissement de session).
 final profilActuelProvider = StreamProvider<Profil?>((ref) async* {
-  debugPrint('[DIAG] profilActuelProvider : build démarré');
   final authService = ref.watch(authServiceProvider);
 
-  final premier = await authService.profilActuel();
-  debugPrint('[DIAG] profilActuelProvider : premier yield = $premier');
-  yield premier;
+  yield await authService.profilActuel();
 
   await for (final _ in authService.changementsAuth) {
-    final suivant = await authService.profilActuel();
-    debugPrint('[DIAG] profilActuelProvider : yield suivant = $suivant');
-    yield suivant;
+    yield await authService.profilActuel();
   }
 });
