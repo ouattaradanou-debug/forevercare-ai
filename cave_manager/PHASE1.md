@@ -156,19 +156,26 @@ file (jamais supprimée silencieusement) jusqu'à ce qu'elle réussisse.
 > - `dart test test/unit` : **14/14 tests passent**.
 > - `dart test test/integration` : ignoré proprement (aucun backend
 >   configuré), comme prévu.
-> - **La migration SQL a été rejouée sur un vrai PostgreSQL 16** (schéma
->   `auth` minimal simulé) : bootstrap de cave, blocage RLS de l'Agent de
->   vente sur `stock`/`clotures` (0 ligne en lecture, erreur `42501` en
->   écriture confirmée), visibilité `profiles` restreinte à soi-même pour
->   l'agent, trigger anti-double-Propriétaire déclenché correctement, et
->   coupure d'accès immédiate d'un compte désactivé (`actif = false`) —
->   les 5 comportements de sécurité annoncés dans ce document sont donc
->   vérifiés, pas seulement documentés.
+> - **La migration SQL a d'abord été rejouée sur un PostgreSQL 16 local**
+>   (schéma `auth` minimal simulé) pour un premier filet de sécurité, puis
+>   **entièrement revérifiée sur le vrai projet Supabase de production**
+>   (`jyuragreklemddfqpzqo`), avec le propriétaire du projet aux commandes
+>   (dashboard + PowerShell) : bootstrap réel d'une cave via
+>   `creer_cave_et_proprietaire` (compte Propriétaire/Gérant créé, cave
+>   créée), création d'un compte Agent de vente réel, puis, avec une vraie
+>   ligne de stock existante (10 cartons enregistrés) : l'agent authentifié
+>   reçoit `[]` en lecture sur `stock` malgré la donnée réelle, et l'erreur
+>   Postgres exacte `{"code":"42501","message":"new row violates row-level
+>   security policy for table \"stock\""}` en écriture — reproduit à
+>   l'identique sur `clotures`. Les deux tables sensibles nommées dans la
+>   contrainte de sécurité du prompt sont donc bloquées, prouvé en
+>   production, pas seulement en local.
 >
-> Reste à faire par le développeur (nécessite un appareil/émulateur, non
-> disponible ici) : `flutter create .` pour générer les dossiers de
-> plateforme, puis test manuel sur téléphone Android (points 1 à 6
-> ci-dessus).
+> Reste à faire (nécessite un appareil/émulateur, non disponible ici) :
+> `flutter create .` pour générer les dossiers de plateforme, puis
+> installer et lancer l'app sur un téléphone Android réel (points 1 à 6
+> ci-dessus) — la partie backend est maintenant intégralement vérifiée,
+> il ne reste que l'interface Flutter à tester en conditions réelles.
 
 ---
 
@@ -307,15 +314,16 @@ fourni.
    donnée financière interdite ?** Non. Preuve : aucune policy RLS
    `select`/`insert`/`update` ne mentionne `agent_vente` sur `stock` ni
    `clotures` → RLS *deny by default* de Postgres s'applique. **Vérifié
-   pour de vrai** sur un PostgreSQL 16 réel (pas seulement lu dans le
-   code) : `SELECT * FROM stock` et `SELECT * FROM clotures` exécutés
-   sous le rôle `authenticated` avec l'identité d'un Agent de vente
-   renvoient 0 ligne, et `INSERT INTO stock (...)` renvoie l'erreur
-   Postgres `new row violates row-level security policy` (42501) — la
-   même preuve que `test/integration/rls_agent_vente_test.dart` vérifiera
-   contre le vrai projet Supabase. Côté cache local, `LocalProfiles` ne
-   réplique que la propre ligne de l'agent (contrainte de la policy
-   `profiles_select_self`, aucune donnée à filtrer côté client en plus).
+   en production**, sur le vrai projet Supabase (pas une simulation) :
+   un compte Agent de vente réel, avec un vrai jeton d'authentification,
+   interrogeant `GET /rest/v1/stock` alors qu'une vraie ligne de stock
+   existait (10 cartons enregistrés) a reçu `[]` — et
+   `POST /rest/v1/stock` a reçu l'erreur Postgres exacte
+   `{"code":"42501","message":"new row violates row-level security policy
+   for table \"stock\""}`, reproduite à l'identique sur `clotures`. Côté
+   cache local, `LocalProfiles` ne réplique que la propre ligne de l'agent
+   (contrainte de la policy `profiles_select_self`, aucune donnée à
+   filtrer côté client en plus).
    Aucune table `produits` de cette phase ne contient de prix d'achat.
 2. **L'application reste-t-elle 100% utilisable sans connexion pour les
    opérations critiques ?** Aucune opération critique (vente, encaissement,
