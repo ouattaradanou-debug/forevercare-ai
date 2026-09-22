@@ -355,6 +355,43 @@ restent cohérents avec le code :
 
 ---
 
+## 10ter. Bug réel trouvé et corrigé lors du test sur téléphone réel
+
+Après le déploiement de la récupération de PIN (section 10bis), l'app est
+restée bloquée sur l'écran de démarrage (spinner infini) lors du test sur
+un TECNO KI5k réel — reproduit sur plusieurs relances, pas un incident
+isolé. Diagnostic mené en direct avec vous, par instrumentation
+(`debugPrint`) plutôt que par supposition :
+
+- **Écarté en premier** : le chargement réseau du profil. Un délai maximum
+  de 15s a été ajouté à `AuthService.profilActuel()` par précaution (une
+  requête sans timeout qui traîne bloquerait l'app sans jamais afficher
+  d'erreur), mais les logs ont montré que le profil se chargeait en fait
+  correctement, en moins d'une seconde — ce n'était pas la cause.
+- **Cause réelle, trouvée par instrumentation du routeur** : le `builder`
+  de la route `/` (`router.dart`) n'était appelé qu'une seule fois, avant
+  même que le profil ne soit chargé. Quand le profil devenait disponible,
+  `redirect` de go_router était bien rappelé (grâce à
+  `refreshListenable`) et décidait correctement de rester sur `/` — mais
+  go_router ne redessine pas la page courante pour autant dans ce cas
+  précis, laissant l'écran Splash affiché indéfiniment malgré des données
+  déjà prêtes.
+- **Correctif** : le contenu de la route `/` est maintenant un vrai
+  `ConsumerWidget` (`_AccueilGate`) qui fait lui-même
+  `ref.watch(profilActuelProvider)`, donc c'est Flutter (pas go_router)
+  qui le reconstruit dès que le profil change. Vérifié en conditions
+  réelles : l'écran d'accueil ("Bienvenue, SEBOGO Benjamin /
+  Propriétaire/Gérant") s'affiche désormais immédiatement.
+- **Test de bout en bout réalisé sur le téléphone réel** après correctif :
+  connexion automatique par session persistée → déconnexion → écran de
+  connexion restylé (PIN + œil + "Code PIN oublié ?") → question secrète
+  ajoutée à un compte existant via SQL Editor → parcours complet "Code PIN
+  oublié" (téléphone → question → réponse → nouveau PIN) → reconnexion
+  avec le nouveau PIN → écran d'accueil. Les 6 étapes ont fonctionné sans
+  erreur.
+
+---
+
 ## 11. Auto-évaluation finale obligatoire
 
 1. **Un agent de vente peut-il, par un moyen quelconque, accéder à une
