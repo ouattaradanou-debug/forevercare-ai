@@ -51,24 +51,9 @@ void main() {
     expect(find.text('Continuer'), findsOneWidget);
   });
 
-  testWidgets(
-      'Le lien "Première utilisation" mène à l\'écran de configuration de la cave',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: CaveManagerApp()));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Première utilisation ? Configurer ma cave'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Configurer ma cave'), findsOneWidget);
-    expect(find.text('Cave à vin'), findsOneWidget);
-    expect(find.text('Question secrète'), findsOneWidget);
-    expect(find.text('Créer ma cave'), findsOneWidget);
-
-    await tester.tap(find.text('Cave à vin'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Type de cave et profil'), findsOneWidget);
-    expect(find.text('Votre profil'), findsOneWidget);
-  });
+  // Le lien "Première utilisation ? Configurer ma cave" a été retiré de
+  // l'écran de connexion (demande explicite) : la route
+  // "/configuration-cave" existe toujours, mais n'a plus de point d'entrée
+  // cliquable sans être connecté, donc plus testable par ce smoke test
+  // sans simuler une connexion complète au préalable.
 }

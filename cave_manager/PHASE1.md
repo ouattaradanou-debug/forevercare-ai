@@ -478,6 +478,34 @@ affiché sous le titre), et son propre nom/prénom. Détails :
 
 ---
 
+## 10sexies. Ajout demandé : déplacement de "Configurer ma cave"
+
+Demandé explicitement : retirer le lien "Première utilisation ?
+Configurer ma cave" de l'écran de connexion, et ne le rendre accessible
+qu'une fois connecté, depuis l'écran d'accueil.
+
+- **Retiré de `LoginScreen`**. **Ajouté sur `HomeScreen`** : une deuxième
+  icône (`Icons.add_business`) à côté de l'icône ⚙️, visible pour les
+  mêmes rôles (`estResponsable`), qui mène à la même route
+  `/configuration-cave` (donc au même écran `CaveSetupScreen` qu'avant).
+- **Conséquence signalée à l'utilisateur avant de coder** :
+  `CaveSetupScreen` crée un **nouveau** compte + une **nouvelle** cave
+  (`signUp` + `creer_cave_et_proprietaire`), ce n'est pas un écran
+  d'édition de la cave courante (celui-là, c'est `ConfigurationCaveScreen`,
+  section 10quinquies). L'utiliser en étant déjà connecté crée donc une
+  cave séparée et bascule la session dessus — comportement accepté en
+  connaissance de cause plutôt que découvert après coup.
+- **Routeur** : `/configuration-cave` était jusque-là automatiquement
+  redirigé vers `/` dès qu'une session active existait (parti du principe
+  que ce n'était utile qu'avant la première connexion). Cette redirection
+  est retirée spécifiquement pour cette route ; `/connexion` et
+  `/pin-oublie` gardent la leur (aucune raison de les visiter connecté).
+- **Test retiré** : le smoke test qui cliquait sur ce lien depuis l'écran
+  de connexion n'a plus de bouton à cliquer ; pas remplacé (simuler une
+  connexion complète dans ce test dépasserait le cadre d'un smoke test).
+
+---
+
 ## 11. Auto-évaluation finale obligatoire
 
 1. **Un agent de vente peut-il, par un moyen quelconque, accéder à une

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/auth/auth_providers.dart';
@@ -26,15 +27,26 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leadingWidth: profil.role.estResponsable ? 96 : null,
         leading: profil.role.estResponsable
-            ? IconButton(
-                icon: const Icon(Icons.tune),
-                tooltip: 'Configuration de la cave',
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ConfigurationCaveScreen(profil: profil),
+            ? Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.tune),
+                    tooltip: 'Configuration de la cave',
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ConfigurationCaveScreen(profil: profil),
+                      ),
+                    ),
                   ),
-                ),
+                  IconButton(
+                    icon: const Icon(Icons.add_business),
+                    tooltip: 'Configurer une nouvelle cave',
+                    onPressed: () => context.push('/configuration-cave'),
+                  ),
+                ],
               )
             : null,
         title: Row(

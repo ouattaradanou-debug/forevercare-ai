@@ -35,7 +35,11 @@ GoRouter construireRouteur(Ref ref) {
         return accessibleSansSession ? null : '/connexion';
       }
 
-      if (accessibleSansSession) return '/';
+      // "/configuration-cave" reste accessible une fois connecté (lien
+      // désormais uniquement sur l'écran d'accueil, plus sur l'écran de
+      // connexion) : seuls "/connexion" et "/pin-oublie" n'ont plus de
+      // raison d'être visités avec une session active.
+      if (surConnexion || surPinOublie) return '/';
       return null;
     },
     routes: [

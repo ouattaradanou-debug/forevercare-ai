@@ -5,8 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/auth/auth_providers.dart';
 
 /// Connexion : téléphone + code PIN. Une seule action principale
-/// ("Se connecter"). Le lien vers "Configurer ma cave" n'est affiché que
-/// pour le tout premier usage de l'appareil (voir router.dart).
+/// ("Se connecter"). "Configurer ma cave" n'est plus accessible depuis cet
+/// écran (retiré sur demande) — uniquement depuis l'écran d'accueil, une
+/// fois connecté (voir `HomeScreen`).
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -121,11 +122,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         : const Text('Se connecter'),
                   ),
                   const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () => context.go('/configuration-cave'),
-                    child:
-                        const Text('Première utilisation ? Configurer ma cave'),
-                  ),
                   TextButton(
                     onPressed: () => context.push('/pin-oublie'),
                     child: const Text('Code PIN oublié ?'),
