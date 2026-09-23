@@ -42,6 +42,13 @@ dependencies:
   # home_screen.dart)
   google_fonts: ^6.2.1
 
+  # Mémorisation du numéro/PIN pour pré-remplir l'écran de connexion
+  # (demandé explicitement, y compris après déconnexion — voir
+  # lib/core/auth/identifiants_memorises.dart pour le compromis sécurité
+  # signalé et accepté). Anciennement dev_dependency uniquement (tests) ;
+  # devient une dépendance de production avec cet usage.
+  shared_preferences: ^2.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -52,9 +59,6 @@ dev_dependencies:
   # Client Dart pur (sans dépendance Flutter), utilisé uniquement par le
   # test d'intégration RLS pour pouvoir tourner via `dart test`.
   supabase: ^2.3.4
-  # Utilisé explicitement par test/widget_test.dart pour fournir un
-  # stockage en mémoire à supabase_flutter pendant les tests.
-  shared_preferences: ^2.2.3
 
 flutter:
   uses-material-design: true

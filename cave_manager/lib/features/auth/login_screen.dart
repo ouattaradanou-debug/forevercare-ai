@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/auth/auth_providers.dart';
+import '../../core/auth/identifiants_memorises.dart';
 
 /// Connexion : téléphone + code PIN. Une seule action principale
 /// ("Se connecter"). "Configurer ma cave" n'est plus accessible depuis cet
@@ -25,6 +26,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   String? _erreur;
 
   @override
+  void initState() {
+    super.initState();
+    _preremplirIdentifiantsMemorises();
+  }
+
+  Future<void> _preremplirIdentifiantsMemorises() async {
+    final (telephone, pin) = await IdentifiantsMemorises.charger();
+    if (!mounted) return;
+    if (telephone != null) _telephoneCtrl.text = telephone;
+    if (pin != null) _pinCtrl.text = pin;
+  }
+
+  @override
   void dispose() {
     _telephoneCtrl.dispose();
     _pinCtrl.dispose();
@@ -39,12 +53,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _erreur = null;
     });
 
+    final telephone = _telephoneCtrl.text.trim();
+    final pin = _pinCtrl.text.trim();
+
     try {
-      await ref.read(authServiceProvider).seConnecter(
-            telephone: _telephoneCtrl.text.trim(),
-            pin: _pinCtrl.text.trim(),
-          );
+      await ref
+          .read(authServiceProvider)
+          .seConnecter(telephone: telephone, pin: pin);
       ref.invalidate(profilActuelProvider);
+      // Mémorisé APRÈS succès uniquement : jamais un PIN erroné.
+      await IdentifiantsMemorises.enregistrer(telephone: telephone, pin: pin);
     } catch (_) {
       if (mounted) setState(() => _erreur = 'Numéro ou code PIN incorrect.');
     } finally {

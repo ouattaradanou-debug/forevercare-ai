@@ -506,6 +506,31 @@ qu'une fois connecté, depuis l'écran d'accueil.
 
 ---
 
+## 10septies. Ajout demandé : pré-remplissage numéro + PIN
+
+Demandé explicitement : après une déconnexion, ne plus avoir à ressaisir
+le numéro et le code PIN — l'écran de connexion doit les pré-remplir,
+pour qu'un seul clic sur "Se connecter" suffise.
+
+- ⚠️ **Compromis sécurité explicitement signalé et accepté avant
+  implémentation** : cela implique de stocker le code PIN **en clair**
+  dans le stockage local de l'app (`shared_preferences`, pas chiffré).
+  Alternative proposée (mémoriser seulement le numéro, PIN toujours
+  ressaisi) explicitement refusée au profit du confort demandé.
+- **`IdentifiantsMemorises`** (nouveau fichier) : deux fonctions,
+  `enregistrer` et `charger`, au-dessus de `shared_preferences` — promue
+  de dev_dependency (tests uniquement) à dépendance de production avec
+  cet ajout.
+- **`LoginScreen`** : pré-remplit les deux champs au chargement de
+  l'écran (`initState`) ; enregistre le couple téléphone/PIN
+  **uniquement après une connexion réussie** (jamais un PIN erroné, pour
+  ne pas mémoriser une faute de frappe).
+- Non couvert par un test automatisé (dépend de `shared_preferences`,
+  déjà mocké à vide dans `widget_test.dart` — comportement de
+  pré-remplissage donc non exercé par le smoke test existant).
+
+---
+
 ## 11. Auto-évaluation finale obligatoire
 
 1. **Un agent de vente peut-il, par un moyen quelconque, accéder à une
