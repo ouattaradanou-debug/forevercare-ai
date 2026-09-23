@@ -82,7 +82,8 @@ class HomeScreen extends ConsumerWidget {
                 'Bienvenue, ${profil.nomComplet}',
                 maxLines: 1,
                 style: GoogleFonts.alexBrush(
-                  fontSize: 30,
+                  fontSize: 38,
+                  fontWeight: FontWeight.bold,
                   color: const Color(0xFF7A1F2B),
                 ),
               ),
