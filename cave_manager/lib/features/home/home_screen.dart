@@ -62,45 +62,50 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Police cursive (Google Fonts "Alex Brush", demandée sur
-              // le modèle d'une calligraphie manuscrite) : téléchargée et
-              // mise en cache au premier affichage avec réseau, réutilisée
-              // ensuite hors ligne. Fond bleu ciel demandé explicitement
-              // pour isoler ce message du reste de l'écran.
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF87CEEB),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  'Bienvenue, ${profil.nomComplet}',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.alexBrush(
-                    fontSize: 34,
-                    color: Colors.white,
-                  ),
+      body: Column(
+        children: [
+          // Police cursive (Google Fonts "Alex Brush", demandée sur le
+          // modèle d'une calligraphie manuscrite) : téléchargée et mise
+          // en cache au premier affichage avec réseau, réutilisée ensuite
+          // hors ligne. Encart bleu ciel collé sous la barre du haut (pas
+          // de marge au-dessus), compact, texte bordeaux (le blanc sur
+          // bleu ciel manquait de lisibilité), toujours sur une seule
+          // ligne grâce à FittedBox qui réduit la taille si le nom est
+          // long.
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: const Color(0xFF87CEEB),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                'Bienvenue, ${profil.nomComplet}',
+                maxLines: 1,
+                style: GoogleFonts.alexBrush(
+                  fontSize: 30,
+                  color: const Color(0xFF7A1F2B),
                 ),
               ),
-              const SizedBox(height: 12),
-              Chip(label: Text(profil.role.libelle)),
-              const SizedBox(height: 24),
-              Text(
-                'Les écrans de vente, stock et clôture arrivent dans les prochaines phases.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
+            ),
           ),
-        ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Chip(label: Text(profil.role.libelle)),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Les écrans de vente, stock et clôture arrivent dans les prochaines phases.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
