@@ -67,16 +67,6 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircleAvatar(
-                radius: 36,
-                child: Text(
-                  profil.prenom.isNotEmpty
-                      ? profil.prenom[0].toUpperCase()
-                      : '?',
-                  style: const TextStyle(fontSize: 28),
-                ),
-              ),
-              const SizedBox(height: 16),
               Text('Bienvenue, ${profil.nomComplet}',
                   style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 8),
