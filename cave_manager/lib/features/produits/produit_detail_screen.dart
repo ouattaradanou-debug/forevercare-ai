@@ -69,6 +69,11 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
     }
   }
 
+  /// Libellé pluriel du type d'emballage de ce produit (ex : "cartons",
+  /// "casiers"), utilisé pour tous les libellés liés au stock.
+  String get _libelleEmballagePluriel =>
+      '${widget.produit.typeEmballage.libelle.toLowerCase()}s';
+
   Future<void> _ajusterStock() async {
     final deltaCartonsCtrl = TextEditingController(text: '0');
     final deltaBouteillesCtrl = TextEditingController(text: '0');
@@ -86,14 +91,14 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
             children: [
               Text(
                 'Entrez une variation (positive pour une entrée, négative '
-                'pour une sortie). Ex : -2 pour retirer 2 cartons.',
+                'pour une sortie). Ex : -2 pour retirer 2 $_libelleEmballagePluriel.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: deltaCartonsCtrl,
-                decoration:
-                    const InputDecoration(labelText: 'Variation (cartons)'),
+                decoration: InputDecoration(
+                    labelText: 'Variation ($_libelleEmballagePluriel)'),
                 keyboardType:
                     const TextInputType.numberWithOptions(signed: true),
                 validator: (v) =>
@@ -165,8 +170,8 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
                       formaterFcfa(produit.prixVenteDetail)),
                   _ligne('Prix de vente en gros',
                       formaterFcfa(produit.prixVenteGros)),
-                  _ligne(
-                      'Bouteilles par carton', '${produit.bouteillesParCarton}'),
+                  _ligne('Bouteilles par ${produit.typeEmballage.libelle.toLowerCase()}',
+                      '${produit.bouteillesParEmballage}'),
                   if (!produit.actif) _ligne('Statut', 'Inactif'),
                   if (widget.profil.role.estResponsable) ...[
                     const Divider(height: 32),
@@ -177,7 +182,7 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _ligne('Stock (cartons)',
+                            _ligne('Stock ($_libelleEmballagePluriel)',
                                 '${stock?.quantiteCartons ?? 0}'),
                             _ligne('Stock (bouteilles)',
                                 '${stock?.quantiteBouteilles ?? 0}'),

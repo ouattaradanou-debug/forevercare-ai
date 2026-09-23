@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../constants/type_emballage.dart';
 import 'produit.dart';
 
 /// Lecture/écriture du catalogue produits et des prix d'achat. Lecture en
@@ -26,7 +27,8 @@ class ProduitsService {
     required String nom,
     required int prixVenteDetail,
     required int prixVenteGros,
-    required int bouteillesParCarton,
+    required TypeEmballage typeEmballage,
+    required int bouteillesParEmballage,
   }) async {
     final ligne = await _client
         .from('produits')
@@ -35,23 +37,25 @@ class ProduitsService {
           'nom': nom,
           'prix_vente_detail': prixVenteDetail,
           'prix_vente_gros': prixVenteGros,
-          'bouteilles_par_carton': bouteillesParCarton,
+          'type_emballage': typeEmballage.nomPostgres,
+          'bouteilles_par_emballage': bouteillesParEmballage,
         })
         .select()
         .single();
     return Produit.depuisJson(ligne);
   }
 
-  /// Protégé côté serveur par `produits_write` (admin only, migration
-  /// 0001) : un appel bloqué par RLS affecte silencieusement 0 ligne (une
-  /// UPDATE, contrairement à un insert/rpc, ne lève pas 42501 — vérifié
-  /// en Phase 1, section 10quater de PHASE1.md).
+  /// Protégé côté serveur par `produits_write` (Propriétaire/Propriétaire-
+  /// Gérant/Gérant, migration 0008) : un appel bloqué par RLS affecte
+  /// silencieusement 0 ligne (une UPDATE, contrairement à un insert/rpc, ne
+  /// lève pas 42501 — vérifié en Phase 1, section 10quater de PHASE1.md).
   Future<void> modifierProduit({
     required String produitId,
     required String nom,
     required int prixVenteDetail,
     required int prixVenteGros,
-    required int bouteillesParCarton,
+    required TypeEmballage typeEmballage,
+    required int bouteillesParEmballage,
     required bool actif,
   }) async {
     final resultat = await _client
@@ -60,7 +64,8 @@ class ProduitsService {
           'nom': nom,
           'prix_vente_detail': prixVenteDetail,
           'prix_vente_gros': prixVenteGros,
-          'bouteilles_par_carton': bouteillesParCarton,
+          'type_emballage': typeEmballage.nomPostgres,
+          'bouteilles_par_emballage': bouteillesParEmballage,
           'actif': actif,
         })
         .eq('id', produitId)
@@ -73,7 +78,8 @@ class ProduitsService {
   /// Renvoie `null` si aucun prix d'achat n'est encore enregistré (produit
   /// tout juste créé) ou si l'appelant n'y a pas droit (RLS filtre
   /// silencieusement, sans erreur — c'est le comportement attendu pour un
-  /// Gérant qui ne devrait de toute façon jamais afficher ce champ).
+  /// Agent de vente, qui ne devrait de toute façon jamais afficher ce
+  /// champ).
   Future<int?> obtenirPrixAchat(String produitId) async {
     final ligne = await _client
         .from('produits_couts')

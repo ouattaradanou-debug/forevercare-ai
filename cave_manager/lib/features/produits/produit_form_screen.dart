@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/type_emballage.dart';
 import '../../core/produits/produit.dart';
 import '../../core/produits/produits_providers.dart';
 
@@ -27,10 +28,12 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
       text: widget.produit?.prixVenteDetail.toString() ?? '');
   late final _prixGrosCtrl = TextEditingController(
       text: widget.produit?.prixVenteGros.toString() ?? '');
-  late final _bouteillesParCartonCtrl = TextEditingController(
-      text: widget.produit?.bouteillesParCarton.toString() ?? '1');
+  late final _bouteillesParEmballageCtrl = TextEditingController(
+      text: widget.produit?.bouteillesParEmballage.toString() ?? '1');
   final _prixAchatCtrl = TextEditingController();
 
+  late TypeEmballage _typeEmballage =
+      widget.produit?.typeEmballage ?? TypeEmballage.carton;
   bool _actif = true;
   bool _chargement = false;
   bool _enCours = false;
@@ -64,7 +67,7 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
     _nomCtrl.dispose();
     _prixDetailCtrl.dispose();
     _prixGrosCtrl.dispose();
-    _bouteillesParCartonCtrl.dispose();
+    _bouteillesParEmballageCtrl.dispose();
     _prixAchatCtrl.dispose();
     super.dispose();
   }
@@ -82,8 +85,8 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
       final nom = _nomCtrl.text.trim();
       final prixDetail = int.parse(_prixDetailCtrl.text.trim());
       final prixGros = int.parse(_prixGrosCtrl.text.trim());
-      final bouteillesParCarton =
-          int.parse(_bouteillesParCartonCtrl.text.trim());
+      final bouteillesParEmballage =
+          int.parse(_bouteillesParEmballageCtrl.text.trim());
 
       String produitId;
       if (widget.produit == null) {
@@ -92,7 +95,8 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
           nom: nom,
           prixVenteDetail: prixDetail,
           prixVenteGros: prixGros,
-          bouteillesParCarton: bouteillesParCarton,
+          typeEmballage: _typeEmballage,
+          bouteillesParEmballage: bouteillesParEmballage,
         );
         produitId = cree.id;
       } else {
@@ -102,7 +106,8 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
           nom: nom,
           prixVenteDetail: prixDetail,
           prixVenteGros: prixGros,
-          bouteillesParCarton: bouteillesParCarton,
+          typeEmballage: _typeEmballage,
+          bouteillesParEmballage: bouteillesParEmballage,
           actif: _actif,
         );
       }
@@ -170,11 +175,30 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
                         keyboardType: TextInputType.number,
                         validator: _valideurEntierPositif,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
+                      Text('Type d\'emballage',
+                          style: Theme.of(context).textTheme.titleMedium),
+                      RadioGroup<TypeEmballage>(
+                        groupValue: _typeEmballage,
+                        onChanged: (v) => setState(() => _typeEmballage = v!),
+                        child: Row(
+                          children: TypeEmballage.values
+                              .map((type) => Expanded(
+                                    child: RadioListTile<TypeEmballage>(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Text(type.libelle),
+                                      value: type,
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
                       TextFormField(
-                        controller: _bouteillesParCartonCtrl,
-                        decoration: const InputDecoration(
-                            labelText: 'Bouteilles par carton'),
+                        controller: _bouteillesParEmballageCtrl,
+                        decoration: InputDecoration(
+                            labelText:
+                                'Bouteilles par ${_typeEmballage.libelle.toLowerCase()}'),
                         keyboardType: TextInputType.number,
                         validator: (v) =>
                             (v == null || int.tryParse(v.trim()) == null || int.parse(v.trim()) < 1)

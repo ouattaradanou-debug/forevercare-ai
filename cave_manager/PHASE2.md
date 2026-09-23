@@ -59,7 +59,7 @@ Fichier : `supabase/migrations/0007_phase2_produits_stock.sql`.
 
 | Table | Rôle | Colonnes clés |
 |---|---|---|
-| `produits` (enrichie) | Catalogue | + `bouteilles_par_carton` |
+| `produits` (enrichie) | Catalogue | + `type_emballage`, `bouteilles_par_emballage` (voir section 10) |
 | `produits_couts` *(nouvelle)* | Prix d'achat, séparé | `produit_id`, `prix_achat` |
 | `mouvements_stock` *(nouvelle)* | Journal append-only des deltas | `delta_cartons`, `delta_bouteilles`, `motif`, `created_by` |
 | `stock` (déjà créée en Phase 1) | Total courant, recalculé par trigger | inchangée |
@@ -227,6 +227,51 @@ production :
 3. Agent de vente lit `produits_couts` → 0 ligne (RLS silencieuse).
 4. Agent de vente tente d'écrire dans `produits_couts` → bloqué par RLS.
 5. Propriétaire toujours OK (aucune régression).
+
+---
+
+## 10. Ajustement demandé : type d'emballage (carton ou casier)
+
+**Demande** : à la création d'un produit, choisir un type d'emballage
+(carton ou casier). Le stock doit ensuite s'exprimer en nombre
+d'emballages (du type choisi) et en nombre de bouteilles qui n'atteignent
+pas un emballage complet.
+
+**Constat** : le mécanisme de stock existant (`quantite_cartons` +
+`quantite_bouteilles`, deltas additifs, trigger) faisait déjà exactement
+ça — seul l'intitulé "carton" était en dur partout dans l'interface, y
+compris pour un produit qui se vend en casiers. Aucun changement du
+mécanisme de stock n'était donc nécessaire, seulement l'ajout du choix de
+type et son utilisation pour l'affichage.
+
+**Modifications** :
+- `supabase/migrations/0010_type_emballage_produits.sql` : nouveau type
+  enum Postgres `type_emballage` ('carton' | 'casier') ; colonne
+  `produits.type_emballage` (défaut `'carton'`, donc aucune perte pour les
+  produits déjà créés) ; colonne `bouteilles_par_carton` renommée en
+  `bouteilles_par_emballage` (rename Postgres : données et contrainte
+  `check (> 0)` conservées).
+- `lib/core/constants/type_emballage.dart` (nouveau) : enum Dart
+  `TypeEmballage` (carton/casier), même schéma que `TypeCave`.
+- `Produit` (modèle) : `bouteillesParCarton` → `bouteillesParEmballage` +
+  nouveau champ `typeEmballage`.
+- `ProduitsService.creerProduit`/`modifierProduit` : nouveau paramètre
+  `typeEmballage`, renommage `bouteillesParEmballage`.
+- `ProduitFormScreen` : nouveau sélecteur "Type d'emballage" (carton /
+  casier, `RadioGroup`, même widget que `TypeCave` en Phase 1) ; le champ
+  "Bouteilles par carton/casier" change de libellé selon le choix.
+- `ProduitDetailScreen` : tous les libellés liés au stock ("Stock
+  (cartons)"/"Stock (casiers)", "Variation (...)", "Bouteilles par ...")
+  dépendent désormais de `produit.typeEmballage` au lieu d'être en dur.
+
+**Vérifié en local sur PostgreSQL 16** avant envoi en production :
+1. Produits déjà créés (avant la migration) : `type_emballage = 'carton'`
+   par défaut, aucune donnée perdue par le rename de colonne.
+2. Propriétaire crée un produit avec `type_emballage = 'casier'` → réussit.
+3. Une valeur hors énumération (`'bidon'`) est rejetée par Postgres au
+   niveau du type, pas seulement par une contrainte applicative.
+4. Gérant crée un produit avec `type_emballage = 'casier'` → réussit
+   (cohérent avec la policy `produits_write` étendue en migration 0008).
 
 ---
 
