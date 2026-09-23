@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../cave/infos_cave.dart';
 import '../constants/roles.dart';
 import '../constants/type_cave.dart';
 import 'profil.dart';
@@ -105,36 +107,89 @@ class AuthService {
     return resultat as String;
   }
 
-  /// Type de cave actuel (pour l'affichage/modification post-connexion,
-  /// icône en haut à gauche de l'écran d'accueil).
-  Future<TypeCave> typeCaveActuel(String caveId) async {
+  /// Informations actuelles de la cave (pour l'affichage/modification
+  /// post-connexion, icône en haut à gauche de l'écran d'accueil).
+  Future<InfosCave> informationsCaveActuelles(String caveId) async {
     final ligne = await _client
         .from('caves')
-        .select('type_cave')
+        .select('nom, telephone, localisation, type_cave, logo_url')
         .eq('id', caveId)
         .single();
-    return TypeCave.depuisPostgres(ligne['type_cave'] as String);
+    return InfosCave.depuisJson(ligne);
   }
 
-  /// Modifie le type de cave après création. Protégé côté serveur par la
-  /// policy RLS `caves_update` (réservée à `is_responsable()`, c'est-à-dire
-  /// Propriétaire, Propriétaire/Gérant et Gérant — pas l'Agent de vente).
+  /// Modifie les informations de la cave après création. Protégé côté
+  /// serveur par la policy RLS `caves_update` (réservée à
+  /// `is_responsable()`, c'est-à-dire Propriétaire, Propriétaire/Gérant et
+  /// Gérant — pas l'Agent de vente).
   ///
   /// Une mise à jour bloquée par RLS ne lève pas d'erreur PostgREST : elle
   /// affecte silencieusement 0 ligne (vérifié en local, contrairement à un
   /// `insert`/`rpc` qui, lui, renvoie bien `42501`). D'où le `.select()`
   /// et la vérification explicite ci-dessous : sans ça, un appel bloqué
   /// malgré le masquage côté UI semblerait avoir réussi.
-  Future<void> modifierTypeCave(
-      {required String caveId, required TypeCave typeCave}) async {
+  Future<void> modifierInformationsCave({
+    required String caveId,
+    required String nom,
+    required String telephone,
+    required String localisation,
+    required TypeCave typeCave,
+  }) async {
     final resultat = await _client
         .from('caves')
-        .update({'type_cave': typeCave.nomPostgres})
+        .update({
+          'nom': nom,
+          'telephone': telephone,
+          'localisation': localisation,
+          'type_cave': typeCave.nomPostgres,
+        })
         .eq('id', caveId)
         .select();
     if (resultat.isEmpty) {
       throw Exception('Modification refusée : rôle insuffisant.');
     }
+  }
+
+  /// Téléverse le logo de la cave (bucket `logos-cave`, chemin
+  /// `<caveId>/logo.<extension>` — le premier segment du chemin est
+  /// justement ce que vérifient les policies de stockage pour s'assurer
+  /// que chacun ne peut écrire que dans le dossier de sa propre cave) et
+  /// enregistre son URL publique sur la cave. Renvoie cette URL.
+  Future<String> televerserLogoCave({
+    required String caveId,
+    required Uint8List octets,
+    required String extension,
+  }) async {
+    final chemin = '$caveId/logo.$extension';
+    await _client.storage.from('logos-cave').uploadBinary(
+          chemin,
+          octets,
+          fileOptions: const FileOptions(upsert: true),
+        );
+    final url = _client.storage.from('logos-cave').getPublicUrl(chemin);
+
+    final resultat = await _client
+        .from('caves')
+        .update({'logo_url': url}).eq('id', caveId).select();
+    if (resultat.isEmpty) {
+      throw Exception('Modification refusée : rôle insuffisant.');
+    }
+    return url;
+  }
+
+  /// Modifie le nom/prénom de l'utilisateur actuellement authentifié.
+  /// Colonnes non sensibles : autorisées par `profiles_update_self` pour
+  /// les 4 rôles (le masquage à Propriétaire/Propriétaire-Gérant/Gérant
+  /// se fait côté UI uniquement, par choix délibéré — voir PHASE1.md).
+  Future<void> modifierMonProfil(
+      {required String nom, required String prenom}) async {
+    final utilisateur = _client.auth.currentUser;
+    if (utilisateur == null) {
+      throw Exception('Aucune session active.');
+    }
+    await _client
+        .from('profiles')
+        .update({'nom': nom, 'prenom': prenom}).eq('id', utilisateur.id);
   }
 
   /// Charge le profil de l'utilisateur actuellement authentifié.

@@ -428,6 +428,51 @@ cave depuis l'écran d'accueil, pas seulement à la création. Détails :
 
 ---
 
+## 10quinquies. Ajout demandé : informations de la cave et logo modifiables
+
+Demandé explicitement en continuité de 10quater : renseigner/modifier,
+depuis le même écran de configuration, le nom de la cave, son numéro de
+téléphone, la ville, un logo affiché sous "Ma Cave" sur l'écran d'accueil,
+et son propre nom/prénom. Détails :
+
+- **`ConfigurationCaveScreen`** remplace le dialogue précédent (devenu
+  trop dense pour une fenêtre modale) : un écran complet, un seul bouton
+  "Enregistrer", dans l'esprit "une action principale" déjà appliqué
+  ailleurs. Toujours accessible via l'icône ⚙️, réservée à
+  `estResponsable`.
+- **Fausse alerte de sécurité, corrigée en cours de route** : j'ai d'abord
+  cru trouver une faille (auto-modification du rôle via
+  `profiles_update_self`, qui n'a pas de restriction de colonne) et écrit
+  une migration pour la corriger — avant de découvrir, en la testant
+  localement, qu'elle dupliquait une protection **déjà existante** depuis
+  la migration 0001 (`protect_sensitive_profile_fields`, trigger avec
+  exactement la même logique). Migration supprimée avant envoi ; aucune
+  modification de schéma nécessaire sur ce point, juste une vérification
+  qui a confirmé que la protection existante suffit.
+- **Migration 0004** : ajoute `caves.logo_url`, un bucket de stockage
+  Supabase `logos-cave` (public en lecture — un logo n'est pas une
+  donnée sensible, contrairement au stock/clôtures) et ses policies
+  d'écriture : chemin `<cave_id>/logo.<ext>`, le premier segment du
+  chemin devant correspondre à la cave de l'utilisateur ET celui-ci devant
+  être `is_responsable()`. Aucune nouvelle policy nécessaire pour
+  nom/téléphone/ville (déjà couverts par `caves_update`) ni pour
+  nom/prénom personnels (déjà couverts par `profiles_update_self`).
+- **Nouvelle dépendance** : `image_picker` (sélection d'image dans la
+  galerie du téléphone), ajoutée à `pubspec.yaml`.
+- **Vérifié sur PostgreSQL 16 local**, RLS réellement active (schéma
+  `storage` reproduit localement avec `storage.foldername()`) : un Gérant
+  peut téléverser un logo dans le dossier de SA cave (accepté), un Agent
+  de vente ne peut pas téléverser du tout (refusé), et un Gérant ne peut
+  pas téléverser dans le dossier D'UNE AUTRE cave (refusé) — les 3 cas
+  testés avec succès.
+- **Non testé sur téléphone réel à la rédaction** : l'upload d'image
+  (`image_picker` + `Supabase Storage`) est le premier point de cette
+  session à dépendre d'un composant natif jamais exercé auparavant dans
+  ce projet (accès galerie). À valider explicitement sur l'appareil avant
+  de considérer cette fonctionnalité acquise.
+
+---
+
 ## 11. Auto-évaluation finale obligatoire
 
 1. **Un agent de vente peut-il, par un moyen quelconque, accéder à une

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../cave/infos_cave.dart';
 import '../database/app_database.dart';
 import '../sync/sync_service.dart';
 import 'auth_service.dart';
@@ -36,4 +37,16 @@ final profilActuelProvider = StreamProvider<Profil?>((ref) async* {
   await for (final _ in authService.changementsAuth) {
     yield await authService.profilActuel();
   }
+});
+
+/// Informations de la cave courante (nom, téléphone, ville, type, logo),
+/// utilisées pour l'affichage du logo sur `HomeScreen` et pour
+/// pré-remplir `ConfigurationCaveScreen`. `autoDispose` : pas besoin de
+/// garder ce cache une fois qu'on quitte les écrans qui l'utilisent.
+final infosCaveProvider = FutureProvider.autoDispose<InfosCave?>((ref) async {
+  final profil = await ref.watch(profilActuelProvider.future);
+  if (profil == null) return null;
+  return ref
+      .watch(authServiceProvider)
+      .informationsCaveActuelles(profil.caveId);
 });

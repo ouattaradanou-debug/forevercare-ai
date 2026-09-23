@@ -34,6 +34,9 @@ dependencies:
 
   uuid: ^4.4.0
 
+  # Sélection d'une image (logo de la cave) depuis la galerie du téléphone
+  image_picker: ^1.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
