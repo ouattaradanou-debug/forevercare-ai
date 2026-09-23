@@ -37,6 +37,11 @@ dependencies:
   # Sélection d'une image (logo de la cave) depuis la galerie du téléphone
   image_picker: ^1.1.2
 
+  # Police cursive pour le message de bienvenue (téléchargée et mise en
+  # cache au premier lancement avec réseau — voir commentaire dans
+  # home_screen.dart)
+  google_fonts: ^6.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

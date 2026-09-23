@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/auth/auth_providers.dart';
 import '../../core/auth/profil.dart';
@@ -67,14 +68,27 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Bienvenue, ${profil.nomComplet}',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontWeight: FontWeight.w700,
-                      fontStyle: FontStyle.italic,
-                    ),
+              // Police cursive (Google Fonts "Alex Brush", demandée sur
+              // le modèle d'une calligraphie manuscrite) : téléchargée et
+              // mise en cache au premier affichage avec réseau, réutilisée
+              // ensuite hors ligne. Fond bleu ciel demandé explicitement
+              // pour isoler ce message du reste de l'écran.
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF87CEEB),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  'Bienvenue, ${profil.nomComplet}',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.alexBrush(
+                    fontSize: 34,
+                    color: Colors.white,
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               Chip(label: Text(profil.role.libelle)),
