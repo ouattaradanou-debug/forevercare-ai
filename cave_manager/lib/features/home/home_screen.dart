@@ -84,7 +84,7 @@ class HomeScreen extends ConsumerWidget {
                 style: GoogleFonts.alexBrush(
                   fontSize: 38,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF7A1F2B),
+                  color: Colors.black,
                 ),
               ),
             ),
