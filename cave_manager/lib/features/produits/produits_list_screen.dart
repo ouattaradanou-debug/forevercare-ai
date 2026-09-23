@@ -10,11 +10,12 @@ import 'categories_produits_screen.dart';
 import 'produit_detail_screen.dart';
 import 'produit_form_screen.dart';
 
-/// Catalogue produits (point 5 du cahier des charges), regroupé par
-/// catégorie (Bières, Vins rouges, ...). Une seule action principale
-/// visible : "+" pour créer un produit, réservée au Propriétaire/
-/// Propriétaire-Gérant/Gérant (`estResponsable`) — l'Agent de vente
-/// consulte la liste mais ne peut ni créer de produit ni gérer les
+/// Catalogue produits (point 5 du cahier des charges), organisé en une
+/// fiche déroulante par catégorie (Bières, Vins rouges, ...), chacune
+/// contenant un tableau des boissons qu'elle contient. Une seule action
+/// principale visible : "+" pour créer un produit, réservée au
+/// Propriétaire/Propriétaire-Gérant/Gérant (`estResponsable`) — l'Agent de
+/// vente consulte la liste mais ne peut ni créer de produit ni gérer les
 /// catégories. Une catégorie masquée n'apparaît que pour `estResponsable`
 /// (avec un repère visuel), jamais pour l'Agent.
 class ProduitsListScreen extends ConsumerWidget {
@@ -102,40 +103,72 @@ class ProduitsListScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
-        for (final categorie in categoriesAffichees) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 12, 4, 4),
-            child: Row(
-              children: [
-                Text(categorie.nom, style: Theme.of(context).textTheme.titleMedium),
-                if (!categorie.visible) ...[
-                  const SizedBox(width: 8),
-                  const Chip(
-                    label: Text('Masquée', style: TextStyle(fontSize: 11)),
-                    visualDensity: VisualDensity.compact,
+        for (final categorie in categoriesAffichees)
+          Card(
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            child: ExpansionTile(
+              key: PageStorageKey(categorie.id),
+              title: Row(
+                children: [
+                  Flexible(
+                    child: Text(categorie.nom,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium),
                   ),
+                  const SizedBox(width: 8),
+                  Text('(${produitsParCategorie[categorie.id]!.length})',
+                      style: Theme.of(context).textTheme.bodySmall),
+                  if (!categorie.visible) ...[
+                    const SizedBox(width: 8),
+                    const Chip(
+                      label: Text('Masquée', style: TextStyle(fontSize: 11)),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
                 ],
+              ),
+              children: [
+                _tableauProduits(context, produitsParCategorie[categorie.id]!),
               ],
             ),
           ),
-          for (final produit in produitsParCategorie[categorie.id]!) ...[
-            ListTile(
-              title: Text(produit.nom),
-              subtitle: Text(
-                  'Détail : ${formaterFcfa(produit.prixVenteDetail)}  ·  '
-                  'Gros : ${formaterFcfa(produit.prixVenteGros)}'),
-              trailing: produit.actif ? null : const Chip(label: Text('Inactif')),
-              onTap: () => Navigator.of(context).push(
+      ],
+    );
+  }
+
+  Widget _tableauProduits(BuildContext context, List<Produit> produits) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columns: const [
+          DataColumn(label: Text('Boisson')),
+          DataColumn(label: Text('Détail'), numeric: true),
+          DataColumn(label: Text('Gros'), numeric: true),
+          DataColumn(label: Text('Statut')),
+        ],
+        rows: [
+          for (final produit in produits)
+            DataRow(
+              onSelectChanged: (_) => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) =>
                       ProduitDetailScreen(produit: produit, profil: profil),
                 ),
               ),
+              cells: [
+                DataCell(Text(produit.nom)),
+                DataCell(Text(formaterFcfa(produit.prixVenteDetail))),
+                DataCell(Text(formaterFcfa(produit.prixVenteGros))),
+                DataCell(produit.actif
+                    ? const Text('')
+                    : const Chip(
+                        label: Text('Inactif', style: TextStyle(fontSize: 11)),
+                        visualDensity: VisualDensity.compact,
+                      )),
+              ],
             ),
-            const Divider(height: 1),
-          ],
         ],
-      ],
+      ),
     );
   }
 }
