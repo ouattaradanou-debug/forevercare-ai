@@ -26,10 +26,7 @@ class ProduitsListScreen extends ConsumerWidget {
           ? FloatingActionButton(
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => ProduitFormScreen(
-                    caveId: profil.caveId,
-                    autoriserPrixAchat: profil.role.estAdministrateur,
-                  ),
+                  builder: (_) => ProduitFormScreen(caveId: profil.caveId),
                 ),
               ),
               tooltip: 'Nouveau produit',

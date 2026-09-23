@@ -11,11 +11,9 @@ import '../../core/produits/produits_providers.dart';
 import '../../core/utils/fcfa_formatter.dart';
 import 'produit_form_screen.dart';
 
-/// Détail d'un produit : informations de vente pour tous, stock et
-/// modification du produit pour Propriétaire/Propriétaire-Gérant/Gérant
-/// (`estResponsable`), prix d'achat pour Propriétaire/Propriétaire-Gérant
-/// uniquement (`estAdministrateur`) — jamais pour le Gérant ni l'Agent de
-/// vente (point 18 du cahier des charges).
+/// Détail d'un produit : informations de vente pour tous, stock,
+/// modification du produit et prix d'achat pour Propriétaire/Propriétaire-
+/// Gérant/Gérant (`estResponsable`) — jamais pour l'Agent de vente.
 class ProduitDetailScreen extends ConsumerStatefulWidget {
   const ProduitDetailScreen(
       {super.key, required this.produit, required this.profil});
@@ -58,8 +56,6 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
             quantiteBouteilles: stockServeur.bouteilles,
           );
         }
-      }
-      if (widget.profil.role.estAdministrateur) {
         _prixAchat = await ref
             .read(produitsServiceProvider)
             .obtenirPrixAchat(widget.produit.id);
@@ -194,13 +190,9 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
                       onPressed: _ajusterStock,
                       child: const Text('Ajuster le stock'),
                     ),
-                  ],
-                  if (widget.profil.role.estAdministrateur) ...[
                     const Divider(height: 32),
                     _ligne('Prix d\'achat',
                         _prixAchat != null ? formaterFcfa(_prixAchat!) : '—'),
-                  ],
-                  if (widget.profil.role.estResponsable) ...[
                     const SizedBox(height: 16),
                     OutlinedButton(
                       onPressed: () => Navigator.of(context).push(
@@ -208,8 +200,6 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
                           builder: (_) => ProduitFormScreen(
                             produit: produit,
                             caveId: produit.caveId,
-                            autoriserPrixAchat:
-                                widget.profil.role.estAdministrateur,
                           ),
                         ),
                       ),

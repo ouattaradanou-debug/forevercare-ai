@@ -12,9 +12,10 @@ avant codage (PHASE1.md section 7).
 Inclus :
 - Catalogue produits : création/modification (Propriétaire,
   Propriétaire/Gérant et Gérant), consultation (tous les rôles).
-- Prix d'achat, séparé du reste du produit, visible et modifiable
-  uniquement par Propriétaire/Propriétaire-Gérant (point 18 : jamais visible
-  par le Gérant ni l'Agent de vente).
+- Prix d'achat, séparé du reste du produit, visible et modifiable par
+  Propriétaire, Propriétaire/Gérant et Gérant — l'Agent de vente en reste
+  seul exclu (mis à jour par rapport au point 18 initial du cahier des
+  charges, voir section 8).
 - Stock : consultation et ajustement (Propriétaire, Propriétaire/Gérant,
   Gérant) — l'Agent de vente n'y a **aucun** accès, ni en lecture ni en
   écriture (point 2.3).
@@ -83,7 +84,7 @@ le delta n'est jamais appliqué deux fois. **Vérifié explicitement en local**
 | Table | PROP | PG | GER | AGENT | Policy RLS |
 |---|---|---|---|---|---|
 | `produits` | R/W/D | R/W/D | R/W/D | R | `produits_select` (toute la cave), `produits_write` (`is_responsable()` depuis la migration 0008 — le Gérant doit pouvoir créer/modifier des produits, sans accès au prix d'achat) |
-| `produits_couts` | R/W | R/W | **—** | **—** | `produits_couts_select`, `produits_couts_write` (admin only) |
+| `produits_couts` | R/W | R/W | R/W | **—** | `produits_couts_select`, `produits_couts_write` (`is_responsable()` depuis la migration 0009 — voir section 8) |
 | `stock` | R/W | R/W | R/W | **—** | inchangées depuis la Phase 1 |
 | `mouvements_stock` | R/W(insert) | R/W(insert) | R/W(insert) | **—** | `mouvements_stock_select`, `mouvements_stock_insert` — mêmes rôles que `stock`. Aucune policy `UPDATE`/`DELETE` : un mouvement, une fois créé, est immuable (corriger = ajouter un nouveau mouvement, jamais modifier l'historique) |
 
@@ -112,16 +113,16 @@ précédentes :
 ## 6. Écrans Flutter livrés
 
 - `ProduitsListScreen` : catalogue, bouton "+" (création) réservé à
-  Propriétaire/Propriétaire-Gérant/Gérant.
-- `ProduitDetailScreen` : infos de vente pour tous ; stock (avec bouton
-  "Ajuster le stock") et bouton "Modifier le produit" pour Propriétaire/
-  Propriétaire-Gérant/Gérant ; prix d'achat pour Propriétaire/Propriétaire-
-  Gérant uniquement.
+  Propriétaire/Propriétaire-Gérant/Gérant (`estResponsable`).
+- `ProduitDetailScreen` : infos de vente pour tous ; stock ("Ajuster le
+  stock"), prix d'achat et "Modifier le produit" pour Propriétaire/
+  Propriétaire-Gérant/Gérant — l'Agent de vente n'a accès à aucun des
+  trois.
 - `ProduitFormScreen` : création/modification (nom, prix détail, prix gros,
-  bouteilles/carton, actif), un seul bouton "Enregistrer". Le champ prix
-  d'achat n'apparaît que si `autoriserPrixAchat` est vrai (Propriétaire/
-  Propriétaire-Gérant) — un Gérant qui crée ou modifie un produit ne le
-  voit jamais.
+  bouteilles/carton, prix d'achat, actif), un seul bouton "Enregistrer" —
+  accessible uniquement aux rôles `estResponsable` (ni le paramétrage ni le
+  blocage réel du prix d'achat ne dépendent plus de `estAdministrateur`,
+  voir section 9).
 - Accessible depuis `HomeScreen` via un nouveau bouton "Produits" (visible
   pour les 4 rôles, chacun voyant un sous-ensemble différent une fois dans
   le détail d'un produit, selon la matrice ci-dessus).
@@ -166,11 +167,13 @@ la simulation RLS locale en Postgres l'a couvert jusqu'ici).
 pouvoir créer et modifier des produits (nom, prix de vente, bouteilles/
 carton) — pas seulement le Propriétaire/Propriétaire-Gérant.
 
-**Ce qui ne change pas** : le prix d'achat (`produits_couts`) reste
-strictement réservé à Propriétaire/Propriétaire-Gérant, conformément au
-point 18 du cahier des charges ("jamais visible par le Gérant ni l'Agent
-de vente") — cette demande ne le remet pas en cause, seule la création de
-la fiche produit (infos de vente) s'ouvre au Gérant.
+**Ce qui ne change pas (à ce stade)** : le prix d'achat (`produits_couts`)
+reste réservé à Propriétaire/Propriétaire-Gérant, conformément au point 18
+du cahier des charges ("jamais visible par le Gérant ni l'Agent de
+vente") — cette demande ne le remet pas en cause, seule la création de la
+fiche produit (infos de vente) s'ouvre au Gérant. *(Révisé en section 9 :
+le Gérant a ensuite obtenu l'accès complet au prix d'achat, sur demande
+explicite.)*
 
 **Modifications** :
 - `supabase/migrations/0008_gerant_creer_produits.sql` : policy
@@ -195,6 +198,35 @@ la fiche produit (infos de vente) s'ouvre au Gérant.
 4. Agent de vente tente de créer un produit → toujours bloqué par RLS.
 5. Propriétaire crée un produit et son prix d'achat → toujours OK (aucune
    régression sur les rôles déjà autorisés).
+
+---
+
+## 9. Ajustement demandé : le Gérant doit aussi voir/modifier le prix d'achat
+
+**Demande** : revenir sur la restriction posée en section 8 — le Gérant
+doit pouvoir enregistrer, voir et modifier le prix d'achat, pas seulement
+la fiche produit. Seul l'Agent de vente reste exclu de cette donnée.
+
+**Modifications** :
+- `supabase/migrations/0009_gerant_prix_achat.sql` : les policies
+  `produits_couts_select`/`produits_couts_write` passent de `is_admin()` à
+  `is_responsable()`.
+- `ProduitDetailScreen` : le bloc prix d'achat (affichage + chargement +
+  bouton "Modifier le produit") passe sous `estResponsable`, comme le bloc
+  stock — les deux sont maintenant fusionnés en un seul bloc.
+- `ProduitFormScreen` : le paramètre `autoriserPrixAchat` ajouté en
+  section 8 devenait toujours vrai aux deux points d'appel (les deux
+  écrans étant déjà réservés à `estResponsable`, qui a maintenant accès
+  complet au prix d'achat) — retiré pour éviter un paramètre mort ; le
+  champ prix d'achat est de nouveau toujours affiché dans ce formulaire.
+
+**Vérifié en local sur PostgreSQL 16 (RLS réelle)**, avant envoi en
+production :
+1. Gérant lit `produits_couts` → réussit (échouait avant cette migration).
+2. Gérant crée puis modifie un prix d'achat → réussit.
+3. Agent de vente lit `produits_couts` → 0 ligne (RLS silencieuse).
+4. Agent de vente tente d'écrire dans `produits_couts` → bloqué par RLS.
+5. Propriétaire toujours OK (aucune régression).
 
 ---
 
