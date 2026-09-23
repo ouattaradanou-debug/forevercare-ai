@@ -45,7 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       ref.invalidate(profilActuelProvider);
     } catch (_) {
-      setState(() => _erreur = 'Numéro ou code PIN incorrect.');
+      if (mounted) setState(() => _erreur = 'Numéro ou code PIN incorrect.');
     } finally {
       if (mounted) setState(() => _enCours = false);
     }
