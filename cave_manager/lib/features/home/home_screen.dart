@@ -36,7 +36,19 @@ class HomeScreen extends ConsumerWidget {
                 ),
               )
             : null,
-        title: const Text('Ma Cave'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (infosCave?.logoUrl != null) ...[
+              CircleAvatar(
+                radius: 16,
+                backgroundImage: NetworkImage(infosCave!.logoUrl!),
+              ),
+              const SizedBox(width: 8),
+            ],
+            const Text('Ma Cave'),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -51,13 +63,6 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (infosCave?.logoUrl != null) ...[
-                CircleAvatar(
-                  radius: 40,
-                  backgroundImage: NetworkImage(infosCave!.logoUrl!),
-                ),
-                const SizedBox(height: 16),
-              ],
               CircleAvatar(
                 radius: 36,
                 child: Text(

@@ -432,8 +432,9 @@ cave depuis l'écran d'accueil, pas seulement à la création. Détails :
 
 Demandé explicitement en continuité de 10quater : renseigner/modifier,
 depuis le même écran de configuration, le nom de la cave, son numéro de
-téléphone, la ville, un logo affiché sous "Ma Cave" sur l'écran d'accueil,
-et son propre nom/prénom. Détails :
+téléphone, la ville, un logo affiché dans la barre du haut juste avant
+"Ma Cave" sur l'écran d'accueil (repositionné là sur demande, initialement
+affiché sous le titre), et son propre nom/prénom. Détails :
 
 - **`ConfigurationCaveScreen`** remplace le dialogue précédent (devenu
   trop dense pour une fenêtre modale) : un écran complet, un seul bouton
