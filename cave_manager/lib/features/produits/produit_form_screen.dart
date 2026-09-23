@@ -5,15 +5,28 @@ import '../../core/produits/produit.dart';
 import '../../core/produits/produits_providers.dart';
 
 /// Création ou modification d'un produit (point 5 du cahier des charges).
-/// Réservé au Propriétaire/Propriétaire-Gérant (`estAdministrateur`) : le
-/// prix d'achat n'est saisissable qu'ici, jamais par un Gérant ni un Agent
-/// de vente. Un seul bouton principal : "Enregistrer".
+/// Accessible à Propriétaire/Propriétaire-Gérant/Gérant ; le champ prix
+/// d'achat n'est affiché et modifiable que si [autoriserPrixAchat] est
+/// vrai (Propriétaire/Propriétaire-Gérant) — jamais pour un Gérant ni un
+/// Agent de vente. Un seul bouton principal : "Enregistrer".
 class ProduitFormScreen extends ConsumerStatefulWidget {
-  const ProduitFormScreen({super.key, this.produit, required this.caveId});
+  const ProduitFormScreen({
+    super.key,
+    this.produit,
+    required this.caveId,
+    required this.autoriserPrixAchat,
+  });
 
   /// `null` pour une création ; renseigné pour une modification.
   final Produit? produit;
   final String caveId;
+
+  /// Contrôle uniquement l'affichage du champ prix d'achat dans ce
+  /// formulaire — le blocage réel et non contournable reste la policy RLS
+  /// `produits_couts_write` (admin only) ; ce booléen n'est qu'un
+  /// raccourci d'UI pour ne pas exposer un champ inutile/refusé
+  /// silencieusement.
+  final bool autoriserPrixAchat;
 
   @override
   ConsumerState<ProduitFormScreen> createState() => _ProduitFormScreenState();
@@ -41,7 +54,9 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
   void initState() {
     super.initState();
     _actif = widget.produit?.actif ?? true;
-    if (widget.produit != null) _chargerPrixAchat();
+    if (widget.produit != null && widget.autoriserPrixAchat) {
+      _chargerPrixAchat();
+    }
   }
 
   Future<void> _chargerPrixAchat() async {
@@ -108,7 +123,7 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
         );
       }
 
-      if (_prixAchatCtrl.text.trim().isNotEmpty) {
+      if (widget.autoriserPrixAchat && _prixAchatCtrl.text.trim().isNotEmpty) {
         await service.modifierPrixAchat(
           produitId: produitId,
           caveId: widget.caveId,
@@ -182,18 +197,20 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
                                 ? 'Au moins 1'
                                 : null,
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _prixAchatCtrl,
-                        decoration: const InputDecoration(
-                            labelText: 'Prix d\'achat (FCFA) — facultatif'),
-                        keyboardType: TextInputType.number,
-                        validator: (v) => (v != null &&
-                                v.trim().isNotEmpty &&
-                                int.tryParse(v.trim()) == null)
-                            ? 'Nombre invalide'
-                            : null,
-                      ),
+                      if (widget.autoriserPrixAchat) ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _prixAchatCtrl,
+                          decoration: const InputDecoration(
+                              labelText: 'Prix d\'achat (FCFA) — facultatif'),
+                          keyboardType: TextInputType.number,
+                          validator: (v) => (v != null &&
+                                  v.trim().isNotEmpty &&
+                                  int.tryParse(v.trim()) == null)
+                              ? 'Nombre invalide'
+                              : null,
+                        ),
+                      ],
                       if (widget.produit != null) ...[
                         const SizedBox(height: 12),
                         SwitchListTile(

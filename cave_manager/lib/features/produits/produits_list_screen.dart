@@ -9,9 +9,8 @@ import 'produit_form_screen.dart';
 
 /// Catalogue produits (point 5 du cahier des charges). Une seule action
 /// principale visible : "+" pour créer un produit, réservée au
-/// Propriétaire/Propriétaire-Gérant (`estAdministrateur`) — le Gérant et
-/// l'Agent de vente consultent la liste mais ne peuvent pas créer de
-/// nouveau produit.
+/// Propriétaire/Propriétaire-Gérant/Gérant (`estResponsable`) — l'Agent de
+/// vente consulte la liste mais ne peut pas créer de nouveau produit.
 class ProduitsListScreen extends ConsumerWidget {
   const ProduitsListScreen({super.key, required this.profil});
 
@@ -23,12 +22,14 @@ class ProduitsListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Produits')),
-      floatingActionButton: profil.role.estAdministrateur
+      floatingActionButton: profil.role.estResponsable
           ? FloatingActionButton(
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) =>
-                      ProduitFormScreen(caveId: profil.caveId),
+                  builder: (_) => ProduitFormScreen(
+                    caveId: profil.caveId,
+                    autoriserPrixAchat: profil.role.estAdministrateur,
+                  ),
                 ),
               ),
               tooltip: 'Nouveau produit',

@@ -11,11 +11,11 @@ import '../../core/produits/produits_providers.dart';
 import '../../core/utils/fcfa_formatter.dart';
 import 'produit_form_screen.dart';
 
-/// Détail d'un produit : informations de vente pour tous, stock pour
-/// Propriétaire/Propriétaire-Gérant/Gérant (`estResponsable`), prix
-/// d'achat pour Propriétaire/Propriétaire-Gérant uniquement
-/// (`estAdministrateur`) — jamais pour l'Agent de vente (point 18 du
-/// cahier des charges).
+/// Détail d'un produit : informations de vente pour tous, stock et
+/// modification du produit pour Propriétaire/Propriétaire-Gérant/Gérant
+/// (`estResponsable`), prix d'achat pour Propriétaire/Propriétaire-Gérant
+/// uniquement (`estAdministrateur`) — jamais pour le Gérant ni l'Agent de
+/// vente (point 18 du cahier des charges).
 class ProduitDetailScreen extends ConsumerStatefulWidget {
   const ProduitDetailScreen(
       {super.key, required this.produit, required this.profil});
@@ -199,12 +199,18 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
                     const Divider(height: 32),
                     _ligne('Prix d\'achat',
                         _prixAchat != null ? formaterFcfa(_prixAchat!) : '—'),
+                  ],
+                  if (widget.profil.role.estResponsable) ...[
                     const SizedBox(height: 16),
                     OutlinedButton(
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => ProduitFormScreen(
-                              produit: produit, caveId: produit.caveId),
+                            produit: produit,
+                            caveId: produit.caveId,
+                            autoriserPrixAchat:
+                                widget.profil.role.estAdministrateur,
+                          ),
                         ),
                       ),
                       child: const Text('Modifier le produit'),

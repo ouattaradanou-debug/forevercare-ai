@@ -10,8 +10,8 @@ avant codage (PHASE1.md section 7).
 ## 1. Périmètre fonctionnel exact de la phase
 
 Inclus :
-- Catalogue produits : création/modification (Propriétaire et
-  Propriétaire/Gérant uniquement), consultation (tous les rôles).
+- Catalogue produits : création/modification (Propriétaire,
+  Propriétaire/Gérant et Gérant), consultation (tous les rôles).
 - Prix d'achat, séparé du reste du produit, visible et modifiable
   uniquement par Propriétaire/Propriétaire-Gérant (point 18 : jamais visible
   par le Gérant ni l'Agent de vente).
@@ -82,7 +82,7 @@ le delta n'est jamais appliqué deux fois. **Vérifié explicitement en local**
 
 | Table | PROP | PG | GER | AGENT | Policy RLS |
 |---|---|---|---|---|---|
-| `produits` | R/W/D | R/W/D | R | R | `produits_select` (toute la cave), `produits_write` (admin only) — inchangées depuis la Phase 1, déjà suffisantes |
+| `produits` | R/W/D | R/W/D | R/W/D | R | `produits_select` (toute la cave), `produits_write` (`is_responsable()` depuis la migration 0008 — le Gérant doit pouvoir créer/modifier des produits, sans accès au prix d'achat) |
 | `produits_couts` | R/W | R/W | **—** | **—** | `produits_couts_select`, `produits_couts_write` (admin only) |
 | `stock` | R/W | R/W | R/W | **—** | inchangées depuis la Phase 1 |
 | `mouvements_stock` | R/W(insert) | R/W(insert) | R/W(insert) | **—** | `mouvements_stock_select`, `mouvements_stock_insert` — mêmes rôles que `stock`. Aucune policy `UPDATE`/`DELETE` : un mouvement, une fois créé, est immuable (corriger = ajouter un nouveau mouvement, jamais modifier l'historique) |
@@ -112,13 +112,16 @@ précédentes :
 ## 6. Écrans Flutter livrés
 
 - `ProduitsListScreen` : catalogue, bouton "+" (création) réservé à
-  Propriétaire/Propriétaire-Gérant.
+  Propriétaire/Propriétaire-Gérant/Gérant.
 - `ProduitDetailScreen` : infos de vente pour tous ; stock (avec bouton
-  "Ajuster le stock") pour Propriétaire/Propriétaire-Gérant/Gérant ; prix
-  d'achat + bouton "Modifier le produit" pour Propriétaire/Propriétaire-
+  "Ajuster le stock") et bouton "Modifier le produit" pour Propriétaire/
+  Propriétaire-Gérant/Gérant ; prix d'achat pour Propriétaire/Propriétaire-
   Gérant uniquement.
 - `ProduitFormScreen` : création/modification (nom, prix détail, prix gros,
-  bouteilles/carton, prix d'achat, actif), un seul bouton "Enregistrer".
+  bouteilles/carton, actif), un seul bouton "Enregistrer". Le champ prix
+  d'achat n'apparaît que si `autoriserPrixAchat` est vrai (Propriétaire/
+  Propriétaire-Gérant) — un Gérant qui crée ou modifie un produit ne le
+  voit jamais.
 - Accessible depuis `HomeScreen` via un nouveau bouton "Produits" (visible
   pour les 4 rôles, chacun voyant un sous-ensemble différent une fois dans
   le détail d'un produit, selon la matrice ci-dessus).
@@ -154,6 +157,44 @@ production :
 principal, mais pas encore testé sur l'appareil réel) : le comportement
 des écrans Produits/Stock avec un compte Gérant ou Agent de vente (seule
 la simulation RLS locale en Postgres l'a couvert jusqu'ici).
+
+---
+
+## 8. Ajustement demandé : le Gérant doit pouvoir créer des produits
+
+**Demande** : le Gérant, en plus de consulter et d'ajuster le stock, doit
+pouvoir créer et modifier des produits (nom, prix de vente, bouteilles/
+carton) — pas seulement le Propriétaire/Propriétaire-Gérant.
+
+**Ce qui ne change pas** : le prix d'achat (`produits_couts`) reste
+strictement réservé à Propriétaire/Propriétaire-Gérant, conformément au
+point 18 du cahier des charges ("jamais visible par le Gérant ni l'Agent
+de vente") — cette demande ne le remet pas en cause, seule la création de
+la fiche produit (infos de vente) s'ouvre au Gérant.
+
+**Modifications** :
+- `supabase/migrations/0008_gerant_creer_produits.sql` : policy
+  `produits_write` passe de `is_admin()` à `is_responsable()` (même
+  fonction déjà utilisée pour `caves_update` depuis la migration 0003).
+- `ProduitsListScreen` : bouton "+" visible pour `estResponsable` (au lieu
+  de `estAdministrateur`).
+- `ProduitFormScreen` : nouveau paramètre requis `autoriserPrixAchat` —
+  le champ prix d'achat (affichage, chargement, sauvegarde) n'apparaît que
+  si vrai (Propriétaire/Propriétaire-Gérant). Un Gérant qui ouvre ce
+  formulaire ne voit tout simplement pas ce champ.
+- `ProduitDetailScreen` : bouton "Modifier le produit" détaché du bloc
+  prix d'achat, visible pour `estResponsable` ; le bloc prix d'achat reste
+  seul sous `estAdministrateur`.
+
+**Vérifié en local sur PostgreSQL 16 (RLS réelle, rôle non-superuser
+`app_test`)**, avant envoi en production :
+1. Gérant crée un produit → réussit (échouait avant la migration).
+2. Gérant modifie un produit existant → réussit.
+3. Gérant tente d'écrire dans `produits_couts` (prix d'achat) → toujours
+   bloqué par RLS.
+4. Agent de vente tente de créer un produit → toujours bloqué par RLS.
+5. Propriétaire crée un produit et son prix d'achat → toujours OK (aucune
+   régression sur les rôles déjà autorisés).
 
 ---
 
