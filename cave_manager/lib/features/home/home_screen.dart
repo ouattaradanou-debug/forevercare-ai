@@ -61,15 +61,22 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
+      body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text('Bienvenue, ${profil.nomComplet}',
-                  style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 8),
+              Text(
+                'Bienvenue, ${profil.nomComplet}',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.secondary,
+                      fontWeight: FontWeight.w700,
+                      fontStyle: FontStyle.italic,
+                    ),
+              ),
+              const SizedBox(height: 12),
               Chip(label: Text(profil.role.libelle)),
               const SizedBox(height: 24),
               Text(
