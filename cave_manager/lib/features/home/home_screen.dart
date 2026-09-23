@@ -57,9 +57,16 @@ class HomeScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () async {
-                await authService.modifierTypeCave(
-                    caveId: profil.caveId, typeCave: typeChoisi);
-                if (context.mounted) Navigator.of(context).pop();
+                try {
+                  await authService.modifierTypeCave(
+                      caveId: profil.caveId, typeCave: typeChoisi);
+                  if (context.mounted) Navigator.of(context).pop();
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Impossible d\'enregistrer.')));
+                  }
+                }
               },
               child: const Text('Enregistrer'),
             ),
@@ -73,7 +80,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        leading: profil.role.estAdministrateur
+        leading: profil.role.estResponsable
             ? IconButton(
                 icon: const Icon(Icons.tune),
                 tooltip: 'Configuration de la cave',

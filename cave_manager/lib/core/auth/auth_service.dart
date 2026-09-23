@@ -117,15 +117,24 @@ class AuthService {
   }
 
   /// Modifie le type de cave après création. Protégé côté serveur par la
-  /// policy RLS `caves_update` (réservée à `is_admin()`, c'est-à-dire
-  /// Propriétaire et Propriétaire/Gérant) : un Gérant ou un Agent de vente
-  /// qui tenterait cet appel malgré le masquage côté UI recevrait une
-  /// erreur `42501`, pas une modification silencieusement ignorée.
+  /// policy RLS `caves_update` (réservée à `is_responsable()`, c'est-à-dire
+  /// Propriétaire, Propriétaire/Gérant et Gérant — pas l'Agent de vente).
+  ///
+  /// Une mise à jour bloquée par RLS ne lève pas d'erreur PostgREST : elle
+  /// affecte silencieusement 0 ligne (vérifié en local, contrairement à un
+  /// `insert`/`rpc` qui, lui, renvoie bien `42501`). D'où le `.select()`
+  /// et la vérification explicite ci-dessous : sans ça, un appel bloqué
+  /// malgré le masquage côté UI semblerait avoir réussi.
   Future<void> modifierTypeCave(
       {required String caveId, required TypeCave typeCave}) async {
-    await _client
+    final resultat = await _client
         .from('caves')
-        .update({'type_cave': typeCave.nomPostgres}).eq('id', caveId);
+        .update({'type_cave': typeCave.nomPostgres})
+        .eq('id', caveId)
+        .select();
+    if (resultat.isEmpty) {
+      throw Exception('Modification refusée : rôle insuffisant.');
+    }
   }
 
   /// Charge le profil de l'utilisateur actuellement authentifié.

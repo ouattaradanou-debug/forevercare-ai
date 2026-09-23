@@ -397,9 +397,10 @@ isolé. Diagnostic mené en direct avec vous, par instrumentation
 Demandé explicitement après le test précédent : pouvoir revoir le type de
 cave depuis l'écran d'accueil, pas seulement à la création. Détails :
 
-- **Icône ⚙️ en haut à gauche de `HomeScreen`**, visible uniquement pour
-  Propriétaire et Propriétaire/Gérant (`RoleUtilisateur.estAdministrateur`)
-  — le Gérant et l'Agent de vente ne la voient pas du tout.
+- **Icône ⚙️ en haut à gauche de `HomeScreen`**, visible pour Propriétaire,
+  Propriétaire/Gérant et Gérant (`RoleUtilisateur.estResponsable` — étendu
+  au Gérant sur demande explicite après un premier essai limité au
+  Propriétaire/Propriétaire-Gérant) — l'Agent de vente ne la voit pas.
 - **Type de cave** : modifiable. **Votre profil (rôle)** : affiché en
   lecture seule dans la même fenêtre, volontairement non modifiable —
   signalé et validé avec vous : permettre à un compte de changer son
@@ -407,16 +408,23 @@ cave depuis l'écran d'accueil, pas seulement à la création. Détails :
   Agent de vente pourrait se promouvoir Propriétaire/Gérant). Le
   changement de rôle d'un compte reste une fonctionnalité de gestion
   d'équipe à part entière, hors périmètre Phase 1.
-- **Pas de nouvelle fonction SQL nécessaire** : la policy RLS
-  `caves_update` (migration 0001, `using (id = current_cave_id() and
-  is_admin())`) couvrait déjà exactement ce besoin. L'update se fait
+- **Migration 0003** : la policy RLS `caves_update` (migration 0001,
+  initialement restreinte à `is_admin()` = Propriétaire/Propriétaire-Gérant
+  seulement) est remplacée par `is_responsable()` (déjà définie en 0001,
+  inclut aussi le Gérant) pour suivre cette extension. L'update se fait
   directement depuis le client Flutter (`AuthService.modifierTypeCave`),
-  sans bypass de RLS — plus simple qu'une RPC dédiée, et repose sur une
-  policy déjà en place.
-- **Vérifié sur PostgreSQL 16 local** (les 3 migrations rejouées à la
-  suite) : Propriétaire/Gérant → modification acceptée ; Agent de vente →
-  refusée avec le message métier attendu depuis la fonction de contrôle
-  `is_admin()`.
+  sans RPC dédiée.
+- **Détail de sécurité trouvé et corrigé pendant la vérification locale** :
+  contrairement à un `insert`/`rpc`, une `update` bloquée par RLS ne lève
+  pas d'erreur `42501` — elle affecte silencieusement 0 ligne. Le premier
+  jet de `modifierTypeCave` ignorait ce cas (l'appel semblait toujours
+  réussir, même bloqué). Corrigé en chaînant `.select()` sur l'update et
+  en levant une exception explicite si 0 ligne est revenue.
+- **Vérifié sur PostgreSQL 16 local**, avec RLS réellement active (rôle de
+  connexion dédié, ni superutilisateur ni propriétaire de table — ces deux
+  cas contournent RLS par défaut, un test avec `sudo -u postgres` ne
+  prouverait rien) : Gérant → `UPDATE 1` (accepté) ; Agent de vente →
+  `UPDATE 0` (refusé), correctement transformé en exception côté Flutter.
 
 ---
 
