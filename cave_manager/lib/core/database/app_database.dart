@@ -8,7 +8,9 @@ import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
 import 'tables/local_caves_table.dart';
 import 'tables/local_profiles_table.dart';
+import 'tables/local_stock_table.dart';
 import 'tables/sync_queue_table.dart';
+import 'daos/stock_dao.dart';
 import 'daos/sync_queue_dao.dart';
 
 part 'app_database.g.dart';
@@ -21,15 +23,25 @@ part 'app_database.g.dart';
 ///   flutter pub get
 ///   dart run build_runner build --delete-conflicting-outputs
 @DriftDatabase(
-  tables: [LocalCaves, LocalProfiles, SyncQueue],
-  daos: [SyncQueueDao],
+  tables: [LocalCaves, LocalProfiles, LocalStock, SyncQueue],
+  daos: [SyncQueueDao, StockDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
   AppDatabase.testInMemory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(localStock);
+          }
+        },
+      );
 }
 
 LazyDatabase _ouvrirConnexion() {

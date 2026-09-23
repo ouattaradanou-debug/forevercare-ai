@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/auth/auth_providers.dart';
 import '../../core/auth/profil.dart';
 import '../cave_setup/configuration_cave_screen.dart';
+import '../produits/produits_list_screen.dart';
 
 /// Accueil minimal post-connexion pour la Phase 1.
 ///
@@ -97,8 +98,18 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   Chip(label: Text(profil.role.libelle)),
                   const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ProduitsListScreen(profil: profil),
+                      ),
+                    ),
+                    icon: const Icon(Icons.inventory_2_outlined),
+                    label: const Text('Produits'),
+                  ),
+                  const SizedBox(height: 24),
                   Text(
-                    'Les écrans de vente, stock et clôture arrivent dans les prochaines phases.',
+                    'Les écrans de vente, encaissement et clôture arrivent dans les prochaines phases.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
