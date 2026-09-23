@@ -453,11 +453,15 @@ affiché sous le titre), et son propre nom/prénom. Détails :
 - **Migration 0004** : ajoute `caves.logo_url`, un bucket de stockage
   Supabase `logos-cave` (public en lecture — un logo n'est pas une
   donnée sensible, contrairement au stock/clôtures) et ses policies
-  d'écriture : chemin `<cave_id>/logo.<ext>`, le premier segment du
-  chemin devant correspondre à la cave de l'utilisateur ET celui-ci devant
-  être `is_responsable()`. Aucune nouvelle policy nécessaire pour
-  nom/téléphone/ville (déjà couverts par `caves_update`) ni pour
-  nom/prénom personnels (déjà couverts par `profiles_update_self`).
+  d'écriture : chemin `<cave_id>/logo_<horodatage>.<ext>` (le premier
+  segment du chemin devant correspondre à la cave de l'utilisateur ET
+  celui-ci devant être `is_responsable()` ; l'horodatage dans le nom de
+  fichier, ajouté après un bug trouvé sur téléphone — un nom de fichier
+  fixe donnait toujours la même URL, et `NetworkImage` continuait
+  d'afficher l'ancien logo en cache malgré le remplacement côté serveur).
+  Aucune nouvelle policy nécessaire pour nom/téléphone/ville (déjà
+  couverts par `caves_update`) ni pour nom/prénom personnels (déjà
+  couverts par `profiles_update_self`).
 - **Nouvelle dépendance** : `image_picker` (sélection d'image dans la
   galerie du téléphone), ajoutée à `pubspec.yaml`.
 - **Vérifié sur PostgreSQL 16 local**, RLS réellement active (schéma

@@ -151,16 +151,23 @@ class AuthService {
   }
 
   /// Téléverse le logo de la cave (bucket `logos-cave`, chemin
-  /// `<caveId>/logo.<extension>` — le premier segment du chemin est
-  /// justement ce que vérifient les policies de stockage pour s'assurer
+  /// `<caveId>/logo_<horodatage>.<extension>` — le premier segment du
+  /// chemin est ce que vérifient les policies de stockage pour s'assurer
   /// que chacun ne peut écrire que dans le dossier de sa propre cave) et
   /// enregistre son URL publique sur la cave. Renvoie cette URL.
+  ///
+  /// Nom de fichier horodaté (pas simplement `logo.<ext>`) : sinon,
+  /// chaque nouveau logo aurait la même URL que le précédent, et
+  /// `NetworkImage` (qui met en cache par URL côté Flutter) continuerait
+  /// d'afficher l'ancienne image malgré le remplacement côté serveur —
+  /// bug reproduit en changeant le logo deux fois de suite sur téléphone.
   Future<String> televerserLogoCave({
     required String caveId,
     required Uint8List octets,
     required String extension,
   }) async {
-    final chemin = '$caveId/logo.$extension';
+    final horodatage = DateTime.now().millisecondsSinceEpoch;
+    final chemin = '$caveId/logo_$horodatage.$extension';
     await _client.storage.from('logos-cave').uploadBinary(
           chemin,
           octets,
