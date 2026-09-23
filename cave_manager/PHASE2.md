@@ -133,14 +133,27 @@ cahier des charges (agent en tournée sans réseau).
 
 ---
 
-## 7. Non vérifié sur téléphone réel à la rédaction
+## 7. Vérifié sur téléphone réel (Propriétaire)
 
-Contrairement au reste de cette phase (SQL testé en local avec RLS réelle),
-la couche Flutter/Drift (nouvelle table locale `LocalStock`, nouveau DAO,
-3 nouveaux écrans) n'a pas encore été compilée ni exécutée sur l'appareil —
-`build_runner` doit être relancé pour générer `app_database.g.dart` et
-`stock_dao.g.dart` avant de pouvoir tester. À valider explicitement avant
-de considérer cette phase acquise.
+Testé sur l'appareil réel (TECNO KI5k), contre le projet Supabase de
+production :
+
+1. **Création de produit** : "SOBEBRA" créé avec prix détail/gros,
+   bouteilles/carton, et prix d'achat (table séparée `produits_couts`) —
+   tous les champs s'affichent correctement sur `ProduitDetailScreen`.
+2. **Ajustement de stock** : deux ajustements successifs déclenchés depuis
+   l'écran ("Ajuster le stock"), cache local mis à jour immédiatement
+   (0 → 12 cartons / 15 bouteilles).
+3. **Synchronisation réelle** : les deux mouvements sont bien arrivés dans
+   `mouvements_stock` côté serveur (12/13 puis 0/2), et le trigger
+   `appliquer_mouvement_stock` a correctement additionné les deltas dans
+   `stock` (12 cartons / 15 bouteilles) — confirmé par requête SQL directe
+   dans le tableau de bord Supabase.
+
+**Reste à vérifier** (non bloquant pour la validation du mécanisme
+principal, mais pas encore testé sur l'appareil réel) : le comportement
+des écrans Produits/Stock avec un compte Gérant ou Agent de vente (seule
+la simulation RLS locale en Postgres l'a couvert jusqu'ici).
 
 ---
 
