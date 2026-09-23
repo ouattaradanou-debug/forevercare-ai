@@ -13,6 +13,11 @@ ThemeData construireTheme() {
   const bordeauxFonce = Color(0xFF4E0F18);
   const dore = Color(0xFFB08D57);
   const ivoire = Color(0xFFFFFBF5);
+  // Fond des écrans : rose poudré, dans les mêmes tons que le bordeaux de
+  // la barre du haut (même teinte, juste très désaturée) plutôt que
+  // l'ivoire neutre précédent — demandé explicitement pour harmoniser le
+  // fond avec le rouge au-dessus.
+  const fondEcran = Color(0xFFFBECEC);
 
   final colorScheme = const ColorScheme.light(
     primary: bordeaux,
@@ -35,7 +40,7 @@ ThemeData construireTheme() {
   final base = ThemeData(useMaterial3: true, colorScheme: colorScheme);
 
   return base.copyWith(
-    scaffoldBackgroundColor: ivoire,
+    scaffoldBackgroundColor: fondEcran,
     // NB : l'agrandissement global du texte n'est PAS fait ici via
     // `textTheme.apply(fontSizeFactor: ...)` — ce plante avec Material 3
     // car certains styles du TextTheme par défaut ont `fontSize == null`
@@ -87,8 +92,8 @@ ThemeData construireTheme() {
       ),
     ),
     cardTheme: CardThemeData(
-      elevation: 0,
-      color: const Color(0xFFF6DADD).withValues(alpha: 0.4),
+      elevation: 1,
+      color: ivoire,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     chipTheme: base.chipTheme.copyWith(
