@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/type_emballage.dart';
+import '../../core/produits/categorie_produit.dart';
 import '../../core/produits/produit.dart';
 import '../../core/produits/produits_providers.dart';
 
@@ -34,6 +35,7 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
 
   late TypeEmballage _typeEmballage =
       widget.produit?.typeEmballage ?? TypeEmballage.carton;
+  String? _categorieId;
   bool _actif = true;
   bool _chargement = false;
   bool _enCours = false;
@@ -43,6 +45,7 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
   void initState() {
     super.initState();
     _actif = widget.produit?.actif ?? true;
+    _categorieId = widget.produit?.categorieId;
     if (widget.produit != null) _chargerPrixAchat();
   }
 
@@ -92,6 +95,7 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
       if (widget.produit == null) {
         final cree = await service.creerProduit(
           caveId: widget.caveId,
+          categorieId: _categorieId!,
           nom: nom,
           prixVenteDetail: prixDetail,
           prixVenteGros: prixGros,
@@ -103,6 +107,7 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
         produitId = widget.produit!.id;
         await service.modifierProduit(
           produitId: produitId,
+          categorieId: _categorieId!,
           nom: nom,
           prixVenteDetail: prixDetail,
           prixVenteGros: prixGros,
@@ -159,6 +164,8 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
                             const InputDecoration(labelText: 'Nom du produit'),
                         validator: _valideurObligatoire,
                       ),
+                      const SizedBox(height: 12),
+                      _champCategorie(),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _prixDetailCtrl,
@@ -248,6 +255,32 @@ class _ProduitFormScreenState extends ConsumerState<ProduitFormScreen> {
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _champCategorie() {
+    final categoriesAsync = ref.watch(categoriesProduitsProvider);
+    return categoriesAsync.when(
+      loading: () => const LinearProgressIndicator(),
+      error: (e, _) => Text('Catégories indisponibles : $e'),
+      data: (categories) {
+        final disponibles = <CategorieProduit>[
+          for (final c in categories)
+            if (c.visible || c.id == widget.produit?.categorieId) c,
+        ];
+        final valeurValide =
+            disponibles.any((c) => c.id == _categorieId) ? _categorieId : null;
+        return DropdownButtonFormField<String>(
+          value: valeurValide,
+          decoration: const InputDecoration(labelText: 'Catégorie'),
+          items: [
+            for (final c in disponibles)
+              DropdownMenuItem(value: c.id, child: Text(c.nom)),
+          ],
+          onChanged: (v) => setState(() => _categorieId = v),
+          validator: (v) => v == null ? 'Choisissez une catégorie' : null,
+        );
+      },
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../constants/type_emballage.dart';
+import 'categorie_produit.dart';
 import 'produit.dart';
 
 /// Lecture/écriture du catalogue produits et des prix d'achat. Lecture en
@@ -24,6 +25,7 @@ class ProduitsService {
 
   Future<Produit> creerProduit({
     required String caveId,
+    required String categorieId,
     required String nom,
     required int prixVenteDetail,
     required int prixVenteGros,
@@ -34,6 +36,7 @@ class ProduitsService {
         .from('produits')
         .insert({
           'cave_id': caveId,
+          'categorie_id': categorieId,
           'nom': nom,
           'prix_vente_detail': prixVenteDetail,
           'prix_vente_gros': prixVenteGros,
@@ -51,6 +54,7 @@ class ProduitsService {
   /// lève pas 42501 — vérifié en Phase 1, section 10quater de PHASE1.md).
   Future<void> modifierProduit({
     required String produitId,
+    required String categorieId,
     required String nom,
     required int prixVenteDetail,
     required int prixVenteGros,
@@ -61,6 +65,7 @@ class ProduitsService {
     final resultat = await _client
         .from('produits')
         .update({
+          'categorie_id': categorieId,
           'nom': nom,
           'prix_vente_detail': prixVenteDetail,
           'prix_vente_gros': prixVenteGros,
@@ -72,6 +77,76 @@ class ProduitsService {
         .select();
     if (resultat.isEmpty) {
       throw Exception('Modification refusée : rôle insuffisant.');
+    }
+  }
+
+  /// Suppression définitive d'un produit (demande explicite : pouvoir
+  /// retirer une boisson du catalogue, pas seulement la désactiver). Pour
+  /// juste la masquer sans perdre son historique, préférer `actif = false`
+  /// via `modifierProduit`.
+  Future<void> supprimerProduit(String produitId) async {
+    final resultat =
+        await _client.from('produits').delete().eq('id', produitId).select();
+    if (resultat.isEmpty) {
+      throw Exception('Suppression refusée : rôle insuffisant.');
+    }
+  }
+
+  Future<List<CategorieProduit>> listerCategories(String caveId) async {
+    final lignes = await _client
+        .from('categories_produits')
+        .select()
+        .eq('cave_id', caveId)
+        .order('ordre');
+    return lignes.map((l) => CategorieProduit.depuisJson(l)).toList();
+  }
+
+  Future<CategorieProduit> creerCategorie({
+    required String caveId,
+    required String nom,
+    required int ordre,
+  }) async {
+    final ligne = await _client
+        .from('categories_produits')
+        .insert({'cave_id': caveId, 'nom': nom, 'ordre': ordre})
+        .select()
+        .single();
+    return CategorieProduit.depuisJson(ligne);
+  }
+
+  Future<void> modifierVisibiliteCategorie({
+    required String categorieId,
+    required bool visible,
+  }) async {
+    final resultat = await _client
+        .from('categories_produits')
+        .update({'visible': visible})
+        .eq('id', categorieId)
+        .select();
+    if (resultat.isEmpty) {
+      throw Exception('Modification refusée : rôle insuffisant.');
+    }
+  }
+
+  /// Bloqué côté serveur (`on delete restrict`) si des produits utilisent
+  /// encore cette catégorie — on renvoie un message clair plutôt que
+  /// l'erreur Postgres brute (voir l'appel dans `CategoriesProduitsScreen`).
+  Future<void> supprimerCategorie(String categorieId) async {
+    try {
+      final resultat = await _client
+          .from('categories_produits')
+          .delete()
+          .eq('id', categorieId)
+          .select();
+      if (resultat.isEmpty) {
+        throw Exception('Suppression refusée : rôle insuffisant.');
+      }
+    } on PostgrestException catch (e) {
+      if (e.code == '23503') {
+        throw Exception(
+            'Impossible de supprimer : des produits utilisent encore cette catégorie. Masquez-la ou déplacez d\'abord ces produits.');
+      }
+      rethrow;
     }
   }
 

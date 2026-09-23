@@ -74,6 +74,39 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
   String get _libelleEmballagePluriel =>
       '${widget.produit.typeEmballage.libelle.toLowerCase()}s';
 
+  Future<void> _supprimerProduit() async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer ce produit ?'),
+        content: Text(
+            '"${widget.produit.nom}" sera définitivement supprimé du catalogue.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true) return;
+
+    try {
+      await ref.read(produitsServiceProvider).supprimerProduit(widget.produit.id);
+      ref.invalidate(produitsProvider);
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erreur : $e')));
+      }
+    }
+  }
+
   Future<void> _ajusterStock() async {
     final deltaCartonsCtrl = TextEditingController(text: '0');
     final deltaBouteillesCtrl = TextEditingController(text: '0');
@@ -158,6 +191,11 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final produit = widget.produit;
+    final categories = ref.watch(categoriesProduitsProvider).valueOrNull;
+    final categoriesTrouvees =
+        categories?.where((c) => c.id == produit.categorieId) ?? const [];
+    final nomCategorie =
+        categoriesTrouvees.isEmpty ? '—' : categoriesTrouvees.first.nom;
     return Scaffold(
       appBar: AppBar(title: Text(produit.nom)),
       body: SafeArea(
@@ -166,6 +204,7 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
             : ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
+                  _ligne('Catégorie', nomCategorie),
                   _ligne('Prix de vente au détail',
                       formaterFcfa(produit.prixVenteDetail)),
                   _ligne('Prix de vente en gros',
@@ -209,6 +248,13 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
                         ),
                       ),
                       child: const Text('Modifier le produit'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _supprimerProduit,
+                      style: TextButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error),
+                      child: const Text('Supprimer le produit'),
                     ),
                   ],
                 ],

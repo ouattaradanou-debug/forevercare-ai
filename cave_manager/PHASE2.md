@@ -275,4 +275,64 @@ type et son utilisation pour l'affichage.
 
 ---
 
+## 11. Réorganisation demandée : catégories de boissons + catalogue de démarrage
+
+**Demande** : organiser les produits par type/catégorie (Bières, Sucreries,
+Vins rouges/blancs/rosés/marocains, Vins non alcoolisés), avec la
+possibilité d'ajouter/supprimer des catégories et des boissons, ou de
+masquer celles qu'on ne veut pas — en partant d'une liste de boissons
+courantes au Burkina Faso fournie explicitement.
+
+**Modélisation** : les catégories ne sont volontairement pas un enum
+Postgres fermé (contrairement à `type_emballage`) : l'utilisateur doit
+pouvoir en ajouter lui-même sans dépendre d'une nouvelle migration. C'est
+donc une table `categories_produits`, propre à chaque cave.
+
+**Modifications** :
+- `supabase/migrations/0011_categories_produits.sql` : nouvelle table
+  `categories_produits` (nom, ordre, visible, RLS : lecture ouverte à
+  toute la cave, écriture réservée à `estResponsable`) ; nouvelle colonne
+  `produits.categorie_id` (`not null`, `on delete restrict` — on ne peut
+  jamais supprimer une catégorie encore utilisée, seulement la masquer) ;
+  catégorie de repli "Autres" pour les produits déjà créés avant cette
+  migration ; catalogue de démarrage (7 catégories + ~44 boissons
+  fournies par l'utilisateur) inséré pour chaque cave existante, prix
+  laissés à 0 (à renseigner ensuite comme n'importe quel produit).
+- `CategorieProduit` (nouveau modèle), `ProduitsService` : `listerCategories`,
+  `creerCategorie`, `modifierVisibiliteCategorie`, `supprimerCategorie`
+  (message clair si la suppression est bloquée par des produits restants)
+  ; `Produit`/`creerProduit`/`modifierProduit` transportent désormais
+  `categorieId`.
+- `ProduitsService.supprimerProduit` (nouveau) : suppression définitive
+  d'une boisson (demande explicite), distincte de la désactivation
+  (`actif = false`) déjà existante pour un masquage réversible.
+- `CategoriesProduitsScreen` (nouvel écran, accessible depuis l'icône
+  catégorie de `ProduitsListScreen`, réservé à `estResponsable`) : liste
+  des catégories avec bascule visible/masquée et suppression.
+- `ProduitsListScreen` : catalogue regroupé par catégorie (section par
+  catégorie, triée par `ordre`) au lieu d'une liste plate. Une catégorie
+  masquée reste visible pour `estResponsable` (avec l'étiquette
+  "Masquée", pour pouvoir la gérer) mais disparaît pour l'Agent de vente.
+- `ProduitFormScreen` : nouveau menu déroulant "Catégorie" (obligatoire) ;
+  propose les catégories visibles, plus la catégorie actuelle du produit
+  si elle est masquée (pour ne pas casser l'édition d'un produit existant).
+- `ProduitDetailScreen` : affiche la catégorie ; nouveau bouton "Supprimer
+  le produit" à côté de "Modifier le produit".
+
+**Vérifié en local sur PostgreSQL 16 (RLS réelle)** avant envoi en
+production :
+1. Catalogue de démarrage : 7 catégories + le bon nombre de boissons dans
+   chacune (Bières 11, Sucreries 7, Vins rouges 9, Vins blancs 5, Vins
+   rosés 4, Vins marocains 3, Vins non alcoolisés 5) ; les produits déjà
+   créés avant la migration sont bien rattachés à "Autres", sans perte.
+2. Agent de vente : lit les catégories (lecture ouverte), bloqué en
+   écriture (création/masquage/suppression).
+3. Gérant : crée, masque et supprime une catégorie vide → réussit.
+4. Suppression d'une catégorie encore utilisée (ex. "Bières") → bloquée
+   par la contrainte `on delete restrict`, pas par un simple filtrage RLS.
+5. Suppression d'un produit : Gérant → réussit (cascade correcte sur
+   `stock`/`produits_couts`/`mouvements_stock`) ; Agent de vente → bloqué.
+
+---
+
 ## En attente de votre validation avant la Phase 3 (Vente & Commandes).
