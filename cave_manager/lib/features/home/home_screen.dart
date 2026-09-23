@@ -37,7 +37,6 @@ class HomeScreen extends ConsumerWidget {
               )
             : null,
         title: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             if (infosCave?.logoUrl != null) ...[
               CircleAvatar(
@@ -46,7 +45,12 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
             ],
-            const Text('Ma Cave'),
+            Flexible(
+              child: Text(
+                infosCave?.nom ?? 'Ma Cave',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         actions: [
