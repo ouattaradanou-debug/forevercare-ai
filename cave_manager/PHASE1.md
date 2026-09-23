@@ -531,6 +531,29 @@ pour qu'un seul clic sur "Se connecter" suffise.
 
 ---
 
+## 10huit. Ajout demandé : vérification de la réponse secrète en deux temps
+
+Demandé explicitement pendant la vérification complète de l'app : sur
+"Code PIN oublié", ne plus afficher les champs "Nouveau code PIN" en même
+temps que le champ réponse — vérifier d'abord que la réponse est correcte,
+et seulement ensuite proposer de choisir le nouveau code.
+
+- **Migration 0005** : nouvelle fonction `verifier_reponse_secrete`, qui
+  reprend exactement la même logique de vérification + anti-brute-force
+  que `reinitialiser_pin` (même compteur, même blocage à 5 échecs), mais
+  sans toucher au mot de passe. `reinitialiser_pin` reste inchangée et
+  revérifie la réponse de son côté au moment du vrai changement de PIN —
+  ne jamais faire confiance à un "déjà vérifié" annoncé par le client pour
+  une action sensible.
+- **Écran en 3 étapes** au lieu de 2 : téléphone → réponse seule
+  ("Vérifier") → nouveau PIN + confirmation ("Réinitialiser mon code"),
+  chacune avec son unique action principale.
+- **Vérifié sur PostgreSQL 16 local** : mauvaise réponse refusée, bonne
+  réponse acceptée et compteur remis à 0, blocage effectif après 5
+  échecs, reste bloqué même avec la bonne réponse au 6ᵉ essai.
+
+---
+
 ## 11. Auto-évaluation finale obligatoire
 
 1. **Un agent de vente peut-il, par un moyen quelconque, accéder à une

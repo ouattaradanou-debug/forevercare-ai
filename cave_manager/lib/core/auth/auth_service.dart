@@ -90,6 +90,21 @@ class AuthService {
     return resultat as String?;
   }
 
+  /// Vérifie seule la réponse à la question secrète (sans toucher au PIN),
+  /// pour confirmer qu'elle est correcte avant même d'afficher les champs
+  /// de saisie du nouveau code. Même statuts que [reinitialiserPin] :
+  /// `'ok'`, `'reponse_incorrecte'`, `'bloque'`.
+  Future<String> verifierReponseSecrete({
+    required String telephone,
+    required String reponse,
+  }) async {
+    final resultat = await _client.rpc('verifier_reponse_secrete', params: {
+      'p_telephone': telephone,
+      'p_reponse': reponse,
+    });
+    return resultat as String;
+  }
+
   /// Réinitialise le code PIN si la réponse à la question secrète est
   /// correcte. Renvoie le statut renvoyé par la base : `'ok'`,
   /// `'reponse_incorrecte'` ou `'bloque'` (5 tentatives ratées, blocage
