@@ -392,6 +392,34 @@ isolé. Diagnostic mené en direct avec vous, par instrumentation
 
 ---
 
+## 10quater. Ajout demandé : configuration de la cave modifiable après coup
+
+Demandé explicitement après le test précédent : pouvoir revoir le type de
+cave depuis l'écran d'accueil, pas seulement à la création. Détails :
+
+- **Icône ⚙️ en haut à gauche de `HomeScreen`**, visible uniquement pour
+  Propriétaire et Propriétaire/Gérant (`RoleUtilisateur.estAdministrateur`)
+  — le Gérant et l'Agent de vente ne la voient pas du tout.
+- **Type de cave** : modifiable. **Votre profil (rôle)** : affiché en
+  lecture seule dans la même fenêtre, volontairement non modifiable —
+  signalé et validé avec vous : permettre à un compte de changer son
+  propre rôle serait une élévation de privilège auto-administrée (un
+  Agent de vente pourrait se promouvoir Propriétaire/Gérant). Le
+  changement de rôle d'un compte reste une fonctionnalité de gestion
+  d'équipe à part entière, hors périmètre Phase 1.
+- **Pas de nouvelle fonction SQL nécessaire** : la policy RLS
+  `caves_update` (migration 0001, `using (id = current_cave_id() and
+  is_admin())`) couvrait déjà exactement ce besoin. L'update se fait
+  directement depuis le client Flutter (`AuthService.modifierTypeCave`),
+  sans bypass de RLS — plus simple qu'une RPC dédiée, et repose sur une
+  policy déjà en place.
+- **Vérifié sur PostgreSQL 16 local** (les 3 migrations rejouées à la
+  suite) : Propriétaire/Gérant → modification acceptée ; Agent de vente →
+  refusée avec le message métier attendu depuis la fonction de contrôle
+  `is_admin()`.
+
+---
+
 ## 11. Auto-évaluation finale obligatoire
 
 1. **Un agent de vente peut-il, par un moyen quelconque, accéder à une

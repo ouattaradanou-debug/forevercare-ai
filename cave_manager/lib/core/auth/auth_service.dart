@@ -105,6 +105,29 @@ class AuthService {
     return resultat as String;
   }
 
+  /// Type de cave actuel (pour l'affichage/modification post-connexion,
+  /// icône en haut à gauche de l'écran d'accueil).
+  Future<TypeCave> typeCaveActuel(String caveId) async {
+    final ligne = await _client
+        .from('caves')
+        .select('type_cave')
+        .eq('id', caveId)
+        .single();
+    return TypeCave.depuisPostgres(ligne['type_cave'] as String);
+  }
+
+  /// Modifie le type de cave après création. Protégé côté serveur par la
+  /// policy RLS `caves_update` (réservée à `is_admin()`, c'est-à-dire
+  /// Propriétaire et Propriétaire/Gérant) : un Gérant ou un Agent de vente
+  /// qui tenterait cet appel malgré le masquage côté UI recevrait une
+  /// erreur `42501`, pas une modification silencieusement ignorée.
+  Future<void> modifierTypeCave(
+      {required String caveId, required TypeCave typeCave}) async {
+    await _client
+        .from('caves')
+        .update({'type_cave': typeCave.nomPostgres}).eq('id', caveId);
+  }
+
   /// Charge le profil de l'utilisateur actuellement authentifié.
   /// Retourne `null` si aucune session n'est active.
   ///

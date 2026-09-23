@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_providers.dart';
 import '../../core/auth/profil.dart';
+import '../../core/constants/type_cave.dart';
 
 /// Accueil minimal post-connexion pour la Phase 1.
 ///
@@ -18,10 +19,67 @@ class HomeScreen extends ConsumerWidget {
 
   final Profil profil;
 
+  Future<void> _ouvrirConfigurationCave(
+      BuildContext context, WidgetRef ref) async {
+    final authService = ref.read(authServiceProvider);
+    final typeActuel = await authService.typeCaveActuel(profil.caveId);
+    if (!context.mounted) return;
+
+    var typeChoisi = typeActuel;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Configuration de la cave'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Type de cave',
+                  style: Theme.of(context).textTheme.titleMedium),
+              RadioGroup<TypeCave>(
+                groupValue: typeChoisi,
+                onChanged: (v) => setDialogState(() => typeChoisi = v!),
+                child: Column(
+                  children: TypeCave.values
+                      .map((type) => RadioListTile<TypeCave>(
+                          title: Text(type.libelle), value: type))
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text('Votre profil',
+                  style: Theme.of(context).textTheme.titleMedium),
+              Text(profil.role.libelle),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await authService.modifierTypeCave(
+                    caveId: profil.caveId, typeCave: typeChoisi);
+                if (context.mounted) Navigator.of(context).pop();
+              },
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
+        leading: profil.role.estAdministrateur
+            ? IconButton(
+                icon: const Icon(Icons.tune),
+                tooltip: 'Configuration de la cave',
+                onPressed: () => _ouvrirConfigurationCave(context, ref),
+              )
+            : null,
         title: const Text('Ma Cave'),
         actions: [
           IconButton(
