@@ -101,9 +101,11 @@ Deno.serve(async (req) => {
     }
 
     // Même hachage bcrypt que côté SQL (pgcrypto crypt()/gen_salt('bf')),
-    // pour que reinitialiser_pin() puisse vérifier la réponse quelle que
-    // soit la voie de création du compte (bootstrap SQL ou cette fonction).
-    const reponseSecreteHash = bcrypt.hashSync(body.reponseSecrete.toLowerCase().trim(), 10);
+    // et même normalisation (casse + accents ignorés, migration 0006) que
+    // verifier_reponse_secrete()/reinitialiser_pin(), pour que la
+    // vérification fonctionne quelle que soit la voie de création du
+    // compte (bootstrap SQL ou cette fonction).
+    const reponseSecreteHash = bcrypt.hashSync(normaliserReponse(body.reponseSecrete), 10);
 
     const { error: erreurInsertionProfil } = await clientAdmin.from('profiles').insert({
       id: nouvelUtilisateur.user.id,
@@ -131,6 +133,14 @@ Deno.serve(async (req) => {
     return reponseErreur(`Erreur interne : ${erreur instanceof Error ? erreur.message : String(erreur)}`, 500);
   }
 });
+
+// Équivalent JS de unaccent(lower(trim(...))) côté SQL (migration 0006) :
+// décompose les caractères accentués (NFD) puis retire les marques
+// diacritiques, pour que "é", "à", "ç"... soient traités comme "e", "a",
+// "c" des deux côtés (hachage ici, vérification en SQL).
+function normaliserReponse(reponse: string): string {
+  return reponse.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
 
 function telephoneVersEmailTechnique(telephone: string): string {
   const chiffres = telephone.replace(/\D/g, '');

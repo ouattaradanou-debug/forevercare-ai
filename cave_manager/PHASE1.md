@@ -554,6 +554,36 @@ et seulement ensuite proposer de choisir le nouveau code.
 
 ---
 
+## 10neuf. Ajout demandé : réponse secrète insensible aux accents
+
+Demandé explicitement, en continuité directe du point précédent : "riz
+sauce", "Riz Sauce" et "rîz saucé" doivent être acceptés comme la même
+réponse. La casse était déjà ignorée (`lower()`) depuis la migration
+0002 ; les accents ne l'étaient pas.
+
+- **Migration 0006** : active l'extension `unaccent` (standard
+  PostgreSQL) et l'ajoute à la même normalisation `lower(trim(...))`,
+  aux trois endroits où une réponse est hachée ou comparée
+  (`creer_cave_et_proprietaire`, `reinitialiser_pin`,
+  `verifier_reponse_secrete`) — les trois doivent rester identiques,
+  sinon plus aucune réponse ne correspondrait à son hash.
+- **Non régressif pour les comptes déjà créés** : `unaccent()` ne change
+  rien pour une réponse sans caractère accentué (ex. "riz sauce", déjà
+  enregistré) — seules les réponses accentuées en profitent, à partir de
+  maintenant.
+- **Edge Function `create-team-member`** mise à jour en cohérence (même
+  normalisation côté JS, `normalize('NFD')` + suppression des marques
+  diacritiques, équivalent d'`unaccent()`) — pas encore appelée par une
+  UI en Phase 1, donc pas testable en conditions réelles, mais gardée
+  cohérente avec la logique SQL.
+- **Vérifié sur PostgreSQL 16 local** : réponse enregistrée avec accents
+  et majuscules ("Riz Sauce Épicé"), acceptée ensuite sous 3 formes
+  (exacte, minuscules sans accents, MAJUSCULES avec accents) ; compte
+  existant sans accent toujours accepté sous sa forme originale et en
+  majuscules (non-régression confirmée).
+
+---
+
 ## 11. Auto-évaluation finale obligatoire
 
 1. **Un agent de vente peut-il, par un moyen quelconque, accéder à une
