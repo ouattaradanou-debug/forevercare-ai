@@ -335,4 +335,31 @@ production :
 
 ---
 
+## 12. Vérifié sur téléphone réel : fiches déroulantes + tableau
+
+Testé sur l'appareil réel (TECNO KI5k), contre la production Supabase,
+après application des migrations 0008 à 0011 :
+
+1. Les 8 catégories (7 du catalogue de démarrage + "Autres") s'affichent
+   comme fiches déroulantes, avec le bon nombre de produits dans chacune.
+2. Une catégorie dépliée affiche son tableau ; une ligne appuyée ouvre
+   bien la fiche détail du produit correspondant.
+3. Le bouton "Ajuster le stock" s'ouvre sans le débordement corrigé en
+   section précédente (le clavier ne fait plus déborder la boîte de
+   dialogue).
+
+**Incident sans rapport avec le code de l'app, résolu au passage** : les
+anciennes clés API JWT (`anon`/`service_role` "héritage") du projet
+Supabase ont cessé de fonctionner en cours de session (rejetées par le
+serveur avec "Invalid API key", vérifié à la fois depuis le navigateur du
+téléphone et par requête directe), sans action de notre part identifiée.
+Contourné en passant à la nouvelle clé publiable (`sb_publishable_...`,
+onglet "Clés API publiques et secrètes" du tableau de bord Supabase),
+compatible avec `supabase_flutter` en tant que remplacement direct de
+`SUPABASE_ANON_KEY`. Un fichier `lancer_app.bat` (non versionné, local à
+la machine de l'utilisateur) a été créé pour éviter de retaper la
+commande `flutter run --dart-define=...` à chaque lancement.
+
+---
+
 ## En attente de votre validation avant la Phase 3 (Vente & Commandes).
