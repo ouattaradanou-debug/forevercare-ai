@@ -136,45 +136,83 @@ class ProduitsListScreen extends ConsumerWidget {
     );
   }
 
+  /// Volontairement un `Table` (widget de layout de base) plutôt que le
+  /// `DataTable` de Material : ce dernier plante sur l'appareil réel testé
+  /// ("type 'bool' is not a subtype of type 'double?'", bug connu du
+  /// widget lié à sa colonne de sélection interne) même sans
+  /// `onSelectChanged`. `Table` offre le même rendu en grille sans ce
+  /// risque.
   Widget _tableauProduits(BuildContext context, List<Produit> produits) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('Boisson')),
-          DataColumn(label: Text('Détail'), numeric: true),
-          DataColumn(label: Text('Gros'), numeric: true),
-          DataColumn(label: Text('Statut')),
-        ],
-        rows: [
-          for (final produit in produits)
-            DataRow(
-              cells: [
-                for (final cell in [
-                  Text(produit.nom),
-                  Text(formaterFcfa(produit.prixVenteDetail)),
-                  Text(formaterFcfa(produit.prixVenteGros)),
-                  produit.actif
-                      ? const Text('')
-                      : const Chip(
-                          label:
-                              Text('Inactif', style: TextStyle(fontSize: 11)),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                ])
-                  DataCell(
-                    cell,
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ProduitDetailScreen(
-                            produit: produit, profil: profil),
+    final bordure = BorderSide(color: Theme.of(context).dividerColor);
+    return Table(
+      border: TableBorder(horizontalInside: bordure),
+      columnWidths: const {
+        0: FlexColumnWidth(2.2),
+        1: FlexColumnWidth(1),
+        2: FlexColumnWidth(1),
+        3: FlexColumnWidth(1.2),
+      },
+      children: [
+        TableRow(
+          decoration:
+              BoxDecoration(color: Theme.of(context).colorScheme.surface),
+          children: const [
+            _CelluleEntete('Boisson'),
+            _CelluleEntete('Détail'),
+            _CelluleEntete('Gros'),
+            _CelluleEntete('Statut'),
+          ],
+        ),
+        for (final produit in produits)
+          TableRow(
+            children: [
+              _celluleTappable(context, produit, Text(produit.nom)),
+              _celluleTappable(context, produit,
+                  Text(formaterFcfa(produit.prixVenteDetail))),
+              _celluleTappable(
+                  context, produit, Text(formaterFcfa(produit.prixVenteGros))),
+              _celluleTappable(
+                context,
+                produit,
+                produit.actif
+                    ? const SizedBox.shrink()
+                    : const Chip(
+                        label:
+                            Text('Inactif', style: TextStyle(fontSize: 11)),
+                        visualDensity: VisualDensity.compact,
                       ),
-                    ),
-                  ),
-              ],
-            ),
-        ],
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _celluleTappable(BuildContext context, Produit produit, Widget enfant) {
+    return TableRowInkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProduitDetailScreen(produit: produit, profil: profil),
+        ),
       ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        child: enfant,
+      ),
+    );
+  }
+}
+
+class _CelluleEntete extends StatelessWidget {
+  const _CelluleEntete(this.texte);
+
+  final String texte;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      child: Text(texte, style: const TextStyle(fontWeight: FontWeight.bold)),
     );
   }
 }
