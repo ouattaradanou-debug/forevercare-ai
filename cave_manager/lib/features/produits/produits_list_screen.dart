@@ -149,22 +149,28 @@ class ProduitsListScreen extends ConsumerWidget {
         rows: [
           for (final produit in produits)
             DataRow(
-              onSelectChanged: (_) => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) =>
-                      ProduitDetailScreen(produit: produit, profil: profil),
-                ),
-              ),
               cells: [
-                DataCell(Text(produit.nom)),
-                DataCell(Text(formaterFcfa(produit.prixVenteDetail))),
-                DataCell(Text(formaterFcfa(produit.prixVenteGros))),
-                DataCell(produit.actif
-                    ? const Text('')
-                    : const Chip(
-                        label: Text('Inactif', style: TextStyle(fontSize: 11)),
-                        visualDensity: VisualDensity.compact,
-                      )),
+                for (final cell in [
+                  Text(produit.nom),
+                  Text(formaterFcfa(produit.prixVenteDetail)),
+                  Text(formaterFcfa(produit.prixVenteGros)),
+                  produit.actif
+                      ? const Text('')
+                      : const Chip(
+                          label:
+                              Text('Inactif', style: TextStyle(fontSize: 11)),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                ])
+                  DataCell(
+                    cell,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ProduitDetailScreen(
+                            produit: produit, profil: profil),
+                      ),
+                    ),
+                  ),
               ],
             ),
         ],
