@@ -117,45 +117,50 @@ class _ProduitDetailScreenState extends ConsumerState<ProduitDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Ajuster le stock'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Entrez une variation (positive pour une entrée, négative '
-                'pour une sortie). Ex : -2 pour retirer 2 $_libelleEmballagePluriel.',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: deltaCartonsCtrl,
-                decoration: InputDecoration(
-                    labelText: 'Variation ($_libelleEmballagePluriel)'),
-                keyboardType:
-                    const TextInputType.numberWithOptions(signed: true),
-                validator: (v) =>
-                    int.tryParse(v?.trim() ?? '') == null ? 'Nombre invalide' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: deltaBouteillesCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Variation (bouteilles)'),
-                keyboardType:
-                    const TextInputType.numberWithOptions(signed: true),
-                validator: (v) =>
-                    int.tryParse(v?.trim() ?? '') == null ? 'Nombre invalide' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: motifCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Motif (ex : réception, casse, inventaire)'),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Champ obligatoire' : null,
-              ),
-            ],
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Entrez une variation (positive pour une entrée, négative '
+                  'pour une sortie). Ex : -2 pour retirer 2 $_libelleEmballagePluriel.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: deltaCartonsCtrl,
+                  decoration: InputDecoration(
+                      labelText: 'Variation ($_libelleEmballagePluriel)'),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(signed: true),
+                  validator: (v) => int.tryParse(v?.trim() ?? '') == null
+                      ? 'Nombre invalide'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: deltaBouteillesCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Variation (bouteilles)'),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(signed: true),
+                  validator: (v) => int.tryParse(v?.trim() ?? '') == null
+                      ? 'Nombre invalide'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: motifCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Motif (ex : réception, casse, inventaire)'),
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Champ obligatoire'
+                      : null,
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
