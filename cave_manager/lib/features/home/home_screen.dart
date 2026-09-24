@@ -6,16 +6,14 @@ import '../../core/auth/auth_providers.dart';
 import '../../core/auth/profil.dart';
 import '../cave_setup/configuration_cave_screen.dart';
 import '../produits/produits_list_screen.dart';
+import '../ventes/commandes_list_screen.dart';
 
-/// Accueil minimal post-connexion pour la Phase 1.
-///
-/// Ne contient volontairement PAS encore les écrans "Vendre" / "Mes
-/// commandes" (Phase 3) ni le tableau de bord Propriétaire (point 28,
-/// Phase 2+) : ce sont des fonctionnalités hors périmètre de cette phase.
-/// Son seul rôle ici est de prouver que le routage par rôle fonctionne et
-/// qu'aucune donnée financière n'apparaît pour un Agent de vente — c'est
-/// le critère d'acceptation testable de la Phase 1, pas une maquette
-/// définitive du tableau de bord.
+/// Accueil post-connexion. Ne contient volontairement pas encore le
+/// tableau de bord Propriétaire (point 28, Phase 2+) ni les écrans de
+/// contrôle/encaissement/clôture (Phases 4-5) : hors périmètre des phases
+/// livrées jusqu'ici. Son rôle reste de prouver que le routage par rôle
+/// fonctionne et qu'aucune donnée financière détaillée n'apparaît pour un
+/// Agent de vente au-delà de ses propres ventes.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key, required this.profil});
 
@@ -101,6 +99,16 @@ class HomeScreen extends ConsumerWidget {
                   ElevatedButton.icon(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
+                        builder: (_) => CommandesListScreen(profil: profil),
+                      ),
+                    ),
+                    icon: const Icon(Icons.point_of_sale),
+                    label: const Text('Vendre / Commandes'),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
                         builder: (_) => ProduitsListScreen(profil: profil),
                       ),
                     ),
@@ -109,7 +117,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Les écrans de vente, encaissement et clôture arrivent dans les prochaines phases.',
+                    'L\'encaissement et la clôture arrivent dans les prochaines phases.',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),

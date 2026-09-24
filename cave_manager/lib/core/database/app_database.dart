@@ -12,6 +12,7 @@ import 'tables/local_stock_table.dart';
 import 'tables/sync_queue_table.dart';
 import 'daos/stock_dao.dart';
 import 'daos/sync_queue_dao.dart';
+import 'daos/ventes_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -24,7 +25,7 @@ part 'app_database.g.dart';
 ///   dart run build_runner build --delete-conflicting-outputs
 @DriftDatabase(
   tables: [LocalCaves, LocalProfiles, LocalStock, SyncQueue],
-  daos: [SyncQueueDao, StockDao],
+  daos: [SyncQueueDao, StockDao, VentesDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
