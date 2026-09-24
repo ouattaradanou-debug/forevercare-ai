@@ -113,7 +113,8 @@ class ProduitsListScreen extends ConsumerWidget {
                   Flexible(
                     child: Text(categorie.nom,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium),
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(width: 8),
                   Text('(${produitsParCategorie[categorie.id]!.length})',
@@ -144,8 +145,9 @@ class ProduitsListScreen extends ConsumerWidget {
   /// risque.
   Widget _tableauProduits(BuildContext context, List<Produit> produits) {
     final bordure = BorderSide(color: Theme.of(context).dividerColor);
+    final couleurNomBoisson = Theme.of(context).colorScheme.primary;
     return Table(
-      border: TableBorder(horizontalInside: bordure),
+      border: TableBorder(horizontalInside: bordure, verticalInside: bordure),
       columnWidths: const {
         0: FlexColumnWidth(2.2),
         1: FlexColumnWidth(1),
@@ -158,19 +160,27 @@ class ProduitsListScreen extends ConsumerWidget {
               BoxDecoration(color: Theme.of(context).colorScheme.surface),
           children: const [
             _CelluleEntete('Boisson'),
-            _CelluleEntete('Détail'),
-            _CelluleEntete('Gros'),
+            _CelluleEntete('Détail (FCFA)'),
+            _CelluleEntete('Gros (FCFA)'),
             _CelluleEntete('Statut'),
           ],
         ),
         for (final produit in produits)
           TableRow(
             children: [
-              _celluleTappable(context, produit, Text(produit.nom)),
-              _celluleTappable(context, produit,
-                  Text(formaterFcfa(produit.prixVenteDetail))),
               _celluleTappable(
-                  context, produit, Text(formaterFcfa(produit.prixVenteGros))),
+                context,
+                produit,
+                Text(produit.nom,
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: couleurNomBoisson)),
+              ),
+              _celluleTappable(context, produit,
+                  Text(formaterMontantSansDevise(produit.prixVenteDetail))),
+              _celluleTappable(context, produit,
+                  Text(formaterMontantSansDevise(produit.prixVenteGros))),
               _celluleTappable(
                 context,
                 produit,
@@ -212,7 +222,8 @@ class _CelluleEntete extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      child: Text(texte, style: const TextStyle(fontWeight: FontWeight.bold)),
+      child: Text(texte,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
     );
   }
 }
