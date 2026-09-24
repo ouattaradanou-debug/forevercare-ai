@@ -103,6 +103,11 @@ class ProduitsListScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Text('Tous les prix sont en FCFA.',
+              style: Theme.of(context).textTheme.bodySmall),
+        ),
         for (final categorie in categoriesAffichees)
           Card(
             margin: const EdgeInsets.symmetric(vertical: 6),
@@ -160,8 +165,8 @@ class ProduitsListScreen extends ConsumerWidget {
               BoxDecoration(color: Theme.of(context).colorScheme.surface),
           children: const [
             _CelluleEntete('Boisson'),
-            _CelluleEntete('Détail (FCFA)'),
-            _CelluleEntete('Gros (FCFA)'),
+            _CelluleEntete('Détail'),
+            _CelluleEntete('Gros'),
             _CelluleEntete('Statut'),
           ],
         ),
