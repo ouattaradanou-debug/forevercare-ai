@@ -118,13 +118,23 @@ class _NouvelleCommandeScreenState
   }
 
   Future<void> _ajouterProduit() async {
-    final produits = ref.read(produitsProvider).valueOrNull
-            ?.where((p) => p.actif)
-            .toList() ??
-        [];
+    List<Produit> produits;
+    try {
+      produits = (await ref.read(produitsProvider.future))
+          .where((p) => p.actif)
+          .toList();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Impossible de charger le catalogue : $e')));
+      }
+      return;
+    }
     if (produits.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Aucun produit actif au catalogue.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Aucun produit actif au catalogue.')));
+      }
       return;
     }
 
