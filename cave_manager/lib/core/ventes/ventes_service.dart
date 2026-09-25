@@ -60,7 +60,8 @@ class VentesService {
     final lignes = await _client
         .from('commande_lignes')
         .select('*, produits(nom)')
-        .eq('commande_id', commandeId);
+        .eq('commande_id', commandeId)
+        .order('created_at');
     return lignes.map((l) => CommandeLigne.depuisJson(l)).toList();
   }
 

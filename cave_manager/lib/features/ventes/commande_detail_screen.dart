@@ -262,11 +262,11 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
     return Table(
       border: TableBorder(horizontalInside: bordure, verticalInside: bordure),
       columnWidths: {
-        0: const FlexColumnWidth(2),
+        0: const FlexColumnWidth(2.2),
         1: const FlexColumnWidth(1),
         2: const FlexColumnWidth(1.2),
         3: const FlexColumnWidth(1.2),
-        if (_peutModifier) 4: const FlexColumnWidth(1),
+        if (_peutModifier) 4: const FlexColumnWidth(0.6),
       },
       children: [
         TableRow(
@@ -292,23 +292,31 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
                   : ligne.prixDetailUnitaire))),
               _cellule(Text(formaterMontantSansDevise(ligne.sousTotal))),
               if (_peutModifier)
-                _cellule(Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 18),
-                      tooltip: 'Modifier la quantité',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => _modifierQuantite(ligne),
+                _cellule(PopupMenuButton<String>(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.more_vert, size: 20),
+                  tooltip: 'Actions',
+                  onSelected: (choix) {
+                    if (choix == 'modifier') {
+                      _modifierQuantite(ligne);
+                    } else if (choix == 'retirer') {
+                      _supprimerLigne(ligne);
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'modifier',
+                      child: ListTile(
+                        leading: Icon(Icons.edit),
+                        title: Text('Modifier la quantité'),
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 18),
-                      tooltip: 'Retirer',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => _supprimerLigne(ligne),
+                    PopupMenuItem(
+                      value: 'retirer',
+                      child: ListTile(
+                        leading: Icon(Icons.delete_outline),
+                        title: Text('Retirer'),
+                      ),
                     ),
                   ],
                 )),
