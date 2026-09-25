@@ -262,10 +262,10 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
     return Table(
       border: TableBorder(horizontalInside: bordure, verticalInside: bordure),
       columnWidths: {
-        0: const FlexColumnWidth(2.2),
-        1: const FlexColumnWidth(1),
-        2: const FlexColumnWidth(1.2),
-        3: const FlexColumnWidth(1.2),
+        0: const FlexColumnWidth(2.6),
+        1: const FlexColumnWidth(0.6),
+        2: const FlexColumnWidth(1.1),
+        3: const FlexColumnWidth(1.1),
         if (_peutModifier) 4: const FlexColumnWidth(0.6),
       },
       children: [
@@ -285,8 +285,8 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
             children: [
               _cellule(Text(ligne.produitNom)),
               _cellule(Text(ligne.quantiteCartons > 0
-                  ? '${ligne.quantiteCartons} cart.'
-                  : '${ligne.quantiteBouteilles} bout.')),
+                  ? '${ligne.quantiteCartons}'
+                  : '${ligne.quantiteBouteilles}')),
               _cellule(Text(formaterMontantSansDevise(ligne.quantiteCartons > 0
                   ? ligne.prixGrosUnitaire
                   : ligne.prixDetailUnitaire))),
