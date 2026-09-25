@@ -150,4 +150,59 @@ class VentesDao extends DatabaseAccessor<AppDatabase> with _$VentesDaoMixin {
       ),
     );
   }
+
+  /// Valide une commande (Phase 4) : passe par la file de synchronisation
+  /// comme le reste de la prise de commande, pour fonctionner hors ligne
+  /// (hypothèse posée en Phase 1 : "tout encaissement, toute mise à jour de
+  /// stock" doivent fonctionner sans réseau — la validation entraîne l'un
+  /// et l'autre). La décrémentation du stock qui en découle n'est PAS
+  /// enfilée séparément ici : elle est appliquée automatiquement, côté
+  /// serveur, par un trigger sur `commandes` (migration 0014) — un seul
+  /// écrit (le changement de statut) déclenche les deux effets de façon
+  /// atomique, jamais deux écritures indépendantes qui pourraient diverger.
+  /// Protégé côté serveur par `commandes_update` : réservé aux
+  /// responsables, uniquement depuis 'en_attente'.
+  Future<void> validerCommande(String commandeId) {
+    return into(syncQueue).insert(
+      SyncQueueCompanion.insert(
+        id: _uuid.v4(),
+        nomTable: 'commandes',
+        entiteId: commandeId,
+        operation: 'modification',
+        payload: jsonEncode({'id': commandeId, 'statut': 'validee'}),
+        creeLe: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Enregistre un encaissement (espèces et/ou Mobile Money, paiement
+  /// partiel possible — voir `calculerResteAPayer`). Même raisonnement
+  /// offline-first que [validerCommande] : passe par la file de
+  /// synchronisation, pas par un appel réseau direct.
+  Future<void> enregistrerEncaissement({
+    required String caveId,
+    required String commandeId,
+    required String creePar,
+    int montantEspeces = 0,
+    int montantMobileMoney = 0,
+  }) {
+    final encaissementId = _uuid.v4();
+    return into(syncQueue).insert(
+      SyncQueueCompanion.insert(
+        id: _uuid.v4(),
+        nomTable: 'encaissements',
+        entiteId: encaissementId,
+        operation: 'insertion',
+        payload: jsonEncode({
+          'id': encaissementId,
+          'cave_id': caveId,
+          'commande_id': commandeId,
+          'montant_especes': montantEspeces,
+          'montant_mobile_money': montantMobileMoney,
+          'created_by': creePar,
+        }),
+        creeLe: DateTime.now(),
+      ),
+    );
+  }
 }

@@ -1,9 +1,9 @@
 /// Statut d'une commande (point 5 — Phase 3 du cahier des charges).
 ///
-/// `validee` existe dès ce schéma pour préparer la Phase 4 (contrôle/
-/// validation, qui décrémente le stock), mais aucune transition vers ce
-/// statut n'est encore possible : la policy RLS `commandes_update` de
-/// cette phase autorise uniquement `en_attente` -> `annulee`. Synchronisé
+/// `validee` (transition `en_attente` -> `validee`, réservée aux
+/// responsables) décrémente automatiquement le stock côté serveur —
+/// voir la policy RLS `commandes_update` et le trigger
+/// `appliquer_validation_commande` (migration 0014, Phase 4). Synchronisé
 /// avec `public.statut_commande` côté Supabase.
 enum StatutCommande {
   enAttente('en_attente', 'En attente'),

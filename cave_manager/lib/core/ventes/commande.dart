@@ -8,6 +8,8 @@ class Commande {
     required this.clientId,
     required this.statut,
     required this.total,
+    this.montantEncaisseEspeces = 0,
+    this.montantEncaisseMobile = 0,
     required this.createdBy,
     required this.createdAt,
   });
@@ -20,8 +22,16 @@ class Commande {
   /// Recalculé côté serveur par trigger à chaque ligne ajoutée — jamais
   /// saisi ni recalculé côté client.
   final int total;
+
+  /// Cumuls des encaissements reçus (Phase 4), recalculés côté serveur par
+  /// trigger à chaque encaissement enregistré — jamais saisis côté client.
+  final int montantEncaisseEspeces;
+  final int montantEncaisseMobile;
+
   final String createdBy;
   final DateTime createdAt;
+
+  int get montantEncaisse => montantEncaisseEspeces + montantEncaisseMobile;
 
   factory Commande.depuisJson(Map<String, dynamic> json) {
     return Commande(
@@ -30,6 +40,8 @@ class Commande {
       clientId: json['client_id'] as String?,
       statut: StatutCommande.depuisPostgres(json['statut'] as String),
       total: json['total'] as int,
+      montantEncaisseEspeces: json['montant_encaisse_especes'] as int? ?? 0,
+      montantEncaisseMobile: json['montant_encaisse_mobile'] as int? ?? 0,
       createdBy: json['created_by'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
     );

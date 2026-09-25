@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/auth_providers.dart';
 import '../../core/auth/profil.dart';
 import '../../core/utils/fcfa_formatter.dart';
+import '../../core/utils/paiement_calculator.dart';
 import '../../core/ventes/commande.dart';
 import '../../core/ventes/commande_ligne.dart';
 import '../../core/ventes/statut_commande.dart';
@@ -13,8 +14,11 @@ import '../../core/ventes/ventes_providers.dart';
 /// total par produit), avec correction possible (modifier la quantité,
 /// retirer un produit dont le client a renoncé) tant qu'elle est encore
 /// en attente, par son créateur ou un responsable — mêmes règles que
-/// côté serveur (`commande_lignes_update`/`_delete`, migration 0013). La
-/// validation (Phase 4) reste hors de portée de cet écran.
+/// côté serveur (`commande_lignes_update`/`_delete`, migration 0013).
+/// Contrôle/validation/encaissement (Phase 4) : un responsable peut
+/// valider une commande en attente (décrémente le stock automatiquement,
+/// côté serveur) et enregistrer un ou plusieurs encaissements (espèces/
+/// Mobile Money, paiement partiel possible).
 class CommandeDetailScreen extends ConsumerStatefulWidget {
   const CommandeDetailScreen(
       {super.key, required this.commande, required this.profil});
@@ -32,6 +36,8 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
   List<CommandeLigne>? _lignes;
   String? _erreurChargement;
   bool _enCoursAnnulation = false;
+  bool _enCoursValidation = false;
+  bool _enCoursEncaissement = false;
 
   bool get _peutModifier =>
       _commande.statut == StatutCommande.enAttente &&
@@ -212,6 +218,144 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
     }
   }
 
+  Future<void> _valider() async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Valider cette commande ?'),
+        content: const Text(
+            'Le stock des produits vendus sera décrémenté automatiquement.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Non'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Oui, valider'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true) return;
+
+    setState(() => _enCoursValidation = true);
+    try {
+      await ref.read(ventesDaoProvider).validerCommande(_commande.id);
+      await ref.read(syncServiceProvider).synchroniser();
+      ref.invalidate(commandesProvider);
+      await _rafraichir();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erreur : $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _enCoursValidation = false);
+    }
+  }
+
+  ResultatPaiement get _paiement => calculerResteAPayer(
+        totalACharger: _commande.total,
+        montantEspeces: _commande.montantEncaisseEspeces,
+        montantMobileMoney: _commande.montantEncaisseMobile,
+      );
+
+  Future<void> _ouvrirDialogueEncaissement() async {
+    final especesCtrl = TextEditingController();
+    final mobileCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final resteActuel = _paiement.resteAPayer;
+
+    int lireMontant(TextEditingController ctrl) =>
+        int.tryParse(ctrl.text.trim()) ?? 0;
+
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final saisiEspeces = lireMontant(especesCtrl);
+          final saisiMobile = lireMontant(mobileCtrl);
+          final apercu = calculerResteAPayer(
+            totalACharger: resteActuel,
+            montantEspeces: saisiEspeces,
+            montantMobileMoney: saisiMobile,
+          );
+          return AlertDialog(
+            title: const Text('Enregistrer un encaissement'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Reste à payer avant : ${formaterFcfa(resteActuel)}'),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: especesCtrl,
+                    autofocus: true,
+                    decoration:
+                        const InputDecoration(labelText: 'Espèces (FCFA)'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: mobileCtrl,
+                    decoration: const InputDecoration(
+                        labelText: 'Mobile Money (FCFA)'),
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    apercu.estSolde
+                        ? 'Soldé après cet encaissement.'
+                        : 'Reste à payer après : ${formaterFcfa(apercu.resteAPayer)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: (saisiEspeces + saisiMobile) > 0
+                    ? () => Navigator.of(context).pop(true)
+                    : null,
+                child: const Text('Enregistrer'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    if (confirme != true) return;
+
+    setState(() => _enCoursEncaissement = true);
+    try {
+      await ref.read(ventesDaoProvider).enregistrerEncaissement(
+            caveId: _commande.caveId,
+            commandeId: _commande.id,
+            creePar: widget.profil.id,
+            montantEspeces: lireMontant(especesCtrl),
+            montantMobileMoney: lireMontant(mobileCtrl),
+          );
+      await ref.read(syncServiceProvider).synchroniser();
+      ref.invalidate(commandesProvider);
+      await _rafraichir();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erreur : $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _enCoursEncaissement = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -233,8 +377,20 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
               const Text('Aucun produit dans cette commande.')
             else
               _tableauLignes(_lignes!),
-            if (_peutAnnuler) ...[
+            if (_peutValider) ...[
               const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _enCoursValidation ? null : _valider,
+                child: _enCoursValidation
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Valider la commande'),
+              ),
+            ],
+            if (_peutAnnuler) ...[
+              const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: _enCoursAnnulation ? null : _annuler,
                 style: OutlinedButton.styleFrom(
@@ -247,6 +403,29 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
                     : const Text('Annuler la commande'),
               ),
             ],
+            if (_peutEncaisser) ...[
+              const Divider(height: 32),
+              Text('Encaissement',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              _ligneInfo('Total', formaterFcfa(_commande.total)),
+              _ligneInfo('Encaissé', formaterFcfa(_commande.montantEncaisse)),
+              _ligneInfo('Reste à payer', formaterFcfa(_paiement.resteAPayer)),
+              const SizedBox(height: 12),
+              if (_paiement.estSolde)
+                const Chip(label: Text('Soldé'))
+              else
+                OutlinedButton(
+                  onPressed:
+                      _enCoursEncaissement ? null : _ouvrirDialogueEncaissement,
+                  child: _enCoursEncaissement
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Enregistrer un encaissement'),
+                ),
+            ],
           ],
         ),
       ),
@@ -256,6 +435,16 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
   bool get _peutAnnuler =>
       widget.profil.role.estResponsable &&
       _commande.statut == StatutCommande.enAttente;
+
+  bool get _peutValider =>
+      widget.profil.role.estResponsable &&
+      _commande.statut == StatutCommande.enAttente;
+
+  /// Un encaissement reste possible tant que la commande n'est pas annulée
+  /// (un dépôt avant validation est autorisé — voir migration 0014).
+  bool get _peutEncaisser =>
+      widget.profil.role.estResponsable &&
+      _commande.statut != StatutCommande.annulee;
 
   Widget _tableauLignes(List<CommandeLigne> lignes) {
     final bordure = BorderSide(color: Theme.of(context).dividerColor);
