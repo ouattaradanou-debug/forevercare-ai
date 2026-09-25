@@ -44,7 +44,13 @@ class CommandesListScreen extends ConsumerWidget {
               child: Text('Impossible de charger les commandes : $e'),
             ),
           ),
-          data: (commandes) {
+          data: (toutesLesCommandes) {
+            // Une commande validée ET intégralement payée n'a plus besoin
+            // d'attention : elle disparaît de cette liste (demandé
+            // explicitement) — elle reste en base, juste pas affichée ici.
+            final commandes = toutesLesCommandes
+                .where((c) => !c.estTerminee)
+                .toList();
             if (commandes.isEmpty) {
               return const Center(
                 child: Padding(

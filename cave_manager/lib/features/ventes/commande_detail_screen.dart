@@ -283,37 +283,39 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
           );
           return AlertDialog(
             title: const Text('Enregistrer un encaissement'),
-            content: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Reste à payer avant : ${formaterFcfa(resteActuel)}'),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: especesCtrl,
-                    autofocus: true,
-                    decoration:
-                        const InputDecoration(labelText: 'Espèces (FCFA)'),
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => setDialogState(() {}),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: mobileCtrl,
-                    decoration: const InputDecoration(
-                        labelText: 'Mobile Money (FCFA)'),
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => setDialogState(() {}),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    apercu.estSolde
-                        ? 'Soldé après cet encaissement.'
-                        : 'Reste à payer après : ${formaterFcfa(apercu.resteAPayer)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Reste à payer avant : ${formaterFcfa(resteActuel)}'),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: especesCtrl,
+                      autofocus: true,
+                      decoration:
+                          const InputDecoration(labelText: 'Espèces (FCFA)'),
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setDialogState(() {}),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: mobileCtrl,
+                      decoration: const InputDecoration(
+                          labelText: 'Mobile Money (FCFA)'),
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setDialogState(() {}),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      apercu.estSolde
+                          ? 'Soldé après cet encaissement.'
+                          : 'Reste à payer après : ${formaterFcfa(apercu.resteAPayer)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
             ),
             actions: [

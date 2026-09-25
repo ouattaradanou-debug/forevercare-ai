@@ -166,10 +166,14 @@ class _NouvelleCommandeScreenState
                 children: [
                   DropdownButtonFormField<Produit>(
                     value: produitChoisi,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Produit'),
                     items: [
                       for (final p in produits)
-                        DropdownMenuItem(value: p, child: Text(p.nom)),
+                        DropdownMenuItem(
+                          value: p,
+                          child: Text(p.nom, overflow: TextOverflow.ellipsis),
+                        ),
                     ],
                     onChanged: (v) =>
                         setDialogState(() => produitChoisi = v!),

@@ -33,6 +33,12 @@ class Commande {
 
   int get montantEncaisse => montantEncaisseEspeces + montantEncaisseMobile;
 
+  /// Validée ET intégralement payée : plus aucune action attendue sur
+  /// cette commande. Une commande payée mais pas encore validée reste
+  /// volontairement visible (elle a encore besoin d'être traitée).
+  bool get estTerminee =>
+      statut == StatutCommande.validee && total > 0 && montantEncaisse >= total;
+
   factory Commande.depuisJson(Map<String, dynamic> json) {
     return Commande(
       id: json['id'] as String,
