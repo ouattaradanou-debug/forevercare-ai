@@ -262,10 +262,10 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
     return Table(
       border: TableBorder(horizontalInside: bordure, verticalInside: bordure),
       columnWidths: {
-        0: const FlexColumnWidth(2.6),
-        1: const FlexColumnWidth(0.6),
-        2: const FlexColumnWidth(1.1),
-        3: const FlexColumnWidth(1.1),
+        0: const FlexColumnWidth(2.2),
+        1: const FlexColumnWidth(0.8),
+        2: const FlexColumnWidth(1.3),
+        3: const FlexColumnWidth(1.3),
         if (_peutModifier) 4: const FlexColumnWidth(0.6),
       },
       children: [
@@ -284,13 +284,14 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
           TableRow(
             children: [
               _cellule(Text(ligne.produitNom)),
-              _cellule(Text(ligne.quantiteCartons > 0
+              _celluleChiffre(ligne.quantiteCartons > 0
                   ? '${ligne.quantiteCartons}'
-                  : '${ligne.quantiteBouteilles}')),
-              _cellule(Text(formaterMontantSansDevise(ligne.quantiteCartons > 0
-                  ? ligne.prixGrosUnitaire
-                  : ligne.prixDetailUnitaire))),
-              _cellule(Text(formaterMontantSansDevise(ligne.sousTotal))),
+                  : '${ligne.quantiteBouteilles}'),
+              _celluleChiffre(formaterMontantSansDevise(
+                  ligne.quantiteCartons > 0
+                      ? ligne.prixGrosUnitaire
+                      : ligne.prixDetailUnitaire)),
+              _celluleChiffre(formaterMontantSansDevise(ligne.sousTotal)),
               if (_peutModifier)
                 _cellule(PopupMenuButton<String>(
                   padding: EdgeInsets.zero,
@@ -330,6 +331,20 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       child: enfant,
+    );
+  }
+
+  /// Comme [_cellule], mais garantit que le chiffre tient sur une seule
+  /// ligne (rétrécit légèrement la police plutôt que de couper le nombre
+  /// en deux lignes si la colonne est trop étroite).
+  Widget _celluleChiffre(String texte) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text(texte, maxLines: 1, softWrap: false),
+      ),
     );
   }
 
