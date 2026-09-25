@@ -99,4 +99,55 @@ class VentesDao extends DatabaseAccessor<AppDatabase> with _$VentesDaoMixin {
       }
     });
   }
+
+  /// Corrige la quantité d'une ligne déjà enregistrée (demande explicite :
+  /// le client renonce à une partie de son achat avant que la vente soit
+  /// finalisée). Protégé côté serveur par `commande_lignes_update` :
+  /// uniquement possible tant que la commande est encore 'en_attente'.
+  Future<void> modifierLigne({
+    required String ligneId,
+    required String commandeId,
+    required String produitId,
+    required int quantiteCartons,
+    required int quantiteBouteilles,
+    required int prixGrosUnitaire,
+    required int prixDetailUnitaire,
+  }) {
+    final sousTotal = quantiteCartons * prixGrosUnitaire +
+        quantiteBouteilles * prixDetailUnitaire;
+    return into(syncQueue).insert(
+      SyncQueueCompanion.insert(
+        id: _uuid.v4(),
+        nomTable: 'commande_lignes',
+        entiteId: ligneId,
+        operation: 'modification',
+        payload: jsonEncode({
+          'id': ligneId,
+          'commande_id': commandeId,
+          'produit_id': produitId,
+          'quantite_cartons': quantiteCartons,
+          'quantite_bouteilles': quantiteBouteilles,
+          'prix_gros_unitaire': prixGrosUnitaire,
+          'prix_detail_unitaire': prixDetailUnitaire,
+          'sous_total': sousTotal,
+        }),
+        creeLe: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Retire un produit dont le client a renoncé. Même protection que
+  /// [modifierLigne] (commande encore 'en_attente' uniquement).
+  Future<void> supprimerLigne(String ligneId) {
+    return into(syncQueue).insert(
+      SyncQueueCompanion.insert(
+        id: _uuid.v4(),
+        nomTable: 'commande_lignes',
+        entiteId: ligneId,
+        operation: 'suppression',
+        payload: jsonEncode({'id': ligneId}),
+        creeLe: DateTime.now(),
+      ),
+    );
+  }
 }

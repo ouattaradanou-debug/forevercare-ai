@@ -150,13 +150,72 @@ changé.
 
 ---
 
-## 7. Non vérifié sur téléphone réel à la rédaction
+## 7. Vérifié sur téléphone réel (Propriétaire/Gérant)
 
-Comme pour la Phase 2, le SQL a été testé en local avec RLS réelle avant
-tout envoi en production, mais la couche Flutter/Drift (nouveau DAO
-`VentesDao`, 3 nouveaux écrans) nécessite `build_runner` avant de pouvoir
-compiler (génère `ventes_dao.g.dart` et met à jour `app_database.g.dart`).
-À valider explicitement avant de considérer cette phase acquise.
+Testé sur l'appareil réel, contre la production Supabase : création d'un
+client, ajout d'un produit au panier, "Enregistrer la vente", la
+commande apparaît dans l'historique avec le bon total et le statut
+"En attente". Un bug a été trouvé et corrigé pendant ce test :
+`ref.read(produitsProvider).valueOrNull` lisait l'état du catalogue avant
+qu'il ait fini de charger (jamais "watch" ailleurs dans cet écran), donc
+"Ajouter un produit" affichait toujours un catalogue vide au premier
+appui — remplacé par `await ref.read(produitsProvider.future)`.
+
+---
+
+## 8. Ajustement demandé : corriger une vente avant validation
+
+**Demande** : afficher le détail d'une commande dans un tableau (boisson,
+quantité, prix unitaire, total par produit), avec la possibilité de
+modifier une quantité ou de retirer un produit dont le client a renoncé.
+
+**Modifications** :
+- `supabase/migrations/0013_modifier_lignes_commande.sql` : ajoute les
+  policies `commande_lignes_update`/`commande_lignes_delete` (bloquées
+  jusqu'ici, migration 0012 — les lignes étaient immuables par design).
+  Autorisées uniquement tant que la commande parente est `en_attente`,
+  par son créateur ou un responsable — jamais après annulation, et
+  jamais après une future validation (Phase 4). Le trigger
+  `appliquer_ligne_commande` passe de `AFTER INSERT` à
+  `AFTER INSERT OR UPDATE OR DELETE`, en appliquant le delta réel
+  (`new.sous_total - old.sous_total` en update, `-old.sous_total` en
+  delete) — reste sûr en cas de retry réseau pour la même raison qu'en
+  Phase 2 (un insert rejoué devient un update avec un delta nul).
+- **Une ligne ne mélange plus jamais cartons et bouteilles à la fois**
+  (choix fait à l'ajout : "Par carton/casier" ou "À la bouteille") —
+  sans ça, "prix unitaire" n'aurait pas de sens unique dans le tableau
+  demandé. Ajouter le même produit dans les deux unités donne
+  volontairement deux lignes distinctes.
+- `VentesDao.modifierLigne`/`supprimerLigne` (nouvelles) : mêmes principes
+  offline-first que `creerCommande`, via la file de synchronisation.
+- `VentesService.obtenirCommande` (nouvelle) : relit le total recalculé
+  après une modification.
+- `CommandeDetailScreen` refaite : tableau (`Table`, pas `DataTable` —
+  voir la justification déjà documentée pour le catalogue en Phase 2),
+  avec icônes "modifier"/"retirer" par ligne, visibles uniquement pour le
+  créateur de la commande ou un responsable, et seulement tant qu'elle
+  est en attente — exactement les mêmes conditions que côté serveur.
+
+**Vérifié en local sur PostgreSQL 16 (RLS réelle)** avant envoi en
+production :
+1. Modifier la quantité d'une ligne → le total de la commande est
+   recalculé par le delta (8 100 → 14 100 pour +6 000).
+2. Supprimer une ligne → le total redescend du montant de la ligne
+   retirée (14 100 → 12 000 pour -2 100).
+3. Un Gérant peut modifier/supprimer une ligne d'une commande créée par
+   un Agent, tant qu'elle est en attente.
+4. Une fois la commande annulée, plus personne ne peut modifier ses
+   lignes (`UPDATE 0`).
+
+---
+
+## Non vérifié sur téléphone réel à la rédaction (section 8)
+
+La modification/suppression de lignes n'a pas encore été testée sur
+l'appareil réel (seulement en local avec RLS). Contrairement à l'ajout
+du DAO en section 6, pas besoin de relancer `build_runner` ici :
+`modifierLigne`/`supprimerLigne` sont des méthodes Dart ordinaires sur
+`VentesDao` (déjà généré), sans nouvelle table ni colonne Drift.
 
 ---
 

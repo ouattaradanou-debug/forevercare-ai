@@ -11,20 +11,30 @@ import '../../core/produits/produits_providers.dart';
 import '../../core/utils/fcfa_formatter.dart';
 import '../../core/ventes/ventes_providers.dart';
 
+/// Une ligne du panier vend TOUJOURS un seul type d'unité à la fois
+/// (cartons/casiers OU bouteilles, jamais les deux mélangés dans la même
+/// ligne) : ajouter le même produit deux fois donne deux lignes si on veut
+/// vendre les deux à la fois. Choix délibéré pour que "quantité" et "prix
+/// unitaire" restent des notions sans ambiguïté à l'affichage (tableau
+/// demandé sur `CommandeDetailScreen`).
 class _LigneCart {
   const _LigneCart({
     required this.produit,
-    required this.quantiteCartons,
-    required this.quantiteBouteilles,
+    required this.parEmballage,
+    required this.quantite,
   });
 
   final Produit produit;
-  final int quantiteCartons;
-  final int quantiteBouteilles;
 
-  int get sousTotal =>
-      quantiteCartons * produit.prixVenteGros +
-      quantiteBouteilles * produit.prixVenteDetail;
+  /// `true` : vendu par carton/casier (prix de gros). `false` : vendu à la
+  /// bouteille (prix de détail).
+  final bool parEmballage;
+  final int quantite;
+
+  int get prixUnitaire =>
+      parEmballage ? produit.prixVenteGros : produit.prixVenteDetail;
+
+  int get sousTotal => quantite * prixUnitaire;
 }
 
 /// "Vendre" (point 5, Phase 3 du cahier des charges) : constitue un panier
@@ -139,8 +149,8 @@ class _NouvelleCommandeScreenState
     }
 
     Produit produitChoisi = produits.first;
-    final cartonsCtrl = TextEditingController(text: '0');
-    final bouteillesCtrl = TextEditingController(text: '0');
+    bool parEmballage = true;
+    final quantiteCtrl = TextEditingController(text: '1');
     final formKey = GlobalKey<FormState>();
 
     final ligne = await showDialog<_LigneCart>(
@@ -165,28 +175,42 @@ class _NouvelleCommandeScreenState
                         setDialogState(() => produitChoisi = v!),
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    controller: cartonsCtrl,
-                    decoration: InputDecoration(
-                        labelText:
-                            'Quantité (${produitChoisi.typeEmballage.libelle.toLowerCase()}s) — ${formaterFcfa(produitChoisi.prixVenteGros)} pièce'),
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => setDialogState(() {}),
-                    validator: (v) => int.tryParse(v?.trim() ?? '') == null
-                        ? 'Nombre invalide'
-                        : null,
+                  RadioGroup<bool>(
+                    groupValue: parEmballage,
+                    onChanged: (v) => setDialogState(() => parEmballage = v!),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                                'Par ${produitChoisi.typeEmballage.libelle.toLowerCase()}'),
+                            subtitle: Text(
+                                formaterFcfa(produitChoisi.prixVenteGros)),
+                            value: true,
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('À la bouteille'),
+                            subtitle: Text(
+                                formaterFcfa(produitChoisi.prixVenteDetail)),
+                            value: false,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
-                    controller: bouteillesCtrl,
-                    decoration: InputDecoration(
-                        labelText:
-                            'Quantité (bouteilles) — ${formaterFcfa(produitChoisi.prixVenteDetail)} pièce'),
+                    controller: quantiteCtrl,
+                    decoration: const InputDecoration(labelText: 'Quantité'),
                     keyboardType: TextInputType.number,
-                    onChanged: (_) => setDialogState(() {}),
-                    validator: (v) => int.tryParse(v?.trim() ?? '') == null
-                        ? 'Nombre invalide'
-                        : null,
+                    validator: (v) {
+                      final n = int.tryParse(v?.trim() ?? '');
+                      return (n == null || n < 1) ? 'Au moins 1' : null;
+                    },
                   ),
                 ],
               ),
@@ -200,17 +224,10 @@ class _NouvelleCommandeScreenState
             TextButton(
               onPressed: () {
                 if (!formKey.currentState!.validate()) return;
-                final cartons = int.parse(cartonsCtrl.text.trim());
-                final bouteilles = int.parse(bouteillesCtrl.text.trim());
-                if (cartons <= 0 && bouteilles <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Entrez au moins une quantité.')));
-                  return;
-                }
                 Navigator.of(context).pop(_LigneCart(
                   produit: produitChoisi,
-                  quantiteCartons: cartons,
-                  quantiteBouteilles: bouteilles,
+                  parEmballage: parEmballage,
+                  quantite: int.parse(quantiteCtrl.text.trim()),
                 ));
               },
               child: const Text('Ajouter'),
@@ -236,8 +253,8 @@ class _NouvelleCommandeScreenState
               for (final l in _panier)
                 LigneAVendre(
                   produitId: l.produit.id,
-                  quantiteCartons: l.quantiteCartons,
-                  quantiteBouteilles: l.quantiteBouteilles,
+                  quantiteCartons: l.parEmballage ? l.quantite : 0,
+                  quantiteBouteilles: l.parEmballage ? 0 : l.quantite,
                   prixGrosUnitaire: l.produit.prixVenteGros,
                   prixDetailUnitaire: l.produit.prixVenteDetail,
                 ),
@@ -312,9 +329,9 @@ class _NouvelleCommandeScreenState
                 Card(
                   child: ListTile(
                     title: Text(_panier[i].produit.nom),
-                    subtitle: Text(
-                        '${_panier[i].quantiteCartons} ${_panier[i].produit.typeEmballage.libelle.toLowerCase()}(s)'
-                        '  ·  ${_panier[i].quantiteBouteilles} bouteille(s)'),
+                    subtitle: Text(_panier[i].parEmballage
+                        ? '${_panier[i].quantite} ${_panier[i].produit.typeEmballage.libelle.toLowerCase()}(s)'
+                        : '${_panier[i].quantite} bouteille(s)'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

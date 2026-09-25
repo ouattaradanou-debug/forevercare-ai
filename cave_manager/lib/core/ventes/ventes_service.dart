@@ -64,6 +64,14 @@ class VentesService {
     return lignes.map((l) => CommandeLigne.depuisJson(l)).toList();
   }
 
+  /// Relit une commande (utilisé après modification/suppression d'une
+  /// ligne, pour afficher le total recalculé côté serveur par trigger).
+  Future<Commande> obtenirCommande(String commandeId) async {
+    final ligne =
+        await _client.from('commandes').select().eq('id', commandeId).single();
+    return Commande.depuisJson(ligne);
+  }
+
   /// Protégé côté serveur par `commandes_update` : seule la transition
   /// 'en_attente' -> 'annulee' est autorisée (Propriétaire/Propriétaire-
   /// Gérant/Gérant uniquement) — un appel bloqué par RLS affecte
