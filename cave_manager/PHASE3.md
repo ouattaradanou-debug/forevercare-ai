@@ -209,13 +209,23 @@ production :
 
 ---
 
-## Non vérifié sur téléphone réel à la rédaction (section 8)
+## 9. Vérifié sur téléphone réel (section 8)
 
-La modification/suppression de lignes n'a pas encore été testée sur
-l'appareil réel (seulement en local avec RLS). Contrairement à l'ajout
-du DAO en section 6, pas besoin de relancer `build_runner` ici :
-`modifierLigne`/`supprimerLigne` sont des méthodes Dart ordinaires sur
-`VentesDao` (déjà généré), sans nouvelle table ni colonne Drift.
+Modification et suppression d'une ligne testées sur l'appareil réel,
+contre la production Supabase : le total se met à jour correctement
+après chaque action. Trois ajustements d'affichage faits pendant ce
+test :
+- Les deux `IconButton` (modifier/retirer) débordaient hors de l'écran
+  dans la colonne d'actions, trop étroite — remplacés par un seul
+  `PopupMenuButton` (icône ⋮) qui ouvre un menu "Modifier la
+  quantité"/"Retirer".
+- `listerLignes` ne précisait pas d'ordre explicite : l'ordre
+  d'affichage des lignes pouvait changer après une modification (Postgres
+  ne garantit rien sans `ORDER BY`) — ajout de `.order('created_at')`.
+- Les colonnes Qté/P.U./Total ont été réajustées (plus de largeur, plus
+  de "cart."/"bout." superflu) et les chiffres sont maintenant dans un
+  `FittedBox` qui rétrécit la police au besoin plutôt que de couper un
+  montant sur deux lignes.
 
 ---
 
