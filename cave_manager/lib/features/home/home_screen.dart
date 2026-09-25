@@ -5,17 +5,17 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/auth/auth_providers.dart';
 import '../../core/auth/profil.dart';
 import '../cave_setup/configuration_cave_screen.dart';
+import '../cloture/cloture_screen.dart';
 import '../produits/produits_list_screen.dart';
 import '../ventes/commandes_list_screen.dart';
 
 /// Accueil post-connexion. Ne contient volontairement pas encore le
-/// tableau de bord Propriétaire (point 28, Phase 2+) ni l'écran de clôture
-/// (Phase 5) : hors périmètre des phases livrées jusqu'ici. Contrôle,
-/// validation et encaissement (Phase 4) sont accessibles depuis le détail
-/// d'une commande, pas depuis un bouton dédié ici. Son rôle reste de
-/// prouver que le routage par rôle fonctionne et qu'aucune donnée
-/// financière détaillée n'apparaît pour un Agent de vente au-delà de ses
-/// propres ventes.
+/// tableau de bord Propriétaire (point 28, Phase 2+) : hors périmètre des
+/// phases livrées jusqu'ici. Contrôle, validation et encaissement
+/// (Phase 4) sont accessibles depuis le détail d'une commande, pas depuis
+/// un bouton dédié ici. Son rôle reste de prouver que le routage par rôle
+/// fonctionne et qu'aucune donnée financière détaillée n'apparaît pour un
+/// Agent de vente au-delà de ses propres ventes.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key, required this.profil});
 
@@ -117,12 +117,18 @@ class HomeScreen extends ConsumerWidget {
                     icon: const Icon(Icons.inventory_2_outlined),
                     label: const Text('Produits'),
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'La clôture arrive dans une prochaine phase.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+                  if (profil.role.estResponsable) ...[
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ClotureScreen(profil: profil),
+                        ),
+                      ),
+                      icon: const Icon(Icons.point_of_sale_outlined),
+                      label: const Text('Clôture de caisse'),
+                    ),
+                  ],
                 ],
               ),
             ),

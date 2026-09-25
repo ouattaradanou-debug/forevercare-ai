@@ -9,6 +9,7 @@ import '../../core/ventes/commande.dart';
 import '../../core/ventes/commande_ligne.dart';
 import '../../core/ventes/statut_commande.dart';
 import '../../core/ventes/ventes_providers.dart';
+import 'facture_screen.dart';
 
 /// Détail d'une commande : un tableau (boisson, quantité, prix unitaire,
 /// total par produit), avec correction possible (modifier la quantité,
@@ -368,6 +369,19 @@ class _CommandeDetailScreenState extends ConsumerState<CommandeDetailScreen> {
           children: [
             _ligneInfo('Statut', _commande.statut.libelle),
             _ligneInfo('Total', formaterFcfa(_commande.total)),
+            if (_lignes != null) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        FactureScreen(commande: _commande, lignes: _lignes!),
+                  ),
+                ),
+                icon: const Icon(Icons.receipt_long),
+                label: const Text('Voir la facture'),
+              ),
+            ],
             const Divider(height: 32),
             Text('Produits', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),

@@ -49,6 +49,12 @@ dependencies:
   # devient une dépendance de production avec cet usage.
   shared_preferences: ^2.2.3
 
+  # Ouvre WhatsApp avec un message pré-rempli pour envoyer une facture au
+  # client (lien "wa.me", aucun backend ni clé API payante — voir
+  # PHASE5.md section 2 pour la justification face à l'API WhatsApp
+  # Business).
+  url_launcher: ^6.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
