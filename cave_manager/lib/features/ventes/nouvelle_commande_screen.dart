@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -264,7 +262,14 @@ class _NouvelleCommandeScreenState
                 ),
             ],
           );
-      unawaited(ref.read(syncServiceProvider).synchroniser());
+      // Attendu (pas "unawaited") : la liste "Commandes" lit directement
+      // Supabase (pas le cache local), elle a donc besoin que la vente ait
+      // réellement atteint le serveur avant d'être invalidée, sinon la
+      // nouvelle commande n'apparaît pas tant qu'on ne raffraîchit pas
+      // manuellement. Reste sûr hors ligne : `synchroniser()` ne lève
+      // jamais d'exception (voir SyncEngine.traiterEntree), une entrée en
+      // échec repasse simplement en file pour être retentée plus tard.
+      await ref.read(syncServiceProvider).synchroniser();
       ref.invalidate(commandesProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
