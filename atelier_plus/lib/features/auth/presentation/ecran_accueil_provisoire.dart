@@ -9,13 +9,12 @@ import '../../abonnement/presentation/bandeau_essai.dart';
 import '../../abonnement/providers/abonnement_providers.dart';
 import '../providers/auth_providers.dart';
 
-/// Écran d'accueil minimal : confirme la connexion, affiche le nom et le
-/// logo de l'atelier, le bandeau d'essai le cas échéant, et donne accès
-/// aux clients, aux rendez-vous, à la vente prête à porter et (pour le
-/// propriétaire) à l'abonnement. Les réglages de l'atelier (types de
-/// tenue, équipe) et le thème sont regroupés dans l'écran Paramètres,
-/// accessible via l'icône ⚙️. Le vrai tableau de bord (statistiques) sera
-/// construit dans une phase ultérieure.
+/// Écran d'accueil minimal : bandeau du haut avec la date du jour et
+/// l'icône ⚙️ Paramètres, bandeau d'essai le cas échéant, nom/logo de
+/// l'atelier, puis l'accès aux clients, aux rendez-vous et à la vente
+/// prête à porter. Les réglages de l'atelier (types de tenue, équipe,
+/// abonnement) et le thème sont regroupés dans l'écran Paramètres. Le vrai
+/// tableau de bord (statistiques) sera construit dans une phase ultérieure.
 class EcranAccueilProvisoire extends ConsumerStatefulWidget {
   const EcranAccueilProvisoire({super.key});
 
@@ -39,15 +38,14 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
   Widget build(BuildContext context) {
     final atelier = ref.watch(atelierCourantProvider);
     final utilisateur = ref.watch(utilisateurCourantProvider);
-    final estProprietaire = ref.watch(estProprietaireProvider);
     final tachesEnAttente = ref.watch(tachesSyncEnAttenteProvider).valueOrNull ?? 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: atelier.when(
-          data: (a) => Text(a?.nom ?? 'Atelier+'),
-          loading: () => const Text('Atelier+'),
-          error: (_, __) => const Text('Atelier+'),
+        centerTitle: false,
+        title: Text(
+          Formatters.dateLongue(DateTime.now()),
+          style: const TextStyle(fontSize: 15),
         ),
         actions: [
           if (tachesEnAttente > 0)
@@ -74,28 +72,17 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
               if (context.mounted) context.go(AppRoutes.connexion);
             },
           ),
+          // À l'extrême droite du bandeau, comme demandé.
+          IconButton(
+            tooltip: 'Paramètres',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push(AppRoutes.parametres),
+          ),
         ],
       ),
       body: Column(
         children: [
           const BandeauEssai(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 4, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  Formatters.dateLongue(DateTime.now()),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                IconButton(
-                  tooltip: 'Paramètres',
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => context.push(AppRoutes.parametres),
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -113,7 +100,16 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       loading: () => const SizedBox(height: 72),
                       error: (_, __) => const SizedBox.shrink(),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
+                    atelier.when(
+                      data: (a) => Text(
+                        a?.nom ?? '',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+                    const SizedBox(height: 8),
                     utilisateur.when(
                       data: (u) => Text(
                         u == null ? '' : 'Bonjour ${u.nom}',
@@ -140,14 +136,6 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       icon: const Icon(Icons.checkroom_outlined),
                       label: const Text('Vente prête à porter'),
                     ),
-                    if (estProprietaire) ...[
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () => context.push(AppRoutes.abonnement),
-                        icon: const Icon(Icons.workspace_premium_outlined),
-                        label: const Text('Mon abonnement'),
-                      ),
-                    ],
                   ],
                 ),
               ),

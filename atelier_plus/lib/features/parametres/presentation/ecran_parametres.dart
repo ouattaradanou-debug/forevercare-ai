@@ -6,9 +6,9 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/theme_mode_provider.dart';
 import '../../auth/providers/auth_providers.dart';
 
-/// Regroupe les réglages de l'atelier (types de tenue, équipe) et les
-/// préférences d'affichage (thème), accessible depuis l'icône ⚙️ de
-/// l'accueil.
+/// Regroupe les réglages de l'atelier (types de tenue, équipe,
+/// abonnement) et les préférences d'affichage (thème), accessible depuis
+/// l'icône ⚙️ de l'accueil.
 class EcranParametres extends ConsumerWidget {
   const EcranParametres({super.key});
 
@@ -36,6 +36,12 @@ class EcranParametres extends ConsumerWidget {
               subtitle: const Text('Gérer mes apprentis'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push(AppRoutes.apprentis),
+            ),
+            ListTile(
+              leading: const Icon(Icons.workspace_premium_outlined),
+              title: const Text('Mon abonnement'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(AppRoutes.abonnement),
             ),
             const Divider(height: 32),
           ],
