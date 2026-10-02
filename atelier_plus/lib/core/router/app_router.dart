@@ -24,11 +24,9 @@ import '../../features/mesures/presentation/ecran_gestion_types_tenue.dart';
 import '../../features/mesures/presentation/ecran_prise_mesure.dart';
 import '../../features/mesures/presentation/ecran_selection_type_tenue.dart';
 import '../../features/finances/presentation/ecran_finances_client.dart';
-import '../../features/parametres/presentation/ecran_parametres.dart';
 import '../../features/permissions/presentation/ecran_panneau_permissions.dart';
 import '../../features/rendezvous/presentation/ecran_formulaire_rendez_vous.dart';
 import '../../features/rendezvous/presentation/ecran_liste_rendez_vous.dart';
-import '../../features/vente_pret_a_porter/presentation/ecran_vente_pret_a_porter.dart';
 
 /// Chemins nommés des routes de l'application, centralisés pour éviter les
 /// chaînes de caractères éparpillées dans le code.
@@ -74,9 +72,6 @@ class AppRoutes {
   static String financesClient(String clientId) => '/clients/$clientId/finances';
 
   static const String abonnement = '/abonnement';
-
-  static const String parametres = '/parametres';
-  static const String ventePretAPorter = '/vente-pret-a-porter';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -185,14 +180,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.abonnement,
         builder: (context, state) => const EcranAbonnement(),
-      ),
-      GoRoute(
-        path: AppRoutes.parametres,
-        builder: (context, state) => const EcranParametres(),
-      ),
-      GoRoute(
-        path: AppRoutes.ventePretAPorter,
-        builder: (context, state) => const EcranVentePretAPorter(),
       ),
     ],
   );

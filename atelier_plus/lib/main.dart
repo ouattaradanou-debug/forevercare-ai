@@ -9,7 +9,6 @@ import 'core/config/supabase_config.dart';
 import 'core/notifications/notifications_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'core/theme/theme_mode_provider.dart';
 import 'data/sync/sync_providers.dart';
 
 Future<void> main() async {
@@ -54,8 +53,6 @@ class AtelierPlusApp extends ConsumerWidget {
       title: AppConfig.nomApplication,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.clair,
-      darkTheme: AppTheme.sombre,
-      themeMode: ref.watch(themeModeProvider),
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [Locale('fr', 'FR')],
       localizationsDelegates: const [

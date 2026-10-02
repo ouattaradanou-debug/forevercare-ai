@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../data/sync/sync_providers.dart';
 import '../../abonnement/presentation/bandeau_essai.dart';
 import '../../abonnement/providers/abonnement_providers.dart';
@@ -11,11 +10,9 @@ import '../providers/auth_providers.dart';
 
 /// Écran d'accueil minimal : confirme la connexion, affiche le nom et le
 /// logo de l'atelier, le bandeau d'essai le cas échéant, et donne accès
-/// aux clients, aux rendez-vous, à la vente prête à porter et (pour le
-/// propriétaire) à l'abonnement. Les réglages de l'atelier (types de
-/// tenue, équipe) et le thème sont regroupés dans l'écran Paramètres,
-/// accessible via l'icône ⚙️. Le vrai tableau de bord (statistiques) sera
-/// construit dans une phase ultérieure.
+/// aux apprentis, aux clients, aux types de tenue, aux rendez-vous et à
+/// l'abonnement. Le vrai tableau de bord (statistiques) sera construit
+/// dans une phase ultérieure.
 class EcranAccueilProvisoire extends ConsumerStatefulWidget {
   const EcranAccueilProvisoire({super.key});
 
@@ -79,23 +76,6 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
       body: Column(
         children: [
           const BandeauEssai(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 4, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  Formatters.dateLongue(DateTime.now()),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                IconButton(
-                  tooltip: 'Paramètres',
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => context.push(AppRoutes.parametres),
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -134,13 +114,19 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       icon: const Icon(Icons.event_outlined),
                       label: const Text('Rendez-vous'),
                     ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: () => context.push(AppRoutes.ventePretAPorter),
-                      icon: const Icon(Icons.checkroom_outlined),
-                      label: const Text('Vente prête à porter'),
-                    ),
                     if (estProprietaire) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => context.push(AppRoutes.typesTenue),
+                        icon: const Icon(Icons.checkroom_outlined),
+                        label: const Text('Mes types de tenue'),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => context.push(AppRoutes.apprentis),
+                        icon: const Icon(Icons.person_outline),
+                        label: const Text('Gérer mes apprentis'),
+                      ),
                       const SizedBox(height: 12),
                       OutlinedButton.icon(
                         onPressed: () => context.push(AppRoutes.abonnement),
