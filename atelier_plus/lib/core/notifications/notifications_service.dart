@@ -15,8 +15,13 @@ class NotificationsService {
 
   static final NotificationsService instance = NotificationsService._();
 
-  static const Duration delaiRappel = Duration(hours: 1);
+  /// Délai avant un rendez-vous auquel son rappel est programmé — modifiable
+  /// via le réglage "Me rappeler les rendez-vous" de l'accueil (persisté par
+  /// [PreferenceRappel]), 2 jours par défaut.
+  Duration delaiRappel = const Duration(days: 2);
+
   static const String _canalId = 'rappels_rdv';
+  static const String _canalTest = 'rappels_test';
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
   bool _initialise = false;
@@ -83,6 +88,26 @@ class NotificationsService {
 
   Future<void> annulerRappel(String rendezVousId) {
     return _plugin.cancel(_idNotification(rendezVousId));
+  }
+
+  /// Envoie immédiatement une notification de test, pour que le
+  /// propriétaire vérifie que les rappels fonctionnent bien sur son
+  /// appareil (bouton "Tester un rappel maintenant" de l'accueil).
+  Future<void> envoyerNotificationTest() async {
+    await _plugin.show(
+      -1,
+      'Rappel de test',
+      'Ceci est un rappel de test — vos rappels de rendez-vous ressembleront à ça.',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _canalTest,
+          'Rappels de test',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+    );
   }
 
   /// Les identifiants de notification doivent être des entiers 32 bits :

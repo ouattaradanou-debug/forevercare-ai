@@ -50,6 +50,9 @@ dependencies:
   # --- Identifiants uniques générés côté client (indispensable hors-ligne) ---
   uuid: ^4.5.1
 
+  # --- Persistance de préférences simples (délai de rappel des rendez-vous) ---
+  shared_preferences: ^2.3.3
+
   # --- Export PDF de fiche client, avec logo/nom d'atelier ---
   pdf: ^3.11.1
   printing: ^5.13.4

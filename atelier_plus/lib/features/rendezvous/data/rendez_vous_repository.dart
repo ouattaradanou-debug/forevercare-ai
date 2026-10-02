@@ -107,7 +107,7 @@ class RendezVousRepository {
     await NotificationsService.instance.planifierRappelRendezVous(
       rendezVousId: rdv.id,
       dateHeureRendezVous: rdv.dateHeure,
-      titre: 'Rendez-vous dans 1 heure',
+      titre: 'Rendez-vous à venir',
       corps: '$libelleType avec $nomClient',
     );
   }

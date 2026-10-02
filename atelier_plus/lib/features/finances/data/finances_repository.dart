@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../data/local/database.dart';
 import '../../../data/models/commande.dart';
+import '../../../data/models/depense.dart';
 import '../../../data/models/paiement.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
 import '../../abonnement/data/abonnement_guard.dart';
@@ -115,6 +116,90 @@ class FinancesRepository {
         );
   }
 
+  Future<Depense> ajouterDepense({
+    required String atelierId,
+    required double montant,
+    String? description,
+    required DateTime date,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
+    final depense = Depense(
+      id: _uuid.v4(),
+      atelierId: atelierId,
+      montant: montant,
+      description: description,
+      date: date,
+      createdAt: DateTime.now().toUtc(),
+    );
+
+    await _mettreEnCacheDepense(depense);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'depenses',
+      recordId: depense.id,
+      operation: 'insert',
+      payload: depense.versJson(),
+    );
+    return depense;
+  }
+
+  /// Paiements et dépenses de tout l'atelier (tous clients confondus),
+  /// utilisés pour le récapitulatif global de l'écran "Suivi des finances".
+  Future<({List<Paiement> paiements, List<Depense> depenses})> recapitulatifBrut(
+    String atelierId,
+  ) async {
+    final lignesPaiements = await _baseLocale.tousPaiementsDeLAtelier(atelierId);
+    final lignesDepenses = await _baseLocale.toutesDepensesDeLAtelier(atelierId);
+    return (
+      paiements: lignesPaiements
+          .map(
+            (l) => Paiement(
+              id: l.id,
+              atelierId: l.atelierId,
+              commandeId: l.commandeId,
+              montant: l.montant,
+              datePaiement: l.datePaiement,
+            ),
+          )
+          .toList(),
+      depenses: lignesDepenses
+          .map(
+            (l) => Depense(
+              id: l.id,
+              atelierId: l.atelierId,
+              montant: l.montant,
+              description: l.description,
+              date: l.date,
+              createdAt: l.createdAt,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// Rapatrie TOUS les paiements et dépenses de l'atelier (contrairement à
+  /// [chargerDepuisServeur], limité à un client) — nécessaire pour que le
+  /// récapitulatif global reste exact même sans avoir visité chaque fiche
+  /// client individuellement.
+  Future<void> chargerRecapitulatifDepuisServeur(String atelierId) async {
+    try {
+      final lignesPaiements =
+          await _client.from('paiements').select().eq('atelier_id', atelierId);
+      for (final ligne in lignesPaiements) {
+        await _mettreEnCachePaiement(Paiement.depuisJson(ligne));
+      }
+
+      final lignesDepenses =
+          await _client.from('depenses').select().eq('atelier_id', atelierId);
+      for (final ligne in lignesDepenses) {
+        await _mettreEnCacheDepense(Depense.depuisJson(ligne));
+      }
+    } catch (_) {
+      // Hors-ligne : le cache existant reste utilisable.
+    }
+  }
+
   /// Rapatriement initial best-effort — appelé uniquement par l'écran
   /// finances, déjà réservé au propriétaire.
   Future<void> chargerDepuisServeur(String clientId) async {
@@ -157,6 +242,17 @@ class FinancesRepository {
       commandeId: paiement.commandeId,
       montant: paiement.montant,
       datePaiement: paiement.datePaiement,
+    );
+  }
+
+  Future<void> _mettreEnCacheDepense(Depense depense) {
+    return _baseLocale.enregistrerDepense(
+      id: depense.id,
+      atelierId: depense.atelierId,
+      montant: depense.montant,
+      description: depense.description,
+      date: depense.date,
+      createdAt: depense.createdAt,
     );
   }
 }

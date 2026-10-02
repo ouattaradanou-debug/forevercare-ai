@@ -16,6 +16,10 @@ class Formatters {
   /// Ex : "25 000 FCFA".
   static String montant(num valeur) => '${_formatMontant.format(valeur)} FCFA';
 
+  /// Ex : "25 000" — sans l'unité, pour les tableaux où elle serait répétée
+  /// sur chaque ligne (voir écran "Suivi des finances").
+  static String nombre(num valeur) => _formatMontant.format(valeur);
+
   /// Ex : "02/09/2026".
   static String dateCourte(DateTime date) => _formatDateCourte.format(date);
 

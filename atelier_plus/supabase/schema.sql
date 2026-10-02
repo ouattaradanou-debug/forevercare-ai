@@ -104,6 +104,19 @@ comment on table public.types_tenue is
 
 create index if not exists idx_types_tenue_atelier on public.types_tenue (atelier_id);
 
+-- Groupes de mesures d'uniformes (promotion, établissement, équipe) : un
+-- conteneur sous lequel on prendra les mesures de plusieurs personnes en une
+-- fois, séparément des fiches clients individuelles.
+create table if not exists public.groupes_uniformes (
+  id          uuid primary key default gen_random_uuid(),
+  atelier_id  uuid not null references public.ateliers (id) on delete cascade,
+  nom         text not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists idx_groupes_uniformes_atelier on public.groupes_uniformes (atelier_id);
+
 -- Champs de mesure appartenant à un type de tenue.
 create table if not exists public.champs_mesure (
   id            uuid primary key default gen_random_uuid(),
@@ -198,6 +211,19 @@ create table if not exists public.paiements (
 create index if not exists idx_paiements_commande on public.paiements (commande_id);
 create index if not exists idx_paiements_atelier on public.paiements (atelier_id);
 
+-- Dépenses de l'atelier (loyer, fournitures, etc.). Table financière — même
+-- règle que commandes/paiements : jamais accessible à un apprenti.
+create table if not exists public.depenses (
+  id           uuid primary key default gen_random_uuid(),
+  atelier_id   uuid not null references public.ateliers (id) on delete cascade,
+  montant      numeric(12, 2) not null check (montant > 0),
+  description  text,
+  date         date not null,
+  created_at   timestamptz not null default now()
+);
+
+create index if not exists idx_depenses_atelier on public.depenses (atelier_id, date);
+
 -- Journal d'actions : trace d'audit append-only (utilisée aussi pour logguer
 -- les résolutions de conflit de synchronisation "dernière modification gagne").
 create table if not exists public.journal_actions (
@@ -248,7 +274,7 @@ begin
     select unnest(array[
       'ateliers', 'utilisateurs', 'permissions_apprenti', 'clients',
       'types_tenue', 'champs_mesure', 'mesures', 'rendez_vous',
-      'commandes', 'abonnements'
+      'commandes', 'abonnements', 'groupes_uniformes'
     ])
   loop
     execute format(
@@ -407,6 +433,8 @@ alter table public.photos enable row level security;
 alter table public.rendez_vous enable row level security;
 alter table public.commandes enable row level security;
 alter table public.paiements enable row level security;
+alter table public.depenses enable row level security;
+alter table public.groupes_uniformes enable row level security;
 alter table public.journal_actions enable row level security;
 alter table public.abonnements enable row level security;
 
@@ -732,6 +760,40 @@ create policy paiements_all on public.paiements
   for all to authenticated
   using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
   with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.11bis DÉPENSES — même garantie que commandes/paiements.
+-- -----------------------------------------------------------------------------
+drop policy if exists depenses_all on public.depenses;
+create policy depenses_all on public.depenses
+  for all to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.11ter GROUPES_UNIFORMES — lecture par tout l'atelier, écriture réservée
+--         au propriétaire (même règle que types_tenue).
+-- -----------------------------------------------------------------------------
+drop policy if exists groupes_uniformes_select on public.groupes_uniformes;
+create policy groupes_uniformes_select on public.groupes_uniformes
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+drop policy if exists groupes_uniformes_insert on public.groupes_uniformes;
+create policy groupes_uniformes_insert on public.groupes_uniformes
+  for insert to authenticated
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists groupes_uniformes_update on public.groupes_uniformes;
+create policy groupes_uniformes_update on public.groupes_uniformes
+  for update to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists groupes_uniformes_delete on public.groupes_uniformes;
+create policy groupes_uniformes_delete on public.groupes_uniformes
+  for delete to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
 
 -- -----------------------------------------------------------------------------
 -- 5.12 JOURNAL_ACTIONS — append-only. Le propriétaire voit tout le journal

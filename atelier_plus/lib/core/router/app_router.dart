@@ -23,10 +23,13 @@ import '../../features/mesures/presentation/ecran_gestion_champs.dart';
 import '../../features/mesures/presentation/ecran_gestion_types_tenue.dart';
 import '../../features/mesures/presentation/ecran_prise_mesure.dart';
 import '../../features/mesures/presentation/ecran_selection_type_tenue.dart';
+import '../../features/finances/presentation/ecran_enregistrer_depense.dart';
 import '../../features/finances/presentation/ecran_finances_client.dart';
+import '../../features/finances/presentation/ecran_suivi_finances.dart';
 import '../../features/permissions/presentation/ecran_panneau_permissions.dart';
 import '../../features/rendezvous/presentation/ecran_formulaire_rendez_vous.dart';
 import '../../features/rendezvous/presentation/ecran_liste_rendez_vous.dart';
+import '../../features/uniformes/presentation/ecran_groupes_uniformes.dart';
 
 /// Chemins nommés des routes de l'application, centralisés pour éviter les
 /// chaînes de caractères éparpillées dans le code.
@@ -72,6 +75,10 @@ class AppRoutes {
   static String financesClient(String clientId) => '/clients/$clientId/finances';
 
   static const String abonnement = '/abonnement';
+
+  static const String nouvelleDepense = '/depenses/nouvelle';
+  static const String suiviFinances = '/finances';
+  static const String groupesUniformes = '/uniformes';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -180,6 +187,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.abonnement,
         builder: (context, state) => const EcranAbonnement(),
+      ),
+      GoRoute(
+        path: AppRoutes.nouvelleDepense,
+        builder: (context, state) => const EcranEnregistrerDepense(),
+      ),
+      GoRoute(
+        path: AppRoutes.suiviFinances,
+        builder: (context, state) => const EcranSuiviFinances(),
+      ),
+      GoRoute(
+        path: AppRoutes.groupesUniformes,
+        builder: (context, state) => const EcranGroupesUniformes(),
       ),
     ],
   );

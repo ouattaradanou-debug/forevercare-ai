@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_constants.dart';
+import '../../../core/notifications/notifications_service.dart';
+import '../../../core/notifications/preference_rappel.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/atelier.dart';
+import '../../../data/models/client.dart';
+import '../../../data/models/rendez_vous.dart';
 import '../../../data/models/utilisateur.dart';
 import '../../../data/sync/sync_providers.dart';
 import '../../abonnement/data/etat_abonnement.dart';
 import '../../abonnement/providers/abonnement_providers.dart';
+import '../../clients/providers/clients_providers.dart';
+import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/auth_providers.dart';
 
 /// Couleurs propres à cet écran (en-tête bleu marine), distinctes de la
@@ -123,22 +130,37 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                           ),
                         if (estProprietaire)
                           _CarteAction(
-                            icone: Icons.checkroom_outlined,
-                            libelle: 'Mes types de tenue',
+                            icone: Icons.straighten_outlined,
+                            libelle: 'Champs de mesure',
                             fondIcone: const Color(0xFFF5DCD3),
                             couleurIcone: const Color(0xFF8A4B24),
                             onTap: () => context.push(AppRoutes.typesTenue),
                           ),
                         if (estProprietaire)
                           _CarteAction(
-                            icone: Icons.workspace_premium_outlined,
-                            libelle: 'Mon abonnement',
-                            fondIcone: const Color(0xFFF5E8C8),
-                            couleurIcone: const Color(0xFFA47B1B),
-                            onTap: () => context.push(AppRoutes.abonnement),
+                            icone: Icons.remove_circle_outline,
+                            libelle: 'Enregistrer dépenses',
+                            fondIcone: const Color(0xFFF5D9D9),
+                            couleurIcone: const Color(0xFFB3261E),
+                            onTap: () => context.push(AppRoutes.nouvelleDepense),
                           ),
                       ],
                     ),
+                    if (estProprietaire) ...[
+                      const SizedBox(height: 24),
+                      const Divider(color: Color(0xFFDDD3C8)),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Aujourd\'hui',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontFamily: 'serif',
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF231A14),
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      const _SectionAujourdhui(),
+                    ],
                   ],
                 ),
               ),
@@ -314,6 +336,221 @@ class _CarteEssai extends ConsumerWidget {
                     Text(sousTitre, style: const TextStyle(color: Color(0xFF6F6259))),
                   ],
                 ),
+              ),
+              const Icon(Icons.chevron_right, color: Color(0xFF6F6259)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Statistiques du jour (nombre de clients, rendez-vous du jour), rappel de
+/// rendez-vous configurable, et accès au suivi des finances / aux mesures
+/// d'uniformes — visible uniquement du propriétaire (données financières et
+/// réglages d'atelier).
+class _SectionAujourdhui extends ConsumerWidget {
+  const _SectionAujourdhui();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clients = ref.watch(rechercheClientsProvider('')).valueOrNull ?? const <Client>[];
+    final rendezVous = ref.watch(rendezVousTriesProvider).valueOrNull ?? const <RendezVous>[];
+
+    final maintenant = DateTime.now();
+    final debutJour = DateTime(maintenant.year, maintenant.month, maintenant.day);
+    final finJour = debutJour.add(const Duration(days: 1));
+    final rdvAujourdhui = rendezVous.where((r) {
+      if (r.statut == AppConstants.rdvAnnule) return false;
+      final local = r.dateHeure.toLocal();
+      return !local.isBefore(debutJour) && local.isBefore(finJour);
+    }).length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _CarteStat(
+                icone: Icons.groups_outlined,
+                valeur: '${clients.length}',
+                libelle: 'Clients',
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _CarteStat(
+                icone: Icons.event_outlined,
+                valeur: '$rdvAujourdhui',
+                libelle: 'Rendez-vous\naujourd\'hui',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _CarteRappel(clients: clients, rendezVous: rendezVous),
+        const SizedBox(height: 16),
+        _LienNavigation(
+          icone: Icons.bar_chart_outlined,
+          libelle: 'Suivi des finances',
+          onTap: () => context.push(AppRoutes.suiviFinances),
+        ),
+        const SizedBox(height: 12),
+        _LienNavigation(
+          icone: Icons.diversity_3_outlined,
+          libelle: 'Mesures des uniformes',
+          onTap: () => context.push(AppRoutes.groupesUniformes),
+        ),
+      ],
+    );
+  }
+}
+
+class _CarteStat extends StatelessWidget {
+  const _CarteStat({required this.icone, required this.valeur, required this.libelle});
+
+  final IconData icone;
+  final String valeur;
+  final String libelle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icone, color: const Color(0xFF2A3A70)),
+          const SizedBox(height: 10),
+          Text(valeur, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 2),
+          Text(libelle, style: const TextStyle(color: Color(0xFF6F6259))),
+        ],
+      ),
+    );
+  }
+}
+
+class _CarteRappel extends ConsumerWidget {
+  const _CarteRappel({required this.clients, required this.rendezVous});
+
+  final List<Client> clients;
+  final List<RendezVous> rendezVous;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final joursAvant = ref.watch(preferenceRappelProvider);
+    final maintenant = DateTime.now();
+    final limite = maintenant.add(Duration(days: joursAvant));
+    final parClient = {for (final c in clients) c.id: c};
+
+    // Déjà triés par date croissante (observerRendezVousTries).
+    final concernes = <String>[];
+    for (final r in rendezVous) {
+      if (r.statut == AppConstants.rdvAnnule) continue;
+      final local = r.dateHeure.toLocal();
+      if (local.isBefore(maintenant) || local.isAfter(limite)) continue;
+      final nom = parClient[r.clientId]?.nomComplet;
+      if (nom != null && !concernes.contains(nom)) concernes.add(nom);
+    }
+
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.notifications_outlined, color: Color(0xFFD4A24C)),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Me rappeler les rendez-vous',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<int>(
+            value: joursAvant,
+            items: choixJoursAvantRappel
+                .map(
+                  (j) => DropdownMenuItem(
+                    value: j,
+                    child: Text(j == 1 ? '1 jour avant' : '$j jours avant'),
+                  ),
+                )
+                .toList(),
+            onChanged: (j) {
+              if (j != null) ref.read(preferenceRappelProvider.notifier).definir(j);
+            },
+          ),
+          const SizedBox(height: 16),
+          const Text('Clients concernés par ce rappel', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          if (concernes.isEmpty)
+            const Text(
+              'Aucun rendez-vous à venir pour le moment.',
+              style: TextStyle(color: Color(0xFF6F6259)),
+            )
+          else
+            ...concernes.map((nom) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text('• $nom'),
+                )),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () => NotificationsService.instance.envoyerNotificationTest(),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.notifications_active_outlined,
+                    size: 18, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  'Tester un rappel maintenant',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LienNavigation extends StatelessWidget {
+  const _LienNavigation({required this.icone, required this.libelle, required this.onTap});
+
+  final IconData icone;
+  final String libelle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(icone, color: const Color(0xFF2A3A70)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(libelle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
               const Icon(Icons.chevron_right, color: Color(0xFF6F6259)),
             ],

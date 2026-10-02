@@ -189,6 +189,33 @@ class PaiementEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Cache local des dépenses — même remarque que CommandeEntries/PaiementEntries
+/// : donnée financière, jamais alimentée ni lue pour un apprenti.
+@DataClassName('DepenseEntry')
+class DepenseEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  RealColumn get montant => real()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get date => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local des groupes de mesures d'uniformes.
+@DataClassName('GroupeUniformeEntry')
+class GroupeUniformeEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get nom => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// File d'attente de synchronisation (Phase 3) : toute écriture "locale
 /// d'abord" dont l'envoi immédiat vers Supabase a échoué (hors-ligne,
 /// coupure réseau) y est déposée, puis rejouée par `SyncEngine` dès qu'une
@@ -236,12 +263,14 @@ class AbonnementEntries extends Table {
   PaiementEntries,
   SyncQueueEntries,
   AbonnementEntries,
+  DepenseEntries,
+  GroupeUniformeEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -262,6 +291,10 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await m.createTable(abonnementEntries);
+          }
+          if (from < 5) {
+            await m.createTable(depenseEntries);
+            await m.createTable(groupeUniformeEntries);
           }
         },
       );
@@ -656,7 +689,39 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
-  /// Vide le cache local des commandes/paiements à la déconnexion : un
+  /// Tous les paiements de l'atelier (tous clients confondus), utilisé par
+  /// l'écran "Suivi des finances" pour le récapitulatif global.
+  Future<List<PaiementEntry>> tousPaiementsDeLAtelier(String atelierId) {
+    return (select(paiementEntries)..where((t) => t.atelierId.equals(atelierId))).get();
+  }
+
+  // --- Dépenses (financier — jamais consulté pour un apprenti) ---
+
+  Future<void> enregistrerDepense({
+    required String id,
+    required String atelierId,
+    required double montant,
+    String? description,
+    required DateTime date,
+    required DateTime createdAt,
+  }) async {
+    await into(depenseEntries).insertOnConflictUpdate(
+      DepenseEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        montant: montant,
+        description: Value(description),
+        date: date,
+        createdAt: createdAt,
+      ),
+    );
+  }
+
+  Future<List<DepenseEntry>> toutesDepensesDeLAtelier(String atelierId) {
+    return (select(depenseEntries)..where((t) => t.atelierId.equals(atelierId))).get();
+  }
+
+  /// Vide le cache local des commandes/paiements/dépenses à la déconnexion : un
   /// appareil peut être partagé entre le propriétaire et un apprenti, et
   /// les données financières ne doivent jamais rester lisibles sur disque
   /// après le départ du propriétaire (défense en profondeur, en plus du
@@ -665,12 +730,38 @@ class AppDatabase extends _$AppDatabase {
   /// perdre de données en attente d'envoi.
   Future<void> effacerCacheFinancierSiSynchronise() async {
     final tachesFinancieres = await (select(syncQueueEntries)
-          ..where((t) => t.nomTable.isIn(const ['commandes', 'paiements'])))
+          ..where((t) => t.nomTable.isIn(const ['commandes', 'paiements', 'depenses'])))
         .get();
     if (tachesFinancieres.isNotEmpty) return;
 
     await delete(commandeEntries).go();
     await delete(paiementEntries).go();
+    await delete(depenseEntries).go();
+  }
+
+  // --- Groupes d'uniformes ---
+
+  Future<void> enregistrerGroupeUniforme({
+    required String id,
+    required String atelierId,
+    required String nom,
+    required DateTime updatedAt,
+  }) async {
+    await into(groupeUniformeEntries).insertOnConflictUpdate(
+      GroupeUniformeEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        nom: nom,
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  Stream<List<GroupeUniformeEntry>> observerGroupesUniformes(String atelierId) {
+    return (select(groupeUniformeEntries)
+          ..where((t) => t.atelierId.equals(atelierId))
+          ..orderBy([(t) => OrderingTerm.asc(t.nom)]))
+        .watch();
   }
 
   // --- File d'attente de synchronisation ---
