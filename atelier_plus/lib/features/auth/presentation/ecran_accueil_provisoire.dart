@@ -186,7 +186,7 @@ class _EnTete extends StatelessWidget {
                   data: (a) => CircleAvatar(
                     radius: 26,
                     backgroundColor: Colors.white24,
-                    backgroundImage: a?.logoUrl == null ? null : NetworkImage(a.logoUrl!),
+                    backgroundImage: a?.logoUrl == null ? null : NetworkImage(a!.logoUrl!),
                     child: a?.logoUrl == null
                         ? const Icon(Icons.storefront, color: Colors.white, size: 24)
                         : null,
