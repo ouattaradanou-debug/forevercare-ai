@@ -38,7 +38,10 @@ dependencies:
   flutter_image_compress: ^2.3.0
 
   # --- Note vocale de description sous chaque photo (tissu/modèle) ---
-  record: ^5.2.0
+  # Version 7.x requise : 5.2.x résout une combinaison record_linux/
+  # record_platform_interface incompatible (erreur de compilation), corrigée
+  # dans les versions plus récentes.
+  record: ^7.1.1
   audioplayers: ^6.1.0
 
   # --- Notifications locales (rappels de rendez-vous) ---
