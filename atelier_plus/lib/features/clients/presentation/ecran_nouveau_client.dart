@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
@@ -47,6 +50,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   bool _dicteeDisponible = false;
   String? _champEnDictee;
   String _texteRendezVousEnCours = '';
+  final _lectureVocale = FlutterTts();
 
   final _montantTotalCtrl = TextEditingController();
   final _avanceCtrl = TextEditingController();
@@ -69,6 +73,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
         await ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
       }
     });
+    _lectureVocale.setLanguage('fr-FR');
   }
 
   @override
@@ -81,6 +86,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
       c.dispose();
     }
     _dicteeVocale.stop();
+    _lectureVocale.stop();
     super.dispose();
   }
 
@@ -179,19 +185,24 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
 
     final resultat = AnalyseurDateVocale.analyser(texte);
     if (resultat == null) {
+      const message = 'Je n\'ai pas compris la date. Essayez par exemple : dans 4 jours à '
+          '15 heures, ou le 20 mars à 10 heures.';
+      unawaited(_lectureVocale.speak(message));
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Date non comprise (vous avez dit : "$texte"). '
-            'Essayez par exemple "dans 4 jours à 15h" ou "le 20 mars à 10h".',
-          ),
-        ),
+        SnackBar(content: Text('Date non comprise (vous avez dit : "$texte"). $message')),
       );
       return;
     }
 
     final heureTxt = '${resultat.dateHeure.hour.toString().padLeft(2, '0')}h'
         '${resultat.dateHeure.minute.toString().padLeft(2, '0')}';
+    final minute = resultat.dateHeure.minute;
+    final phraseParlee = 'Rendez-vous le ${Formatters.dateLongue(resultat.dateHeure)} à '
+        '${resultat.dateHeure.hour} heures${minute > 0 ? ' $minute' : ''}'
+        '${resultat.heureDeduite ? '. Heure non précisée : neuf heures par défaut.' : '.'} '
+        'Dites confirmer, ou appuyez de nouveau sur le micro pour recommencer.';
+    unawaited(_lectureVocale.speak(phraseParlee));
+
     final confirme = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -203,17 +214,28 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () {
+              _lectureVocale.stop();
+              Navigator.of(context).pop(false);
+            },
             child: const Text('Recommencer'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () {
+              _lectureVocale.stop();
+              Navigator.of(context).pop(true);
+            },
             child: const Text('Confirmer'),
           ),
         ],
       ),
     );
-    if (confirme != true) return;
+    if (confirme != true) {
+      // "Recliquer pour reprendre son vocal" : on relance directement une
+      // nouvelle écoute, sans action supplémentaire à faire par le
+      // tailleur au-delà d'appuyer de nouveau sur le micro.
+      return;
+    }
 
     final client = await _assurerClientCree();
     if (client == null || !mounted) return;
