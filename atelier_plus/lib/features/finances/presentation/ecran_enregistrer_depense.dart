@@ -24,7 +24,7 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
 
   final _dicteeVocale = stt.SpeechToText();
   bool _dicteeDisponible = false;
-  bool _dicteeEnCours = false;
+  String? _champEnDictee;
 
   @override
   void dispose() {
@@ -34,25 +34,30 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
     super.dispose();
   }
 
-  /// Même mécanisme de dictée que les champs Finances de "Nouveau client" :
-  /// un tailleur qui ne sait pas écrire peut dicter le montant, transcrit
-  /// en ne gardant que les chiffres.
-  Future<void> _basculerDicteeMontant() async {
-    if (_dicteeEnCours) {
+  /// Même mécanisme de dictée que dans "Nouveau client" : un tailleur qui
+  /// ne sait pas écrire peut dicter le montant (chiffres uniquement) ou la
+  /// description (texte libre). Un seul champ à la fois.
+  Future<void> _basculerDictee(
+    String champ,
+    TextEditingController controleur, {
+    bool chiffresSeulement = false,
+  }) async {
+    if (_champEnDictee == champ) {
       await _dicteeVocale.stop();
-      if (mounted) setState(() => _dicteeEnCours = false);
+      if (mounted) setState(() => _champEnDictee = null);
       return;
     }
+    if (_champEnDictee != null) await _dicteeVocale.stop();
 
     if (!_dicteeDisponible) {
       _dicteeDisponible = await _dicteeVocale.initialize(
         onStatus: (statut) {
           if ((statut == 'done' || statut == 'notListening') && mounted) {
-            setState(() => _dicteeEnCours = false);
+            setState(() => _champEnDictee = null);
           }
         },
         onError: (_) {
-          if (mounted) setState(() => _dicteeEnCours = false);
+          if (mounted) setState(() => _champEnDictee = null);
         },
       );
     }
@@ -65,13 +70,16 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
       return;
     }
 
-    setState(() => _dicteeEnCours = true);
+    setState(() => _champEnDictee = champ);
     await _dicteeVocale.listen(
       localeId: 'fr_FR',
       onResult: (resultat) {
-        final texte = resultat.recognizedWords.replaceAll(RegExp(r'[^0-9]'), '');
-        _montantCtrl.text = texte;
-        _montantCtrl.selection = TextSelection.collapsed(offset: _montantCtrl.text.length);
+        var texte = resultat.recognizedWords;
+        if (chiffresSeulement) {
+          texte = texte.replaceAll(RegExp(r'[^0-9]'), '');
+        }
+        controleur.text = texte;
+        controleur.selection = TextSelection.collapsed(offset: controleur.text.length);
       },
     );
   }
@@ -130,9 +138,10 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
                 decoration: InputDecoration(
                   labelText: 'Montant (FCFA)',
                   prefixIcon: IconButton(
-                    icon: Icon(_dicteeEnCours ? Icons.mic : Icons.mic_none),
-                    color: _dicteeEnCours ? Colors.red : null,
-                    onPressed: _basculerDicteeMontant,
+                    icon: Icon(_champEnDictee == 'montant' ? Icons.mic : Icons.mic_none),
+                    color: _champEnDictee == 'montant' ? Colors.red : null,
+                    onPressed: () =>
+                        _basculerDictee('montant', _montantCtrl, chiffresSeulement: true),
                   ),
                 ),
                 autofocus: true,
@@ -140,7 +149,14 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
               const SizedBox(height: 16),
               TextField(
                 controller: _descriptionCtrl,
-                decoration: const InputDecoration(labelText: 'Description (optionnel)'),
+                decoration: InputDecoration(
+                  labelText: 'Description (optionnel)',
+                  prefixIcon: IconButton(
+                    icon: Icon(_champEnDictee == 'description' ? Icons.mic : Icons.mic_none),
+                    color: _champEnDictee == 'description' ? Colors.red : null,
+                    onPressed: () => _basculerDictee('description', _descriptionCtrl),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               ListTile(
