@@ -12,6 +12,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
 import '../../mesures/providers/mesures_providers.dart';
+import '../../../data/models/type_tenue.dart';
 import '../providers/clients_providers.dart';
 import '../providers/photos_providers.dart';
 
@@ -38,7 +39,6 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   final _montantTotalCtrl = TextEditingController();
   final _avanceCtrl = TextEditingController();
 
-  String? _typeTenueId;
   final Map<String, TextEditingController> _controleursMesure = {};
 
   Client? _client;
@@ -47,6 +47,17 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   bool _financesEnregistrees = false;
   bool _photoEnCours = false;
   String? _erreur;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      if (utilisateur != null) {
+        await ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -115,9 +126,23 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     }
   }
 
-  Future<void> _enregistrerMesures() async {
-    final client = await _assurerClientCree();
-    if (client == null || _typeTenueId == null) return;
+  /// Id du gabarit par défaut (fourni par l'application) pour ce sexe —
+  /// les mesures du client ne passent jamais par le choix d'un type de
+  /// tenue, contrairement aux groupes d'uniformes : une seule liste fixe de
+  /// champs par sexe, comme dans l'ancienne application.
+  Future<String?> _idGabaritPourSexe(String sexe) async {
+    final liste = await ref.read(typesTenueVisiblesProvider.future);
+    for (final type in liste) {
+      if (type.estGabaritParDefaut && type.sexe == sexe) return type.id;
+    }
+    return null;
+  }
+
+  /// Enregistre les mesures déjà saisies en une seule prise, appelée au
+  /// moment d'"Enregistrer le client" (jamais par champ : `mesures` est une
+  /// table historisée, chaque appel crée une nouvelle ligne).
+  Future<void> _enregistrerMesures(Client client) async {
+    if (_mesuresEnregistrees || _sexe == null) return;
 
     final valeurs = <String, String>{};
     for (final entree in _controleursMesure.entries) {
@@ -126,21 +151,19 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     }
     if (valeurs.isEmpty) return;
 
+    final typeTenueId = await _idGabaritPourSexe(_sexe!);
+    if (typeTenueId == null) return;
+
     try {
       final utilisateur = await ref.read(utilisateurCourantProvider.future);
       await ref.read(mesuresRepositoryProvider).enregistrerNouvellePrise(
             atelierId: utilisateur!.atelierId,
             clientId: client.id,
-            typeTenueId: _typeTenueId!,
+            typeTenueId: typeTenueId,
             valeurs: valeurs,
             prisePar: utilisateur.id,
           );
-      if (mounted) {
-        setState(() => _mesuresEnregistrees = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mesures enregistrées.')),
-        );
-      }
+      if (mounted) setState(() => _mesuresEnregistrees = true);
     } catch (e) {
       if (mounted) setState(() => _erreur = e.toString());
     }
@@ -209,6 +232,8 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   Future<void> _terminer() async {
     final client = await _assurerClientCree();
     if (client == null || !mounted) return;
+    await _enregistrerMesures(client);
+    if (!mounted) return;
     context.pushReplacement(AppRoutes.ficheClient(client.id));
   }
 
@@ -308,11 +333,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                   else
                     _SectionMesures(
                       sexe: _sexe!,
-                      typeTenueId: _typeTenueId,
-                      onTypeChange: (id) => setState(() => _typeTenueId = id),
                       controleurPour: _controleurMesure,
-                      onEnregistrer: _enregistrerMesures,
-                      enregistre: _mesuresEnregistrees,
                     ),
                   const SizedBox(height: 28),
                   _EnTeteSection(
@@ -521,22 +542,16 @@ class _CarteSexe extends StatelessWidget {
   }
 }
 
+/// Liste fixe des champs de mesure selon le sexe du client — pas de choix
+/// de type de tenue à cette étape (contrairement aux groupes d'uniformes) :
+/// l'ancienne application affiche directement, dès le sexe choisi, la même
+/// liste de ~20 (homme) ou ~23 (femme) champs, lue depuis les gabarits par
+/// défaut `Standard homme`/`Standard femme` (voir schema.sql, section 6).
 class _SectionMesures extends ConsumerWidget {
-  const _SectionMesures({
-    required this.sexe,
-    required this.typeTenueId,
-    required this.onTypeChange,
-    required this.controleurPour,
-    required this.onEnregistrer,
-    required this.enregistre,
-  });
+  const _SectionMesures({required this.sexe, required this.controleurPour});
 
   final String sexe;
-  final String? typeTenueId;
-  final ValueChanged<String?> onTypeChange;
   final TextEditingController Function(String champId) controleurPour;
-  final VoidCallback onEnregistrer;
-  final bool enregistre;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -544,52 +559,40 @@ class _SectionMesures extends ConsumerWidget {
 
     return types.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const Text('Impossible de charger les types de tenue.'),
+      error: (_, __) => const Text('Impossible de charger les champs de mesure.'),
       data: (liste) {
-        final filtres = liste.where((t) => t.sexe == sexe || t.sexe == 'mixte').toList();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DropdownButtonFormField<String>(
-              value: typeTenueId,
-              decoration: const InputDecoration(labelText: 'Type de tenue'),
-              items: filtres
-                  .map((t) => DropdownMenuItem(value: t.id, child: Text(t.nom)))
-                  .toList(),
-              onChanged: onTypeChange,
-            ),
-            if (typeTenueId != null) ...[
-              const SizedBox(height: 12),
-              Consumer(
-                builder: (context, ref, _) {
-                  final champs = ref.watch(champsActifsProvider(typeTenueId!));
-                  return champs.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (_, __) => const Text('Impossible de charger les champs de mesure.'),
-                    data: (champsListe) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final champ in champsListe)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: TextField(
-                              controller: controleurPour(champ.id),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              decoration:
-                                  InputDecoration(labelText: '${champ.nom} (${champ.unite})'),
-                            ),
-                          ),
-                        OutlinedButton(
-                          onPressed: onEnregistrer,
-                          child: Text(enregistre ? 'Mesures enregistrées ✓' : 'Enregistrer les mesures'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+        TypeTenue? gabarit;
+        for (final type in liste) {
+          if (type.estGabaritParDefaut && type.sexe == sexe) {
+            gabarit = type;
+            break;
+          }
+        }
+        if (gabarit == null) {
+          return const Text(
+            'Connectez-vous à internet une première fois pour récupérer les champs de mesure.',
+            style: TextStyle(color: Color(0xFF6F6259)),
+          );
+        }
+
+        final champs = ref.watch(champsActifsProvider(gabarit.id));
+        return champs.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => const Text('Impossible de charger les champs de mesure.'),
+          data: (champsListe) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final champ in champsListe)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TextField(
+                    controller: controleurPour(champ.id),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(labelText: '${champ.nom} (${champ.unite})'),
+                  ),
+                ),
             ],
-          ],
+          ),
         );
       },
     );
