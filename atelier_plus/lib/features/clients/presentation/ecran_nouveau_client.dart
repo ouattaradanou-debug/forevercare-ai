@@ -125,6 +125,11 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
         }
         controleur.text = texte;
         controleur.selection = TextSelection.collapsed(offset: controleur.text.length);
+        // Nécessaire pour les champs Finances : "Reste à payer" lit
+        // directement les contrôleurs dans build() et ne se rafraîchit
+        // sinon pas lors d'une mise à jour par dictée (contrairement à la
+        // saisie manuelle, qui passe par onChanged).
+        if (mounted) setState(() {});
       },
     );
   }
@@ -142,6 +147,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
           final champTermine = _champEnDictee;
           setState(() => _champEnDictee = null);
           if (champTermine == 'rendezvous') _traiterDicteeRendezVous();
+          if (champTermine == 'montant' || champTermine == 'avance') _enregistrerFinances();
         }
       },
       onError: (_) {
@@ -572,7 +578,18 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                   TextField(
                     controller: _montantTotalCtrl,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Montant total convenu (FCFA)'),
+                    decoration: InputDecoration(
+                      labelText: 'Montant total convenu (FCFA)',
+                      prefixIcon: IconButton(
+                        icon: Icon(_champEnDictee == 'montant' ? Icons.mic : Icons.mic_none),
+                        color: _champEnDictee == 'montant' ? Colors.red : null,
+                        onPressed: () => _basculerDictee(
+                          'montant',
+                          _montantTotalCtrl,
+                          chiffresSeulement: true,
+                        ),
+                      ),
+                    ),
                     onChanged: (_) => setState(() {}),
                     onEditingComplete: _enregistrerFinances,
                   ),
@@ -580,8 +597,18 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                   TextField(
                     controller: _avanceCtrl,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration:
-                        const InputDecoration(labelText: 'Avance déjà payée par le client'),
+                    decoration: InputDecoration(
+                      labelText: 'Avance déjà payée par le client',
+                      prefixIcon: IconButton(
+                        icon: Icon(_champEnDictee == 'avance' ? Icons.mic : Icons.mic_none),
+                        color: _champEnDictee == 'avance' ? Colors.red : null,
+                        onPressed: () => _basculerDictee(
+                          'avance',
+                          _avanceCtrl,
+                          chiffresSeulement: true,
+                        ),
+                      ),
+                    ),
                     onChanged: (_) => setState(() {}),
                     onEditingComplete: _enregistrerFinances,
                   ),
