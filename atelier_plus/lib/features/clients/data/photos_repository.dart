@@ -77,6 +77,15 @@ class PhotosRepository {
     return url;
   }
 
+  /// Retire la note vocale d'une photo (le fichier audio lui-même reste
+  /// dans le stockage — même choix que pour les photos/champs, jamais
+  /// supprimés physiquement, seulement détachés).
+  Future<void> supprimerAudioDePhoto(PhotoClient photo) async {
+    await verifierEcritureAutorisee(_baseLocale, photo.atelierId);
+    await _client.from('photos').update({'audio_url': null}).eq('id', photo.id);
+    await _baseLocale.mettreAJourAudioPhoto(photo.id, null);
+  }
+
   Future<void> chargerDepuisServeur(String clientId) async {
     try {
       final lignes = await _client.from('photos').select().eq('client_id', clientId);

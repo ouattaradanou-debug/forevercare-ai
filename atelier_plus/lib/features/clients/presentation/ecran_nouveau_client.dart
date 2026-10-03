@@ -738,6 +738,45 @@ class _TuilePhotoState extends ConsumerState<_TuilePhoto> {
     }
   }
 
+  Future<void> _supprimerAudio() async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer le vocal ?'),
+        content: const Text('Cette note vocale sera retirée de cette photo.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true) return;
+
+    if (_lecture) {
+      await _player.stop();
+      if (mounted) setState(() => _lecture = false);
+    }
+
+    setState(() => _enCoursEnvoi = true);
+    try {
+      await ref.read(photosRepositoryProvider).supprimerAudioDePhoto(widget.photo);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Échec de la suppression : $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _enCoursEnvoi = false);
+    }
+  }
+
   void _ouvrirPleinEcran() {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -786,13 +825,21 @@ class _TuilePhotoState extends ConsumerState<_TuilePhoto> {
                     couleurFond: const Color(0xFF141B3E),
                     onTap: _basculerLecture,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 3),
                 ],
                 _BoutonRondPhoto(
                   icone: Icons.mic,
                   couleurFond: aUnAudio ? const Color(0xFF8A4B24) : const Color(0xFF141B3E),
                   onTap: _basculerEnregistrement,
                 ),
+                if (aUnAudio) ...[
+                  const SizedBox(width: 3),
+                  _BoutonRondPhoto(
+                    icone: Icons.delete_outline,
+                    couleurFond: const Color(0xFF8A2E2E),
+                    onTap: _supprimerAudio,
+                  ),
+                ],
               ],
             ),
         ],
