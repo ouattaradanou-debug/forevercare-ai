@@ -330,8 +330,15 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(groupeUniformeEntries);
           }
           if (from < 6) {
-            await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.repondantNom);
-            await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.repondantTelephone);
+            // `createTable` ci-dessus construit toujours la table avec la
+            // définition Dart actuelle (donc déjà avec repondant_nom/
+            // repondant_telephone) : ces colonnes n'existent pas encore
+            // seulement pour un appareil qui était déjà exactement en
+            // version 5 (table créée avant leur ajout au modèle).
+            if (from >= 5) {
+              await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.repondantNom);
+              await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.repondantTelephone);
+            }
             await m.createTable(membreGroupeUniformeEntries);
             await m.createTable(mesureUniformeEntries);
           }
