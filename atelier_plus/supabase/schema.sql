@@ -1072,3 +1072,43 @@ values
   ('22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222200', 'Bas', 'cm', 21),
   ('22222222-2222-2222-2222-222222222223', '22222222-2222-2222-2222-222222222200', 'Long. Tunique', 'cm', 22)
 on conflict (id) do update set nom = excluded.nom, unite = excluded.unite, ordre = excluded.ordre;
+
+-- =============================================================================
+-- 7. STOCKAGE (SUPABASE STORAGE)
+-- =============================================================================
+-- Les buckets utilisés par l'application (photos de tissus/modèles, logo
+-- d'atelier) n'avaient jamais été créés ni dotés de règles d'accès (RLS) —
+-- d'où l'erreur "new row violates row-level security policy" lors du tout
+-- premier envoi de photo. `public = true` permet à `getPublicUrl()` de
+-- fonctionner sans authentification côté lecture (affichage des photos).
+insert into storage.buckets (id, name, public)
+values
+  ('photos-clients', 'photos-clients', true),
+  ('logos-ateliers', 'logos-ateliers', true)
+on conflict (id) do nothing;
+
+drop policy if exists photos_clients_insert on storage.objects;
+create policy photos_clients_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'photos-clients');
+
+drop policy if exists photos_clients_select on storage.objects;
+create policy photos_clients_select on storage.objects
+  for select to authenticated
+  using (bucket_id = 'photos-clients');
+
+drop policy if exists logos_ateliers_insert on storage.objects;
+create policy logos_ateliers_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'logos-ateliers');
+
+drop policy if exists logos_ateliers_update on storage.objects;
+create policy logos_ateliers_update on storage.objects
+  for update to authenticated
+  using (bucket_id = 'logos-ateliers')
+  with check (bucket_id = 'logos-ateliers');
+
+drop policy if exists logos_ateliers_select on storage.objects;
+create policy logos_ateliers_select on storage.objects
+  for select to authenticated
+  using (bucket_id = 'logos-ateliers');
