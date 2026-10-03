@@ -801,6 +801,15 @@ class AppDatabase extends _$AppDatabase {
     return (select(depenseEntries)..where((t) => t.atelierId.equals(atelierId))).get();
   }
 
+  /// Historique des dépenses, les plus récentes en premier — utilisé par
+  /// l'écran "Historique des dépenses".
+  Stream<List<DepenseEntry>> observerDepensesDeLAtelier(String atelierId) {
+    return (select(depenseEntries)
+          ..where((t) => t.atelierId.equals(atelierId))
+          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+        .watch();
+  }
+
   /// Vide le cache local des commandes/paiements/dépenses à la déconnexion : un
   /// appareil peut être partagé entre le propriétaire et un apprenti, et
   /// les données financières ne doivent jamais rester lisibles sur disque

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/local/database_provider.dart';
 import '../../../data/models/commande.dart';
+import '../../../data/models/depense.dart';
 import '../../../data/models/paiement.dart';
 import '../../../data/remote/supabase_client_provider.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -51,4 +52,14 @@ final commandeDuClientProvider =
 final paiementsDeLaCommandeProvider =
     StreamProvider.family<List<Paiement>, String>((ref, commandeId) {
   return ref.watch(financesRepositoryProvider).observerPaiements(commandeId);
+});
+
+/// Historique des dépenses de l'atelier, pour l'écran du même nom.
+final depensesDeLAtelierProvider = StreamProvider.autoDispose<List<Depense>>((ref) async* {
+  final atelier = await ref.watch(atelierCourantProvider.future);
+  if (atelier == null) {
+    yield const [];
+    return;
+  }
+  yield* ref.watch(financesRepositoryProvider).observerDepenses(atelier.id);
 });

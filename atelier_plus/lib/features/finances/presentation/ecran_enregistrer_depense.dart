@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
+import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/finances_providers.dart';
@@ -180,6 +182,11 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : const Text('Enregistrer'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => context.push(AppRoutes.historiqueDepenses),
+                child: const Text('Historique des dépenses'),
               ),
             ],
           ),

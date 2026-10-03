@@ -25,6 +25,7 @@ import '../../features/mesures/presentation/ecran_gestion_types_tenue.dart';
 import '../../features/mesures/presentation/ecran_prise_mesure.dart';
 import '../../features/mesures/presentation/ecran_selection_type_tenue.dart';
 import '../../features/finances/presentation/ecran_enregistrer_depense.dart';
+import '../../features/finances/presentation/ecran_historique_depenses.dart';
 import '../../features/finances/presentation/ecran_finances_client.dart';
 import '../../features/finances/presentation/ecran_suivi_finances.dart';
 import '../../features/permissions/presentation/ecran_panneau_permissions.dart';
@@ -81,6 +82,7 @@ class AppRoutes {
   static const String abonnement = '/abonnement';
 
   static const String nouvelleDepense = '/depenses/nouvelle';
+  static const String historiqueDepenses = '/depenses/historique';
   static const String suiviFinances = '/finances';
   static const String groupesUniformes = '/uniformes';
   static const String _detailGroupeUniformeTemplate = '/uniformes/:id';
@@ -204,6 +206,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.nouvelleDepense,
         builder: (context, state) => const EcranEnregistrerDepense(),
+      ),
+      GoRoute(
+        path: AppRoutes.historiqueDepenses,
+        builder: (context, state) => const EcranHistoriqueDepenses(),
       ),
       GoRoute(
         path: AppRoutes.suiviFinances,

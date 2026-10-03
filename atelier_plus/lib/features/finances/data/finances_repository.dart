@@ -144,6 +144,25 @@ class FinancesRepository {
     return depense;
   }
 
+  /// Historique des dépenses, du plus récent au plus ancien — pour l'écran
+  /// "Historique des dépenses".
+  Stream<List<Depense>> observerDepenses(String atelierId) {
+    return _baseLocale.observerDepensesDeLAtelier(atelierId).map(
+          (lignes) => lignes
+              .map(
+                (l) => Depense(
+                  id: l.id,
+                  atelierId: l.atelierId,
+                  montant: l.montant,
+                  description: l.description,
+                  date: l.date,
+                  createdAt: l.createdAt,
+                ),
+              )
+              .toList(),
+        );
+  }
+
   /// Paiements et dépenses de tout l'atelier (tous clients confondus),
   /// utilisés pour le récapitulatif global de l'écran "Suivi des finances".
   Future<({List<Paiement> paiements, List<Depense> depenses})> recapitulatifBrut(
