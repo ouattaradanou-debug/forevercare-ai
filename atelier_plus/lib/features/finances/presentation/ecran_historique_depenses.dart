@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/formatters.dart';
 import '../providers/finances_providers.dart';
 
-/// Liste de toutes les dépenses enregistrées, la plus récente en premier.
+/// Tableau de toutes les dépenses enregistrées (Date, Motif, Montant), la
+/// plus récente en premier.
 class EcranHistoriqueDepenses extends ConsumerWidget {
   const EcranHistoriqueDepenses({super.key});
 
@@ -27,28 +28,64 @@ class EcranHistoriqueDepenses extends ConsumerWidget {
                 ),
               );
             }
-            return ListView.separated(
+            return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              itemCount: liste.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final depense = liste[index];
-                return ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFF5E3E3),
-                    child: Icon(Icons.remove, color: Color(0xFFB3261E)),
-                  ),
-                  title: Text(Formatters.montant(depense.montant)),
-                  subtitle: Text(
-                    depense.description == null || depense.description!.isEmpty
-                        ? Formatters.dateLongue(depense.date)
-                        : '${depense.description}\n${Formatters.dateLongue(depense.date)}',
-                  ),
-                  isThreeLine: depense.description != null && depense.description!.isNotEmpty,
-                );
-              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 6)],
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Table(
+                  columnWidths: const {
+                    0: FixedColumnWidth(90),
+                    2: FlexColumnWidth(0.9),
+                  },
+                  children: [
+                    const TableRow(children: [
+                      _Cellule('Date', entete: true),
+                      _Cellule('Motif', entete: true),
+                      _Cellule('Montant', entete: true, alignDroite: true),
+                    ]),
+                    for (final depense in liste)
+                      TableRow(children: [
+                        _Cellule(Formatters.dateCourte(depense.date)),
+                        _Cellule(
+                          depense.description == null || depense.description!.isEmpty
+                              ? '—'
+                              : depense.description!,
+                        ),
+                        _Cellule(Formatters.nombre(depense.montant), alignDroite: true),
+                      ]),
+                  ],
+                ),
+              ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _Cellule extends StatelessWidget {
+  const _Cellule(this.texte, {this.entete = false, this.alignDroite = false});
+
+  final String texte;
+  final bool entete;
+  final bool alignDroite;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      child: Text(
+        texte,
+        textAlign: alignDroite ? TextAlign.right : TextAlign.left,
+        style: TextStyle(
+          fontWeight: entete ? FontWeight.bold : FontWeight.normal,
+          color: const Color(0xFF231A14),
         ),
       ),
     );
