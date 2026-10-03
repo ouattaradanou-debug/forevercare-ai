@@ -733,20 +733,33 @@ class _TuilePhotoState extends ConsumerState<_TuilePhoto> {
     }
   }
 
+  void _ouvrirPleinEcran() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => _EcranPhotoPleinEcran(url: widget.photo.url),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final aUnAudio = widget.photo.audioUrl != null;
 
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(widget.photo.url, width: 90, height: 90, fit: BoxFit.cover),
-        ),
-        Positioned(
-          right: 4,
-          bottom: 4,
-          child: GestureDetector(
+    return SizedBox(
+      width: 90,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: _ouvrirPleinEcran,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(widget.photo.url, width: 90, height: 90, fit: BoxFit.cover),
+            ),
+          ),
+          const SizedBox(height: 6),
+          GestureDetector(
             onTap: _enCoursEnvoi ? null : (aUnAudio ? _basculerLecture : _basculerEnregistrement),
             child: CircleAvatar(
               radius: 14,
@@ -766,8 +779,32 @@ class _TuilePhotoState extends ConsumerState<_TuilePhoto> {
                     ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Affichage plein écran d'une photo (ouverte en appuyant sur sa vignette),
+/// avec zoom/déplacement tactile.
+class _EcranPhotoPleinEcran extends StatelessWidget {
+  const _EcranPhotoPleinEcran({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          child: Image.network(url),
         ),
-      ],
+      ),
     );
   }
 }
