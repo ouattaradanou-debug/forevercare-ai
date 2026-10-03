@@ -237,6 +237,14 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
       return;
     }
 
+    await _enregistrerRendezVous(resultat.dateHeure);
+  }
+
+  /// Crée (si besoin) le client puis enregistre directement le rendez-vous
+  /// — type "essayage" par défaut, partagé par la dictée vocale et le choix
+  /// manuel calendrier/horloge : aucun des deux ne passe par le formulaire
+  /// complet (nom du client déjà connu, type non redemandé).
+  Future<void> _enregistrerRendezVous(DateTime dateHeure) async {
     final client = await _assurerClientCree();
     if (client == null || !mounted) return;
 
@@ -245,7 +253,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
       await ref.read(rendezVousRepositoryProvider).creerRendezVous(
             atelierId: utilisateur!.atelierId,
             clientId: client.id,
-            dateHeure: resultat.dateHeure,
+            dateHeure: dateHeure,
             type: AppConstants.rdvEssayage,
             nomClientPourRappel: client.nomComplet,
           );
@@ -399,10 +407,27 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     }
   }
 
+  /// Calendrier puis horloge, enchaînés directement — pour un tailleur qui
+  /// sait lire/écrire et préfère les sélecteurs manuels à la dictée vocale.
+  /// Ni le nom du client (déjà connu) ni le type de rendez-vous ne sont
+  /// redemandés ici (voir _enregistrerRendezVous).
   Future<void> _ajouterRendezVous() async {
-    final client = await _assurerClientCree();
-    if (client == null || !mounted) return;
-    context.push(AppRoutes.creationRendezVous, extra: client);
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (date == null || !mounted) return;
+
+    final heure = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 9, minute: 0),
+    );
+    if (heure == null || !mounted) return;
+
+    final dateHeure = DateTime(date.year, date.month, date.day, heure.hour, heure.minute);
+    await _enregistrerRendezVous(dateHeure);
   }
 
   Future<void> _terminer() async {
