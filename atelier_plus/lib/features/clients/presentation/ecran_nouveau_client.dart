@@ -9,7 +9,9 @@ import 'package:record/record.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:uuid/uuid.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/analyseur_date_vocale.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/client.dart';
 import '../../../data/models/photo_client.dart';
@@ -19,6 +21,7 @@ import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
 import '../../mesures/providers/mesures_providers.dart';
 import '../../../data/models/type_tenue.dart';
+import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/clients_providers.dart';
 import '../providers/photos_providers.dart';
 
@@ -43,6 +46,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   final _dicteeVocale = stt.SpeechToText();
   bool _dicteeDisponible = false;
   String? _champEnDictee;
+  String _texteRendezVousEnCours = '';
 
   final _montantTotalCtrl = TextEditingController();
   final _avanceCtrl = TextEditingController();
@@ -103,27 +107,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
       await _dicteeVocale.stop();
     }
 
-    if (!_dicteeDisponible) {
-      _dicteeDisponible = await _dicteeVocale.initialize(
-        onStatus: (statut) {
-          if ((statut == 'done' || statut == 'notListening') && mounted) {
-            setState(() => _champEnDictee = null);
-          }
-        },
-        onError: (_) {
-          if (mounted) setState(() => _champEnDictee = null);
-        },
-      );
-    }
-
-    if (!_dicteeDisponible) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
-        );
-      }
-      return;
-    }
+    if (!await _initialiserDicteeSiBesoin()) return;
 
     setState(() => _champEnDictee = champ);
     await _dicteeVocale.listen(
@@ -137,6 +121,124 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
         controleur.selection = TextSelection.collapsed(offset: controleur.text.length);
       },
     );
+  }
+
+  /// Initialise le moteur de dictée si besoin, avec un callback de statut
+  /// commun à tous les champs dictables : quand l'écoute se termine (fin de
+  /// phrase détectée, ou arrêt manuel), on efface l'état "en écoute" et, si
+  /// c'était le rendez-vous, on lance l'analyse de la date/heure dictée.
+  Future<bool> _initialiserDicteeSiBesoin() async {
+    if (_dicteeDisponible) return true;
+
+    _dicteeDisponible = await _dicteeVocale.initialize(
+      onStatus: (statut) {
+        if ((statut == 'done' || statut == 'notListening') && mounted) {
+          final champTermine = _champEnDictee;
+          setState(() => _champEnDictee = null);
+          if (champTermine == 'rendezvous') _traiterDicteeRendezVous();
+        }
+      },
+      onError: (_) {
+        if (mounted) setState(() => _champEnDictee = null);
+      },
+    );
+
+    if (!_dicteeDisponible && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
+      );
+    }
+    return _dicteeDisponible;
+  }
+
+  /// Dicter directement la date et l'heure du rendez-vous ("dans 4 jours à
+  /// 15h", "le 20 mars à 10h30"...) plutôt que de passer par les sélecteurs
+  /// manuels de l'écran "Nouveau rendez-vous" — pensé pour un tailleur qui
+  /// ne sait pas écrire. La date comprise est toujours répétée dans une
+  /// boîte de confirmation avant tout enregistrement.
+  Future<void> _dicterRendezVous() async {
+    if (_champEnDictee == 'rendezvous') {
+      await _dicteeVocale.stop();
+      return; // Le traitement est déclenché par le callback onStatus ci-dessus.
+    }
+    if (_champEnDictee != null) await _dicteeVocale.stop();
+
+    if (!await _initialiserDicteeSiBesoin()) return;
+
+    _texteRendezVousEnCours = '';
+    setState(() => _champEnDictee = 'rendezvous');
+    await _dicteeVocale.listen(
+      localeId: 'fr_FR',
+      onResult: (resultat) => _texteRendezVousEnCours = resultat.recognizedWords,
+    );
+  }
+
+  Future<void> _traiterDicteeRendezVous() async {
+    final texte = _texteRendezVousEnCours.trim();
+    if (texte.isEmpty || !mounted) return;
+
+    final resultat = AnalyseurDateVocale.analyser(texte);
+    if (resultat == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Date non comprise (vous avez dit : "$texte"). '
+            'Essayez par exemple "dans 4 jours à 15h" ou "le 20 mars à 10h".',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final heureTxt = '${resultat.dateHeure.hour.toString().padLeft(2, '0')}h'
+        '${resultat.dateHeure.minute.toString().padLeft(2, '0')}';
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmer le rendez-vous ?'),
+        content: Text(
+          'Rendez-vous le ${Formatters.dateLongue(resultat.dateHeure)} à $heureTxt'
+          '${resultat.heureDeduite ? ' (heure non précisée, 9h00 par défaut)' : ''}.\n\n'
+          'Vous avez dit : "$texte"',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Recommencer'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Confirmer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true) return;
+
+    final client = await _assurerClientCree();
+    if (client == null || !mounted) return;
+
+    try {
+      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      await ref.read(rendezVousRepositoryProvider).creerRendezVous(
+            atelierId: utilisateur!.atelierId,
+            clientId: client.id,
+            dateHeure: resultat.dateHeure,
+            type: AppConstants.rdvEssayage,
+            nomClientPourRappel: client.nomComplet,
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Rendez-vous enregistré.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Échec de l\'enregistrement du rendez-vous : $e')),
+        );
+      }
+    }
   }
 
   /// Crée le client si ce n'est pas déjà fait, à partir des informations
@@ -465,15 +567,40 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                     titre: 'Rendez-vous',
                   ),
                   const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: _ajouterRendezVous,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Ajouter un rendez-vous'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      foregroundColor: const Color(0xFF141B3E),
-                      side: const BorderSide(color: Color(0xFF141B3E)),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _ajouterRendezVous,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Ajouter un rendez-vous'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            foregroundColor: const Color(0xFF141B3E),
+                            side: const BorderSide(color: Color(0xFF141B3E)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        height: 52,
+                        width: 52,
+                        decoration: BoxDecoration(
+                          color: _champEnDictee == 'rendezvous'
+                              ? Colors.red
+                              : const Color(0xFF141B3E),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            _champEnDictee == 'rendezvous' ? Icons.mic : Icons.mic_none,
+                            color: Colors.white,
+                          ),
+                          tooltip: 'Dicter la date et l\'heure du rendez-vous',
+                          onPressed: _dicterRendezVous,
+                        ),
+                      ),
+                    ],
                   ),
                   if (_erreur != null) ...[
                     const SizedBox(height: 16),
