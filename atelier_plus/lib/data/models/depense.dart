@@ -22,7 +22,7 @@ class Depense {
       atelierId: json['atelier_id'] as String,
       montant: double.parse(json['montant'].toString()),
       description: json['description'] as String?,
-      date: DateTime.parse(json['date'] as String),
+      date: DateTime.parse(json['date_depense'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -33,9 +33,7 @@ class Depense {
       'atelier_id': atelierId,
       'montant': montant,
       'description': description,
-      'date': '${date.year.toString().padLeft(4, '0')}-'
-          '${date.month.toString().padLeft(2, '0')}-'
-          '${date.day.toString().padLeft(2, '0')}',
+      'date_depense': date.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
     };
   }

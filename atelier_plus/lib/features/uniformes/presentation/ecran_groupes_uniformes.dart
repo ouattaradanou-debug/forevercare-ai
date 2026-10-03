@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/app_router.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/uniformes_providers.dart';
 
@@ -28,37 +30,61 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
 
   Future<void> _creerGroupe() async {
     final nomCtrl = TextEditingController();
-    final nom = await showDialog<String>(
+    final repondantNomCtrl = TextEditingController();
+    final repondantTelCtrl = TextEditingController();
+    final resultat = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Nouveau groupe'),
-        content: TextField(
-          controller: nomCtrl,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Nom du groupe',
-            hintText: 'Ex. : Promotion 2026, Équipe commerciale...',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nomCtrl,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Nom du groupe',
+                  hintText: 'Ex. : Promotion 2026, Équipe commerciale...',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: repondantNomCtrl,
+                decoration: const InputDecoration(labelText: 'Nom du répondant (optionnel)'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: repondantTelCtrl,
+                keyboardType: TextInputType.phone,
+                decoration:
+                    const InputDecoration(labelText: 'Téléphone du répondant (optionnel)'),
+              ),
+            ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Annuler'),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(nomCtrl.text.trim()),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text('Créer'),
           ),
         ],
       ),
     );
-    if (nom == null || nom.isEmpty || !mounted) return;
+    if (resultat != true || nomCtrl.text.trim().isEmpty || !mounted) return;
 
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (utilisateur == null) return;
     await ref.read(groupesUniformesRepositoryProvider).creerGroupe(
           atelierId: utilisateur.atelierId,
-          nom: nom,
+          nom: nomCtrl.text.trim(),
+          repondantNom: repondantNomCtrl.text.trim().isEmpty ? null : repondantNomCtrl.text.trim(),
+          repondantTelephone:
+              repondantTelCtrl.text.trim().isEmpty ? null : repondantTelCtrl.text.trim(),
         );
   }
 
@@ -94,7 +120,11 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
                             child: ListTile(
                               leading: const Icon(Icons.groups_outlined),
                               title: Text(groupe.nom),
+                              subtitle: groupe.repondantNom == null
+                                  ? null
+                                  : Text('Répondant : ${groupe.repondantNom}'),
                               trailing: const Icon(Icons.chevron_right),
+                              onTap: () => context.push(AppRoutes.detailGroupeUniforme(groupe.id)),
                             ),
                           );
                         },

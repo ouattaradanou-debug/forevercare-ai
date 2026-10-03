@@ -108,14 +108,59 @@ create index if not exists idx_types_tenue_atelier on public.types_tenue (atelie
 -- conteneur sous lequel on prendra les mesures de plusieurs personnes en une
 -- fois, séparément des fiches clients individuelles.
 create table if not exists public.groupes_uniformes (
-  id          uuid primary key default gen_random_uuid(),
-  atelier_id  uuid not null references public.ateliers (id) on delete cascade,
-  nom         text not null,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+  id                    uuid primary key default gen_random_uuid(),
+  atelier_id            uuid not null references public.ateliers (id) on delete cascade,
+  nom                   text not null,
+  repondant_nom         text,
+  repondant_telephone   text,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now()
 );
 
 create index if not exists idx_groupes_uniformes_atelier on public.groupes_uniformes (atelier_id);
+
+-- Membres d'un groupe d'uniformes (une personne dont on prend les mesures
+-- dans le cadre d'une commande groupée, sans fiche client individuelle).
+create table if not exists public.membres_groupe_uniforme (
+  id               uuid primary key default gen_random_uuid(),
+  groupe_id        uuid not null references public.groupes_uniformes (id) on delete cascade,
+  nom              text,
+  prenom           text,
+  sexe             text,
+  tenue_terminee   boolean not null default false,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+create index if not exists idx_membres_groupe on public.membres_groupe_uniforme (groupe_id);
+
+-- Mesures prises pour un membre de groupe — même principe que `mesures`
+-- (jamais de mise à jour, chaque prise crée une nouvelle ligne), mais
+-- rattachées à un membre plutôt qu'à un client.
+create table if not exists public.mesures_uniforme (
+  id             uuid primary key default gen_random_uuid(),
+  membre_id      uuid not null references public.membres_groupe_uniforme (id) on delete cascade,
+  type_tenue_id  uuid not null references public.types_tenue (id) on delete cascade,
+  date_prise     timestamptz not null default now(),
+  valeurs        jsonb not null default '{}'::jsonb,
+  prise_par      uuid references public.utilisateurs (id) on delete set null,
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists idx_mesures_uniforme_membre on public.mesures_uniforme (membre_id);
+
+-- Photos (tissus/modèles) associées à un groupe d'uniformes.
+create table if not exists public.photos_groupe_uniforme (
+  id            uuid primary key default gen_random_uuid(),
+  groupe_id     uuid not null references public.groupes_uniformes (id) on delete cascade,
+  type          text not null,
+  url           text not null,
+  source        text not null,
+  commentaire   text,
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists idx_photos_groupe on public.photos_groupe_uniforme (groupe_id);
 
 -- Champs de mesure appartenant à un type de tenue.
 create table if not exists public.champs_mesure (
@@ -214,15 +259,15 @@ create index if not exists idx_paiements_atelier on public.paiements (atelier_id
 -- Dépenses de l'atelier (loyer, fournitures, etc.). Table financière — même
 -- règle que commandes/paiements : jamais accessible à un apprenti.
 create table if not exists public.depenses (
-  id           uuid primary key default gen_random_uuid(),
-  atelier_id   uuid not null references public.ateliers (id) on delete cascade,
-  montant      numeric(12, 2) not null check (montant > 0),
-  description  text,
-  date         date not null,
-  created_at   timestamptz not null default now()
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  montant        numeric(12, 2) not null check (montant > 0),
+  description    text,
+  date_depense   timestamptz not null default now(),
+  created_at     timestamptz not null default now()
 );
 
-create index if not exists idx_depenses_atelier on public.depenses (atelier_id, date);
+create index if not exists idx_depenses_atelier on public.depenses (atelier_id, date_depense);
 
 -- Journal d'actions : trace d'audit append-only (utilisée aussi pour logguer
 -- les résolutions de conflit de synchronisation "dernière modification gagne").
@@ -274,7 +319,7 @@ begin
     select unnest(array[
       'ateliers', 'utilisateurs', 'permissions_apprenti', 'clients',
       'types_tenue', 'champs_mesure', 'mesures', 'rendez_vous',
-      'commandes', 'abonnements', 'groupes_uniformes'
+      'commandes', 'abonnements', 'groupes_uniformes', 'membres_groupe_uniforme'
     ])
   loop
     execute format(
@@ -435,6 +480,9 @@ alter table public.commandes enable row level security;
 alter table public.paiements enable row level security;
 alter table public.depenses enable row level security;
 alter table public.groupes_uniformes enable row level security;
+alter table public.membres_groupe_uniforme enable row level security;
+alter table public.mesures_uniforme enable row level security;
+alter table public.photos_groupe_uniforme enable row level security;
 alter table public.journal_actions enable row level security;
 alter table public.abonnements enable row level security;
 
@@ -794,6 +842,130 @@ drop policy if exists groupes_uniformes_delete on public.groupes_uniformes;
 create policy groupes_uniformes_delete on public.groupes_uniformes
   for delete to authenticated
   using (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.11quater MEMBRES_GROUPE_UNIFORME — accès via le groupe parent, même
+--            règle que groupes_uniformes (lecture atelier, écriture propriétaire).
+-- -----------------------------------------------------------------------------
+drop policy if exists membres_groupe_select on public.membres_groupe_uniforme;
+create policy membres_groupe_select on public.membres_groupe_uniforme
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists membres_groupe_insert on public.membres_groupe_uniforme;
+create policy membres_groupe_insert on public.membres_groupe_uniforme
+  for insert to authenticated
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists membres_groupe_update on public.membres_groupe_uniforme;
+create policy membres_groupe_update on public.membres_groupe_uniforme
+  for update to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  )
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists membres_groupe_delete on public.membres_groupe_uniforme;
+create policy membres_groupe_delete on public.membres_groupe_uniforme
+  for delete to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.11quinquies MESURES_UNIFORME — accès via le membre puis le groupe parent.
+-- -----------------------------------------------------------------------------
+drop policy if exists mesures_uniforme_select on public.mesures_uniforme;
+create policy mesures_uniforme_select on public.mesures_uniforme
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists mesures_uniforme_insert on public.mesures_uniforme;
+create policy mesures_uniforme_insert on public.mesures_uniforme
+  for insert to authenticated
+  with check (
+    exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.11sexies PHOTOS_GROUPE_UNIFORME — accès via le groupe parent, même règle
+--            que photos (lecture/écriture par tout l'atelier, pas réservé au
+--            propriétaire : action non financière, comme les photos clients).
+-- -----------------------------------------------------------------------------
+drop policy if exists photos_groupe_select on public.photos_groupe_uniforme;
+create policy photos_groupe_select on public.photos_groupe_uniforme
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = photos_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists photos_groupe_insert on public.photos_groupe_uniforme;
+create policy photos_groupe_insert on public.photos_groupe_uniforme
+  for insert to authenticated
+  with check (
+    exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = photos_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists photos_groupe_delete on public.photos_groupe_uniforme;
+create policy photos_groupe_delete on public.photos_groupe_uniforme
+  for delete to authenticated
+  using (
+    exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = photos_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
 
 -- -----------------------------------------------------------------------------
 -- 5.12 JOURNAL_ACTIONS — append-only. Le propriétaire voit tout le journal

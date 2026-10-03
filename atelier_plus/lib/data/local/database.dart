@@ -210,7 +210,38 @@ class GroupeUniformeEntries extends Table {
   TextColumn get id => text()();
   TextColumn get atelierId => text()();
   TextColumn get nom => text()();
+  TextColumn get repondantNom => text().nullable()();
+  TextColumn get repondantTelephone => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local des membres d'un groupe d'uniformes.
+@DataClassName('MembreGroupeUniformeEntry')
+class MembreGroupeUniformeEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get groupeId => text()();
+  TextColumn get nom => text().nullable()();
+  TextColumn get prenom => text().nullable()();
+  TextColumn get sexe => text().nullable()();
+  BoolColumn get tenueTerminee => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Cache local des mesures prises pour un membre de groupe.
+@DataClassName('MesureUniformeEntry')
+class MesureUniformeEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get membreId => text()();
+  TextColumn get typeTenueId => text()();
+  DateTimeColumn get datePrise => dateTime()();
+  TextColumn get valeursJson => text()();
+  TextColumn get prisePar => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -265,12 +296,14 @@ class AbonnementEntries extends Table {
   AbonnementEntries,
   DepenseEntries,
   GroupeUniformeEntries,
+  MembreGroupeUniformeEntries,
+  MesureUniformeEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -295,6 +328,12 @@ class AppDatabase extends _$AppDatabase {
           if (from < 5) {
             await m.createTable(depenseEntries);
             await m.createTable(groupeUniformeEntries);
+          }
+          if (from < 6) {
+            await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.repondantNom);
+            await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.repondantTelephone);
+            await m.createTable(membreGroupeUniformeEntries);
+            await m.createTable(mesureUniformeEntries);
           }
         },
       );
@@ -745,6 +784,8 @@ class AppDatabase extends _$AppDatabase {
     required String id,
     required String atelierId,
     required String nom,
+    String? repondantNom,
+    String? repondantTelephone,
     required DateTime updatedAt,
   }) async {
     await into(groupeUniformeEntries).insertOnConflictUpdate(
@@ -752,6 +793,8 @@ class AppDatabase extends _$AppDatabase {
         id: id,
         atelierId: atelierId,
         nom: nom,
+        repondantNom: Value(repondantNom),
+        repondantTelephone: Value(repondantTelephone),
         updatedAt: updatedAt,
       ),
     );
@@ -762,6 +805,73 @@ class AppDatabase extends _$AppDatabase {
           ..where((t) => t.atelierId.equals(atelierId))
           ..orderBy([(t) => OrderingTerm.asc(t.nom)]))
         .watch();
+  }
+
+  Future<GroupeUniformeEntry?> groupeUniformeParId(String id) {
+    return (select(groupeUniformeEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  // --- Membres d'un groupe d'uniformes ---
+
+  Future<void> enregistrerMembreGroupeUniforme({
+    required String id,
+    required String groupeId,
+    String? nom,
+    String? prenom,
+    String? sexe,
+    required bool tenueTerminee,
+    required DateTime updatedAt,
+  }) async {
+    await into(membreGroupeUniformeEntries).insertOnConflictUpdate(
+      MembreGroupeUniformeEntriesCompanion.insert(
+        id: id,
+        groupeId: groupeId,
+        nom: Value(nom),
+        prenom: Value(prenom),
+        sexe: Value(sexe),
+        tenueTerminee: Value(tenueTerminee),
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  Stream<List<MembreGroupeUniformeEntry>> observerMembresDuGroupe(String groupeId) {
+    return (select(membreGroupeUniformeEntries)
+          ..where((t) => t.groupeId.equals(groupeId))
+          ..orderBy([(t) => OrderingTerm.asc(t.nom)]))
+        .watch();
+  }
+
+  // --- Mesures des membres de groupe ---
+
+  Future<void> enregistrerMesureUniforme({
+    required String id,
+    required String membreId,
+    required String typeTenueId,
+    required DateTime datePrise,
+    required String valeursJson,
+    String? prisePar,
+  }) async {
+    await into(mesureUniformeEntries).insertOnConflictUpdate(
+      MesureUniformeEntriesCompanion.insert(
+        id: id,
+        membreId: membreId,
+        typeTenueId: typeTenueId,
+        datePrise: datePrise,
+        valeursJson: valeursJson,
+        prisePar: Value(prisePar),
+      ),
+    );
+  }
+
+  /// Dernière mesure prise pour ce membre et ce type de tenue — pré-remplit
+  /// le formulaire, comme `derniereMesure` pour un client.
+  Future<MesureUniformeEntry?> derniereMesureUniforme(String membreId, String typeTenueId) {
+    return (select(mesureUniformeEntries)
+          ..where((t) => t.membreId.equals(membreId) & t.typeTenueId.equals(typeTenueId))
+          ..orderBy([(t) => OrderingTerm.desc(t.datePrise)])
+          ..limit(1))
+        .getSingleOrNull();
   }
 
   // --- File d'attente de synchronisation ---

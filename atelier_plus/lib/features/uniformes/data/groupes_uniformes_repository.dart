@@ -17,12 +17,19 @@ class GroupesUniformesRepository {
   final AppDatabase _baseLocale;
   static const _uuid = Uuid();
 
-  Future<GroupeUniforme> creerGroupe({required String atelierId, required String nom}) async {
+  Future<GroupeUniforme> creerGroupe({
+    required String atelierId,
+    required String nom,
+    String? repondantNom,
+    String? repondantTelephone,
+  }) async {
     await verifierEcritureAutorisee(_baseLocale, atelierId);
     final groupe = GroupeUniforme(
       id: _uuid.v4(),
       atelierId: atelierId,
       nom: nom,
+      repondantNom: repondantNom,
+      repondantTelephone: repondantTelephone,
       updatedAt: DateTime.now().toUtc(),
     );
 
@@ -40,17 +47,13 @@ class GroupesUniformesRepository {
 
   Stream<List<GroupeUniforme>> observerGroupes(String atelierId) {
     return _baseLocale.observerGroupesUniformes(atelierId).map(
-          (lignes) => lignes
-              .map(
-                (l) => GroupeUniforme(
-                  id: l.id,
-                  atelierId: l.atelierId,
-                  nom: l.nom,
-                  updatedAt: l.updatedAt,
-                ),
-              )
-              .toList(),
+          (lignes) => lignes.map(_depuisLigne).toList(),
         );
+  }
+
+  Future<GroupeUniforme?> groupeParId(String id) async {
+    final ligne = await _baseLocale.groupeUniformeParId(id);
+    return ligne == null ? null : _depuisLigne(ligne);
   }
 
   Future<void> chargerDepuisServeur(String atelierId) async {
@@ -65,11 +68,24 @@ class GroupesUniformesRepository {
     }
   }
 
+  GroupeUniforme _depuisLigne(GroupeUniformeEntry l) {
+    return GroupeUniforme(
+      id: l.id,
+      atelierId: l.atelierId,
+      nom: l.nom,
+      repondantNom: l.repondantNom,
+      repondantTelephone: l.repondantTelephone,
+      updatedAt: l.updatedAt,
+    );
+  }
+
   Future<void> _mettreEnCache(GroupeUniforme groupe) {
     return _baseLocale.enregistrerGroupeUniforme(
       id: groupe.id,
       atelierId: groupe.atelierId,
       nom: groupe.nom,
+      repondantNom: groupe.repondantNom,
+      repondantTelephone: groupe.repondantTelephone,
       updatedAt: groupe.updatedAt,
     );
   }

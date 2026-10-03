@@ -29,7 +29,10 @@ import '../../features/finances/presentation/ecran_suivi_finances.dart';
 import '../../features/permissions/presentation/ecran_panneau_permissions.dart';
 import '../../features/rendezvous/presentation/ecran_formulaire_rendez_vous.dart';
 import '../../features/rendezvous/presentation/ecran_liste_rendez_vous.dart';
+import '../../features/uniformes/presentation/ecran_detail_groupe.dart';
 import '../../features/uniformes/presentation/ecran_groupes_uniformes.dart';
+import '../../features/uniformes/presentation/ecran_prise_mesure_membre.dart';
+import '../../features/uniformes/presentation/ecran_selection_type_tenue_membre.dart';
 
 /// Chemins nommés des routes de l'application, centralisés pour éviter les
 /// chaînes de caractères éparpillées dans le code.
@@ -79,6 +82,15 @@ class AppRoutes {
   static const String nouvelleDepense = '/depenses/nouvelle';
   static const String suiviFinances = '/finances';
   static const String groupesUniformes = '/uniformes';
+  static const String _detailGroupeUniformeTemplate = '/uniformes/:id';
+  static const String _selectionTypeTenueMembreTemplate = '/uniformes/membres/:membreId/mesures';
+  static const String _priseMesureMembreTemplate =
+      '/uniformes/membres/:membreId/mesures/:typeTenueId';
+
+  static String detailGroupeUniforme(String id) => '/uniformes/$id';
+  static String selectionTypeTenueMembre(String membreId) => '/uniformes/membres/$membreId/mesures';
+  static String priseMesureMembre(String membreId, String typeTenueId) =>
+      '/uniformes/membres/$membreId/mesures/$typeTenueId';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -199,6 +211,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.groupesUniformes,
         builder: (context, state) => const EcranGroupesUniformes(),
+      ),
+      GoRoute(
+        path: AppRoutes._detailGroupeUniformeTemplate,
+        builder: (context, state) => EcranDetailGroupe(groupeId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes._selectionTypeTenueMembreTemplate,
+        builder: (context, state) => EcranSelectionTypeTenueMembre(
+          membreId: state.pathParameters['membreId']!,
+          nomMembre: (state.extra as String?) ?? '',
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes._priseMesureMembreTemplate,
+        builder: (context, state) => EcranPriseMesureMembre(
+          membreId: state.pathParameters['membreId']!,
+          typeTenueId: state.pathParameters['typeTenueId']!,
+          nomMembre: (state.extra as String?) ?? '',
+        ),
       ),
     ],
   );
