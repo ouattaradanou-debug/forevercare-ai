@@ -61,7 +61,8 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   bool _enregistrementClientEnCours = false;
   bool _mesuresEnregistrees = false;
   bool _financesEnregistrees = false;
-  bool _photoEnCours = false;
+  bool _photoTissuEnCours = false;
+  bool _photoModeleEnCours = false;
   String? _erreur;
 
   @override
@@ -393,7 +394,14 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     if (resultat == null) return;
     final (fichier, sourceImage) = resultat;
 
-    setState(() => _photoEnCours = true);
+    final estTissu = type == TypePhoto.tissu;
+    setState(() {
+      if (estTissu) {
+        _photoTissuEnCours = true;
+      } else {
+        _photoModeleEnCours = true;
+      }
+    });
     try {
       await ref.read(photosRepositoryProvider).ajouterPhoto(
             atelierId: client.atelierId,
@@ -409,7 +417,15 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
         );
       }
     } finally {
-      if (mounted) setState(() => _photoEnCours = false);
+      if (mounted) {
+        setState(() {
+          if (estTissu) {
+            _photoTissuEnCours = false;
+          } else {
+            _photoModeleEnCours = false;
+          }
+        });
+      }
     }
   }
 
@@ -550,7 +566,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                   _GrillePhotosSection(
                     clientId: _client?.id,
                     type: TypePhoto.tissu,
-                    enCours: _photoEnCours,
+                    enCours: _photoTissuEnCours,
                     onAjouter: () => _ajouterPhoto(TypePhoto.tissu),
                   ),
                   const SizedBox(height: 28),
@@ -564,7 +580,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                   _GrillePhotosSection(
                     clientId: _client?.id,
                     type: TypePhoto.modele,
-                    enCours: _photoEnCours,
+                    enCours: _photoModeleEnCours,
                     onAjouter: () => _ajouterPhoto(TypePhoto.modele),
                   ),
                   const SizedBox(height: 28),
