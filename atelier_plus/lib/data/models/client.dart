@@ -20,7 +20,12 @@ class Client {
   final DateTime datePriseMesures;
   final DateTime updatedAt;
 
-  String get nomComplet => prenom.isEmpty ? nom : '$nom $prenom';
+  /// `prenom` ne peut jamais être vide côté base (contrainte
+  /// `clients_prenom_check`) : depuis la fusion des champs "Nom" et
+  /// "Prénom" en un seul à l'écran, `prenom` reçoit systématiquement la
+  /// même valeur que `nom` — on n'affiche donc le prénom séparément que
+  /// s'il diffère réellement (fiches créées avant cette fusion).
+  String get nomComplet => (prenom.isEmpty || prenom == nom) ? nom : '$nom $prenom';
 
   factory Client.depuisJson(Map<String, dynamic> json) {
     return Client(

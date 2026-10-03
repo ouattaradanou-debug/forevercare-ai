@@ -302,7 +302,11 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
       final client = await ref.read(clientsRepositoryProvider).creerClient(
             atelierId: utilisateur!.atelierId,
             nom: nom,
-            prenom: '',
+            // La base exige prenom non vide (clients_prenom_check) ; le
+            // champ "Nom et prénom" étant fusionné à l'écran, on y répète
+            // la même valeur (voir Client.nomComplet, qui évite l'affichage
+            // en double quand prenom == nom).
+            prenom: nom,
             telephone: telephone,
             sexe: _sexe!,
             datePriseMesures: DateTime.now(),

@@ -53,11 +53,14 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
     });
 
     try {
+      final nom = _nomCtrl.text.trim();
       final repo = ref.read(clientsRepositoryProvider);
       final client = await repo.modifierClient(
         widget.clientExistant,
-        nom: _nomCtrl.text.trim(),
-        prenom: '',
+        nom: nom,
+        // La base exige prenom non vide (clients_prenom_check) ; voir la
+        // même remarque dans EcranNouveauClient.
+        prenom: nom,
         telephone: _telephoneCtrl.text.trim(),
         sexe: _sexe,
         datePriseMesures: _datePriseMesures,
