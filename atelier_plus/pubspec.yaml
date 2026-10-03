@@ -44,6 +44,10 @@ dependencies:
   record: ^7.1.1
   audioplayers: ^6.1.0
 
+  # --- Dictée vocale (nom/téléphone) pour un tailleur qui ne sait pas
+  # écrire : reconnaissance vocale du téléphone, transcrite dans le champ.
+  speech_to_text: ^7.0.0
+
   # --- Notifications locales (rappels de rendez-vous) ---
   flutter_local_notifications: ^18.0.1
   # Requis par flutter_local_notifications pour la planification exacte

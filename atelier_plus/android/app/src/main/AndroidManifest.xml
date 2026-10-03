@@ -52,5 +52,10 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Requis par speech_to_text (dictée vocale) sur Android 11+, qui
+             masque par défaut les apps de reconnaissance vocale installées. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
     </queries>
 </manifest>

@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:uuid/uuid.dart';
 
 import '../../../core/router/app_router.dart';
@@ -39,6 +40,10 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   final _telephoneCtrl = TextEditingController();
   String? _sexe;
 
+  final _dicteeVocale = stt.SpeechToText();
+  bool _dicteeDisponible = false;
+  String? _champEnDictee;
+
   final _montantTotalCtrl = TextEditingController();
   final _avanceCtrl = TextEditingController();
 
@@ -71,11 +76,67 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     for (final c in _controleursMesure.values) {
       c.dispose();
     }
+    _dicteeVocale.stop();
     super.dispose();
   }
 
   TextEditingController _controleurMesure(String champId) {
     return _controleursMesure.putIfAbsent(champId, () => TextEditingController());
+  }
+
+  /// Démarre/arrête la dictée vocale pour [champ] ('nom' ou 'telephone') :
+  /// un tailleur qui ne sait pas écrire peut ainsi dicter le nom/prénom et
+  /// le téléphone, transcrits directement dans le champ concerné. Un seul
+  /// champ à la fois peut être en cours de dictée.
+  Future<void> _basculerDictee(
+    String champ,
+    TextEditingController controleur, {
+    bool chiffresSeulement = false,
+  }) async {
+    if (_champEnDictee == champ) {
+      await _dicteeVocale.stop();
+      if (mounted) setState(() => _champEnDictee = null);
+      return;
+    }
+
+    if (_champEnDictee != null) {
+      await _dicteeVocale.stop();
+    }
+
+    if (!_dicteeDisponible) {
+      _dicteeDisponible = await _dicteeVocale.initialize(
+        onStatus: (statut) {
+          if ((statut == 'done' || statut == 'notListening') && mounted) {
+            setState(() => _champEnDictee = null);
+          }
+        },
+        onError: (_) {
+          if (mounted) setState(() => _champEnDictee = null);
+        },
+      );
+    }
+
+    if (!_dicteeDisponible) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _champEnDictee = champ);
+    await _dicteeVocale.listen(
+      localeId: 'fr_FR',
+      onResult: (resultat) {
+        var texte = resultat.recognizedWords;
+        if (chiffresSeulement) {
+          texte = texte.replaceAll(RegExp(r'[^0-9]'), '');
+        }
+        controleur.text = texte;
+        controleur.selection = TextSelection.collapsed(offset: controleur.text.length);
+      },
+    );
   }
 
   /// Crée le client si ce n'est pas déjà fait, à partir des informations
@@ -255,13 +316,31 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: _nomCtrl,
-                    decoration: const InputDecoration(labelText: 'Nom et prénom'),
+                    decoration: InputDecoration(
+                      labelText: 'Nom et prénom',
+                      prefixIcon: IconButton(
+                        icon: Icon(_champEnDictee == 'nom' ? Icons.mic : Icons.mic_none),
+                        color: _champEnDictee == 'nom' ? Colors.red : null,
+                        onPressed: () => _basculerDictee('nom', _nomCtrl),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _telephoneCtrl,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'Contact (téléphone)'),
+                    decoration: InputDecoration(
+                      labelText: 'Contact (téléphone)',
+                      prefixIcon: IconButton(
+                        icon: Icon(_champEnDictee == 'telephone' ? Icons.mic : Icons.mic_none),
+                        color: _champEnDictee == 'telephone' ? Colors.red : null,
+                        onPressed: () => _basculerDictee(
+                          'telephone',
+                          _telephoneCtrl,
+                          chiffresSeulement: true,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text('Sexe', style: TextStyle(color: Color(0xFF6F6259))),
