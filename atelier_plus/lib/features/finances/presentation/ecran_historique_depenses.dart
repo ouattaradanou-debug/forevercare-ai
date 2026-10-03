@@ -83,6 +83,8 @@ class _Cellule extends StatelessWidget {
       child: Text(
         texte,
         textAlign: alignDroite ? TextAlign.right : TextAlign.left,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontWeight: entete ? FontWeight.bold : FontWeight.normal,
           color: const Color(0xFF231A14),
