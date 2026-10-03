@@ -8,6 +8,7 @@ import '../../../data/remote/stockage_repository.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 const String bucketPhotosClients = 'photos-clients';
+const String bucketAudiosClients = 'audios-clients';
 
 /// Photos de tissus/modèles associées à un client. Contrairement aux
 /// gabarits, l'ajout d'une photo fait partie de l'usage courant (comme les
@@ -57,6 +58,25 @@ class PhotosRepository {
     return photo;
   }
 
+  /// Enregistre (ou remplace) la note vocale de description d'une photo déjà
+  /// envoyée. [cheminFichierAudio] est le fichier local produit par le
+  /// package `record` (voir EcranNouveauClient).
+  Future<String> ajouterAudioAPhoto({
+    required PhotoClient photo,
+    required String cheminFichierAudio,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, photo.atelierId);
+    final url = await _stockage.televerserAudio(
+      cheminFichier: cheminFichierAudio,
+      bucket: bucketAudiosClients,
+      dossier: photo.clientId,
+    );
+
+    await _client.from('photos').update({'audio_url': url}).eq('id', photo.id);
+    await _baseLocale.mettreAJourAudioPhoto(photo.id, url);
+    return url;
+  }
+
   Future<void> chargerDepuisServeur(String clientId) async {
     try {
       final lignes = await _client.from('photos').select().eq('client_id', clientId);
@@ -79,6 +99,7 @@ class PhotosRepository {
                   type: TypePhoto.depuisTexte(ligne.type),
                   url: ligne.url,
                   source: SourcePhoto.depuisTexte(ligne.source),
+                  audioUrl: ligne.audioUrl,
                   createdAt: ligne.createdAt,
                 ),
               )
@@ -94,6 +115,7 @@ class PhotosRepository {
       type: photo.type.name,
       url: photo.url,
       source: photo.source.name,
+      audioUrl: photo.audioUrl,
       createdAt: photo.createdAt,
     );
   }

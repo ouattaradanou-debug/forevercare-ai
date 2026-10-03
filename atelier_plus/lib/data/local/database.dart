@@ -144,6 +144,7 @@ class PhotoEntries extends Table {
   TextColumn get type => text()();
   TextColumn get url => text()();
   TextColumn get source => text()();
+  TextColumn get audioUrl => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
 
   @override
@@ -308,7 +309,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -354,6 +355,14 @@ class AppDatabase extends _$AppDatabase {
             // création de cette table sur l'appareil.
             if (from >= 2) {
               await m.addColumn(clientEntries, clientEntries.datePriseMesures);
+            }
+          }
+          if (from < 8) {
+            // photoEntries est créée (avec audioUrl déjà présent dans sa
+            // définition Dart actuelle) dans le bloc `from < 2` : même
+            // précaution que ci-dessus pour un appareil déjà en version >= 2.
+            if (from >= 2) {
+              await m.addColumn(photoEntries, photoEntries.audioUrl);
             }
           }
         },
@@ -639,6 +648,7 @@ class AppDatabase extends _$AppDatabase {
     required String type,
     required String url,
     required String source,
+    String? audioUrl,
     required DateTime createdAt,
   }) async {
     await into(photoEntries).insertOnConflictUpdate(
@@ -649,9 +659,17 @@ class AppDatabase extends _$AppDatabase {
         type: type,
         url: url,
         source: source,
+        audioUrl: Value(audioUrl),
         createdAt: createdAt,
       ),
     );
+  }
+
+  /// Rattache (ou remplace) la note vocale de description d'une photo déjà
+  /// envoyée — ne touche à aucune autre colonne de la ligne.
+  Future<void> mettreAJourAudioPhoto(String id, String? audioUrl) async {
+    await (update(photoEntries)..where((t) => t.id.equals(id)))
+        .write(PhotoEntriesCompanion(audioUrl: Value(audioUrl)));
   }
 
   Stream<List<PhotoEntry>> observerPhotosDuClient(String clientId) {

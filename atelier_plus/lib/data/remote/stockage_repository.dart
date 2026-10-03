@@ -38,6 +38,26 @@ class StockageRepository {
     return _client.storage.from(bucket).getPublicUrl(nomFichier);
   }
 
+  /// Envoie un fichier audio (note vocale) tel quel, sans compression — pas
+  /// d'équivalent audio à `flutter_image_compress`, et un enregistrement
+  /// court (quelques secondes) reste de toute façon léger.
+  Future<String> televerserAudio({
+    required String cheminFichier,
+    required String bucket,
+    required String dossier,
+  }) async {
+    final octets = await File(cheminFichier).readAsBytes();
+    final nomFichier = '$dossier/${_uuid.v4()}.m4a';
+
+    await _client.storage.from(bucket).uploadBinary(
+          nomFichier,
+          octets,
+          fileOptions: const FileOptions(contentType: 'audio/m4a', upsert: false),
+        );
+
+    return _client.storage.from(bucket).getPublicUrl(nomFichier);
+  }
+
   Future<Uint8List> _compresser(XFile fichier) async {
     final dossierTemp = await getTemporaryDirectory();
     final cheminSortie = p.join(

@@ -207,8 +207,14 @@ create table if not exists public.photos (
   type        text not null check (type in ('tissu', 'modele')),
   url         text not null,
   source      text not null check (source in ('camera', 'galerie')),
+  audio_url   text,
   created_at  timestamptz not null default now()
 );
+
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante) : note vocale de
+-- description optionnelle, une par photo.
+alter table public.photos add column if not exists audio_url text;
 
 create index if not exists idx_photos_client on public.photos (client_id);
 create index if not exists idx_photos_atelier on public.photos (atelier_id);
@@ -1084,7 +1090,8 @@ on conflict (id) do update set nom = excluded.nom, unite = excluded.unite, ordre
 insert into storage.buckets (id, name, public)
 values
   ('photos-clients', 'photos-clients', true),
-  ('logos-ateliers', 'logos-ateliers', true)
+  ('logos-ateliers', 'logos-ateliers', true),
+  ('audios-clients', 'audios-clients', true)
 on conflict (id) do nothing;
 
 drop policy if exists photos_clients_insert on storage.objects;
@@ -1112,3 +1119,19 @@ drop policy if exists logos_ateliers_select on storage.objects;
 create policy logos_ateliers_select on storage.objects
   for select to authenticated
   using (bucket_id = 'logos-ateliers');
+
+drop policy if exists audios_clients_insert on storage.objects;
+create policy audios_clients_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'audios-clients');
+
+drop policy if exists audios_clients_update on storage.objects;
+create policy audios_clients_update on storage.objects
+  for update to authenticated
+  using (bucket_id = 'audios-clients')
+  with check (bucket_id = 'audios-clients');
+
+drop policy if exists audios_clients_select on storage.objects;
+create policy audios_clients_select on storage.objects
+  for select to authenticated
+  using (bucket_id = 'audios-clients');

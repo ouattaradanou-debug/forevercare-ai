@@ -1,7 +1,12 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
@@ -623,11 +628,7 @@ class _GrillePhotosSection extends ConsumerWidget {
       spacing: 12,
       runSpacing: 12,
       children: [
-        for (final photo in liste)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(photo.url, width: 90, height: 90, fit: BoxFit.cover),
-          ),
+        for (final photo in liste) _TuilePhoto(photo: photo),
         InkWell(
           onTap: enCours ? null : onAjouter,
           borderRadius: BorderRadius.circular(12),
@@ -641,6 +642,129 @@ class _GrillePhotosSection extends ConsumerWidget {
             child: enCours
                 ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.add_a_photo_outlined),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Vignette d'une photo avec, en superposition, le contrôle de note vocale
+/// de description : un micro tant qu'aucun vocal n'existe (appui = démarre,
+/// appui = arrête et envoie), puis un bouton lecture/pause une fois un
+/// vocal enregistré.
+class _TuilePhoto extends ConsumerStatefulWidget {
+  const _TuilePhoto({required this.photo});
+
+  final PhotoClient photo;
+
+  @override
+  ConsumerState<_TuilePhoto> createState() => _TuilePhotoState();
+}
+
+class _TuilePhotoState extends ConsumerState<_TuilePhoto> {
+  final _recorder = AudioRecorder();
+  final _player = AudioPlayer();
+  bool _enregistrement = false;
+  bool _enCoursEnvoi = false;
+  bool _lecture = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => _lecture = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _recorder.dispose();
+    _player.dispose();
+    super.dispose();
+  }
+
+  Future<void> _basculerEnregistrement() async {
+    if (_enregistrement) {
+      final chemin = await _recorder.stop();
+      if (mounted) setState(() => _enregistrement = false);
+      if (chemin == null) return;
+
+      setState(() => _enCoursEnvoi = true);
+      try {
+        await ref.read(photosRepositoryProvider).ajouterAudioAPhoto(
+              photo: widget.photo,
+              cheminFichierAudio: chemin,
+            );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Échec de l\'envoi du vocal : $e')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _enCoursEnvoi = false);
+      }
+      return;
+    }
+
+    if (!await _recorder.hasPermission()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Autorisez le micro pour enregistrer une note vocale.')),
+        );
+      }
+      return;
+    }
+
+    final dossierTemp = await getTemporaryDirectory();
+    final chemin = p.join(dossierTemp.path, '${const Uuid().v4()}.m4a');
+    await _recorder.start(const RecordConfig(encoder: AudioEncoder.aacLc), path: chemin);
+    if (mounted) setState(() => _enregistrement = true);
+  }
+
+  Future<void> _basculerLecture() async {
+    if (_lecture) {
+      await _player.pause();
+      if (mounted) setState(() => _lecture = false);
+    } else {
+      await _player.play(UrlSource(widget.photo.audioUrl!));
+      if (mounted) setState(() => _lecture = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final aUnAudio = widget.photo.audioUrl != null;
+
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(widget.photo.url, width: 90, height: 90, fit: BoxFit.cover),
+        ),
+        Positioned(
+          right: 4,
+          bottom: 4,
+          child: GestureDetector(
+            onTap: _enCoursEnvoi ? null : (aUnAudio ? _basculerLecture : _basculerEnregistrement),
+            child: CircleAvatar(
+              radius: 14,
+              backgroundColor: _enregistrement ? Colors.red : const Color(0xFF141B3E),
+              child: _enCoursEnvoi
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Icon(
+                      aUnAudio
+                          ? (_lecture ? Icons.pause : Icons.play_arrow)
+                          : (_enregistrement ? Icons.stop : Icons.mic),
+                      size: 16,
+                      color: Colors.white,
+                    ),
+            ),
           ),
         ),
       ],
