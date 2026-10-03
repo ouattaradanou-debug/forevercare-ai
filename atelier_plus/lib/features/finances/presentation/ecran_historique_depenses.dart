@@ -45,17 +45,15 @@ class EcranHistoriqueDepenses extends ConsumerWidget {
                   children: [
                     const TableRow(children: [
                       _Cellule('Date', entete: true),
-                      _Cellule('Motif', entete: true),
+                      _Cellule('Motif', entete: true, centre: true),
                       _Cellule('Montant', entete: true, alignDroite: true),
                     ]),
                     for (final depense in liste)
                       TableRow(children: [
                         _Cellule(Formatters.dateCourte(depense.date)),
-                        _Cellule(
-                          depense.description == null || depense.description!.isEmpty
-                              ? '—'
-                              : depense.description!,
-                        ),
+                        depense.description == null || depense.description!.isEmpty
+                            ? const _Cellule('—', centre: true)
+                            : _Cellule(depense.description!),
                         _Cellule(Formatters.nombre(depense.montant), alignDroite: true),
                       ]),
                   ],
@@ -70,11 +68,17 @@ class EcranHistoriqueDepenses extends ConsumerWidget {
 }
 
 class _Cellule extends StatelessWidget {
-  const _Cellule(this.texte, {this.entete = false, this.alignDroite = false});
+  const _Cellule(
+    this.texte, {
+    this.entete = false,
+    this.alignDroite = false,
+    this.centre = false,
+  });
 
   final String texte;
   final bool entete;
   final bool alignDroite;
+  final bool centre;
 
   @override
   Widget build(BuildContext context) {
@@ -82,12 +86,15 @@ class _Cellule extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       child: Text(
         texte,
-        textAlign: alignDroite ? TextAlign.right : TextAlign.left,
+        textAlign: centre
+            ? TextAlign.center
+            : (alignDroite ? TextAlign.right : TextAlign.left),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontWeight: entete ? FontWeight.bold : FontWeight.normal,
           color: const Color(0xFF231A14),
+          fontSize: 13,
         ),
       ),
     );
