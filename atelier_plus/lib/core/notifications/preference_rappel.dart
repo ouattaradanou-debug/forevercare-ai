@@ -6,7 +6,7 @@ import 'notifications_service.dart';
 const String _cleJoursAvant = 'rappel_jours_avant';
 
 /// Choix proposés pour "Me rappeler les rendez-vous X avant" — en jours.
-const List<int> choixJoursAvantRappel = [1, 2, 3, 7];
+const List<int> choixJoursAvantRappel = [2, 3, 4, 5];
 
 /// Persiste le délai de rappel choisi (jours avant le rendez-vous) et le
 /// répercute sur [NotificationsService], qui l'utilise pour tout nouveau
