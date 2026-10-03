@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/models/client.dart';
 import '../providers/clients_providers.dart';
@@ -44,16 +43,6 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
     _nomCtrl.dispose();
     _telephoneCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _choisirDate() async {
-    final choisie = await showDatePicker(
-      context: context,
-      initialDate: _datePriseMesures,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (choisie != null) setState(() => _datePriseMesures = choisie);
   }
 
   Future<void> _enregistrer() async {
@@ -104,14 +93,6 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(labelText: 'Contact (téléphone)'),
                   validator: Validators.nomRequis,
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.calendar_today_outlined),
-                  title: const Text('Date de prise des mesures'),
-                  subtitle: Text(Formatters.dateLongue(_datePriseMesures)),
-                  onTap: _choisirDate,
                 ),
                 const SizedBox(height: 16),
                 SegmentedButton<String>(

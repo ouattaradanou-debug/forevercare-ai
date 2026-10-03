@@ -37,7 +37,6 @@ class EcranNouveauClient extends ConsumerStatefulWidget {
 class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   final _nomCtrl = TextEditingController();
   final _telephoneCtrl = TextEditingController();
-  DateTime? _datePriseMesures;
   String? _sexe;
 
   final _montantTotalCtrl = TextEditingController();
@@ -79,16 +78,6 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     return _controleursMesure.putIfAbsent(champId, () => TextEditingController());
   }
 
-  Future<void> _choisirDate() async {
-    final choisie = await showDatePicker(
-      context: context,
-      initialDate: _datePriseMesures ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (choisie != null) setState(() => _datePriseMesures = choisie);
-  }
-
   /// Crée le client si ce n'est pas déjà fait, à partir des informations
   /// actuellement saisies. Retourne `null` (et affiche une erreur) si les
   /// champs obligatoires ne sont pas encore remplis.
@@ -116,7 +105,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
             prenom: '',
             telephone: telephone,
             sexe: _sexe!,
-            datePriseMesures: _datePriseMesures ?? DateTime.now(),
+            datePriseMesures: DateTime.now(),
           );
       if (mounted) setState(() => _client = client);
       return client;
@@ -273,22 +262,6 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                     controller: _telephoneCtrl,
                     keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(labelText: 'Contact (téléphone)'),
-                  ),
-                  const SizedBox(height: 12),
-                  ListTile(
-                    tileColor: const Color(0xFFF3E9D8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: Color(0xFFDDD3C8)),
-                    ),
-                    title: const Text('Date de prise des mesures'),
-                    subtitle: Text(
-                      _datePriseMesures == null
-                          ? 'Non renseignée'
-                          : Formatters.dateLongue(_datePriseMesures!),
-                    ),
-                    trailing: const Icon(Icons.calendar_today_outlined),
-                    onTap: _choisirDate,
                   ),
                   const SizedBox(height: 16),
                   const Text('Sexe', style: TextStyle(color: Color(0xFF6F6259))),
