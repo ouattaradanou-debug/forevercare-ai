@@ -125,8 +125,8 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
                 const SizedBox(height: 16),
                 SegmentedButton<String>(
                   segments: const [
-                    ButtonSegment(value: 'femme', label: Text('Femme')),
-                    ButtonSegment(value: 'homme', label: Text('Homme')),
+                    ButtonSegment(value: 'Femme', label: Text('Femme')),
+                    ButtonSegment(value: 'Homme', label: Text('Homme')),
                   ],
                   selected: {_sexe},
                   onSelectionChanged: (selection) {

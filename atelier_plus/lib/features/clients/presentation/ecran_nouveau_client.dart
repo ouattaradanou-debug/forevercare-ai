@@ -302,8 +302,8 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                         child: _CarteSexe(
                           icone: Icons.male,
                           libelle: 'Homme',
-                          selectionne: _sexe == 'homme',
-                          onTap: () => setState(() => _sexe = 'homme'),
+                          selectionne: _sexe == 'Homme',
+                          onTap: () => setState(() => _sexe = 'Homme'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -311,8 +311,8 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                         child: _CarteSexe(
                           icone: Icons.female,
                           libelle: 'Femme',
-                          selectionne: _sexe == 'femme',
-                          onTap: () => setState(() => _sexe = 'femme'),
+                          selectionne: _sexe == 'Femme',
+                          onTap: () => setState(() => _sexe = 'Femme'),
                         ),
                       ),
                     ],

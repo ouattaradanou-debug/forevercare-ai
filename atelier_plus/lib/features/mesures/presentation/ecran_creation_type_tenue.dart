@@ -17,7 +17,7 @@ class EcranCreationTypeTenue extends ConsumerStatefulWidget {
 class _EcranCreationTypeTenueState extends ConsumerState<EcranCreationTypeTenue> {
   final _formKey = GlobalKey<FormState>();
   final _nomCtrl = TextEditingController();
-  String _sexe = 'femme';
+  String _sexe = 'Femme';
   bool _chargement = false;
   String? _erreur;
 
@@ -69,9 +69,8 @@ class _EcranCreationTypeTenueState extends ConsumerState<EcranCreationTypeTenue>
                 const SizedBox(height: 16),
                 SegmentedButton<String>(
                   segments: const [
-                    ButtonSegment(value: 'femme', label: Text('Femme')),
-                    ButtonSegment(value: 'homme', label: Text('Homme')),
-                    ButtonSegment(value: 'mixte', label: Text('Mixte')),
+                    ButtonSegment(value: 'Femme', label: Text('Femme')),
+                    ButtonSegment(value: 'Homme', label: Text('Homme')),
                   ],
                   selected: {_sexe},
                   onSelectionChanged: (selection) => setState(() => _sexe = selection.first),

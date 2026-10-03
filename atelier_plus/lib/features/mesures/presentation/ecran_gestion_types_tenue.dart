@@ -58,8 +58,8 @@ class _EcranGestionTypesTenueState extends ConsumerState<EcranGestionTypesTenue>
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
         data: (liste) {
-          final femmes = liste.where((t) => t.sexe == 'femme').toList();
-          final hommes = liste.where((t) => t.sexe == 'homme').toList();
+          final femmes = liste.where((t) => t.sexe == 'Femme').toList();
+          final hommes = liste.where((t) => t.sexe == 'Homme').toList();
           return ListView(
             children: [
               if (femmes.isNotEmpty) _EnTeteSection(titre: 'Femme'),

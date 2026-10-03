@@ -55,8 +55,8 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                 const SizedBox(height: 12),
                 SegmentedButton<String>(
                   segments: const [
-                    ButtonSegment(value: 'homme', label: Text('Homme')),
-                    ButtonSegment(value: 'femme', label: Text('Femme')),
+                    ButtonSegment(value: 'Homme', label: Text('Homme')),
+                    ButtonSegment(value: 'Femme', label: Text('Femme')),
                   ],
                   selected: sexe == null ? {} : {sexe!},
                   emptySelectionAllowed: true,
@@ -158,7 +158,7 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                 return Card(
                                   child: ListTile(
                                     leading: Icon(
-                                      membre.sexe == 'femme' ? Icons.female : Icons.male,
+                                      membre.sexe == 'Femme' ? Icons.female : Icons.male,
                                     ),
                                     title: Text(membre.nomComplet),
                                     trailing: IconButton(

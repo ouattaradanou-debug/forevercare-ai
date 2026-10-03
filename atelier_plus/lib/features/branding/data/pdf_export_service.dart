@@ -68,7 +68,7 @@ class PdfExportService {
           style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
         ),
         if (client.telephone != null) pw.Text('Téléphone : ${client.telephone}'),
-        if (client.sexe != null) pw.Text('Sexe : ${client.sexe == 'femme' ? 'Femme' : 'Homme'}'),
+        if (client.sexe != null) pw.Text('Sexe : ${client.sexe == 'Femme' ? 'Femme' : 'Homme'}'),
       ],
     );
   }

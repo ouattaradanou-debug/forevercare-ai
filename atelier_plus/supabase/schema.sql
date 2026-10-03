@@ -1020,8 +1020,8 @@ create policy abonnements_select on public.abonnements
 -- -----------------------------------------------------------------------------
 insert into public.types_tenue (id, atelier_id, nom, sexe)
 values
-  ('11111111-1111-1111-1111-111111111100', null, 'Standard homme', 'homme'),
-  ('22222222-2222-2222-2222-222222222200', null, 'Standard femme', 'femme')
+  ('11111111-1111-1111-1111-111111111100', null, 'Standard homme', 'Homme'),
+  ('22222222-2222-2222-2222-222222222200', null, 'Standard femme', 'Femme')
 on conflict (id) do update set nom = excluded.nom, sexe = excluded.sexe;
 
 insert into public.champs_mesure (id, type_tenue_id, nom, unite, ordre)
