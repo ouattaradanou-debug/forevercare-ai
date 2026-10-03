@@ -23,7 +23,6 @@ class EcranFormulaireClient extends ConsumerStatefulWidget {
 class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nomCtrl;
-  late final TextEditingController _prenomCtrl;
   late final TextEditingController _telephoneCtrl;
   late String _sexe;
   late DateTime _datePriseMesures;
@@ -34,8 +33,7 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
   void initState() {
     super.initState();
     final client = widget.clientExistant;
-    _nomCtrl = TextEditingController(text: client.nom);
-    _prenomCtrl = TextEditingController(text: client.prenom);
+    _nomCtrl = TextEditingController(text: client.nomComplet);
     _telephoneCtrl = TextEditingController(text: client.telephone);
     _sexe = client.sexe;
     _datePriseMesures = client.datePriseMesures;
@@ -44,7 +42,6 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
   @override
   void dispose() {
     _nomCtrl.dispose();
-    _prenomCtrl.dispose();
     _telephoneCtrl.dispose();
     super.dispose();
   }
@@ -71,7 +68,7 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
       final client = await repo.modifierClient(
         widget.clientExistant,
         nom: _nomCtrl.text.trim(),
-        prenom: _prenomCtrl.text.trim(),
+        prenom: '',
         telephone: _telephoneCtrl.text.trim(),
         sexe: _sexe,
         datePriseMesures: _datePriseMesures,
@@ -98,13 +95,7 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
               children: [
                 TextFormField(
                   controller: _nomCtrl,
-                  decoration: const InputDecoration(labelText: 'Nom'),
-                  validator: Validators.nomRequis,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _prenomCtrl,
-                  decoration: const InputDecoration(labelText: 'Prénom'),
+                  decoration: const InputDecoration(labelText: 'Nom et prénom'),
                   validator: Validators.nomRequis,
                 ),
                 const SizedBox(height: 16),

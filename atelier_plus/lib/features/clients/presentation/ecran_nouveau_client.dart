@@ -36,7 +36,6 @@ class EcranNouveauClient extends ConsumerStatefulWidget {
 
 class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   final _nomCtrl = TextEditingController();
-  final _prenomCtrl = TextEditingController();
   final _telephoneCtrl = TextEditingController();
   DateTime? _datePriseMesures;
   String? _sexe;
@@ -67,7 +66,6 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   @override
   void dispose() {
     _nomCtrl.dispose();
-    _prenomCtrl.dispose();
     _telephoneCtrl.dispose();
     _montantTotalCtrl.dispose();
     _avanceCtrl.dispose();
@@ -98,11 +96,10 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     if (_client != null) return _client;
 
     final nom = _nomCtrl.text.trim();
-    final prenom = _prenomCtrl.text.trim();
     final telephone = _telephoneCtrl.text.trim();
-    if (nom.isEmpty || prenom.isEmpty || telephone.isEmpty || _sexe == null) {
+    if (nom.isEmpty || telephone.isEmpty || _sexe == null) {
       setState(() {
-        _erreur = 'Renseignez le nom, le prénom, le téléphone et le sexe avant de continuer.';
+        _erreur = 'Renseignez le nom, le téléphone et le sexe avant de continuer.';
       });
       return null;
     }
@@ -116,7 +113,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
       final client = await ref.read(clientsRepositoryProvider).creerClient(
             atelierId: utilisateur!.atelierId,
             nom: nom,
-            prenom: prenom,
+            prenom: '',
             telephone: telephone,
             sexe: _sexe!,
             datePriseMesures: _datePriseMesures ?? DateTime.now(),
@@ -269,12 +266,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: _nomCtrl,
-                    decoration: const InputDecoration(labelText: 'Nom'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _prenomCtrl,
-                    decoration: const InputDecoration(labelText: 'Prénom'),
+                    decoration: const InputDecoration(labelText: 'Nom et prénom'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
