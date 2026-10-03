@@ -717,6 +717,11 @@ class _TuilePhotoState extends ConsumerState<_TuilePhoto> {
       return;
     }
 
+    if (_lecture) {
+      await _player.stop();
+      if (mounted) setState(() => _lecture = false);
+    }
+
     final dossierTemp = await getTemporaryDirectory();
     final chemin = p.join(dossierTemp.path, '${const Uuid().v4()}.m4a');
     await _recorder.start(const RecordConfig(encoder: AudioEncoder.aacLc), path: chemin);
@@ -759,27 +764,58 @@ class _TuilePhotoState extends ConsumerState<_TuilePhoto> {
             ),
           ),
           const SizedBox(height: 6),
-          GestureDetector(
-            onTap: _enCoursEnvoi ? null : (aUnAudio ? _basculerLecture : _basculerEnregistrement),
-            child: CircleAvatar(
-              radius: 14,
-              backgroundColor: _enregistrement ? Colors.red : const Color(0xFF141B3E),
-              child: _enCoursEnvoi
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : Icon(
-                      aUnAudio
-                          ? (_lecture ? Icons.pause : Icons.play_arrow)
-                          : (_enregistrement ? Icons.stop : Icons.mic),
-                      size: 16,
-                      color: Colors.white,
-                    ),
+          if (_enCoursEnvoi)
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else if (_enregistrement)
+            _BoutonRondPhoto(
+              icone: Icons.stop,
+              couleurFond: Colors.red,
+              onTap: _basculerEnregistrement,
+            )
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (aUnAudio) ...[
+                  _BoutonRondPhoto(
+                    icone: _lecture ? Icons.pause : Icons.play_arrow,
+                    couleurFond: const Color(0xFF141B3E),
+                    onTap: _basculerLecture,
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                _BoutonRondPhoto(
+                  icone: Icons.mic,
+                  couleurFond: aUnAudio ? const Color(0xFF8A4B24) : const Color(0xFF141B3E),
+                  onTap: _basculerEnregistrement,
+                ),
+              ],
             ),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _BoutonRondPhoto extends StatelessWidget {
+  const _BoutonRondPhoto({required this.icone, required this.couleurFond, required this.onTap});
+
+  final IconData icone;
+  final Color couleurFond;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: CircleAvatar(
+        radius: 14,
+        backgroundColor: couleurFond,
+        child: Icon(icone, size: 16, color: Colors.white),
       ),
     );
   }
