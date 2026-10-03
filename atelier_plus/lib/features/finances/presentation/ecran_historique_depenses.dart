@@ -51,9 +51,12 @@ class EcranHistoriqueDepenses extends ConsumerWidget {
                     for (final depense in liste)
                       TableRow(children: [
                         _Cellule(Formatters.dateCourte(depense.date)),
-                        depense.description == null || depense.description!.isEmpty
-                            ? const _Cellule('—', centre: true)
-                            : _Cellule(depense.description!),
+                        _Cellule(
+                          depense.description == null || depense.description!.isEmpty
+                              ? '—'
+                              : depense.description!,
+                          centre: true,
+                        ),
                         _Cellule(Formatters.nombre(depense.montant), alignDroite: true),
                       ]),
                   ],
