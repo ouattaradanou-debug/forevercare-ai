@@ -42,6 +42,9 @@ class _EcranFormulaireRendezVousState extends ConsumerState<EcranFormulaireRende
     super.dispose();
   }
 
+  /// Enchaîne directement sur le choix de l'heure une fois la date choisie,
+  /// pour un tailleur qui sait lire/écrire et préfère les sélecteurs
+  /// manuels (calendrier puis horloge) à la dictée vocale.
   Future<void> _choisirDate() async {
     final choisie = await showDatePicker(
       context: context,
@@ -49,7 +52,9 @@ class _EcranFormulaireRendezVousState extends ConsumerState<EcranFormulaireRende
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (choisie != null) setState(() => _date = choisie);
+    if (choisie == null) return;
+    setState(() => _date = choisie);
+    if (mounted) await _choisirHeure();
   }
 
   Future<void> _choisirHeure() async {
