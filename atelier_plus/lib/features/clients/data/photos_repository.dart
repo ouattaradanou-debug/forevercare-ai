@@ -5,6 +5,8 @@ import 'package:uuid/uuid.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../data/remote/stockage_repository.dart';
+import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/sync_engine.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 const String bucketPhotosClients = 'photos-clients';
@@ -15,13 +17,18 @@ const String bucketAudiosClients = 'audios-clients';
 /// clients et les mesures) : écriture locale d'abord, avec tentative
 /// d'upload immédiate en meilleur effort.
 class PhotosRepository {
-  PhotosRepository({required SupabaseClient client, required AppDatabase baseLocale})
-      : _client = client,
+  PhotosRepository({
+    required SupabaseClient client,
+    required AppDatabase baseLocale,
+    required SyncEngine syncEngine,
+  })  : _client = client,
         _baseLocale = baseLocale,
+        _syncEngine = syncEngine,
         _stockage = StockageRepository(client);
 
   final SupabaseClient _client;
   final AppDatabase _baseLocale;
+  final SyncEngine _syncEngine;
   final StockageRepository _stockage;
   static const _uuid = Uuid();
 
@@ -53,7 +60,17 @@ class PhotosRepository {
       createdAt: DateTime.now().toUtc(),
     );
 
-    await _client.from('photos').insert(photo.versJson());
+    // Le client vient peut-être d'être créé "en local d'abord" quelques
+    // instants plus tôt (voir ClientsRepository.creerClient) : si sa propre
+    // écriture vers Supabase a échoué et a été mise en file d'attente (ex.
+    // réseau instable à ce moment précis), l'insertion directe ci-dessous
+    // échouerait avec "violates foreign key constraint" puisque la photo
+    // référence un client absent côté serveur. On force alors le rejeu de
+    // la file d'attente puis on retente une seule fois.
+    await avecRejeuSiClientPasEncoreSynchronise(
+      syncEngine: _syncEngine,
+      ecrire: () => _client.from('photos').insert(photo.versJson()),
+    );
     await _mettreEnCache(photo);
     return photo;
   }
