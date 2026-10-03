@@ -30,9 +30,10 @@ final rechercheClientsProvider = StreamProvider.family<List<Client>, String>((re
                 id: ligne.id,
                 atelierId: ligne.atelierId,
                 nom: ligne.nom,
-                prenom: ligne.prenom,
-                telephone: ligne.telephone,
-                sexe: ligne.sexe,
+                prenom: ligne.prenom ?? '',
+                telephone: ligne.telephone ?? '',
+                sexe: ligne.sexe ?? '',
+                datePriseMesures: ligne.datePriseMesures ?? ligne.updatedAt,
                 updatedAt: ligne.updatedAt,
               ),
             )
@@ -48,9 +49,10 @@ final clientParIdProvider = FutureProvider.family<Client?, String>((ref, id) asy
     id: ligne.id,
     atelierId: ligne.atelierId,
     nom: ligne.nom,
-    prenom: ligne.prenom,
-    telephone: ligne.telephone,
-    sexe: ligne.sexe,
+    prenom: ligne.prenom ?? '',
+    telephone: ligne.telephone ?? '',
+    sexe: ligne.sexe ?? '',
+    datePriseMesures: ligne.datePriseMesures ?? ligne.updatedAt,
     updatedAt: ligne.updatedAt,
   );
 });

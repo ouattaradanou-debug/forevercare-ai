@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/models/client.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -24,6 +25,7 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
   late final TextEditingController _prenomCtrl;
   late final TextEditingController _telephoneCtrl;
   String? _sexe;
+  DateTime? _datePriseMesures;
   bool _chargement = false;
   String? _erreur;
 
@@ -37,6 +39,7 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
     _prenomCtrl = TextEditingController(text: client?.prenom ?? '');
     _telephoneCtrl = TextEditingController(text: client?.telephone ?? '');
     _sexe = client?.sexe;
+    _datePriseMesures = client?.datePriseMesures ?? DateTime.now();
   }
 
   @override
@@ -47,8 +50,22 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
     super.dispose();
   }
 
+  Future<void> _choisirDate() async {
+    final choisie = await showDatePicker(
+      context: context,
+      initialDate: _datePriseMesures ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (choisie != null) setState(() => _datePriseMesures = choisie);
+  }
+
   Future<void> _enregistrer() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_sexe == null) {
+      setState(() => _erreur = 'Choisissez le sexe du client.');
+      return;
+    }
     setState(() {
       _chargement = true;
       _erreur = null;
@@ -61,18 +78,20 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
         client = await repo.modifierClient(
           widget.clientExistant!,
           nom: _nomCtrl.text.trim(),
-          prenom: _videVersNull(_prenomCtrl.text),
-          telephone: _videVersNull(_telephoneCtrl.text),
+          prenom: _prenomCtrl.text.trim(),
+          telephone: _telephoneCtrl.text.trim(),
           sexe: _sexe,
+          datePriseMesures: _datePriseMesures,
         );
       } else {
         final utilisateur = await ref.read(utilisateurCourantProvider.future);
         client = await repo.creerClient(
           atelierId: utilisateur!.atelierId,
           nom: _nomCtrl.text.trim(),
-          prenom: _videVersNull(_prenomCtrl.text),
-          telephone: _videVersNull(_telephoneCtrl.text),
-          sexe: _sexe,
+          prenom: _prenomCtrl.text.trim(),
+          telephone: _telephoneCtrl.text.trim(),
+          sexe: _sexe!,
+          datePriseMesures: _datePriseMesures ?? DateTime.now(),
         );
       }
       if (mounted) context.pushReplacement(AppRoutes.ficheClient(client.id));
@@ -82,8 +101,6 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
       if (mounted) setState(() => _chargement = false);
     }
   }
-
-  String? _videVersNull(String valeur) => valeur.trim().isEmpty ? null : valeur.trim();
 
   @override
   Widget build(BuildContext context) {
@@ -105,13 +122,27 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _prenomCtrl,
-                  decoration: const InputDecoration(labelText: 'Prénom (optionnel)'),
+                  decoration: const InputDecoration(labelText: 'Prénom'),
+                  validator: Validators.nomRequis,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _telephoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: 'Téléphone (optionnel)'),
+                  decoration: const InputDecoration(labelText: 'Contact (téléphone)'),
+                  validator: Validators.nomRequis,
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.calendar_today_outlined),
+                  title: const Text('Date de prise des mesures'),
+                  subtitle: Text(
+                    _datePriseMesures == null
+                        ? 'Non renseignée'
+                        : Formatters.dateLongue(_datePriseMesures!),
+                  ),
+                  onTap: _choisirDate,
                 ),
                 const SizedBox(height: 16),
                 SegmentedButton<String>(

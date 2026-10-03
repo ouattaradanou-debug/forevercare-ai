@@ -75,9 +75,14 @@ class ClientEntries extends Table {
   TextColumn get id => text()();
   TextColumn get atelierId => text()();
   TextColumn get nom => text()();
+  // Nullable uniquement pour permettre l'ajout de ces colonnes sans casser
+  // un éventuel cache existant (migration) — en pratique toujours
+  // renseignées, `clients.prenom/telephone/sexe/date_prise_mesures` étant
+  // NOT NULL côté serveur.
   TextColumn get prenom => text().nullable()();
   TextColumn get telephone => text().nullable()();
   TextColumn get sexe => text().nullable()();
+  DateTimeColumn get datePriseMesures => dateTime().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -303,7 +308,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -341,6 +346,15 @@ class AppDatabase extends _$AppDatabase {
             }
             await m.createTable(membreGroupeUniformeEntries);
             await m.createTable(mesureUniformeEntries);
+          }
+          if (from < 7) {
+            // Même précaution que pour groupeUniformeEntries ci-dessus :
+            // `createTable(clientEntries)` dans le bloc `from < 2` construit
+            // déjà la table avec datePriseMesures si c'est la première
+            // création de cette table sur l'appareil.
+            if (from >= 2) {
+              await m.addColumn(clientEntries, clientEntries.datePriseMesures);
+            }
           }
         },
       );
@@ -446,6 +460,7 @@ class AppDatabase extends _$AppDatabase {
     String? prenom,
     String? telephone,
     String? sexe,
+    DateTime? datePriseMesures,
     required DateTime updatedAt,
   }) async {
     await into(clientEntries).insertOnConflictUpdate(
@@ -456,6 +471,7 @@ class AppDatabase extends _$AppDatabase {
         prenom: Value(prenom),
         telephone: Value(telephone),
         sexe: Value(sexe),
+        datePriseMesures: Value(datePriseMesures),
         updatedAt: updatedAt,
       ),
     );

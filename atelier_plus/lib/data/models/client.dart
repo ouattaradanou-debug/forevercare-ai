@@ -4,30 +4,33 @@ class Client {
     required this.id,
     required this.atelierId,
     required this.nom,
-    this.prenom,
-    this.telephone,
-    this.sexe,
+    required this.prenom,
+    required this.telephone,
+    required this.sexe,
+    required this.datePriseMesures,
     required this.updatedAt,
   });
 
   final String id;
   final String atelierId;
   final String nom;
-  final String? prenom;
-  final String? telephone;
-  final String? sexe;
+  final String prenom;
+  final String telephone;
+  final String sexe;
+  final DateTime datePriseMesures;
   final DateTime updatedAt;
 
-  String get nomComplet => prenom == null || prenom!.isEmpty ? nom : '$nom $prenom';
+  String get nomComplet => prenom.isEmpty ? nom : '$nom $prenom';
 
   factory Client.depuisJson(Map<String, dynamic> json) {
     return Client(
       id: json['id'] as String,
       atelierId: json['atelier_id'] as String,
       nom: json['nom'] as String,
-      prenom: json['prenom'] as String?,
-      telephone: json['telephone'] as String?,
-      sexe: json['sexe'] as String?,
+      prenom: json['prenom'] as String,
+      telephone: json['telephone'] as String,
+      sexe: json['sexe'] as String,
+      datePriseMesures: DateTime.parse(json['date_prise_mesures'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
@@ -44,6 +47,9 @@ class Client {
       'prenom': prenom,
       'telephone': telephone,
       'sexe': sexe,
+      'date_prise_mesures': '${datePriseMesures.year.toString().padLeft(4, '0')}-'
+          '${datePriseMesures.month.toString().padLeft(2, '0')}-'
+          '${datePriseMesures.day.toString().padLeft(2, '0')}',
       'updated_at': updatedAt.toIso8601String(),
     };
   }

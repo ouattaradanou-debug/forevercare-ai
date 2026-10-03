@@ -115,6 +115,7 @@ class SyncEngine {
           prenom: c.prenom,
           telephone: c.telephone,
           sexe: c.sexe,
+          datePriseMesures: c.datePriseMesures,
           updatedAt: c.updatedAt,
         );
         break;

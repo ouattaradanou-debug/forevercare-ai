@@ -23,9 +23,10 @@ class ClientsRepository {
   Future<Client> creerClient({
     required String atelierId,
     required String nom,
-    String? prenom,
-    String? telephone,
-    String? sexe,
+    required String prenom,
+    required String telephone,
+    required String sexe,
+    required DateTime datePriseMesures,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, atelierId);
     final client = Client(
@@ -35,6 +36,7 @@ class ClientsRepository {
       prenom: prenom,
       telephone: telephone,
       sexe: sexe,
+      datePriseMesures: datePriseMesures,
       updatedAt: DateTime.now().toUtc(),
     );
 
@@ -56,6 +58,7 @@ class ClientsRepository {
     String? prenom,
     String? telephone,
     String? sexe,
+    DateTime? datePriseMesures,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, existant.atelierId);
     final miseAJour = Client(
@@ -65,6 +68,7 @@ class ClientsRepository {
       prenom: prenom ?? existant.prenom,
       telephone: telephone ?? existant.telephone,
       sexe: sexe ?? existant.sexe,
+      datePriseMesures: datePriseMesures ?? existant.datePriseMesures,
       updatedAt: DateTime.now().toUtc(),
     );
     await _mettreEnCache(miseAJour);
@@ -104,6 +108,7 @@ class ClientsRepository {
       prenom: client.prenom,
       telephone: client.telephone,
       sexe: client.sexe,
+      datePriseMesures: client.datePriseMesures,
       updatedAt: client.updatedAt,
     );
   }
