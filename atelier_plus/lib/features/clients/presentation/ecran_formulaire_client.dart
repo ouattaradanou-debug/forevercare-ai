@@ -6,14 +6,15 @@ import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/models/client.dart';
-import '../../auth/providers/auth_providers.dart';
 import '../providers/clients_providers.dart';
 
-/// Création ou édition d'une fiche client. [clientExistant] null = création.
+/// Modification d'une fiche client existante (la création passe par
+/// EcranNouveauClient, qui combine infos/mesures/photos/finances/
+/// rendez-vous en un seul écran).
 class EcranFormulaireClient extends ConsumerStatefulWidget {
-  const EcranFormulaireClient({super.key, this.clientExistant});
+  const EcranFormulaireClient({super.key, required this.clientExistant});
 
-  final Client? clientExistant;
+  final Client clientExistant;
 
   @override
   ConsumerState<EcranFormulaireClient> createState() => _EcranFormulaireClientState();
@@ -24,22 +25,20 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
   late final TextEditingController _nomCtrl;
   late final TextEditingController _prenomCtrl;
   late final TextEditingController _telephoneCtrl;
-  String? _sexe;
-  DateTime? _datePriseMesures;
+  late String _sexe;
+  late DateTime _datePriseMesures;
   bool _chargement = false;
   String? _erreur;
-
-  bool get _modeEdition => widget.clientExistant != null;
 
   @override
   void initState() {
     super.initState();
     final client = widget.clientExistant;
-    _nomCtrl = TextEditingController(text: client?.nom ?? '');
-    _prenomCtrl = TextEditingController(text: client?.prenom ?? '');
-    _telephoneCtrl = TextEditingController(text: client?.telephone ?? '');
-    _sexe = client?.sexe;
-    _datePriseMesures = client?.datePriseMesures ?? DateTime.now();
+    _nomCtrl = TextEditingController(text: client.nom);
+    _prenomCtrl = TextEditingController(text: client.prenom);
+    _telephoneCtrl = TextEditingController(text: client.telephone);
+    _sexe = client.sexe;
+    _datePriseMesures = client.datePriseMesures;
   }
 
   @override
@@ -53,7 +52,7 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
   Future<void> _choisirDate() async {
     final choisie = await showDatePicker(
       context: context,
-      initialDate: _datePriseMesures ?? DateTime.now(),
+      initialDate: _datePriseMesures,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
@@ -62,10 +61,6 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
 
   Future<void> _enregistrer() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_sexe == null) {
-      setState(() => _erreur = 'Choisissez le sexe du client.');
-      return;
-    }
     setState(() {
       _chargement = true;
       _erreur = null;
@@ -73,27 +68,14 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
 
     try {
       final repo = ref.read(clientsRepositoryProvider);
-      final Client client;
-      if (_modeEdition) {
-        client = await repo.modifierClient(
-          widget.clientExistant!,
-          nom: _nomCtrl.text.trim(),
-          prenom: _prenomCtrl.text.trim(),
-          telephone: _telephoneCtrl.text.trim(),
-          sexe: _sexe,
-          datePriseMesures: _datePriseMesures,
-        );
-      } else {
-        final utilisateur = await ref.read(utilisateurCourantProvider.future);
-        client = await repo.creerClient(
-          atelierId: utilisateur!.atelierId,
-          nom: _nomCtrl.text.trim(),
-          prenom: _prenomCtrl.text.trim(),
-          telephone: _telephoneCtrl.text.trim(),
-          sexe: _sexe!,
-          datePriseMesures: _datePriseMesures ?? DateTime.now(),
-        );
-      }
+      final client = await repo.modifierClient(
+        widget.clientExistant,
+        nom: _nomCtrl.text.trim(),
+        prenom: _prenomCtrl.text.trim(),
+        telephone: _telephoneCtrl.text.trim(),
+        sexe: _sexe,
+        datePriseMesures: _datePriseMesures,
+      );
       if (mounted) context.pushReplacement(AppRoutes.ficheClient(client.id));
     } catch (e) {
       setState(() => _erreur = e.toString());
@@ -105,7 +87,7 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_modeEdition ? 'Modifier le client' : 'Nouveau client')),
+      appBar: AppBar(title: const Text('Modifier le client')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -137,11 +119,7 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today_outlined),
                   title: const Text('Date de prise des mesures'),
-                  subtitle: Text(
-                    _datePriseMesures == null
-                        ? 'Non renseignée'
-                        : Formatters.dateLongue(_datePriseMesures!),
-                  ),
+                  subtitle: Text(Formatters.dateLongue(_datePriseMesures)),
                   onTap: _choisirDate,
                 ),
                 const SizedBox(height: 16),
@@ -150,10 +128,9 @@ class _EcranFormulaireClientState extends ConsumerState<EcranFormulaireClient> {
                     ButtonSegment(value: 'femme', label: Text('Femme')),
                     ButtonSegment(value: 'homme', label: Text('Homme')),
                   ],
-                  selected: _sexe == null ? const {} : {_sexe!},
-                  emptySelectionAllowed: true,
+                  selected: {_sexe},
                   onSelectionChanged: (selection) {
-                    setState(() => _sexe = selection.isEmpty ? null : selection.first);
+                    setState(() => _sexe = selection.first);
                   },
                 ),
                 if (_erreur != null) ...[

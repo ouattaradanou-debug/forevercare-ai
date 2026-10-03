@@ -1,0 +1,646 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../../core/router/app_router.dart';
+import '../../../core/utils/formatters.dart';
+import '../../../data/models/client.dart';
+import '../../../data/models/photo_client.dart';
+import '../../../shared/widgets/selecteur_source_image.dart';
+import '../../auth/providers/auth_providers.dart';
+import '../../finances/providers/finances_providers.dart';
+import '../../mesures/providers/gabarits_providers.dart';
+import '../../mesures/providers/mesures_providers.dart';
+import '../providers/clients_providers.dart';
+import '../providers/photos_providers.dart';
+
+/// Création d'un client en un seul écran : informations, mesures, photos,
+/// finances et rendez-vous — chaque section s'enregistre dès que possible
+/// plutôt que d'exiger un unique gros formulaire validé d'un coup. Le
+/// client lui-même est créé dès que son nom/prénom/téléphone/sexe sont
+/// renseignés (déclenché par la première action qui en a besoin : ajouter
+/// une photo, enregistrer des mesures/finances, ou le bouton final).
+class EcranNouveauClient extends ConsumerStatefulWidget {
+  const EcranNouveauClient({super.key});
+
+  @override
+  ConsumerState<EcranNouveauClient> createState() => _EcranNouveauClientState();
+}
+
+class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
+  final _nomCtrl = TextEditingController();
+  final _prenomCtrl = TextEditingController();
+  final _telephoneCtrl = TextEditingController();
+  DateTime? _datePriseMesures;
+  String? _sexe;
+
+  final _montantTotalCtrl = TextEditingController();
+  final _avanceCtrl = TextEditingController();
+
+  String? _typeTenueId;
+  final Map<String, TextEditingController> _controleursMesure = {};
+
+  Client? _client;
+  bool _enregistrementClientEnCours = false;
+  bool _mesuresEnregistrees = false;
+  bool _financesEnregistrees = false;
+  bool _photoEnCours = false;
+  String? _erreur;
+
+  @override
+  void dispose() {
+    _nomCtrl.dispose();
+    _prenomCtrl.dispose();
+    _telephoneCtrl.dispose();
+    _montantTotalCtrl.dispose();
+    _avanceCtrl.dispose();
+    for (final c in _controleursMesure.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  TextEditingController _controleurMesure(String champId) {
+    return _controleursMesure.putIfAbsent(champId, () => TextEditingController());
+  }
+
+  Future<void> _choisirDate() async {
+    final choisie = await showDatePicker(
+      context: context,
+      initialDate: _datePriseMesures ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (choisie != null) setState(() => _datePriseMesures = choisie);
+  }
+
+  /// Crée le client si ce n'est pas déjà fait, à partir des informations
+  /// actuellement saisies. Retourne `null` (et affiche une erreur) si les
+  /// champs obligatoires ne sont pas encore remplis.
+  Future<Client?> _assurerClientCree() async {
+    if (_client != null) return _client;
+
+    final nom = _nomCtrl.text.trim();
+    final prenom = _prenomCtrl.text.trim();
+    final telephone = _telephoneCtrl.text.trim();
+    if (nom.isEmpty || prenom.isEmpty || telephone.isEmpty || _sexe == null) {
+      setState(() {
+        _erreur = 'Renseignez le nom, le prénom, le téléphone et le sexe avant de continuer.';
+      });
+      return null;
+    }
+
+    setState(() {
+      _enregistrementClientEnCours = true;
+      _erreur = null;
+    });
+    try {
+      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final client = await ref.read(clientsRepositoryProvider).creerClient(
+            atelierId: utilisateur!.atelierId,
+            nom: nom,
+            prenom: prenom,
+            telephone: telephone,
+            sexe: _sexe!,
+            datePriseMesures: _datePriseMesures ?? DateTime.now(),
+          );
+      if (mounted) setState(() => _client = client);
+      return client;
+    } catch (e) {
+      if (mounted) setState(() => _erreur = e.toString());
+      return null;
+    } finally {
+      if (mounted) setState(() => _enregistrementClientEnCours = false);
+    }
+  }
+
+  Future<void> _enregistrerMesures() async {
+    final client = await _assurerClientCree();
+    if (client == null || _typeTenueId == null) return;
+
+    final valeurs = <String, String>{};
+    for (final entree in _controleursMesure.entries) {
+      final texte = entree.value.text.trim();
+      if (texte.isNotEmpty) valeurs[entree.key] = texte;
+    }
+    if (valeurs.isEmpty) return;
+
+    try {
+      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      await ref.read(mesuresRepositoryProvider).enregistrerNouvellePrise(
+            atelierId: utilisateur!.atelierId,
+            clientId: client.id,
+            typeTenueId: _typeTenueId!,
+            valeurs: valeurs,
+            prisePar: utilisateur.id,
+          );
+      if (mounted) {
+        setState(() => _mesuresEnregistrees = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mesures enregistrées.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) setState(() => _erreur = e.toString());
+    }
+  }
+
+  Future<void> _enregistrerFinances() async {
+    final client = await _assurerClientCree();
+    if (client == null) return;
+
+    final montantTotal = double.tryParse(_montantTotalCtrl.text.replaceAll(',', '.')) ?? 0;
+    final avance = double.tryParse(_avanceCtrl.text.replaceAll(',', '.')) ?? 0;
+    if (montantTotal <= 0 && avance <= 0) return;
+
+    try {
+      await ref.read(financesRepositoryProvider).definirCommande(
+            atelierId: client.atelierId,
+            clientId: client.id,
+            montantTotal: montantTotal,
+            avance: avance,
+          );
+      if (mounted) {
+        setState(() => _financesEnregistrees = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Finances enregistrées.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) setState(() => _erreur = e.toString());
+    }
+  }
+
+  Future<void> _ajouterPhoto(TypePhoto type) async {
+    final client = await _assurerClientCree();
+    if (client == null || !mounted) return;
+
+    final resultat = await choisirSourceEtImage(context);
+    if (resultat == null) return;
+    final (fichier, sourceImage) = resultat;
+
+    setState(() => _photoEnCours = true);
+    try {
+      await ref.read(photosRepositoryProvider).ajouterPhoto(
+            atelierId: client.atelierId,
+            clientId: client.id,
+            type: type,
+            source: sourceImage == ImageSource.camera ? SourcePhoto.camera : SourcePhoto.galerie,
+            fichier: fichier,
+          );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Échec de l\'envoi : $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _photoEnCours = false);
+    }
+  }
+
+  Future<void> _ajouterRendezVous() async {
+    final client = await _assurerClientCree();
+    if (client == null || !mounted) return;
+    context.push(AppRoutes.creationRendezVous, extra: client);
+  }
+
+  Future<void> _terminer() async {
+    final client = await _assurerClientCree();
+    if (client == null || !mounted) return;
+    context.pushReplacement(AppRoutes.ficheClient(client.id));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAF6F1),
+      appBar: AppBar(
+        title: const Text('Nouveau client'),
+        backgroundColor: const Color(0xFFE8E3DD),
+        foregroundColor: const Color(0xFF231A14),
+        elevation: 0,
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _EnTeteSection(
+                    icone: Icons.badge_outlined,
+                    couleurFond: const Color(0xFFE3E1F5),
+                    couleurIcone: const Color(0xFF3B3470),
+                    titre: 'Informations du client',
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _nomCtrl,
+                    decoration: const InputDecoration(labelText: 'Nom'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _prenomCtrl,
+                    decoration: const InputDecoration(labelText: 'Prénom'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _telephoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(labelText: 'Contact (téléphone)'),
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    tileColor: const Color(0xFFF3E9D8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: Color(0xFFDDD3C8)),
+                    ),
+                    title: const Text('Date de prise des mesures'),
+                    subtitle: Text(
+                      _datePriseMesures == null
+                          ? 'Non renseignée'
+                          : Formatters.dateLongue(_datePriseMesures!),
+                    ),
+                    trailing: const Icon(Icons.calendar_today_outlined),
+                    onTap: _choisirDate,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Sexe', style: TextStyle(color: Color(0xFF6F6259))),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _CarteSexe(
+                          icone: Icons.male,
+                          libelle: 'Homme',
+                          selectionne: _sexe == 'homme',
+                          onTap: () => setState(() => _sexe = 'homme'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _CarteSexe(
+                          icone: Icons.female,
+                          libelle: 'Femme',
+                          selectionne: _sexe == 'femme',
+                          onTap: () => setState(() => _sexe = 'femme'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  _EnTeteSection(
+                    icone: Icons.straighten_outlined,
+                    couleurFond: const Color(0xFFF5DCD3),
+                    couleurIcone: const Color(0xFF8A4B24),
+                    titre: 'Mesures',
+                  ),
+                  const SizedBox(height: 12),
+                  if (_sexe == null)
+                    const Text(
+                      'Renseigne le sexe du client ci-dessus pour afficher les champs de mesure.',
+                      style: TextStyle(color: Color(0xFF6F6259)),
+                    )
+                  else
+                    _SectionMesures(
+                      sexe: _sexe!,
+                      typeTenueId: _typeTenueId,
+                      onTypeChange: (id) => setState(() => _typeTenueId = id),
+                      controleurPour: _controleurMesure,
+                      onEnregistrer: _enregistrerMesures,
+                      enregistre: _mesuresEnregistrees,
+                    ),
+                  const SizedBox(height: 28),
+                  _EnTeteSection(
+                    icone: Icons.texture_outlined,
+                    couleurFond: const Color(0xFFF0E6C8),
+                    couleurIcone: const Color(0xFFA47B1B),
+                    titre: 'Photos du tissu',
+                  ),
+                  const SizedBox(height: 12),
+                  _GrillePhotosSection(
+                    clientId: _client?.id,
+                    type: TypePhoto.tissu,
+                    enCours: _photoEnCours,
+                    onAjouter: () => _ajouterPhoto(TypePhoto.tissu),
+                  ),
+                  const SizedBox(height: 28),
+                  _EnTeteSection(
+                    icone: Icons.checkroom_outlined,
+                    couleurFond: const Color(0xFFDCEADF),
+                    couleurIcone: const Color(0xFF2E7D32),
+                    titre: 'Photos du ou des modèles',
+                  ),
+                  const SizedBox(height: 12),
+                  _GrillePhotosSection(
+                    clientId: _client?.id,
+                    type: TypePhoto.modele,
+                    enCours: _photoEnCours,
+                    onAjouter: () => _ajouterPhoto(TypePhoto.modele),
+                  ),
+                  const SizedBox(height: 28),
+                  _EnTeteSection(
+                    icone: Icons.savings_outlined,
+                    couleurFond: const Color(0xFFDCEADF),
+                    couleurIcone: const Color(0xFF2E7D32),
+                    titre: 'Finances',
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _montantTotalCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Montant total convenu (FCFA)'),
+                    onChanged: (_) => setState(() {}),
+                    onEditingComplete: _enregistrerFinances,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _avanceCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration:
+                        const InputDecoration(labelText: 'Avance déjà payée par le client'),
+                    onChanged: (_) => setState(() {}),
+                    onEditingComplete: _enregistrerFinances,
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDEAE4),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Reste à payer'),
+                        Text(
+                          Formatters.montant(
+                            (double.tryParse(_montantTotalCtrl.text.replaceAll(',', '.')) ?? 0) -
+                                (double.tryParse(_avanceCtrl.text.replaceAll(',', '.')) ?? 0),
+                          ),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  _EnTeteSection(
+                    icone: Icons.event_available_outlined,
+                    couleurFond: const Color(0xFFF0E6C8),
+                    couleurIcone: const Color(0xFFA47B1B),
+                    titre: 'Rendez-vous',
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _ajouterRendezVous,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Ajouter un rendez-vous'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                      foregroundColor: const Color(0xFF141B3E),
+                      side: const BorderSide(color: Color(0xFF141B3E)),
+                    ),
+                  ),
+                  if (_erreur != null) ...[
+                    const SizedBox(height: 16),
+                    Text(_erreur!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  ],
+                  const SizedBox(height: 16),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle, size: 16, color: Color(0xFF2E7D32)),
+                      SizedBox(width: 6),
+                      Text('Enregistré automatiquement', style: TextStyle(color: Color(0xFF2E7D32))),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: 16,
+              child: FilledButton(
+                onPressed: _enregistrementClientEnCours ? null : _terminer,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF141B3E),
+                  minimumSize: const Size.fromHeight(52),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                ),
+                child: _enregistrementClientEnCours
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Enregistrer le client'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EnTeteSection extends StatelessWidget {
+  const _EnTeteSection({
+    required this.icone,
+    required this.couleurFond,
+    required this.couleurIcone,
+    required this.titre,
+  });
+
+  final IconData icone;
+  final Color couleurFond;
+  final Color couleurIcone;
+  final String titre;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(radius: 20, backgroundColor: couleurFond, child: Icon(icone, color: couleurIcone)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            titre,
+            style: const TextStyle(fontFamily: 'serif', fontWeight: FontWeight.bold, fontSize: 20),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CarteSexe extends StatelessWidget {
+  const _CarteSexe({
+    required this.icone,
+    required this.libelle,
+    required this.selectionne,
+    required this.onTap,
+  });
+
+  final IconData icone;
+  final String libelle;
+  final bool selectionne;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selectionne ? const Color(0xFF141B3E) : const Color(0xFFDDD3C8),
+              width: selectionne ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(icone, size: 28),
+              const SizedBox(height: 8),
+              Text(libelle),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionMesures extends ConsumerWidget {
+  const _SectionMesures({
+    required this.sexe,
+    required this.typeTenueId,
+    required this.onTypeChange,
+    required this.controleurPour,
+    required this.onEnregistrer,
+    required this.enregistre,
+  });
+
+  final String sexe;
+  final String? typeTenueId;
+  final ValueChanged<String?> onTypeChange;
+  final TextEditingController Function(String champId) controleurPour;
+  final VoidCallback onEnregistrer;
+  final bool enregistre;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final types = ref.watch(typesTenueVisiblesProvider);
+
+    return types.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const Text('Impossible de charger les types de tenue.'),
+      data: (liste) {
+        final filtres = liste.where((t) => t.sexe == sexe || t.sexe == 'mixte').toList();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DropdownButtonFormField<String>(
+              value: typeTenueId,
+              decoration: const InputDecoration(labelText: 'Type de tenue'),
+              items: filtres
+                  .map((t) => DropdownMenuItem(value: t.id, child: Text(t.nom)))
+                  .toList(),
+              onChanged: onTypeChange,
+            ),
+            if (typeTenueId != null) ...[
+              const SizedBox(height: 12),
+              Consumer(
+                builder: (context, ref, _) {
+                  final champs = ref.watch(champsActifsProvider(typeTenueId!));
+                  return champs.when(
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (_, __) => const Text('Impossible de charger les champs de mesure.'),
+                    data: (champsListe) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final champ in champsListe)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: TextField(
+                              controller: controleurPour(champ.id),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration:
+                                  InputDecoration(labelText: '${champ.nom} (${champ.unite})'),
+                            ),
+                          ),
+                        OutlinedButton(
+                          onPressed: onEnregistrer,
+                          child: Text(enregistre ? 'Mesures enregistrées ✓' : 'Enregistrer les mesures'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _GrillePhotosSection extends ConsumerWidget {
+  const _GrillePhotosSection({
+    required this.clientId,
+    required this.type,
+    required this.enCours,
+    required this.onAjouter,
+  });
+
+  final String? clientId;
+  final TypePhoto type;
+  final bool enCours;
+  final VoidCallback onAjouter;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final photos = clientId == null
+        ? const AsyncValue<List<PhotoClient>>.data([])
+        : ref.watch(photosDuClientProvider(clientId!));
+    final liste = photos.valueOrNull?.where((p) => p.type == type).toList() ?? [];
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        for (final photo in liste)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(photo.url, width: 90, height: 90, fit: BoxFit.cover),
+          ),
+        InkWell(
+          onTap: enCours ? null : onAjouter,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFDDD3C8)),
+            ),
+            child: enCours
+                ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.add_a_photo_outlined),
+          ),
+        ),
+      ],
+    );
+  }
+}

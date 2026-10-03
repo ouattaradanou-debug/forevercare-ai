@@ -18,6 +18,7 @@ import '../../features/clients/presentation/ecran_fiche_client.dart';
 import '../../features/clients/presentation/ecran_formulaire_client.dart';
 import '../../features/clients/presentation/ecran_gestion_photos.dart';
 import '../../features/clients/presentation/ecran_liste_clients.dart';
+import '../../features/clients/presentation/ecran_nouveau_client.dart';
 import '../../features/mesures/presentation/ecran_creation_type_tenue.dart';
 import '../../features/mesures/presentation/ecran_gestion_champs.dart';
 import '../../features/mesures/presentation/ecran_gestion_types_tenue.dart';
@@ -144,7 +145,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.creationClient,
-        builder: (context, state) => const EcranFormulaireClient(),
+        builder: (context, state) => const EcranNouveauClient(),
       ),
       GoRoute(
         path: AppRoutes._ficheClientTemplate,
@@ -153,7 +154,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes._modificationClientTemplate,
         builder: (context, state) =>
-            EcranFormulaireClient(clientExistant: state.extra as Client?),
+            EcranFormulaireClient(clientExistant: state.extra as Client),
       ),
       GoRoute(
         path: AppRoutes._selectionTypeTenueTemplate,
