@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../../../core/utils/formatters.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -21,11 +22,58 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
   bool _chargement = false;
   String? _erreur;
 
+  final _dicteeVocale = stt.SpeechToText();
+  bool _dicteeDisponible = false;
+  bool _dicteeEnCours = false;
+
   @override
   void dispose() {
     _montantCtrl.dispose();
     _descriptionCtrl.dispose();
+    _dicteeVocale.stop();
     super.dispose();
+  }
+
+  /// Même mécanisme de dictée que les champs Finances de "Nouveau client" :
+  /// un tailleur qui ne sait pas écrire peut dicter le montant, transcrit
+  /// en ne gardant que les chiffres.
+  Future<void> _basculerDicteeMontant() async {
+    if (_dicteeEnCours) {
+      await _dicteeVocale.stop();
+      if (mounted) setState(() => _dicteeEnCours = false);
+      return;
+    }
+
+    if (!_dicteeDisponible) {
+      _dicteeDisponible = await _dicteeVocale.initialize(
+        onStatus: (statut) {
+          if ((statut == 'done' || statut == 'notListening') && mounted) {
+            setState(() => _dicteeEnCours = false);
+          }
+        },
+        onError: (_) {
+          if (mounted) setState(() => _dicteeEnCours = false);
+        },
+      );
+    }
+    if (!_dicteeDisponible) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _dicteeEnCours = true);
+    await _dicteeVocale.listen(
+      localeId: 'fr_FR',
+      onResult: (resultat) {
+        final texte = resultat.recognizedWords.replaceAll(RegExp(r'[^0-9]'), '');
+        _montantCtrl.text = texte;
+        _montantCtrl.selection = TextSelection.collapsed(offset: _montantCtrl.text.length);
+      },
+    );
   }
 
   Future<void> _choisirDate() async {
@@ -79,7 +127,14 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
               TextField(
                 controller: _montantCtrl,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Montant (FCFA)'),
+                decoration: InputDecoration(
+                  labelText: 'Montant (FCFA)',
+                  prefixIcon: IconButton(
+                    icon: Icon(_dicteeEnCours ? Icons.mic : Icons.mic_none),
+                    color: _dicteeEnCours ? Colors.red : null,
+                    onPressed: _basculerDicteeMontant,
+                  ),
+                ),
                 autofocus: true,
               ),
               const SizedBox(height: 16),
