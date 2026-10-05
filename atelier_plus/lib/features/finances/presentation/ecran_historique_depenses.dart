@@ -142,6 +142,7 @@ class _EcranHistoriqueDepensesState extends ConsumerState<EcranHistoriqueDepense
             ? '—'
             : depense.description!,
         centre: true,
+        tronquer: false,
       ),
       _Cellule(Formatters.nombre(depense.montant), alignDroite: true),
     ]);
@@ -154,12 +155,14 @@ class _Cellule extends StatelessWidget {
     this.entete = false,
     this.alignDroite = false,
     this.centre = false,
+    this.tronquer = true,
   });
 
   final String texte;
   final bool entete;
   final bool alignDroite;
   final bool centre;
+  final bool tronquer;
 
   @override
   Widget build(BuildContext context) {
@@ -170,8 +173,8 @@ class _Cellule extends StatelessWidget {
         textAlign: centre
             ? TextAlign.center
             : (alignDroite ? TextAlign.right : TextAlign.left),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+        maxLines: tronquer ? 1 : null,
+        overflow: tronquer ? TextOverflow.ellipsis : TextOverflow.visible,
         style: TextStyle(
           fontWeight: entete ? FontWeight.bold : FontWeight.normal,
           color: const Color(0xFF231A14),
