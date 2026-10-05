@@ -327,16 +327,17 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     }
   }
 
-  /// Id du gabarit par défaut (fourni par l'application) pour ce sexe —
-  /// les mesures du client ne passent jamais par le choix d'un type de
-  /// tenue, contrairement aux groupes d'uniformes : une seule liste fixe de
-  /// champs par sexe, comme dans l'ancienne application.
+  /// Id du gabarit à utiliser pour ce sexe — les mesures du client ne
+  /// passent jamais par le choix d'un type de tenue, contrairement aux
+  /// groupes d'uniformes : une seule liste fixe de champs par sexe, comme
+  /// dans l'ancienne application. Reprend la copie propre à l'atelier si
+  /// "Champs de mesure" a été personnalisé, sinon le gabarit par défaut
+  /// partagé (voir _choisirGabaritPourSexe).
   Future<String?> _idGabaritPourSexe(String sexe) async {
+    final utilisateur = await ref.read(utilisateurCourantProvider.future);
+    if (utilisateur == null) return null;
     final liste = await ref.read(typesTenueVisiblesProvider.future);
-    for (final type in liste) {
-      if (type.estGabaritParDefaut && type.sexe == sexe) return type.id;
-    }
-    return null;
+    return _choisirGabaritPourSexe(liste, utilisateur.atelierId, sexe)?.id;
   }
 
   /// Enregistre les mesures déjà saisies en une seule prise, appelée au
@@ -816,11 +817,28 @@ class _CarteSexe extends StatelessWidget {
   }
 }
 
+/// Choisit, parmi les gabarits visibles, celui à utiliser pour [sexe] dans
+/// un flux sans sélecteur explicite : la copie propre à l'atelier si elle
+/// existe (reflète les modifications faites dans "Champs de mesure"),
+/// sinon le gabarit par défaut partagé.
+TypeTenue? _choisirGabaritPourSexe(List<TypeTenue> liste, String atelierId, String sexe) {
+  TypeTenue? propre;
+  TypeTenue? parDefaut;
+  for (final type in liste) {
+    if (type.sexe != sexe) continue;
+    if (type.atelierId == atelierId) {
+      propre = type;
+    } else if (type.estGabaritParDefaut) {
+      parDefaut = type;
+    }
+  }
+  return propre ?? parDefaut;
+}
+
 /// Liste fixe des champs de mesure selon le sexe du client — pas de choix
 /// de type de tenue à cette étape (contrairement aux groupes d'uniformes) :
 /// l'ancienne application affiche directement, dès le sexe choisi, la même
-/// liste de ~20 (homme) ou ~23 (femme) champs, lue depuis les gabarits par
-/// défaut `Standard homme`/`Standard femme` (voir schema.sql, section 6).
+/// liste de champs, personnalisable via "Paramètres > Champs de mesure".
 class _SectionMesures extends ConsumerWidget {
   const _SectionMesures({required this.sexe, required this.controleurPour});
 
@@ -829,19 +847,15 @@ class _SectionMesures extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final utilisateur = ref.watch(utilisateurCourantProvider).valueOrNull;
     final types = ref.watch(typesTenueVisiblesProvider);
 
     return types.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => const Text('Impossible de charger les champs de mesure.'),
       data: (liste) {
-        TypeTenue? gabarit;
-        for (final type in liste) {
-          if (type.estGabaritParDefaut && type.sexe == sexe) {
-            gabarit = type;
-            break;
-          }
-        }
+        if (utilisateur == null) return const Center(child: CircularProgressIndicator());
+        final gabarit = _choisirGabaritPourSexe(liste, utilisateur.atelierId, sexe);
         if (gabarit == null) {
           return const Text(
             'Connectez-vous à internet une première fois pour récupérer les champs de mesure.',

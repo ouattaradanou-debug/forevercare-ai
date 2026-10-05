@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../data/models/champ_mesure.dart';
 import '../../../data/models/type_tenue.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/gabarits_providers.dart';
 
-const _navyAjouter = Color(0xFF141B3E);
+const _bleuSeda = Color(0xFF1B4FA0);
+const _orangeSeda = Color(0xFFF5821F);
 
 /// "Champs de mesure" tel que dans l'ancienne application : un choix
 /// Homme/Femme, puis la liste des champs de ce gabarit avec un
@@ -95,7 +95,11 @@ class _EcranChampsDeMesureState extends ConsumerState<EcranChampsDeMesure> {
     final utilisateur = ref.watch(utilisateurCourantProvider).valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Champs de mesure')),
+      appBar: AppBar(
+        title: const Text('Champs de mesure'),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
+      ),
       body: utilisateur == null
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
@@ -169,7 +173,7 @@ class _EcranChampsDeMesureState extends ConsumerState<EcranChampsDeMesure> {
                                       child: SwitchListTile(
                                         title: Text('${champ.nom} (${champ.unite})'),
                                         value: actif,
-                                        activeColor: AppColors.primaire,
+                                        activeColor: _bleuSeda,
                                         onChanged: (valeur) async {
                                           if (valeur) {
                                             await executerAvecErreurAffichee(
@@ -195,7 +199,7 @@ class _EcranChampsDeMesureState extends ConsumerState<EcranChampsDeMesure> {
                                 bottom: 16,
                                 child: FloatingActionButton.extended(
                                   onPressed: () => _ajouterChamp(gabarit),
-                                  backgroundColor: _navyAjouter,
+                                  backgroundColor: _orangeSeda,
                                   icon: const Icon(Icons.add, color: Colors.white),
                                   label: const Text(
                                     'Ajouter un champ',
@@ -250,7 +254,7 @@ class _BasculeSexe extends StatelessWidget {
         height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selectionne ? AppColors.primaire : Colors.transparent,
+          color: selectionne ? _bleuSeda : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Row(
