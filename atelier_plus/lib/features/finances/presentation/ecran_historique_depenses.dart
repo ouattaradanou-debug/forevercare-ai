@@ -7,6 +7,10 @@ import '../../auth/providers/auth_providers.dart';
 import '../data/recapitulatif_finances.dart';
 import '../providers/finances_providers.dart';
 
+/// Bleu/orange du logo SEDA Tech, repris pour les écrans de dépenses.
+const Color _bleuSeda = Color(0xFF1B4FA0);
+const Color _orangeSeda = Color(0xFFF5821F);
+
 enum _Periode { jour, semaine, mois, annee }
 
 /// Tableau de toutes les dépenses enregistrées (Date, Motif, Montant), la
@@ -55,13 +59,22 @@ class _EcranHistoriqueDepensesState extends ConsumerState<EcranHistoriqueDepense
     final (debut, finExclusive) = _bornesPeriode(_periode);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Historique des dépenses')),
+      appBar: AppBar(
+        title: const Text('Historique des dépenses'),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
+      ),
       body: SafeArea(
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: SegmentedButton<_Periode>(
+                style: SegmentedButton.styleFrom(
+                  selectedBackgroundColor: _orangeSeda,
+                  selectedForegroundColor: Colors.white,
+                  foregroundColor: _bleuSeda,
+                ),
                 segments: const [
                   ButtonSegment(value: _Periode.jour, label: Text('Jour')),
                   ButtonSegment(value: _Periode.semaine, label: Text('Semaine')),
@@ -110,11 +123,16 @@ class _EcranHistoriqueDepensesState extends ConsumerState<EcranHistoriqueDepense
                               2: FlexColumnWidth(0.9),
                             },
                             children: [
-                              const TableRow(children: [
-                                _Cellule('Date', entete: true),
-                                _Cellule('Motif', entete: true, centre: true),
-                                _Cellule('Montant', entete: true, alignDroite: true),
-                              ]),
+                              TableRow(
+                                decoration: const BoxDecoration(
+                                  border: Border(bottom: BorderSide(color: _orangeSeda, width: 2)),
+                                ),
+                                children: const [
+                                  _Cellule('Date', entete: true),
+                                  _Cellule('Motif', entete: true, centre: true),
+                                  _Cellule('Montant', entete: true, alignDroite: true),
+                                ],
+                              ),
                               for (final depense in filtrees) _ligne(depense),
                             ],
                           ),
@@ -123,16 +141,19 @@ class _EcranHistoriqueDepensesState extends ConsumerState<EcranHistoriqueDepense
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEDEAE4),
+                            color: _bleuSeda,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Total'),
+                              const Text('Total', style: TextStyle(color: Colors.white)),
                               Text(
                                 Formatters.montant(total),
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: _orangeSeda,
+                                ),
                               ),
                             ],
                           ),
@@ -192,7 +213,7 @@ class _Cellule extends StatelessWidget {
         overflow: tronquer ? TextOverflow.ellipsis : TextOverflow.visible,
         style: TextStyle(
           fontWeight: entete ? FontWeight.bold : FontWeight.normal,
-          color: const Color(0xFF231A14),
+          color: entete ? _bleuSeda : const Color(0xFF231A14),
           fontSize: 13,
         ),
       ),

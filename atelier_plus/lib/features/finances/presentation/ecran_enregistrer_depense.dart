@@ -8,6 +8,10 @@ import '../../../core/utils/formatters.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/finances_providers.dart';
 
+/// Bleu/orange du logo SEDA Tech, repris pour les écrans de dépenses.
+const Color _bleuSeda = Color(0xFF1B4FA0);
+const Color _orangeSeda = Color(0xFFF5821F);
+
 /// Enregistre une dépense de l'atelier (loyer, fournitures, etc.), prise en
 /// compte dans l'écran "Suivi des finances".
 class EcranEnregistrerDepense extends ConsumerStatefulWidget {
@@ -127,7 +131,11 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Enregistrer une dépense')),
+      appBar: AppBar(
+        title: const Text('Enregistrer une dépense'),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -141,7 +149,7 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
                   labelText: 'Montant (FCFA)',
                   prefixIcon: IconButton(
                     icon: Icon(_champEnDictee == 'montant' ? Icons.mic : Icons.mic_none),
-                    color: _champEnDictee == 'montant' ? Colors.red : null,
+                    color: _champEnDictee == 'montant' ? Colors.red : _bleuSeda,
                     onPressed: () =>
                         _basculerDictee('montant', _montantCtrl, chiffresSeulement: true),
                   ),
@@ -155,7 +163,7 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
                   labelText: 'Description (optionnel)',
                   prefixIcon: IconButton(
                     icon: Icon(_champEnDictee == 'description' ? Icons.mic : Icons.mic_none),
-                    color: _champEnDictee == 'description' ? Colors.red : null,
+                    color: _champEnDictee == 'description' ? Colors.red : _bleuSeda,
                     onPressed: () => _basculerDictee('description', _descriptionCtrl),
                   ),
                 ),
@@ -163,7 +171,7 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
               const SizedBox(height: 16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.calendar_today_outlined),
+                leading: const Icon(Icons.calendar_today_outlined, color: _bleuSeda),
                 title: const Text('Date'),
                 subtitle: Text(Formatters.dateLongue(_date)),
                 onTap: _choisirDate,
@@ -175,6 +183,10 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _chargement ? null : _enregistrer,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _orangeSeda,
+                  foregroundColor: Colors.white,
+                ),
                 child: _chargement
                     ? const SizedBox(
                         width: 22,
@@ -186,6 +198,10 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () => context.push(AppRoutes.historiqueDepenses),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _bleuSeda,
+                  side: const BorderSide(color: _bleuSeda),
+                ),
                 child: const Text('Historique des dépenses'),
               ),
             ],
