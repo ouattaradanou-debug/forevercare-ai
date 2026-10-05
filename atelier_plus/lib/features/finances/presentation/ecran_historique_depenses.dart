@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/depense.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../data/recapitulatif_finances.dart';
 import '../providers/finances_providers.dart';
 
@@ -19,6 +20,20 @@ class EcranHistoriqueDepenses extends ConsumerStatefulWidget {
 
 class _EcranHistoriqueDepensesState extends ConsumerState<EcranHistoriqueDepenses> {
   _Periode _periode = _Periode.mois;
+
+  @override
+  void initState() {
+    super.initState();
+    // Le cache local ne contient que les dépenses déjà rencontrées sur cet
+    // appareil : on rapatrie celles du serveur (autres appareils, ou
+    // ajoutées avant l'existence de cet écran) dès l'ouverture.
+    Future.microtask(() async {
+      final atelier = await ref.read(atelierCourantProvider.future);
+      if (atelier != null) {
+        await ref.read(financesRepositoryProvider).chargerRecapitulatifDepuisServeur(atelier.id);
+      }
+    });
+  }
 
   (DateTime, DateTime) _bornesPeriode(_Periode periode) {
     final now = DateTime.now();
