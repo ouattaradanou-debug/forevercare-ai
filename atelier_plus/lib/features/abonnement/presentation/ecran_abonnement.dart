@@ -5,6 +5,9 @@ import '../../../core/utils/formatters.dart';
 import '../data/etat_abonnement.dart';
 import '../providers/abonnement_providers.dart';
 
+const _bleuSeda = Color(0xFF1B4FA0);
+const _orangeSeda = Color(0xFFF5821F);
+
 /// Statut de l'abonnement et transition essai -> abonnement.
 ///
 /// Aucun moyen de paiement n'était spécifié au cahier des charges : le
@@ -27,7 +30,11 @@ class EcranAbonnement extends ConsumerWidget {
           'en attendant.',
         ),
         actions: [
-          FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Compris')),
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+            child: const Text('Compris'),
+          ),
         ],
       ),
     );
@@ -38,7 +45,11 @@ class EcranAbonnement extends ConsumerWidget {
     final abonnementAsync = ref.watch(abonnementCourantProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon abonnement')),
+      appBar: AppBar(
+        title: const Text('Mon abonnement'),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
+      ),
       body: abonnementAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
@@ -95,6 +106,10 @@ class EcranAbonnement extends ConsumerWidget {
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: () => _afficherContactRenouvellement(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _orangeSeda,
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text('Renouveler mon abonnement'),
                 ),
               ],
