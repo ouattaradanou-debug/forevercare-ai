@@ -16,6 +16,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/analyseur_date_vocale.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/ecran_photo_plein_ecran.dart';
 import '../../../core/widgets/en_tete_section.dart';
 import '../../../data/models/client.dart';
 import '../../../data/models/photo_client.dart';
@@ -1013,14 +1014,7 @@ class _TuilePhotoState extends ConsumerState<_TuilePhoto> {
     }
   }
 
-  void _ouvrirPleinEcran() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (context) => _EcranPhotoPleinEcran(url: widget.photo.url),
-      ),
-    );
-  }
+  void _ouvrirPleinEcran() => ouvrirPhotoPleinEcran(context, widget.photo.url);
 
   @override
   Widget build(BuildContext context) {
@@ -1104,26 +1098,3 @@ class _BoutonRondPhoto extends StatelessWidget {
   }
 }
 
-/// Affichage plein écran d'une photo (ouverte en appuyant sur sa vignette),
-/// avec zoom/déplacement tactile.
-class _EcranPhotoPleinEcran extends StatelessWidget {
-  const _EcranPhotoPleinEcran({required this.url});
-
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          child: Image.network(url),
-        ),
-      ),
-    );
-  }
-}

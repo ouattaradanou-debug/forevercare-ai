@@ -34,6 +34,7 @@ final rechercheClientsProvider = StreamProvider.family<List<Client>, String>((re
                 telephone: ligne.telephone ?? '',
                 sexe: ligne.sexe ?? '',
                 datePriseMesures: ligne.datePriseMesures ?? ligne.updatedAt,
+                createdAt: ligne.createdAt ?? ligne.updatedAt,
                 updatedAt: ligne.updatedAt,
               ),
             )
@@ -53,6 +54,7 @@ final clientParIdProvider = FutureProvider.family<Client?, String>((ref, id) asy
     telephone: ligne.telephone ?? '',
     sexe: ligne.sexe ?? '',
     datePriseMesures: ligne.datePriseMesures ?? ligne.updatedAt,
+    createdAt: ligne.createdAt ?? ligne.updatedAt,
     updatedAt: ligne.updatedAt,
   );
 });

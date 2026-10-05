@@ -8,6 +8,7 @@ class Client {
     required this.telephone,
     required this.sexe,
     required this.datePriseMesures,
+    required this.createdAt,
     required this.updatedAt,
   });
 
@@ -18,6 +19,7 @@ class Client {
   final String telephone;
   final String sexe;
   final DateTime datePriseMesures;
+  final DateTime createdAt;
   final DateTime updatedAt;
 
   /// `prenom` ne peut jamais être vide côté base (contrainte
@@ -36,6 +38,7 @@ class Client {
       telephone: json['telephone'] as String,
       sexe: json['sexe'] as String,
       datePriseMesures: DateTime.parse(json['date_prise_mesures'] as String),
+      createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
@@ -55,6 +58,7 @@ class Client {
       'date_prise_mesures': '${datePriseMesures.year.toString().padLeft(4, '0')}-'
           '${datePriseMesures.month.toString().padLeft(2, '0')}-'
           '${datePriseMesures.day.toString().padLeft(2, '0')}',
+      'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
   }

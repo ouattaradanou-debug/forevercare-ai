@@ -29,6 +29,7 @@ class ClientsRepository {
     required DateTime datePriseMesures,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, atelierId);
+    final maintenant = DateTime.now().toUtc();
     final client = Client(
       id: _uuid.v4(),
       atelierId: atelierId,
@@ -37,7 +38,8 @@ class ClientsRepository {
       telephone: telephone,
       sexe: sexe,
       datePriseMesures: datePriseMesures,
-      updatedAt: DateTime.now().toUtc(),
+      createdAt: maintenant,
+      updatedAt: maintenant,
     );
 
     await _mettreEnCache(client);
@@ -69,6 +71,7 @@ class ClientsRepository {
       telephone: telephone ?? existant.telephone,
       sexe: sexe ?? existant.sexe,
       datePriseMesures: datePriseMesures ?? existant.datePriseMesures,
+      createdAt: existant.createdAt,
       updatedAt: DateTime.now().toUtc(),
     );
     await _mettreEnCache(miseAJour);
@@ -109,6 +112,7 @@ class ClientsRepository {
       telephone: client.telephone,
       sexe: client.sexe,
       datePriseMesures: client.datePriseMesures,
+      createdAt: client.createdAt,
       updatedAt: client.updatedAt,
     );
   }

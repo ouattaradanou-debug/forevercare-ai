@@ -8,6 +8,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
+import '../../../core/widgets/ecran_photo_plein_ecran.dart';
 import '../../../core/widgets/en_tete_section.dart';
 import '../../../data/models/client.dart';
 import '../../../data/models/photo_client.dart';
@@ -399,11 +400,14 @@ class _VignettePhoto extends StatelessWidget {
       children: [
         Text(titre, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: AspectRatio(
-            aspectRatio: 1,
-            child: Image.network(url, fit: BoxFit.cover),
+        GestureDetector(
+          onTap: () => ouvrirPhotoPleinEcran(context, url),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Image.network(url, fit: BoxFit.cover),
+            ),
           ),
         ),
       ],

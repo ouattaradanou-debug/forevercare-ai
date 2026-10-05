@@ -83,6 +83,12 @@ class ClientEntries extends Table {
   TextColumn get telephone => text().nullable()();
   TextColumn get sexe => text().nullable()();
   DateTimeColumn get datePriseMesures => dateTime().nullable()();
+  // Nullable pour la même raison que les colonnes ci-dessus (migration sans
+  // casser un cache existant) : un client déjà en cache avant cet ajout
+  // n'aura ce champ renseigné qu'après le prochain rapatriement serveur —
+  // en attendant, il trie simplement après les clients qui l'ont déjà
+  // (NULL est trié en dernier par ORDER BY ... DESC en SQLite).
+  DateTimeColumn get createdAt => dateTime().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -310,7 +316,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -373,6 +379,14 @@ class AppDatabase extends _$AppDatabase {
             // version >= 3.
             if (from >= 3) {
               await m.addColumn(commandeEntries, commandeEntries.tenueRetiree);
+            }
+          }
+          if (from < 10) {
+            // clientEntries est créée (avec createdAt déjà présent dans sa
+            // définition Dart actuelle) dans le bloc `from < 2` : même
+            // précaution que ci-dessus pour un appareil déjà en version >= 2.
+            if (from >= 2) {
+              await m.addColumn(clientEntries, clientEntries.createdAt);
             }
           }
         },
@@ -480,6 +494,7 @@ class AppDatabase extends _$AppDatabase {
     String? telephone,
     String? sexe,
     DateTime? datePriseMesures,
+    DateTime? createdAt,
     required DateTime updatedAt,
   }) async {
     await into(clientEntries).insertOnConflictUpdate(
@@ -491,6 +506,7 @@ class AppDatabase extends _$AppDatabase {
         telephone: Value(telephone),
         sexe: Value(sexe),
         datePriseMesures: Value(datePriseMesures),
+        createdAt: Value(createdAt),
         updatedAt: updatedAt,
       ),
     );
@@ -502,7 +518,8 @@ class AppDatabase extends _$AppDatabase {
 
   /// Recherche instantanée locale par nom, prénom ou téléphone — c'est le
   /// chemin de lecture normal de l'écran liste des clients (hors-ligne au
-  /// quotidien).
+  /// quotidien). Du plus récent au plus ancien, comme dans l'ancienne
+  /// application.
   Stream<List<ClientEntry>> rechercherClients(String atelierId, String requete) {
     final termeRecherche = requete.trim();
     final motif = '%$termeRecherche%';
@@ -513,7 +530,7 @@ class AppDatabase extends _$AppDatabase {
             final correspond = t.nom.like(motif) | t.prenom.like(motif) | t.telephone.like(motif);
             return memeAtelier & correspond;
           })
-          ..orderBy([(t) => OrderingTerm.asc(t.nom)]))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .watch();
   }
 

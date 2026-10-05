@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../../../core/router/app_router.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -21,7 +22,10 @@ class EcranListeClients extends ConsumerStatefulWidget {
 
 class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
   final _rechercheCtrl = TextEditingController();
+  final _dicteeVocale = stt.SpeechToText();
   String _requete = '';
+  bool _dicteeDisponible = false;
+  bool _enEcoute = false;
 
   @override
   void initState() {
@@ -39,8 +43,50 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
 
   @override
   void dispose() {
+    _dicteeVocale.stop();
     _rechercheCtrl.dispose();
     super.dispose();
+  }
+
+  /// Dicter la recherche (nom ou numéro) pour un tailleur qui ne sait pas
+  /// écrire — même mécanisme de dictée vocale que "Nouveau client".
+  Future<void> _basculerDicteeRecherche() async {
+    if (_enEcoute) {
+      await _dicteeVocale.stop();
+      if (mounted) setState(() => _enEcoute = false);
+      return;
+    }
+
+    if (!_dicteeDisponible) {
+      _dicteeDisponible = await _dicteeVocale.initialize(
+        onStatus: (statut) {
+          if ((statut == 'done' || statut == 'notListening') && mounted) {
+            setState(() => _enEcoute = false);
+          }
+        },
+        onError: (_) {
+          if (mounted) setState(() => _enEcoute = false);
+        },
+      );
+      if (!_dicteeDisponible) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
+          );
+        }
+        return;
+      }
+    }
+
+    setState(() => _enEcoute = true);
+    await _dicteeVocale.listen(
+      localeId: 'fr_FR',
+      onResult: (resultat) {
+        _rechercheCtrl.text = resultat.recognizedWords;
+        _rechercheCtrl.selection = TextSelection.collapsed(offset: _rechercheCtrl.text.length);
+        setState(() => _requete = resultat.recognizedWords);
+      },
+    );
   }
 
   @override
@@ -67,6 +113,14 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
                 hintText: 'Rechercher par nom ou téléphone',
                 hintStyle: const TextStyle(color: Colors.white70),
                 prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _enEcoute ? Icons.mic : Icons.mic_none,
+                    color: _enEcoute ? Colors.red : Colors.white70,
+                  ),
+                  tooltip: 'Rechercher à la voix',
+                  onPressed: _basculerDicteeRecherche,
+                ),
                 filled: true,
                 fillColor: Colors.white24,
                 border: OutlineInputBorder(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/widgets/ecran_photo_plein_ecran.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -132,9 +133,13 @@ class _GrillePhotos extends ConsumerWidget {
           ),
           itemCount: liste.length,
           itemBuilder: (context, index) {
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(liste[index].url, fit: BoxFit.cover),
+            final url = liste[index].url;
+            return GestureDetector(
+              onTap: () => ouvrirPhotoPleinEcran(context, url),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(url, fit: BoxFit.cover),
+              ),
             );
           },
         );
