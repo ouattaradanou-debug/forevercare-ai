@@ -59,4 +59,40 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get sombre {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: AppColors.primaire,
+      primary: AppColors.secondaire,
+      secondary: AppColors.secondaire,
+      error: AppColors.erreur,
+      brightness: Brightness.dark,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: const Color(0xFF17140F),
+      appBarTheme: AppBarTheme(
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        centerTitle: true,
+        elevation: 0,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.secondaire,
+          foregroundColor: Colors.black,
+          minimumSize: const Size.fromHeight(52),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+      ),
+    );
+  }
 }

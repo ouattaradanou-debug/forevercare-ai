@@ -9,6 +9,7 @@ import 'core/config/supabase_config.dart';
 import 'core/notifications/notifications_service.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/preference_theme.dart';
 import 'data/sync/sync_providers.dart';
 
 Future<void> main() async {
@@ -45,6 +46,7 @@ class AtelierPlusApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
     // Instancié une seule fois pour toute la durée de vie de l'app : démarre
     // l'écoute connectivity_plus qui déclenche la synchronisation (Phase 3).
     ref.watch(syncTriggerProvider);
@@ -53,6 +55,8 @@ class AtelierPlusApp extends ConsumerWidget {
       title: AppConfig.nomApplication,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.clair,
+      darkTheme: AppTheme.sombre,
+      themeMode: themeMode,
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [Locale('fr', 'FR')],
       localizationsDelegates: const [

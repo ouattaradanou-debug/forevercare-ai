@@ -13,6 +13,7 @@ import '../../features/auth/presentation/ecran_connexion.dart';
 import '../../features/auth/presentation/ecran_creation_apprenti.dart';
 import '../../features/auth/presentation/ecran_creation_compte_atelier.dart';
 import '../../features/auth/presentation/ecran_gestion_apprentis.dart';
+import '../../features/auth/presentation/ecran_parametres.dart';
 import '../../features/auth/providers/auth_providers.dart';
 import '../../features/clients/presentation/ecran_fiche_client.dart';
 import '../../features/clients/presentation/ecran_formulaire_client.dart';
@@ -44,6 +45,7 @@ class AppRoutes {
   static const String connexion = '/connexion';
   static const String creationCompte = '/creation-compte';
   static const String accueil = '/';
+  static const String parametres = '/parametres';
   static const String apprentis = '/apprentis';
   static const String creationApprenti = '/apprentis/nouveau';
   static const String _permissionsApprentiTemplate = '/apprentis/:id/permissions';
@@ -125,6 +127,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.accueil,
         builder: (context, state) => const EcranAccueilProvisoire(),
+      ),
+      GoRoute(
+        path: AppRoutes.parametres,
+        builder: (context, state) => const EcranParametres(),
       ),
       GoRoute(
         path: AppRoutes.apprentis,

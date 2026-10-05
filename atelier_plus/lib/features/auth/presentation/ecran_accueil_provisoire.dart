@@ -130,14 +130,6 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                           ),
                         if (estProprietaire)
                           _CarteAction(
-                            icone: Icons.straighten_outlined,
-                            libelle: 'Champs de mesure',
-                            fondIcone: const Color(0xFFF5DCD3),
-                            couleurIcone: const Color(0xFF8A4B24),
-                            onTap: () => context.push(AppRoutes.typesTenue),
-                          ),
-                        if (estProprietaire)
-                          _CarteAction(
                             icone: Icons.remove_circle_outline,
                             libelle: 'Enregistrer dépenses',
                             fondIcone: const Color(0xFFF5D9D9),
@@ -253,6 +245,11 @@ class _EnTete extends StatelessWidget {
                       child: const Icon(Icons.cloud_off, color: Colors.white70, size: 20),
                     ),
                   ),
+                IconButton(
+                  tooltip: 'Paramètres',
+                  icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                  onPressed: () => context.push(AppRoutes.parametres),
+                ),
                 IconButton(
                   tooltip: 'Se déconnecter',
                   icon: const Icon(Icons.logout, color: Colors.white),
