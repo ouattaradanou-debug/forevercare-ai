@@ -7,6 +7,9 @@ import '../../auth/providers/auth_providers.dart';
 import '../../permissions/providers/permissions_providers.dart';
 import '../providers/clients_providers.dart';
 
+const _bleuSeda = Color(0xFF1B4FA0);
+const _orangeSeda = Color(0xFFF5821F);
+
 /// Liste des clients avec recherche instantanée (nom/prénom/téléphone).
 /// Lecture entièrement locale : fonctionne hors-ligne au quotidien.
 class EcranListeClients extends ConsumerStatefulWidget {
@@ -50,6 +53,8 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mes clients'),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(64),
           child: Padding(
@@ -90,7 +95,11 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
               final client = clients[index];
               return ListTile(
                 leading: CircleAvatar(
-                  child: Text(client.nom.isNotEmpty ? client.nom[0].toUpperCase() : '?'),
+                  backgroundColor: _bleuSeda,
+                  child: Text(
+                    client.nom.isNotEmpty ? client.nom[0].toUpperCase() : '?',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
                 title: Text(client.nomComplet),
                 subtitle: client.telephone != null ? Text(client.telephone!) : null,
@@ -103,8 +112,9 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
       floatingActionButton: peutCreer
           ? FloatingActionButton.extended(
               onPressed: () => context.push(AppRoutes.creationClient),
-              icon: const Icon(Icons.person_add_alt_1),
-              label: const Text('Nouveau client'),
+              backgroundColor: _orangeSeda,
+              icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
+              label: const Text('Nouveau client', style: TextStyle(color: Colors.white)),
             )
           : null,
     );
