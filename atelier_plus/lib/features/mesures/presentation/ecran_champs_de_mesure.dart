@@ -76,8 +76,16 @@ class _EcranChampsDeMesureState extends ConsumerState<EcranChampsDeMesure> {
                   'Il pourra être réactivé plus tard.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Annuler')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Désactiver')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+            child: const Text('Désactiver'),
+          ),
         ],
       ),
     );
