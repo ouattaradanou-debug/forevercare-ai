@@ -10,6 +10,7 @@ class Formatters {
 
   static final DateFormat _formatDateCourte = DateFormat('dd/MM/yyyy', 'fr_FR');
   static final DateFormat _formatDateLongue = DateFormat('EEEE d MMMM yyyy', 'fr_FR');
+  static final DateFormat _formatJourMois = DateFormat('EEEE d MMMM', 'fr_FR');
   static final DateFormat _formatHeure = DateFormat('HH:mm', 'fr_FR');
   static final DateFormat _formatDateHeure = DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR');
 
@@ -31,4 +32,12 @@ class Formatters {
 
   /// Ex : "02/09/2026 à 14:30".
   static String dateHeure(DateTime date) => _formatDateHeure.format(date);
+
+  /// Ex : "vendredi 18 septembre à 18h00", comme dans l'ancienne application
+  /// (fiche client, rappel vocal de rendez-vous).
+  static String rendezVousComplet(DateTime date) {
+    final heures = date.hour.toString().padLeft(2, '0');
+    final minutes = date.minute.toString().padLeft(2, '0');
+    return '${_formatJourMois.format(date)} à ${heures}h$minutes';
+  }
 }

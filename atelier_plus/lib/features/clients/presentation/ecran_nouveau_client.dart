@@ -16,6 +16,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/analyseur_date_vocale.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/en_tete_section.dart';
 import '../../../data/models/client.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
@@ -23,7 +24,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
 import '../../mesures/providers/mesures_providers.dart';
-import '../../../data/models/type_tenue.dart';
+import '../../mesures/utils/choix_gabarit.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/clients_providers.dart';
 import '../providers/photos_providers.dart';
@@ -332,12 +333,12 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   /// groupes d'uniformes : une seule liste fixe de champs par sexe, comme
   /// dans l'ancienne application. Reprend la copie propre à l'atelier si
   /// "Champs de mesure" a été personnalisé, sinon le gabarit par défaut
-  /// partagé (voir _choisirGabaritPourSexe).
+  /// partagé (voir choisirGabaritPourSexe).
   Future<String?> _idGabaritPourSexe(String sexe) async {
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (utilisateur == null) return null;
     final liste = await ref.read(typesTenueVisiblesProvider.future);
-    return _choisirGabaritPourSexe(liste, utilisateur.atelierId, sexe)?.id;
+    return choisirGabaritPourSexe(liste, utilisateur.atelierId, sexe)?.id;
   }
 
   /// Enregistre les mesures déjà saisies en une seule prise, appelée au
@@ -489,7 +490,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _EnTeteSection(
+                  EnTeteSection(
                     icone: Icons.badge_outlined,
                     couleurFond: const Color(0xFFE3E1F5),
                     couleurIcone: const Color(0xFF3B3470),
@@ -549,7 +550,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                     ],
                   ),
                   const SizedBox(height: 28),
-                  _EnTeteSection(
+                  EnTeteSection(
                     icone: Icons.straighten_outlined,
                     couleurFond: const Color(0xFFF5DCD3),
                     couleurIcone: const Color(0xFF8A4B24),
@@ -567,7 +568,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                       controleurPour: _controleurMesure,
                     ),
                   const SizedBox(height: 28),
-                  _EnTeteSection(
+                  EnTeteSection(
                     icone: Icons.texture_outlined,
                     couleurFond: const Color(0xFFF0E6C8),
                     couleurIcone: const Color(0xFFA47B1B),
@@ -581,7 +582,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                     onAjouter: () => _ajouterPhoto(TypePhoto.tissu),
                   ),
                   const SizedBox(height: 28),
-                  _EnTeteSection(
+                  EnTeteSection(
                     icone: Icons.checkroom_outlined,
                     couleurFond: const Color(0xFFDCEADF),
                     couleurIcone: const Color(0xFF2E7D32),
@@ -595,7 +596,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                     onAjouter: () => _ajouterPhoto(TypePhoto.modele),
                   ),
                   const SizedBox(height: 28),
-                  _EnTeteSection(
+                  EnTeteSection(
                     icone: Icons.savings_outlined,
                     couleurFond: const Color(0xFFDCEADF),
                     couleurIcone: const Color(0xFF2E7D32),
@@ -661,7 +662,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                     ),
                   ),
                   const SizedBox(height: 28),
-                  _EnTeteSection(
+                  EnTeteSection(
                     icone: Icons.event_available_outlined,
                     couleurFond: const Color(0xFFF0E6C8),
                     couleurIcone: const Color(0xFFA47B1B),
@@ -744,36 +745,6 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   }
 }
 
-class _EnTeteSection extends StatelessWidget {
-  const _EnTeteSection({
-    required this.icone,
-    required this.couleurFond,
-    required this.couleurIcone,
-    required this.titre,
-  });
-
-  final IconData icone;
-  final Color couleurFond;
-  final Color couleurIcone;
-  final String titre;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        CircleAvatar(radius: 20, backgroundColor: couleurFond, child: Icon(icone, color: couleurIcone)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            titre,
-            style: const TextStyle(fontFamily: 'serif', fontWeight: FontWeight.bold, fontSize: 20),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _CarteSexe extends StatelessWidget {
   const _CarteSexe({
     required this.icone,
@@ -817,24 +788,6 @@ class _CarteSexe extends StatelessWidget {
   }
 }
 
-/// Choisit, parmi les gabarits visibles, celui à utiliser pour [sexe] dans
-/// un flux sans sélecteur explicite : la copie propre à l'atelier si elle
-/// existe (reflète les modifications faites dans "Champs de mesure"),
-/// sinon le gabarit par défaut partagé.
-TypeTenue? _choisirGabaritPourSexe(List<TypeTenue> liste, String atelierId, String sexe) {
-  TypeTenue? propre;
-  TypeTenue? parDefaut;
-  for (final type in liste) {
-    if (type.sexe != sexe) continue;
-    if (type.atelierId == atelierId) {
-      propre = type;
-    } else if (type.estGabaritParDefaut) {
-      parDefaut = type;
-    }
-  }
-  return propre ?? parDefaut;
-}
-
 /// Liste fixe des champs de mesure selon le sexe du client — pas de choix
 /// de type de tenue à cette étape (contrairement aux groupes d'uniformes) :
 /// l'ancienne application affiche directement, dès le sexe choisi, la même
@@ -855,7 +808,7 @@ class _SectionMesures extends ConsumerWidget {
       error: (_, __) => const Text('Impossible de charger les champs de mesure.'),
       data: (liste) {
         if (utilisateur == null) return const Center(child: CircularProgressIndicator());
-        final gabarit = _choisirGabaritPourSexe(liste, utilisateur.atelierId, sexe);
+        final gabarit = choisirGabaritPourSexe(liste, utilisateur.atelierId, sexe);
         if (gabarit == null) {
           return const Text(
             'Connectez-vous à internet une première fois pour récupérer les champs de mesure.',

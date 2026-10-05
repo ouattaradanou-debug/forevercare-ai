@@ -73,6 +73,10 @@ dependencies:
   # Téléchargement du logo (Supabase Storage) pour l'incorporer au PDF.
   http: ^1.2.2
 
+  # --- Appel/SMS en un tap depuis la fiche client (icônes téléphone/message
+  # à côté du numéro, comme dans l'ancienne application) ---
+  url_launcher: ^6.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

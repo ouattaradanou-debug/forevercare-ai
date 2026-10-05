@@ -242,9 +242,15 @@ create table if not exists public.commandes (
   client_id      uuid not null references public.clients (id) on delete cascade,
   montant_total  numeric(12, 2) not null default 0 check (montant_total >= 0),
   avance         numeric(12, 2) not null default 0 check (avance >= 0),
+  tenue_retiree  boolean not null default false,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
 );
+
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante) : le client est-il venu
+-- récupérer sa tenue terminée ? (case à cocher sur la fiche client).
+alter table public.commandes add column if not exists tenue_retiree boolean not null default false;
 
 create index if not exists idx_commandes_client on public.commandes (client_id);
 create index if not exists idx_commandes_atelier on public.commandes (atelier_id);

@@ -176,6 +176,7 @@ class CommandeEntries extends Table {
   TextColumn get clientId => text()();
   RealColumn get montantTotal => real()();
   RealColumn get avance => real()();
+  BoolColumn get tenueRetiree => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -309,7 +310,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -363,6 +364,15 @@ class AppDatabase extends _$AppDatabase {
             // précaution que ci-dessus pour un appareil déjà en version >= 2.
             if (from >= 2) {
               await m.addColumn(photoEntries, photoEntries.audioUrl);
+            }
+          }
+          if (from < 9) {
+            // commandeEntries est créée (avec tenueRetiree déjà présent
+            // dans sa définition Dart actuelle) dans le bloc `from < 3` :
+            // même précaution que ci-dessus pour un appareil déjà en
+            // version >= 3.
+            if (from >= 3) {
+              await m.addColumn(commandeEntries, commandeEntries.tenueRetiree);
             }
           }
         },
@@ -723,6 +733,7 @@ class AppDatabase extends _$AppDatabase {
     required String clientId,
     required double montantTotal,
     required double avance,
+    bool tenueRetiree = false,
     required DateTime updatedAt,
   }) async {
     await into(commandeEntries).insertOnConflictUpdate(
@@ -732,6 +743,7 @@ class AppDatabase extends _$AppDatabase {
         clientId: clientId,
         montantTotal: montantTotal,
         avance: avance,
+        tenueRetiree: Value(tenueRetiree),
         updatedAt: updatedAt,
       ),
     );

@@ -57,5 +57,15 @@
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
+        <!-- Requis par url_launcher (appel/SMS depuis la fiche client) sur
+             Android 11+, même restriction de visibilité des paquets. -->
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="sms" />
+        </intent>
     </queries>
 </manifest>

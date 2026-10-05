@@ -39,6 +39,7 @@ class FinancesRepository {
       clientId: ligne.clientId,
       montantTotal: ligne.montantTotal,
       avance: ligne.avance,
+      tenueRetiree: ligne.tenueRetiree,
       updatedAt: ligne.updatedAt,
     );
   }
@@ -59,6 +60,7 @@ class FinancesRepository {
       clientId: clientId,
       montantTotal: montantTotal,
       avance: avance,
+      tenueRetiree: existante?.tenueRetiree ?? false,
       updatedAt: DateTime.now().toUtc(),
     );
 
@@ -72,6 +74,38 @@ class FinancesRepository {
       payload: commande.versJson(),
     );
     return commande;
+  }
+
+  /// Marque (ou démarque) la tenue d'un client comme retirée — ne fait rien
+  /// si le client n'a pas encore de commande (rien à marquer).
+  Future<void> definirTenueRetiree({
+    required String atelierId,
+    required String clientId,
+    required bool tenueRetiree,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
+    final existante = await commandeDuClient(clientId);
+    if (existante == null) return;
+
+    final commande = Commande(
+      id: existante.id,
+      atelierId: existante.atelierId,
+      clientId: existante.clientId,
+      montantTotal: existante.montantTotal,
+      avance: existante.avance,
+      tenueRetiree: tenueRetiree,
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    await _mettreEnCacheCommande(commande);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'commandes',
+      recordId: commande.id,
+      operation: 'update',
+      payload: commande.versJson(),
+    );
   }
 
   Future<Paiement> ajouterPaiement({
@@ -250,6 +284,7 @@ class FinancesRepository {
       clientId: commande.clientId,
       montantTotal: commande.montantTotal,
       avance: commande.avance,
+      tenueRetiree: commande.tenueRetiree,
       updatedAt: commande.updatedAt,
     );
   }
