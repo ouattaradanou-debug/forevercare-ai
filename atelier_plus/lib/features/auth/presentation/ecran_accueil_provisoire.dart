@@ -122,14 +122,6 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                         ),
                         if (estProprietaire)
                           _CarteAction(
-                            icone: Icons.diversity_3_outlined,
-                            libelle: 'Mon équipe',
-                            fondIcone: const Color(0xFFE0E3F5),
-                            couleurIcone: const Color(0xFF2A3A70),
-                            onTap: () => context.push(AppRoutes.apprentis),
-                          ),
-                        if (estProprietaire)
-                          _CarteAction(
                             icone: Icons.remove_circle_outline,
                             libelle: 'Enregistrer dépenses',
                             fondIcone: const Color(0xFFF5D9D9),

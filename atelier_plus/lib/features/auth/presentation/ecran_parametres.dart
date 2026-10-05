@@ -26,22 +26,35 @@ class EcranParametres extends ConsumerWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.card_membership_outlined, color: _bleuSeda),
-              title: const Text('Renouveler mon abonnement'),
+              title: const Text(
+                'Renouveler mon abonnement',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push(AppRoutes.abonnement),
             ),
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.brightness_6_outlined, color: _bleuSeda),
-              title: const Text('Thème'),
+              title: const Text('Thème', style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(_libelleTheme(themeMode)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _choisirTheme(context, ref, themeMode),
             ),
             const Divider(height: 1),
             ListTile(
+              leading: const Icon(Icons.diversity_3_outlined, color: _bleuSeda),
+              title: const Text('Mon équipe', style: TextStyle(fontWeight: FontWeight.bold)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(AppRoutes.apprentis),
+            ),
+            const Divider(height: 1),
+            ListTile(
               leading: const Icon(Icons.straighten_outlined, color: _bleuSeda),
-              title: const Text('Champs de mesure'),
+              title: const Text(
+                'Champs de mesure',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push(AppRoutes.typesTenue),
             ),
