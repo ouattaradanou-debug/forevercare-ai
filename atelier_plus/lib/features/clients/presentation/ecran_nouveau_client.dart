@@ -28,6 +28,12 @@ import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/clients_providers.dart';
 import '../providers/photos_providers.dart';
 
+/// Bleu/orange du logo SEDA Tech, repris ici en remplacement du bleu marine
+/// utilisé jusque-là pour les boutons/accents (le texte reste noir là où
+/// c'est plus lisible — titres de section, valeurs).
+const Color _bleuSeda = Color(0xFF1B4FA0);
+const Color _orangeSeda = Color(0xFFF5821F);
+
 /// Création d'un client en un seul écran : informations, mesures, photos,
 /// finances et rendez-vous — chaque section s'enregistre dès que possible
 /// plutôt que d'exiger un unique gros formulaire validé d'un coup. Le
@@ -495,7 +501,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                       labelText: 'Nom et prénom',
                       prefixIcon: IconButton(
                         icon: Icon(_champEnDictee == 'nom' ? Icons.mic : Icons.mic_none),
-                        color: _champEnDictee == 'nom' ? Colors.red : null,
+                        color: _champEnDictee == 'nom' ? Colors.red : _bleuSeda,
                         onPressed: () => _basculerDictee('nom', _nomCtrl),
                       ),
                     ),
@@ -508,7 +514,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                       labelText: 'Contact (téléphone)',
                       prefixIcon: IconButton(
                         icon: Icon(_champEnDictee == 'telephone' ? Icons.mic : Icons.mic_none),
-                        color: _champEnDictee == 'telephone' ? Colors.red : null,
+                        color: _champEnDictee == 'telephone' ? Colors.red : _bleuSeda,
                         onPressed: () => _basculerDictee(
                           'telephone',
                           _telephoneCtrl,
@@ -602,7 +608,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                       labelText: 'Montant total convenu (FCFA)',
                       prefixIcon: IconButton(
                         icon: Icon(_champEnDictee == 'montant' ? Icons.mic : Icons.mic_none),
-                        color: _champEnDictee == 'montant' ? Colors.red : null,
+                        color: _champEnDictee == 'montant' ? Colors.red : _bleuSeda,
                         onPressed: () => _basculerDictee(
                           'montant',
                           _montantTotalCtrl,
@@ -621,7 +627,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                       labelText: 'Avance déjà payée par le client',
                       prefixIcon: IconButton(
                         icon: Icon(_champEnDictee == 'avance' ? Icons.mic : Icons.mic_none),
-                        color: _champEnDictee == 'avance' ? Colors.red : null,
+                        color: _champEnDictee == 'avance' ? Colors.red : _bleuSeda,
                         onPressed: () => _basculerDictee(
                           'avance',
                           _avanceCtrl,
@@ -670,8 +676,8 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                           label: const Text('Ajouter un rendez-vous'),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size.fromHeight(52),
-                            foregroundColor: const Color(0xFF141B3E),
-                            side: const BorderSide(color: Color(0xFF141B3E)),
+                            foregroundColor: _bleuSeda,
+                            side: const BorderSide(color: _bleuSeda),
                           ),
                         ),
                       ),
@@ -680,9 +686,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                         height: 52,
                         width: 52,
                         decoration: BoxDecoration(
-                          color: _champEnDictee == 'rendezvous'
-                              ? Colors.red
-                              : const Color(0xFF141B3E),
+                          color: _champEnDictee == 'rendezvous' ? Colors.red : _bleuSeda,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
@@ -719,7 +723,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
               child: FilledButton(
                 onPressed: _enregistrementClientEnCours ? null : _terminer,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF141B3E),
+                  backgroundColor: _orangeSeda,
                   minimumSize: const Size.fromHeight(52),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                 ),
@@ -795,7 +799,7 @@ class _CarteSexe extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: selectionne ? const Color(0xFF141B3E) : const Color(0xFFDDD3C8),
+              color: selectionne ? _bleuSeda : const Color(0xFFDDD3C8),
               width: selectionne ? 2 : 1,
             ),
           ),
@@ -1087,14 +1091,14 @@ class _TuilePhotoState extends ConsumerState<_TuilePhoto> {
                 if (aUnAudio) ...[
                   _BoutonRondPhoto(
                     icone: _lecture ? Icons.pause : Icons.play_arrow,
-                    couleurFond: const Color(0xFF141B3E),
+                    couleurFond: _bleuSeda,
                     onTap: _basculerLecture,
                   ),
                   const SizedBox(width: 3),
                 ],
                 _BoutonRondPhoto(
                   icone: Icons.mic,
-                  couleurFond: aUnAudio ? const Color(0xFF8A4B24) : const Color(0xFF141B3E),
+                  couleurFond: aUnAudio ? _orangeSeda : _bleuSeda,
                   onTap: _basculerEnregistrement,
                 ),
                 if (aUnAudio) ...[
