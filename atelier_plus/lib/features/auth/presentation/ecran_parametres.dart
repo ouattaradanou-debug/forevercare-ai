@@ -4,16 +4,19 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/preference_theme.dart';
+import '../providers/auth_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
 
-/// Réglages de l'atelier : abonnement, thème et champs de mesure.
+/// Réglages de l'atelier : abonnement, thème, équipe et champs de mesure
+/// (ces deux dernières commandes réservées au propriétaire).
 class EcranParametres extends ConsumerWidget {
   const EcranParametres({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final estProprietaire = ref.watch(estProprietaireProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -41,23 +44,25 @@ class EcranParametres extends ConsumerWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _choisirTheme(context, ref, themeMode),
             ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.diversity_3_outlined, color: _bleuSeda),
-              title: const Text('Mon équipe', style: TextStyle(fontWeight: FontWeight.bold)),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppRoutes.apprentis),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.straighten_outlined, color: _bleuSeda),
-              title: const Text(
-                'Champs de mesure',
-                style: TextStyle(fontWeight: FontWeight.bold),
+            if (estProprietaire) ...[
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.diversity_3_outlined, color: _bleuSeda),
+                title: const Text('Mon équipe', style: TextStyle(fontWeight: FontWeight.bold)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.apprentis),
               ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppRoutes.typesTenue),
-            ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.straighten_outlined, color: _bleuSeda),
+                title: const Text(
+                  'Champs de mesure',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.champsDeMesure),
+              ),
+            ],
             const Divider(height: 1),
           ],
         ),

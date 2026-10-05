@@ -122,6 +122,52 @@ class GabaritsRepository {
     return nouveauType;
   }
 
+  /// Gabarit modifiable par CET atelier pour [sexe] ("Homme"/"Femme") : sa
+  /// propre copie si elle existe déjà, sinon une duplication automatique et
+  /// transparente du gabarit par défaut partagé (lecture seule entre
+  /// ateliers, voir TypeTenue.estGabaritParDefaut) — appelé à l'ouverture
+  /// de l'écran "Champs de mesure", qui ne doit jamais montrer le gabarit
+  /// partagé lui-même.
+  Future<TypeTenue> gabaritModifiablePourSexe({
+    required String atelierId,
+    required String sexe,
+  }) async {
+    final liste = await _baseLocale.observerTypesTenueVisibles(atelierId).first;
+
+    TypeTenueEntry? propre;
+    TypeTenueEntry? parDefaut;
+    for (final t in liste) {
+      if (t.sexe != sexe) continue;
+      if (t.atelierId == atelierId) {
+        propre = t;
+      } else if (t.atelierId == null) {
+        parDefaut = t;
+      }
+    }
+
+    if (propre != null) {
+      return TypeTenue(
+        id: propre.id,
+        atelierId: propre.atelierId,
+        nom: propre.nom,
+        sexe: propre.sexe,
+        updatedAt: propre.updatedAt,
+      );
+    }
+    if (parDefaut == null) {
+      throw StateError('Aucun gabarit par défaut pour "$sexe".');
+    }
+
+    final source = TypeTenue(
+      id: parDefaut.id,
+      atelierId: parDefaut.atelierId,
+      nom: parDefaut.nom,
+      sexe: parDefaut.sexe,
+      updatedAt: parDefaut.updatedAt,
+    );
+    return dupliquerGabarit(source: source, atelierId: atelierId, nouveauNom: parDefaut.nom);
+  }
+
   Future<ChampMesure> ajouterChamp({
     required String typeTenueId,
     required String nom,

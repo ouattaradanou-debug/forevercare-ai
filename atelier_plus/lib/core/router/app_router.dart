@@ -20,6 +20,7 @@ import '../../features/clients/presentation/ecran_formulaire_client.dart';
 import '../../features/clients/presentation/ecran_gestion_photos.dart';
 import '../../features/clients/presentation/ecran_liste_clients.dart';
 import '../../features/clients/presentation/ecran_nouveau_client.dart';
+import '../../features/mesures/presentation/ecran_champs_de_mesure.dart';
 import '../../features/mesures/presentation/ecran_creation_type_tenue.dart';
 import '../../features/mesures/presentation/ecran_gestion_champs.dart';
 import '../../features/mesures/presentation/ecran_gestion_types_tenue.dart';
@@ -71,6 +72,7 @@ class AppRoutes {
   static const String typesTenue = '/types-tenue';
   static const String creationTypeTenue = '/types-tenue/nouveau';
   static const String _gestionChampsTemplate = '/types-tenue/:id/champs';
+  static const String champsDeMesure = '/champs-de-mesure';
 
   static String gestionChampsTypeTenue(String id) => '/types-tenue/$id/champs';
 
@@ -191,6 +193,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes._gestionChampsTemplate,
         builder: (context, state) => EcranGestionChamps(type: state.extra as TypeTenue),
+      ),
+      GoRoute(
+        path: AppRoutes.champsDeMesure,
+        builder: (context, state) => const EcranChampsDeMesure(),
       ),
       GoRoute(
         path: AppRoutes.rendezVous,
