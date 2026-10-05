@@ -476,8 +476,8 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
       backgroundColor: const Color(0xFFFAF6F1),
       appBar: AppBar(
         title: const Text('Nouveau client'),
-        backgroundColor: const Color(0xFFE8E3DD),
-        foregroundColor: const Color(0xFF231A14),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: SafeArea(
