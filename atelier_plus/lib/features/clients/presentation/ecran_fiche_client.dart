@@ -276,7 +276,7 @@ class _CarteInfos extends StatelessWidget {
     return _Carte(
       child: Column(
         children: [
-          _LigneInfo('Nom', client.nomComplet),
+          _LigneInfo('Nom', client.nom),
           _LigneTelephone(client.telephone),
           _LigneInfo('Sexe', client.sexe),
           _LigneInfo('Date de prise des mesures', Formatters.dateLongue(client.datePriseMesures)),
