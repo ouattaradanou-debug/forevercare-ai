@@ -279,7 +279,7 @@ class _CarteInfos extends StatelessWidget {
           _LigneInfo('Nom', client.nom),
           _LigneTelephone(client.telephone),
           _LigneInfo('Sexe', client.sexe),
-          _LigneInfo('Date de prise des mesures', Formatters.dateLongue(client.datePriseMesures)),
+          _LigneInfo('Date de prise des mesures', Formatters.dateCourte(client.datePriseMesures)),
         ],
       ),
     );
