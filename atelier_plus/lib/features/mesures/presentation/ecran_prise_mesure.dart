@@ -24,6 +24,7 @@ class _EcranPriseMesureState extends ConsumerState<EcranPriseMesure> {
   final Map<String, TextEditingController> _controleurs = {};
   DateTime? _dateDerniereMesure;
   bool _chargement = false;
+  bool _modifie = false;
   String? _erreur;
 
   @override
@@ -57,7 +58,19 @@ class _EcranPriseMesureState extends ConsumerState<EcranPriseMesure> {
     }
   }
 
-  Future<void> _enregistrer() async {
+  /// Enregistre la mesure si au moins un champ a été modifié depuis le
+  /// préremplissage, puis quitte l'écran — y compris quand on revient en
+  /// arrière sans avoir appuyé sur "Enregistrer la mesure" (voir
+  /// `PopScope` dans `build`) : les modifications ne doivent jamais se
+  /// perdre silencieusement. Ne crée pas de nouvelle ligne historisée si
+  /// rien n'a changé (juste consulté puis quitté), pour ne pas polluer
+  /// l'historique de doublons identiques.
+  Future<void> _enregistrerEtQuitter() async {
+    if (!_modifie) {
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+
     setState(() {
       _chargement = true;
       _erreur = null;
@@ -96,61 +109,68 @@ class _EcranPriseMesureState extends ConsumerState<EcranPriseMesure> {
   Widget build(BuildContext context) {
     final champs = ref.watch(champsActifsProvider(widget.typeTenueId));
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Prise de mesure')),
-      body: champs.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
-        data: (liste) {
-          if (liste.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('Ce type de tenue n\'a aucun champ de mesure actif.'),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _enregistrerEtQuitter();
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Prise de mesure')),
+        body: champs.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
+          data: (liste) {
+            if (liste.isEmpty) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text('Ce type de tenue n\'a aucun champ de mesure actif.'),
+                ),
+              );
+            }
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_dateDerniereMesure != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        'Dernière mesure le ${Formatters.dateCourte(_dateDerniereMesure!)} '
+                        '(valeurs pré-remplies)',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  for (final champ in liste)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextField(
+                        controller: _controleurPour(champ.id),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: InputDecoration(labelText: '${champ.nom} (${champ.unite})'),
+                        onChanged: (_) => _modifie = true,
+                      ),
+                    ),
+                  if (_erreur != null) ...[
+                    Text(_erreur!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    const SizedBox(height: 8),
+                  ],
+                  ElevatedButton(
+                    onPressed: _chargement ? null : _enregistrerEtQuitter,
+                    child: _chargement
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Text('Enregistrer la mesure'),
+                  ),
+                ],
               ),
             );
-          }
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_dateDerniereMesure != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      'Dernière mesure le ${Formatters.dateCourte(_dateDerniereMesure!)} '
-                      '(valeurs pré-remplies)',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                for (final champ in liste)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: TextField(
-                      controller: _controleurPour(champ.id),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(labelText: '${champ.nom} (${champ.unite})'),
-                    ),
-                  ),
-                if (_erreur != null) ...[
-                  Text(_erreur!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                  const SizedBox(height: 8),
-                ],
-                ElevatedButton(
-                  onPressed: _chargement ? null : _enregistrer,
-                  child: _chargement
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Enregistrer la mesure'),
-                ),
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
