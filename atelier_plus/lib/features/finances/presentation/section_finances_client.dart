@@ -58,19 +58,19 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
             TextField(
               controller: montantCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 17),
+              style: const TextStyle(fontSize: 15),
               decoration: const InputDecoration(
                 labelText: 'Montant total (FCFA)',
-                labelStyle: TextStyle(fontSize: 15),
+                labelStyle: TextStyle(fontSize: 13),
               ),
             ),
             TextField(
               controller: avanceCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 17),
+              style: const TextStyle(fontSize: 15),
               decoration: const InputDecoration(
                 labelText: 'Avance reçue (FCFA)',
-                labelStyle: TextStyle(fontSize: 15),
+                labelStyle: TextStyle(fontSize: 13),
               ),
             ),
           ],
@@ -131,7 +131,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
       builder: (context) => AlertDialog(
         title: const Text(
           'Modifier Montant/Avance/Paiement',
-          style: TextStyle(color: _bleuSeda, fontSize: 19),
+          style: TextStyle(color: _bleuSeda, fontSize: 17),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -139,28 +139,28 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
             TextField(
               controller: montantCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 17),
+              style: const TextStyle(fontSize: 15),
               decoration: const InputDecoration(
                 labelText: 'Montant total (FCFA)',
-                labelStyle: TextStyle(fontSize: 15),
+                labelStyle: TextStyle(fontSize: 13),
               ),
             ),
             TextField(
               controller: avanceCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 17),
+              style: const TextStyle(fontSize: 15),
               decoration: const InputDecoration(
                 labelText: 'Avance reçue (FCFA)',
-                labelStyle: TextStyle(fontSize: 15),
+                labelStyle: TextStyle(fontSize: 13),
               ),
             ),
             TextField(
               controller: paiementCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 17),
+              style: const TextStyle(fontSize: 15),
               decoration: const InputDecoration(
                 labelText: 'Paiement reçu (FCFA)',
-                labelStyle: TextStyle(fontSize: 15),
+                labelStyle: TextStyle(fontSize: 13),
               ),
             ),
           ],
@@ -216,10 +216,10 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
           controller: montantCtrl,
           autofocus: true,
           keyboardType: TextInputType.number,
-          style: const TextStyle(fontSize: 17),
+          style: const TextStyle(fontSize: 15),
           decoration: const InputDecoration(
             labelText: 'Montant reçu (FCFA)',
-            labelStyle: TextStyle(fontSize: 15),
+            labelStyle: TextStyle(fontSize: 13),
           ),
         ),
         actions: [
@@ -283,7 +283,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                 backgroundColor: _orangeSeda,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
               icon: const Icon(Icons.add),
               label: const Text('Créer une commande'),
@@ -327,7 +327,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                         foregroundColor: _bleuSeda,
                         side: const BorderSide(color: _bleuSeda),
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                       child: const Text('Modifier Montant/Avance/Paiement', textAlign: TextAlign.center),
                     ),
@@ -338,7 +338,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                       contentPadding: EdgeInsets.zero,
                       title: const Text(
                         'Tenue retirée',
-                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                       ),
                       onChanged: (valeur) => _basculerTenueRetiree(courante, valeur),
                     ),
@@ -356,7 +356,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                       backgroundColor: _orangeSeda,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                     icon: const Icon(Icons.payments_outlined),
                     label: const Text('Ajouter un paiement'),
@@ -370,7 +370,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                       foregroundColor: _bleuSeda,
                       side: const BorderSide(color: _bleuSeda),
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                     icon: const Icon(Icons.add_business_outlined),
                     label: const Text('Nouvelle commande'),
@@ -381,7 +381,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
             const SizedBox(height: 16),
             const Text(
               'Historique des paiements',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _bleuSeda),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _bleuSeda),
             ),
             paiements.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -390,7 +390,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                 if (liste.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text('Aucun paiement enregistré.', style: TextStyle(fontSize: 16)),
+                    child: Text('Aucun paiement enregistré.', style: TextStyle(fontSize: 14)),
                   );
                 }
                 return Column(
@@ -400,11 +400,11 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                           leading: const Icon(Icons.receipt_long_outlined, color: _bleuSeda),
                           title: Text(
                             Formatters.montant(p.montant),
-                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
                             Formatters.dateCourte(p.datePaiement),
-                            style: const TextStyle(fontSize: 14),
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ),
                       )
@@ -416,7 +416,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
               const SizedBox(height: 24),
               const Text(
                 'Commandes précédentes',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _bleuSeda),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _bleuSeda),
               ),
               const SizedBox(height: 8),
               for (final commande in precedentes) _CarteCommandePrecedente(commande: commande),
@@ -438,8 +438,8 @@ class _LigneMontant extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = accent
-        ? const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: _orangeSeda)
-        : const TextStyle(fontSize: 17, color: Color(0xFF231A14));
+        ? const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _orangeSeda)
+        : const TextStyle(fontSize: 15, color: Color(0xFF231A14));
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -484,11 +484,11 @@ class _CarteCommandePrecedente extends ConsumerWidget {
                   children: [
                     Text(
                       Formatters.dateCourte(commande.createdAt),
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _bleuSeda),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _bleuSeda),
                     ),
                     Text(
                       Formatters.montant(commande.montantTotal),
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -496,7 +496,7 @@ class _CarteCommandePrecedente extends ConsumerWidget {
                 Text(
                   reste > 0 ? 'Reste à payer : ${Formatters.montant(reste)}' : 'Soldée',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 13,
                     color: reste > 0 ? _orangeSeda : const Color(0xFF2E7D32),
                     fontWeight: FontWeight.bold,
                   ),
@@ -506,7 +506,7 @@ class _CarteCommandePrecedente extends ConsumerWidget {
                     padding: EdgeInsets.only(top: 4),
                     child: Text(
                       'Tenue retirée',
-                      style: TextStyle(fontSize: 14, color: Color(0xFF6F6259)),
+                      style: TextStyle(fontSize: 12, color: Color(0xFF6F6259)),
                     ),
                   ),
               ],
