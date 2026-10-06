@@ -534,6 +534,26 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  /// Supprime un client du cache local, avec tout ce qui lui est associé
+  /// (mesures, photos, rendez-vous, commande et ses paiements) — miroir
+  /// local du `on delete cascade` déjà en place côté serveur, appelé après
+  /// une suppression réussie sur Supabase (voir ClientsRepository.
+  /// supprimerClient).
+  Future<void> supprimerClientEtDependances(String clientId) async {
+    await transaction(() async {
+      final commandes =
+          await (select(commandeEntries)..where((t) => t.clientId.equals(clientId))).get();
+      for (final commande in commandes) {
+        await (delete(paiementEntries)..where((t) => t.commandeId.equals(commande.id))).go();
+      }
+      await (delete(commandeEntries)..where((t) => t.clientId.equals(clientId))).go();
+      await (delete(mesureEntries)..where((t) => t.clientId.equals(clientId))).go();
+      await (delete(photoEntries)..where((t) => t.clientId.equals(clientId))).go();
+      await (delete(rendezVousEntries)..where((t) => t.clientId.equals(clientId))).go();
+      await (delete(clientEntries)..where((t) => t.id.equals(clientId))).go();
+    });
+  }
+
   // --- Types de tenue ---
 
   Future<void> enregistrerTypeTenue({

@@ -169,6 +169,12 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                   onPressed: () =>
                       context.push(AppRoutes.modificationClient(client.id), extra: client),
                 ),
+              if (estProprietaire)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: 'Supprimer le client',
+                  onPressed: () => _supprimerClient(context, client),
+                ),
             ],
           ),
           body: ListView(
@@ -242,6 +248,45 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
             groupesMesures: groupes,
           ),
     );
+  }
+
+  /// Supprime définitivement ce client (fiches de test, doublons...) après
+  /// confirmation — réservé au propriétaire. Nécessite une connexion : pas
+  /// de mise en file d'attente possible pour une suppression.
+  Future<void> _supprimerClient(BuildContext context, Client client) async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer ce client ?'),
+        content: Text(
+          'Cette action supprime définitivement "${client.nomComplet}", ainsi que '
+          'toutes ses mesures, photos, rendez-vous et données financières. '
+          'Impossible à annuler.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFB3261E)),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true || !mounted) return;
+
+    try {
+      await ref.read(clientsRepositoryProvider).supprimerClient(client);
+      if (mounted) context.pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
   }
 }
 

@@ -86,6 +86,20 @@ class ClientsRepository {
     return miseAJour;
   }
 
+  /// Supprime définitivement un client et tout ce qui lui est associé
+  /// (mesures, photos, rendez-vous, commande, paiements) — réservé au
+  /// propriétaire, la RLS `clients_delete` l'impose de toute façon côté
+  /// serveur. Contrairement aux autres écritures de ce repository,
+  /// nécessite une connexion : il n'existe pas d'opération "delete" dans
+  /// la file d'attente de synchronisation (voir data/sync/), une
+  /// suppression ne peut donc jamais être mise en attente hors-ligne —
+  /// même principe que la modification des gabarits.
+  Future<void> supprimerClient(Client client) async {
+    await verifierEcritureAutorisee(_baseLocale, client.atelierId);
+    await _client.from('clients').delete().eq('id', client.id);
+    await _baseLocale.supprimerClientEtDependances(client.id);
+  }
+
   /// Récupère tous les clients de l'atelier depuis Supabase et alimente le
   /// cache local. Appelée au premier affichage de l'écran liste des clients
   /// (ou lors d'un rafraîchissement manuel) : ce n'est PAS le moteur de
