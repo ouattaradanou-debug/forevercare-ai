@@ -23,6 +23,7 @@ import '../../branding/providers/branding_providers.dart';
 import '../../finances/presentation/section_finances_client.dart';
 import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
+import '../../mesures/utils/choix_gabarit.dart';
 import '../../permissions/providers/permissions_providers.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/clients_providers.dart';
@@ -187,9 +188,7 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                 couleurFond: const Color(0xFFF5DCD3),
                 couleurIcone: const Color(0xFF8A4B24),
                 titre: 'Mesures',
-                onTap: peutPrendreMesure
-                    ? () => context.push(AppRoutes.selectionTypeTenue(client.id))
-                    : null,
+                onTap: peutPrendreMesure ? () => _ouvrirPriseMesure(context, client) : null,
               ),
               const SizedBox(height: 12),
               _carteMesures(donnees.mesures),
@@ -199,7 +198,9 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                 couleurFond: const Color(0xFFF0E6C8),
                 couleurIcone: const Color(0xFFA47B1B),
                 titre: 'Photos',
-                onTap: () => context.push(AppRoutes.photosClient(client.id)),
+                onTap: () => _naviguerEtRafraichir(
+                  context.push(AppRoutes.photosClient(client.id)),
+                ),
               ),
               const SizedBox(height: 12),
               _cartePhotos(donnees.tissu, donnees.modele),
@@ -209,7 +210,9 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                 couleurFond: const Color(0xFFF0E6C8),
                 couleurIcone: const Color(0xFFA47B1B),
                 titre: 'Rendez-vous',
-                onTap: () => context.push(AppRoutes.creationRendezVous, extra: client),
+                onTap: () => _naviguerEtRafraichir(
+                  context.push(AppRoutes.creationRendezVous, extra: client),
+                ),
               ),
               const SizedBox(height: 12),
               _carteRendezVous(donnees.prochainRdv),
@@ -287,6 +290,43 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
+  }
+
+  /// Ouvre directement la prise de mesure pour le gabarit du sexe déjà
+  /// renseigné pour ce client (même résolution que Nouveau client) —
+  /// préremplie avec les dernières valeurs connues, modifiables une à une.
+  /// Évite de repasser par "Quel type de tenue ?", qui n'a de sens que pour
+  /// les groupes d'uniformes (plusieurs types possibles par membre) : un
+  /// client a toujours un seul gabarit, fixé par son sexe.
+  Future<void> _ouvrirPriseMesure(BuildContext context, Client client) async {
+    final utilisateur = await ref.read(utilisateurCourantProvider.future);
+    if (utilisateur == null || !mounted) return;
+
+    final types = await ref.read(typesTenueVisiblesProvider.future);
+    final gabarit = choisirGabaritPourSexe(types, utilisateur.atelierId, client.sexe);
+    if (!mounted) return;
+
+    if (gabarit == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Connectez-vous à internet une première fois pour récupérer les champs de mesure.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await _naviguerEtRafraichir(context.push(AppRoutes.priseMesure(client.id, gabarit.id)));
+  }
+
+  /// Recharge toute la fiche au retour d'un écran poussé depuis une
+  /// section (Mesures, Photos, Rendez-vous) : une nouvelle prise de
+  /// mesure, un ajout de photo ou de rendez-vous doit se refléter
+  /// immédiatement ici, sans attendre une nouvelle visite de la fiche.
+  Future<void> _naviguerEtRafraichir(Future<dynamic> navigation) async {
+    await navigation;
+    if (mounted) setState(() => _chargement = _charger());
   }
 }
 
