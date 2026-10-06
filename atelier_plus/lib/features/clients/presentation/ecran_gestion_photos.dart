@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,6 +9,9 @@ import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../permissions/providers/permissions_providers.dart';
 import '../providers/photos_providers.dart';
+
+const _bleuSeda = Color(0xFF1B4FA0);
+const _orangeSeda = Color(0xFFF5821F);
 
 /// Photos de tissus et de modèles d'un client. Choix explicite caméra ou
 /// galerie à chaque ajout (voir `choisirSourceEtImage`), jamais de valeur
@@ -78,8 +82,16 @@ class _EcranGestionPhotosState extends ConsumerState<EcranGestionPhotos>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Photos'),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _ongletsCtrl,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: _orangeSeda,
+          indicatorWeight: 3,
+          labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           tabs: const [Tab(text: 'Tissus'), Tab(text: 'Modèles')],
         ),
       ),
@@ -92,6 +104,7 @@ class _EcranGestionPhotosState extends ConsumerState<EcranGestionPhotos>
       ),
       floatingActionButton: peutAjouter
           ? FloatingActionButton(
+              backgroundColor: _orangeSeda,
               onPressed: _envoiEnCours ? null : () => _ajouter(typeOngletCourant),
               child: _envoiEnCours
                   ? const SizedBox(
@@ -99,7 +112,7 @@ class _EcranGestionPhotosState extends ConsumerState<EcranGestionPhotos>
                       height: 22,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Icon(Icons.add_a_photo),
+                  : const Icon(Icons.add_a_photo, color: Colors.white),
             )
           : null,
     );
@@ -138,7 +151,16 @@ class _GrillePhotos extends ConsumerWidget {
               onTap: () => ouvrirPhotoPleinEcran(context, url),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(url, fit: BoxFit.cover),
+                child: CachedNetworkImage(
+                  imageUrl: url,
+                  fit: BoxFit.cover,
+                  fadeInDuration: Duration.zero,
+                  placeholder: (context, url) => Container(color: const Color(0xFFEDEAE4)),
+                  errorWidget: (context, url, error) => Container(
+                    color: const Color(0xFFEDEAE4),
+                    child: const Icon(Icons.broken_image_outlined, color: Color(0xFF6F6259)),
+                  ),
+                ),
               ),
             );
           },
