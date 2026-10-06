@@ -179,6 +179,35 @@ class FinancesRepository {
     return paiement;
   }
 
+  /// Corrige directement le total "Paiement reçu" d'une commande (depuis
+  /// "Modifier Montant/Avance/Paiement"), plutôt que d'ajouter un paiement
+  /// de plus : remplace tout l'historique détaillé des paiements de cette
+  /// commande par une seule ligne correspondant au nouveau total (ou
+  /// n'enregistre rien si le nouveau total est nul). Nécessite une
+  /// connexion, comme la suppression d'un client : il n'existe pas
+  /// d'opération "delete" dans la file d'attente de synchronisation.
+  Future<void> definirPaiementTotal({
+    required String atelierId,
+    required Commande commande,
+    required double nouveauTotal,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
+    await _client.from('paiements').delete().eq('commande_id', commande.id);
+    await _baseLocale.supprimerPaiementsDeLaCommande(commande.id);
+
+    if (nouveauTotal > 0) {
+      final paiement = Paiement(
+        id: _uuid.v4(),
+        atelierId: atelierId,
+        commandeId: commande.id,
+        montant: nouveauTotal,
+        datePaiement: DateTime.now().toUtc(),
+      );
+      await _client.from('paiements').insert(paiement.versJson());
+      await _mettreEnCachePaiement(paiement);
+    }
+  }
+
   Stream<List<Paiement>> observerPaiements(String commandeId) {
     return _baseLocale.observerPaiementsDeLaCommande(commandeId).map(
           (lignes) => lignes

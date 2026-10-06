@@ -108,27 +108,78 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
     ref.invalidate(commandesDuClientProvider(widget.clientId));
   }
 
-  /// Corrige le montant/l'avance de la commande en cours (erreur de
-  /// saisie) — ne crée jamais une nouvelle commande.
-  Future<void> _modifierCommandeCourante(Commande courante) async {
-    final valeurs = await _demanderMontants(
-      titre: 'Modifier la commande',
-      montantActuel: courante.montantTotal,
-      avanceActuelle: courante.avance,
+  /// Corrige le montant total, l'avance et le paiement reçu de la commande
+  /// en cours (erreur de saisie) — ne crée jamais une nouvelle commande.
+  /// Corriger le paiement reçu remplace l'historique détaillé des
+  /// paiements individuels par une seule ligne correspondant au nouveau
+  /// total (voir FinancesRepository.definirPaiementTotal).
+  Future<void> _modifierCommandeCourante(Commande courante, double sommePaiementsActuelle) async {
+    final montantCtrl = TextEditingController(text: courante.montantTotal.toStringAsFixed(0));
+    final avanceCtrl = TextEditingController(text: courante.avance.toStringAsFixed(0));
+    final paiementCtrl = TextEditingController(text: sommePaiementsActuelle.toStringAsFixed(0));
+
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Modifier Montant/Avance/Paiement'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: montantCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Montant total (FCFA)'),
+            ),
+            TextField(
+              controller: avanceCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Avance reçue (FCFA)'),
+            ),
+            TextField(
+              controller: paiementCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Paiement reçu (FCFA)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
     );
-    if (valeurs == null) return;
+    if (confirme != true) return;
+
+    final montant = double.tryParse(montantCtrl.text.replaceAll(',', '.')) ?? 0;
+    final avance = double.tryParse(avanceCtrl.text.replaceAll(',', '.')) ?? 0;
+    final paiement = double.tryParse(paiementCtrl.text.replaceAll(',', '.')) ?? 0;
 
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
-    await executerAvecErreurAffichee(
-      context,
-      () => ref.read(financesRepositoryProvider).modifierCommande(
-            atelierId: utilisateur!.atelierId,
-            commande: courante,
-            montantTotal: valeurs.montant,
-            avance: valeurs.avance,
-          ),
-    );
+    await executerAvecErreurAffichee(context, () async {
+      final repo = ref.read(financesRepositoryProvider);
+      await repo.modifierCommande(
+        atelierId: utilisateur!.atelierId,
+        commande: courante,
+        montantTotal: montant,
+        avance: avance,
+      );
+      if (paiement != sommePaiementsActuelle) {
+        await repo.definirPaiementTotal(
+          atelierId: utilisateur.atelierId,
+          commande: courante,
+          nouveauTotal: paiement,
+        );
+      }
+    });
     ref.invalidate(commandesDuClientProvider(widget.clientId));
   }
 
@@ -239,9 +290,9 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                     const Divider(),
                     const SizedBox(height: 8),
                     OutlinedButton(
-                      onPressed: () => _modifierCommandeCourante(courante),
+                      onPressed: () => _modifierCommandeCourante(courante, sommePaiements),
                       style: OutlinedButton.styleFrom(foregroundColor: _bleuSeda, side: const BorderSide(color: _bleuSeda)),
-                      child: const Text('Modifier montant / avance'),
+                      child: const Text('Modifier Montant/Avance/Paiement'),
                     ),
                     CheckboxListTile(
                       value: courante.tenueRetiree,

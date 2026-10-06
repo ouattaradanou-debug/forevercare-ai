@@ -837,6 +837,15 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  /// Supprime tous les paiements d'une commande du cache local — utilisé
+  /// quand le propriétaire corrige directement le total "Paiement reçu"
+  /// (voir FinancesRepository.definirPaiementTotal), qui remplace
+  /// l'historique détaillé par une seule ligne correspondant au nouveau
+  /// total.
+  Future<void> supprimerPaiementsDeLaCommande(String commandeId) {
+    return (delete(paiementEntries)..where((t) => t.commandeId.equals(commandeId))).go();
+  }
+
   /// Tous les paiements de l'atelier (tous clients confondus), utilisé par
   /// l'écran "Suivi des finances" pour le récapitulatif global.
   Future<List<PaiementEntry>> tousPaiementsDeLAtelier(String atelierId) {
