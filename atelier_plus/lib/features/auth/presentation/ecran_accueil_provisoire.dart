@@ -128,6 +128,14 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                             couleurIcone: const Color(0xFFB3261E),
                             onTap: () => context.push(AppRoutes.nouvelleDepense),
                           ),
+                        if (estProprietaire)
+                          _CarteAction(
+                            icone: Icons.storefront_outlined,
+                            libelle: 'Ventes',
+                            fondIcone: const Color(0xFFDCEADF),
+                            couleurIcone: const Color(0xFF2E7D32),
+                            onTap: () => context.push(AppRoutes.ventes),
+                          ),
                       ],
                     ),
                     if (estProprietaire) ...[
@@ -385,12 +393,6 @@ class _SectionAujourdhui extends ConsumerWidget {
           icone: Icons.bar_chart_outlined,
           libelle: 'Suivi des finances',
           onTap: () => context.push(AppRoutes.suiviFinances),
-        ),
-        const SizedBox(height: 12),
-        _LienNavigation(
-          icone: Icons.storefront_outlined,
-          libelle: 'Ventes',
-          onTap: () => context.push(AppRoutes.ventes),
         ),
         const SizedBox(height: 12),
         _LienNavigation(
