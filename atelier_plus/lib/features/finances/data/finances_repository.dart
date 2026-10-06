@@ -179,33 +179,6 @@ class FinancesRepository {
     return paiement;
   }
 
-  /// Corrige le montant d'un paiement déjà enregistré (erreur de saisie).
-  Future<Paiement> modifierPaiement({
-    required String atelierId,
-    required Paiement paiement,
-    required double montant,
-  }) async {
-    await verifierEcritureAutorisee(_baseLocale, atelierId);
-    final miseAJour = Paiement(
-      id: paiement.id,
-      atelierId: paiement.atelierId,
-      commandeId: paiement.commandeId,
-      montant: montant,
-      datePaiement: paiement.datePaiement,
-    );
-
-    await _mettreEnCachePaiement(miseAJour);
-    await ecrireEtSynchroniser(
-      client: _client,
-      baseLocale: _baseLocale,
-      table: 'paiements',
-      recordId: miseAJour.id,
-      operation: 'update',
-      payload: miseAJour.versJson(),
-    );
-    return miseAJour;
-  }
-
   Stream<List<Paiement>> observerPaiements(String commandeId) {
     return _baseLocale.observerPaiementsDeLaCommande(commandeId).map(
           (lignes) => lignes

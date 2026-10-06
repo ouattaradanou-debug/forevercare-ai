@@ -33,12 +33,8 @@ class SyncEngine {
 
   /// Tables dont les mises à jour peuvent entrer en conflit (donc pour
   /// lesquelles on compare les horodatages avant d'écraser le serveur).
-  /// `mesures` reste "insert-only" (jamais modifiée après coup), donc
-  /// absente de cette liste. `paiements` peut désormais être corrigé
-  /// (erreur de saisie), mais sans `updated_at` à comparer : la correction
-  /// écrase simplement l'ancienne valeur ("dernière modification gagne"
-  /// sans détection de conflit), acceptable pour une correction ponctuelle
-  /// rare plutôt qu'une édition concurrente fréquente.
+  /// Les tables "insert-only" (mesures, paiements) n'ont pas besoin de
+  /// cette vérification : chaque ligne n'est jamais modifiée après coup.
   static const _tablesAvecConflitPossible = {'clients', 'rendez_vous', 'commandes'};
 
   Future<void> traiterFileAttente() async {

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../data/models/commande.dart';
-import '../../../data/models/paiement.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../data/calcul_solde.dart';
 import '../providers/finances_providers.dart';
@@ -176,50 +175,6 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
     );
   }
 
-  /// Corrige le montant d'un paiement déjà enregistré (erreur de saisie).
-  Future<void> _modifierPaiement(Paiement paiement) async {
-    final montantCtrl = TextEditingController(text: paiement.montant.toStringAsFixed(0));
-    final confirme = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Modifier le paiement'),
-        content: TextField(
-          controller: montantCtrl,
-          autofocus: true,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Montant reçu (FCFA)'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
-            child: const Text('Enregistrer'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirme != true) return;
-    final montant = double.tryParse(montantCtrl.text.replaceAll(',', '.')) ?? 0;
-    if (montant <= 0) return;
-
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
-    if (!mounted) return;
-    await executerAvecErreurAffichee(
-      context,
-      () => ref.read(financesRepositoryProvider).modifierPaiement(
-            atelierId: utilisateur!.atelierId,
-            paiement: paiement,
-            montant: montant,
-          ),
-    );
-  }
-
   Future<void> _basculerTenueRetiree(Commande courante, bool? valeur) async {
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
@@ -341,8 +296,6 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                           leading: const Icon(Icons.receipt_long_outlined),
                           title: Text(Formatters.montant(p.montant)),
                           subtitle: Text(Formatters.dateCourte(p.datePaiement)),
-                          trailing: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF6F6259)),
-                          onTap: () => _modifierPaiement(p),
                         ),
                       )
                       .toList(),
