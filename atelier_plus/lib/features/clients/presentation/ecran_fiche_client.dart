@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -382,25 +383,28 @@ PhotoClient? _premierDuType(List<PhotoClient> liste, TypePhoto type) {
   return null;
 }
 
-/// Dernières photos (tissu et modèle) du client, affichées directement.
+/// Dernières photos (tissu et modèle) du client, affichées directement,
+/// avec la note vocale enregistrée lors de la prise de mesure si elle
+/// existe.
 Widget _cartePhotos(PhotoClient? tissu, PhotoClient? modele) {
   if (tissu == null && modele == null) {
     return const _Carte(child: Text('Aucune photo pour ce client.'));
   }
   return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      if (tissu != null) Expanded(child: _VignettePhoto(titre: 'Tissu', url: tissu.url)),
+      if (tissu != null) Expanded(child: _VignettePhoto(titre: 'Tissu', photo: tissu)),
       if (tissu != null && modele != null) const SizedBox(width: 16),
-      if (modele != null) Expanded(child: _VignettePhoto(titre: 'Modèle', url: modele.url)),
+      if (modele != null) Expanded(child: _VignettePhoto(titre: 'Modèle', photo: modele)),
     ],
   );
 }
 
 class _VignettePhoto extends StatelessWidget {
-  const _VignettePhoto({required this.titre, required this.url});
+  const _VignettePhoto({required this.titre, required this.photo});
 
   final String titre;
-  final String url;
+  final PhotoClient photo;
 
   @override
   Widget build(BuildContext context) {
@@ -410,16 +414,87 @@ class _VignettePhoto extends StatelessWidget {
         Text(titre, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         GestureDetector(
-          onTap: () => ouvrirPhotoPleinEcran(context, url),
+          onTap: () => ouvrirPhotoPleinEcran(context, photo.url),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: AspectRatio(
               aspectRatio: 1,
-              child: Image.network(url, fit: BoxFit.cover),
+              child: Image.network(photo.url, fit: BoxFit.cover),
             ),
           ),
         ),
+        if (photo.audioUrl != null) ...[
+          const SizedBox(height: 8),
+          _LecteurAudio(url: photo.audioUrl!),
+        ],
       ],
+    );
+  }
+}
+
+/// Lecture de la note vocale enregistrée sous une photo (tissu/modèle) lors
+/// de la prise de mesure — même mécanisme que la vignette photo de Nouveau
+/// client.
+class _LecteurAudio extends StatefulWidget {
+  const _LecteurAudio({required this.url});
+
+  final String url;
+
+  @override
+  State<_LecteurAudio> createState() => _LecteurAudioState();
+}
+
+class _LecteurAudioState extends State<_LecteurAudio> {
+  final _player = AudioPlayer();
+  bool _lecture = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _player.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => _lecture = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  Future<void> _basculerLecture() async {
+    if (_lecture) {
+      await _player.pause();
+      if (mounted) setState(() => _lecture = false);
+    } else {
+      await _player.play(UrlSource(widget.url));
+      if (mounted) setState(() => _lecture = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: _basculerLecture,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEDEAE4),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(_lecture ? Icons.pause : Icons.play_arrow, size: 18, color: _bleuSeda),
+            const SizedBox(width: 4),
+            Text(
+              _lecture ? 'Pause' : 'Écouter',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
