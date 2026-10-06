@@ -286,6 +286,24 @@ create table if not exists public.depenses (
 
 create index if not exists idx_depenses_atelier on public.depenses (atelier_id, date_depense);
 
+-- Ventes directes (prêt-à-porter, tissu, article de couture) — table
+-- financière, même règle que commandes/paiements/depenses : jamais
+-- accessible à un apprenti. L'unité (pièce/mètre) n'est pas stockée :
+-- dérivée de `categorie` côté application.
+create table if not exists public.ventes (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  categorie      text not null check (categorie in ('pret_a_porter', 'tissu', 'article_couture')),
+  designation    text not null,
+  quantite       numeric(12, 2) not null check (quantite > 0),
+  prix_unitaire  numeric(12, 2) not null check (prix_unitaire >= 0),
+  montant_total  numeric(12, 2) not null check (montant_total >= 0),
+  date_vente     timestamptz not null default now(),
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists idx_ventes_atelier on public.ventes (atelier_id, date_vente);
+
 -- Journal d'actions : trace d'audit append-only (utilisée aussi pour logguer
 -- les résolutions de conflit de synchronisation "dernière modification gagne").
 create table if not exists public.journal_actions (
@@ -496,6 +514,7 @@ alter table public.rendez_vous enable row level security;
 alter table public.commandes enable row level security;
 alter table public.paiements enable row level security;
 alter table public.depenses enable row level security;
+alter table public.ventes enable row level security;
 alter table public.groupes_uniformes enable row level security;
 alter table public.membres_groupe_uniforme enable row level security;
 alter table public.mesures_uniforme enable row level security;
@@ -831,6 +850,15 @@ create policy paiements_all on public.paiements
 -- -----------------------------------------------------------------------------
 drop policy if exists depenses_all on public.depenses;
 create policy depenses_all on public.depenses
+  for all to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.11quater VENTES — même garantie que commandes/paiements/depenses.
+-- -----------------------------------------------------------------------------
+drop policy if exists ventes_all on public.ventes;
+create policy ventes_all on public.ventes
   for all to authenticated
   using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
   with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());

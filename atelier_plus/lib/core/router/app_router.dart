@@ -38,6 +38,10 @@ import '../../features/uniformes/presentation/ecran_detail_groupe.dart';
 import '../../features/uniformes/presentation/ecran_groupes_uniformes.dart';
 import '../../features/uniformes/presentation/ecran_prise_mesure_membre.dart';
 import '../../features/uniformes/presentation/ecran_selection_type_tenue_membre.dart';
+import '../../data/models/categorie_vente.dart';
+import '../../features/ventes/presentation/ecran_enregistrer_vente.dart';
+import '../../features/ventes/presentation/ecran_historique_ventes.dart';
+import '../../features/ventes/presentation/ecran_ventes.dart';
 
 /// Chemins nommés des routes de l'application, centralisés pour éviter les
 /// chaînes de caractères éparpillées dans le code.
@@ -100,6 +104,10 @@ class AppRoutes {
   static String selectionTypeTenueMembre(String membreId) => '/uniformes/membres/$membreId/mesures';
   static String priseMesureMembre(String membreId, String typeTenueId) =>
       '/uniformes/membres/$membreId/mesures/$typeTenueId';
+
+  static const String ventes = '/ventes';
+  static const String nouvelleVente = '/ventes/nouvelle';
+  static const String historiqueVentes = '/ventes/historique';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -255,6 +263,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           typeTenueId: state.pathParameters['typeTenueId']!,
           nomMembre: (state.extra as String?) ?? '',
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.ventes,
+        builder: (context, state) => const EcranVentes(),
+      ),
+      GoRoute(
+        path: AppRoutes.nouvelleVente,
+        builder: (context, state) =>
+            EcranEnregistrerVente(categorie: state.extra as CategorieVente),
+      ),
+      GoRoute(
+        path: AppRoutes.historiqueVentes,
+        builder: (context, state) => const EcranHistoriqueVentes(),
       ),
     ],
   );

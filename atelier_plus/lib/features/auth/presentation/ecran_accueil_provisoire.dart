@@ -388,6 +388,12 @@ class _SectionAujourdhui extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         _LienNavigation(
+          icone: Icons.storefront_outlined,
+          libelle: 'Ventes',
+          onTap: () => context.push(AppRoutes.ventes),
+        ),
+        const SizedBox(height: 12),
+        _LienNavigation(
           icone: Icons.diversity_3_outlined,
           libelle: 'Mesures des uniformes',
           onTap: () => context.push(AppRoutes.groupesUniformes),

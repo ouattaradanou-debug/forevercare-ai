@@ -224,6 +224,28 @@ class DepenseEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Cache local des ventes directes (prêt-à-porter, tissu, article de
+/// couture) — même remarque que CommandeEntries/PaiementEntries/DepenseEntries
+/// : donnée financière, jamais alimentée ni lue pour un apprenti.
+/// `categorie` : 'pret_a_porter' | 'tissu' | 'article_couture' (voir
+/// CategorieVente). `unite` n'est pas stockée : dérivée de la catégorie à
+/// l'affichage (CategorieVente.uniteLabel), pour éviter toute incohérence.
+@DataClassName('VenteEntry')
+class VenteEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get categorie => text()();
+  TextColumn get designation => text()();
+  RealColumn get quantite => real()();
+  RealColumn get prixUnitaire => real()();
+  RealColumn get montantTotal => real()();
+  DateTimeColumn get date => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Cache local des groupes de mesures d'uniformes.
 @DataClassName('GroupeUniformeEntry')
 class GroupeUniformeEntries extends Table {
@@ -318,12 +340,13 @@ class AbonnementEntries extends Table {
   GroupeUniformeEntries,
   MembreGroupeUniformeEntries,
   MesureUniformeEntries,
+  VenteEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -410,6 +433,9 @@ class AppDatabase extends _$AppDatabase {
             // précédent) : la colonne manque donc toujours sur un appareil
             // déjà installé, sans précaution `from >=` à vérifier ici.
             await m.addColumn(atelierEntries, atelierEntries.signatureUrl);
+          }
+          if (from < 13) {
+            await m.createTable(venteEntries);
           }
         },
       );
@@ -930,22 +956,66 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
-  /// Vide le cache local des commandes/paiements/dépenses à la déconnexion : un
-  /// appareil peut être partagé entre le propriétaire et un apprenti, et
-  /// les données financières ne doivent jamais rester lisibles sur disque
-  /// après le départ du propriétaire (défense en profondeur, en plus du
-  /// filtrage déjà fait par l'écran et par la RLS). Ne fait rien s'il reste
-  /// des écritures financières non encore synchronisées, pour ne jamais
-  /// perdre de données en attente d'envoi.
+  /// Vide le cache local des commandes/paiements/dépenses/ventes à la
+  /// déconnexion : un appareil peut être partagé entre le propriétaire et
+  /// un apprenti, et les données financières ne doivent jamais rester
+  /// lisibles sur disque après le départ du propriétaire (défense en
+  /// profondeur, en plus du filtrage déjà fait par l'écran et par la RLS).
+  /// Ne fait rien s'il reste des écritures financières non encore
+  /// synchronisées, pour ne jamais perdre de données en attente d'envoi.
   Future<void> effacerCacheFinancierSiSynchronise() async {
     final tachesFinancieres = await (select(syncQueueEntries)
-          ..where((t) => t.nomTable.isIn(const ['commandes', 'paiements', 'depenses'])))
+          ..where(
+            (t) => t.nomTable.isIn(const ['commandes', 'paiements', 'depenses', 'ventes']),
+          ))
         .get();
     if (tachesFinancieres.isNotEmpty) return;
 
     await delete(commandeEntries).go();
     await delete(paiementEntries).go();
     await delete(depenseEntries).go();
+    await delete(venteEntries).go();
+  }
+
+  // --- Ventes directes (financier — jamais consulté pour un apprenti) ---
+
+  Future<void> enregistrerVente({
+    required String id,
+    required String atelierId,
+    required String categorie,
+    required String designation,
+    required double quantite,
+    required double prixUnitaire,
+    required double montantTotal,
+    required DateTime date,
+    required DateTime createdAt,
+  }) async {
+    await into(venteEntries).insertOnConflictUpdate(
+      VenteEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        categorie: categorie,
+        designation: designation,
+        quantite: quantite,
+        prixUnitaire: prixUnitaire,
+        montantTotal: montantTotal,
+        date: date,
+        createdAt: createdAt,
+      ),
+    );
+  }
+
+  Future<List<VenteEntry>> toutesVentesDeLAtelier(String atelierId) {
+    return (select(venteEntries)..where((t) => t.atelierId.equals(atelierId))).get();
+  }
+
+  /// Historique des ventes, les plus récentes en premier — utilisé par
+  /// l'écran "Historique des ventes".
+  Stream<List<VenteEntry>> observerVentesDeLAtelier(String atelierId) {
+    return (select(venteEntries)
+          ..where((t) => t.atelierId.equals(atelierId))
+          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+        .watch();
   }
 
   // --- Groupes d'uniformes ---
