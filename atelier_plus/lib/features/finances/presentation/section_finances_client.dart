@@ -230,11 +230,10 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                   children: [
                     _LigneMontant('Montant total', courante.montantTotal),
                     _LigneMontant('Avance', courante.avance),
-                    _LigneMontant('Paiements reçus', sommePaiements),
                     const Divider(),
                     _LigneMontant(
-                      reste > 0 ? 'Reste à payer' : 'Trop-perçu',
-                      reste.abs(),
+                      reste > 0 ? 'Reste à payer' : 'Paiement reçu',
+                      reste > 0 ? reste : courante.avance + sommePaiements,
                       accent: true,
                     ),
                     const SizedBox(height: 8),
