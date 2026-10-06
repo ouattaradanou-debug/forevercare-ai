@@ -103,6 +103,51 @@ class PhotosRepository {
     await _baseLocale.mettreAJourAudioPhoto(photo.id, null);
   }
 
+  /// Supprime définitivement une photo (fichier dans Supabase Storage,
+  /// note vocale associée si elle existe, ligne `photos`) — pour retirer
+  /// une photo ajoutée par erreur ou qui n'est plus utile. Nécessite une
+  /// connexion, comme la suppression d'un client : il n'existe pas
+  /// d'opération "delete" dans la file d'attente de synchronisation.
+  Future<void> supprimerPhoto(PhotoClient photo) async {
+    await verifierEcritureAutorisee(_baseLocale, photo.atelierId);
+
+    // Retire d'abord toute tâche encore en file d'attente (ajout fait
+    // hors-ligne, jamais encore envoyé) : sans ça, la suppression serait
+    // "ressuscitée" dès que la file serait rejouée — même précaution que
+    // FinancesRepository.definirPaiementTotal.
+    await _baseLocale.retirerTachesPourEnregistrement('photos', photo.id);
+    await _client.from('photos').delete().eq('id', photo.id);
+    await _baseLocale.supprimerPhoto(photo.id);
+
+    // Best-effort : la photo a déjà disparu de l'application à ce stade,
+    // un fichier orphelin dans le stockage n'est pas une erreur à remonter.
+    try {
+      final cheminImage = _cheminDepuisUrlPublique(photo.url, bucketPhotosClients);
+      if (cheminImage != null) {
+        await _client.storage.from(bucketPhotosClients).remove([cheminImage]);
+      }
+      final audioUrl = photo.audioUrl;
+      if (audioUrl != null) {
+        final cheminAudio = _cheminDepuisUrlPublique(audioUrl, bucketAudiosClients);
+        if (cheminAudio != null) {
+          await _client.storage.from(bucketAudiosClients).remove([cheminAudio]);
+        }
+      }
+    } catch (_) {
+      // Ignoré, voir commentaire ci-dessus.
+    }
+  }
+
+  /// Extrait le chemin interne au bucket depuis une URL publique Supabase
+  /// Storage (`.../object/public/<bucket>/<chemin>`), nécessaire pour
+  /// demander la suppression du fichier lui-même.
+  String? _cheminDepuisUrlPublique(String url, String bucket) {
+    final motif = '/object/public/$bucket/';
+    final index = url.indexOf(motif);
+    if (index == -1) return null;
+    return url.substring(index + motif.length);
+  }
+
   Future<void> chargerDepuisServeur(String clientId) async {
     try {
       final lignes = await _client.from('photos').select().eq('client_id', clientId);

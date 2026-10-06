@@ -765,6 +765,10 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  Future<void> supprimerPhoto(String id) {
+    return (delete(photoEntries)..where((t) => t.id.equals(id))).go();
+  }
+
   // --- Rendez-vous ---
 
   Future<void> enregistrerRendezVous({

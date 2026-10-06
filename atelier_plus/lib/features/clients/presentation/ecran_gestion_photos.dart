@@ -98,8 +98,8 @@ class _EcranGestionPhotosState extends ConsumerState<EcranGestionPhotos>
       body: TabBarView(
         controller: _ongletsCtrl,
         children: [
-          _GrillePhotos(clientId: widget.clientId, type: TypePhoto.tissu),
-          _GrillePhotos(clientId: widget.clientId, type: TypePhoto.modele),
+          _GrillePhotos(clientId: widget.clientId, type: TypePhoto.tissu, peutSupprimer: peutAjouter),
+          _GrillePhotos(clientId: widget.clientId, type: TypePhoto.modele, peutSupprimer: peutAjouter),
         ],
       ),
       floatingActionButton: peutAjouter
@@ -120,10 +120,42 @@ class _EcranGestionPhotosState extends ConsumerState<EcranGestionPhotos>
 }
 
 class _GrillePhotos extends ConsumerWidget {
-  const _GrillePhotos({required this.clientId, required this.type});
+  const _GrillePhotos({required this.clientId, required this.type, required this.peutSupprimer});
 
   final String clientId;
   final TypePhoto type;
+  final bool peutSupprimer;
+
+  Future<void> _confirmerSuppression(BuildContext context, WidgetRef ref, PhotoClient photo) async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer cette photo ?'),
+        content: const Text('Cette action est définitive.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFB3261E)),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true) return;
+
+    try {
+      await ref.read(photosRepositoryProvider).supprimerPhoto(photo);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -137,33 +169,50 @@ class _GrillePhotos extends ConsumerWidget {
         if (liste.isEmpty) {
           return const Center(child: Text('Aucune photo pour le moment.'));
         }
-        return GridView.builder(
-          padding: const EdgeInsets.all(8),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-          ),
-          itemCount: liste.length,
-          itemBuilder: (context, index) {
-            final url = liste[index].url;
-            return GestureDetector(
-              onTap: () => ouvrirPhotoPleinEcran(context, url),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: CachedNetworkImage(
-                  imageUrl: url,
-                  fit: BoxFit.cover,
-                  fadeInDuration: Duration.zero,
-                  placeholder: (context, url) => Container(color: const Color(0xFFEDEAE4)),
-                  errorWidget: (context, url, error) => Container(
-                    color: const Color(0xFFEDEAE4),
-                    child: const Icon(Icons.broken_image_outlined, color: Color(0xFF6F6259)),
-                  ),
+        return Column(
+          children: [
+            if (peutSupprimer)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Text(
+                  'Appui long sur une photo pour la supprimer',
+                  style: TextStyle(color: Color(0xFF6F6259), fontSize: 13),
                 ),
               ),
-            );
-          },
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(8),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: liste.length,
+                itemBuilder: (context, index) {
+                  final photo = liste[index];
+                  return GestureDetector(
+                    onTap: () => ouvrirPhotoPleinEcran(context, photo.url),
+                    onLongPress: peutSupprimer
+                        ? () => _confirmerSuppression(context, ref, photo)
+                        : null,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: CachedNetworkImage(
+                        imageUrl: photo.url,
+                        fit: BoxFit.cover,
+                        fadeInDuration: Duration.zero,
+                        placeholder: (context, url) => Container(color: const Color(0xFFEDEAE4)),
+                        errorWidget: (context, url, error) => Container(
+                          color: const Color(0xFFEDEAE4),
+                          child: const Icon(Icons.broken_image_outlined, color: Color(0xFF6F6259)),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         );
       },
     );
