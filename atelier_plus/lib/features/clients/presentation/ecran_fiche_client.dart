@@ -14,17 +14,15 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../core/widgets/ecran_photo_plein_ecran.dart';
 import '../../../core/widgets/en_tete_section.dart';
-import '../../../data/models/champ_mesure.dart';
 import '../../../data/models/client.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../data/models/rendez_vous.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../branding/data/donnees_export_client.dart';
 import '../../branding/providers/branding_providers.dart';
 import '../../finances/presentation/section_finances_client.dart';
 import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
-import '../../mesures/providers/mesures_providers.dart';
-import '../../mesures/utils/choix_gabarit.dart';
 import '../../permissions/providers/permissions_providers.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/clients_providers.dart';
@@ -97,26 +95,30 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
       unawaited(ref.read(commandeDuClientProvider(widget.clientId).future));
     }
 
-    final types = await ref.read(typesTenueVisiblesProvider.future);
-    final gabarit = choisirGabaritPourSexe(types, utilisateur.atelierId, client.sexe);
-
-    final champsFuture = gabarit == null
-        ? Future.value(<ChampMesure>[])
-        : ref.read(champsActifsProvider(gabarit.id).future);
-    final valeursFuture = gabarit == null
-        ? Future<Map<String, String>?>.value(null)
-        : ref.read(mesuresRepositoryProvider).dernieresValeurs(widget.clientId, gabarit.id);
+    // Dernière mesure du client, quel que soit le gabarit sous lequel elle a
+    // été enregistrée à l'époque (le gabarit "courant" pour ce sexe peut
+    // avoir changé depuis — copie propre créée via "Champs de mesure" — sans
+    // que l'historique existant soit perdu pour autant) : on prend le groupe
+    // le plus récent parmi tous ceux jamais utilisés par ce client, avec les
+    // noms de champs déjà résolus.
+    final groupesFuture =
+        ref.read(donneesExportClientProvider).dernieresMesuresParType(widget.clientId);
     final photosFuture = ref.read(photosDuClientProvider(widget.clientId).future);
     final rdvFuture = ref.read(rendezVousTriesProvider.future);
 
-    final champsListe = await champsFuture;
-    final valeurs = await valeursFuture;
+    final groupes = await groupesFuture;
     final photos = await photosFuture;
     final rdvTous = await rdvFuture;
 
+    GroupeMesureExport? dernierGroupe;
+    for (final groupe in groupes) {
+      if (dernierGroupe == null || groupe.datePrise.isAfter(dernierGroupe.datePrise)) {
+        dernierGroupe = groupe;
+      }
+    }
     final mesures = <MapEntry<String, String>>[
-      for (final champ in champsListe)
-        if (valeurs?[champ.id] != null) MapEntry(champ.nom, valeurs![champ.id]!),
+      for (final ligne in dernierGroupe?.lignes ?? const <LigneMesureExport>[])
+        MapEntry(ligne.nomChamp, ligne.valeur),
     ];
 
     return _DonneesFiche(
