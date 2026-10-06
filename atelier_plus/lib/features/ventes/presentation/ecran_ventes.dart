@@ -19,6 +19,8 @@ class EcranVentes extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ventes = ref.watch(ventesDeLAtelierProvider);
+    final articles = ref.watch(articlesDeLAtelierProvider).valueOrNull ?? const [];
+    final articlesEnAlerte = articles.where((a) => a.stockBas).length;
     final maintenant = DateTime.now();
     final debutJour = DateTime(maintenant.year, maintenant.month, maintenant.day);
 
@@ -32,6 +34,38 @@ class EcranVentes extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (articlesEnAlerte > 0) ...[
+              Material(
+                color: const Color(0xFFFBE9E7),
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => context.push(AppRoutes.gestionStock),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_outlined, color: Color(0xFFB3261E)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            articlesEnAlerte == 1
+                                ? '1 article en stock bas'
+                                : '$articlesEnAlerte articles en stock bas',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFB3261E),
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: Color(0xFFB3261E)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             const Text(
               'Enregistrer une vente',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _bleuSeda),
@@ -45,6 +79,18 @@ class EcranVentes extends ConsumerWidget {
               const SizedBox(height: 12),
             ],
             const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => context.push(AppRoutes.gestionStock),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _bleuSeda,
+                side: const BorderSide(color: _bleuSeda),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              icon: const Icon(Icons.inventory_2_outlined),
+              label: const Text('Gérer mon stock'),
+            ),
+            const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => context.push(AppRoutes.historiqueVentes),
               style: OutlinedButton.styleFrom(

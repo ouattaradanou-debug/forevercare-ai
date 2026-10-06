@@ -14,6 +14,7 @@ class Vente {
     required this.montantTotal,
     required this.date,
     required this.createdAt,
+    this.articleId,
   });
 
   final String id;
@@ -25,6 +26,10 @@ class Vente {
   final double montantTotal;
   final DateTime date;
   final DateTime createdAt;
+  /// Article du catalogue vendu, s'il a été choisi dans la liste plutôt que
+  /// saisi librement (voir `Article`) — permet la décrémentation
+  /// automatique du stock. Nullable : une vente "libre" reste possible.
+  final String? articleId;
 
   factory Vente.depuisJson(Map<String, dynamic> json) {
     return Vente(
@@ -39,6 +44,7 @@ class Vente {
       montantTotal: double.parse(json['montant_total'].toString()),
       date: DateTime.parse(json['date_vente'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
+      articleId: json['article_id'] as String?,
     );
   }
 
@@ -53,6 +59,7 @@ class Vente {
       'montant_total': montantTotal,
       'date_vente': date.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
+      'article_id': articleId,
     };
   }
 }

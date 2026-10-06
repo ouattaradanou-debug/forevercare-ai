@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/formatters.dart';
+import '../../../data/models/article.dart';
 import '../../../data/models/categorie_vente.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/ventes_providers.dart';
@@ -12,6 +13,10 @@ const _orangeSeda = Color(0xFFF5821F);
 /// Enregistre une vente directe (prêt-à-porter, tissu ou article de
 /// couture) : les libellés et l'unité de quantité s'adaptent à [categorie],
 /// pour un formulaire pertinent dans chaque cas sans dupliquer l'écran.
+///
+/// Choisir un article du catalogue (voir `EcranGestionStock`) décrémente
+/// automatiquement son stock ; laisser "Vente libre" garde le formulaire
+/// utilisable même pour un article non suivi en stock.
 class EcranEnregistrerVente extends ConsumerStatefulWidget {
   const EcranEnregistrerVente({super.key, required this.categorie});
 
@@ -26,6 +31,7 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
   final _quantiteCtrl = TextEditingController(text: '1');
   final _prixUnitaireCtrl = TextEditingController();
   DateTime _date = DateTime.now();
+  Article? _articleChoisi;
   bool _chargement = false;
   String? _erreur;
 
@@ -47,6 +53,16 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
   double get _quantite => double.tryParse(_quantiteCtrl.text.replaceAll(',', '.')) ?? 0;
   double get _prixUnitaire => double.tryParse(_prixUnitaireCtrl.text.replaceAll(',', '.')) ?? 0;
   double get _montantTotal => _quantite * _prixUnitaire;
+
+  void _choisirArticle(Article? article) {
+    setState(() {
+      _articleChoisi = article;
+      if (article != null) {
+        _designationCtrl.text = article.nom;
+        _prixUnitaireCtrl.text = article.prixUnitaireDefaut.toStringAsFixed(0);
+      }
+    });
+  }
 
   Future<void> _choisirDate() async {
     final choisie = await showDatePicker(
@@ -72,6 +88,35 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
       setState(() => _erreur = 'Entrez un prix unitaire valide.');
       return;
     }
+
+    final article = _articleChoisi;
+    if (article != null && _quantite > article.quantiteStock) {
+      final continuer = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Stock insuffisant'),
+          content: Text(
+            'Il ne reste que ${Formatters.nombre(article.quantiteStock)} '
+            '${article.categorie.uniteLabel} en stock pour « ${article.nom} ». '
+            'Enregistrer cette vente quand même ?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+              child: const Text('Continuer'),
+            ),
+          ],
+        ),
+      );
+      if (continuer != true) return;
+    }
+
     setState(() {
       _chargement = true;
       _erreur = null;
@@ -86,6 +131,7 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
             quantite: _quantite,
             prixUnitaire: _prixUnitaire,
             date: _date,
+            article: article,
           );
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -102,6 +148,12 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
   @override
   Widget build(BuildContext context) {
     final categorie = widget.categorie;
+    final articlesAsync = ref.watch(articlesDeLAtelierProvider);
+    final articlesCategorie = articlesAsync.valueOrNull
+            ?.where((a) => a.categorie == categorie)
+            .toList() ??
+        const <Article>[];
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Vente de ${categorie.libelle.toLowerCase()}'),
@@ -114,14 +166,36 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (articlesCategorie.isNotEmpty) ...[
+                DropdownButtonFormField<Article?>(
+                  value: _articleChoisi,
+                  decoration: const InputDecoration(labelText: 'Article du catalogue'),
+                  items: [
+                    const DropdownMenuItem<Article?>(
+                      value: null,
+                      child: Text('Vente libre (non suivie en stock)'),
+                    ),
+                    for (final a in articlesCategorie)
+                      DropdownMenuItem<Article?>(
+                        value: a,
+                        child: Text(
+                          '${a.nom} — ${Formatters.nombre(a.quantiteStock)} ${a.categorie.uniteLabel} en stock',
+                        ),
+                      ),
+                  ],
+                  onChanged: _choisirArticle,
+                ),
+                const SizedBox(height: 16),
+              ],
               TextField(
                 controller: _designationCtrl,
+                enabled: _articleChoisi == null,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   labelText: 'Désignation',
                   hintText: categorie.exempleDesignation,
                 ),
-                autofocus: true,
+                autofocus: articlesCategorie.isEmpty,
               ),
               const SizedBox(height: 16),
               TextField(

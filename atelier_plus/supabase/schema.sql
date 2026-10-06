@@ -286,6 +286,26 @@ create table if not exists public.depenses (
 
 create index if not exists idx_depenses_atelier on public.depenses (atelier_id, date_depense);
 
+-- Catalogue des articles suivis en stock (prêt-à-porter, tissu, article de
+-- couture) — même règle que commandes/paiements/depenses : jamais
+-- accessible à un apprenti. `quantite_stock` est la source de vérité du
+-- "reste en stock", décrémentée automatiquement par chaque vente qui
+-- référence cet article (voir ventes.article_id) et augmentée manuellement
+-- via "Réapprovisionner" côté application.
+create table if not exists public.articles (
+  id                    uuid primary key default gen_random_uuid(),
+  atelier_id            uuid not null references public.ateliers (id) on delete cascade,
+  categorie             text not null check (categorie in ('pret_a_porter', 'tissu', 'article_couture')),
+  nom                   text not null,
+  prix_unitaire_defaut  numeric(12, 2) not null default 0 check (prix_unitaire_defaut >= 0),
+  quantite_stock        numeric(12, 2) not null default 0 check (quantite_stock >= 0),
+  seuil_alerte          numeric(12, 2) not null default 3 check (seuil_alerte >= 0),
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now()
+);
+
+create index if not exists idx_articles_atelier on public.articles (atelier_id, categorie);
+
 -- Ventes directes (prêt-à-porter, tissu, article de couture) — table
 -- financière, même règle que commandes/paiements/depenses : jamais
 -- accessible à un apprenti. L'unité (pièce/mètre) n'est pas stockée :
@@ -299,8 +319,15 @@ create table if not exists public.ventes (
   prix_unitaire  numeric(12, 2) not null check (prix_unitaire >= 0),
   montant_total  numeric(12, 2) not null check (montant_total >= 0),
   date_vente     timestamptz not null default now(),
-  created_at     timestamptz not null default now()
+  created_at     timestamptz not null default now(),
+  -- Article du catalogue vendu, s'il a été choisi dans la liste plutôt que
+  -- saisi librement : permet la décrémentation automatique du stock.
+  article_id     uuid references public.articles (id) on delete set null
 );
+
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante).
+alter table public.ventes add column if not exists article_id uuid references public.articles (id) on delete set null;
 
 create index if not exists idx_ventes_atelier on public.ventes (atelier_id, date_vente);
 
@@ -354,7 +381,7 @@ begin
     select unnest(array[
       'ateliers', 'utilisateurs', 'permissions_apprenti', 'clients',
       'types_tenue', 'champs_mesure', 'mesures', 'rendez_vous',
-      'commandes', 'abonnements', 'groupes_uniformes', 'membres_groupe_uniforme'
+      'commandes', 'abonnements', 'groupes_uniformes', 'membres_groupe_uniforme', 'articles'
     ])
   loop
     execute format(
@@ -515,6 +542,7 @@ alter table public.commandes enable row level security;
 alter table public.paiements enable row level security;
 alter table public.depenses enable row level security;
 alter table public.ventes enable row level security;
+alter table public.articles enable row level security;
 alter table public.groupes_uniformes enable row level security;
 alter table public.membres_groupe_uniforme enable row level security;
 alter table public.mesures_uniforme enable row level security;
@@ -859,6 +887,15 @@ create policy depenses_all on public.depenses
 -- -----------------------------------------------------------------------------
 drop policy if exists ventes_all on public.ventes;
 create policy ventes_all on public.ventes
+  for all to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.11quinquies ARTICLES (catalogue/stock) — même garantie que ventes.
+-- -----------------------------------------------------------------------------
+drop policy if exists articles_all on public.articles;
+create policy articles_all on public.articles
   for all to authenticated
   using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
   with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());

@@ -241,6 +241,33 @@ class VenteEntries extends Table {
   RealColumn get montantTotal => real()();
   DateTimeColumn get date => dateTime()();
   DateTimeColumn get createdAt => dateTime()();
+  // Article du catalogue vendu (voir ArticleEntries), s'il a été choisi dans
+  // la liste plutôt que saisi librement : permet de décrémenter le stock
+  // automatiquement. Nullable : une vente "libre" n'est jamais bloquée par
+  // l'absence d'article suivi en stock.
+  TextColumn get articleId => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Catalogue des articles suivis en stock (prêt-à-porter, tissu, article de
+/// couture) — donnée financière/business, même règle que VenteEntries :
+/// jamais alimentée ni lue pour un apprenti. `quantiteStock` est la source
+/// de vérité du "reste en stock", décrémentée automatiquement à chaque
+/// vente qui référence cet article (voir VentesRepository.enregistrerVente)
+/// et augmentée manuellement via "Réapprovisionner".
+@DataClassName('ArticleEntry')
+class ArticleEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get categorie => text()();
+  TextColumn get nom => text()();
+  RealColumn get prixUnitaireDefaut => real()();
+  RealColumn get quantiteStock => real()();
+  RealColumn get seuilAlerte => real()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -341,12 +368,13 @@ class AbonnementEntries extends Table {
   MembreGroupeUniformeEntries,
   MesureUniformeEntries,
   VenteEntries,
+  ArticleEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -436,6 +464,17 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 13) {
             await m.createTable(venteEntries);
+          }
+          if (from < 14) {
+            await m.createTable(articleEntries);
+            // venteEntries créée dans le bloc `from < 13` ci-dessus inclut
+            // déjà `articleId` dans la définition Dart actuelle : sur un
+            // appareil qui saute directement d'une version < 13 à 14,
+            // `createTable` l'a déjà créée avec la colonne, d'où cette
+            // précaution pour éviter un "duplicate column".
+            if (from >= 13) {
+              await m.addColumn(venteEntries, venteEntries.articleId);
+            }
           }
         },
       );
@@ -966,7 +1005,8 @@ class AppDatabase extends _$AppDatabase {
   Future<void> effacerCacheFinancierSiSynchronise() async {
     final tachesFinancieres = await (select(syncQueueEntries)
           ..where(
-            (t) => t.nomTable.isIn(const ['commandes', 'paiements', 'depenses', 'ventes']),
+            (t) => t.nomTable
+                .isIn(const ['commandes', 'paiements', 'depenses', 'ventes', 'articles']),
           ))
         .get();
     if (tachesFinancieres.isNotEmpty) return;
@@ -975,6 +1015,7 @@ class AppDatabase extends _$AppDatabase {
     await delete(paiementEntries).go();
     await delete(depenseEntries).go();
     await delete(venteEntries).go();
+    await delete(articleEntries).go();
   }
 
   // --- Ventes directes (financier — jamais consulté pour un apprenti) ---
@@ -989,6 +1030,7 @@ class AppDatabase extends _$AppDatabase {
     required double montantTotal,
     required DateTime date,
     required DateTime createdAt,
+    String? articleId,
   }) async {
     await into(venteEntries).insertOnConflictUpdate(
       VenteEntriesCompanion.insert(
@@ -1001,6 +1043,7 @@ class AppDatabase extends _$AppDatabase {
         montantTotal: montantTotal,
         date: date,
         createdAt: createdAt,
+        articleId: Value(articleId),
       ),
     );
   }
@@ -1015,6 +1058,51 @@ class AppDatabase extends _$AppDatabase {
     return (select(venteEntries)
           ..where((t) => t.atelierId.equals(atelierId))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+        .watch();
+  }
+
+  // --- Catalogue d'articles / stock (financier — jamais consulté pour un apprenti) ---
+
+  Future<void> enregistrerArticle({
+    required String id,
+    required String atelierId,
+    required String categorie,
+    required String nom,
+    required double prixUnitaireDefaut,
+    required double quantiteStock,
+    required double seuilAlerte,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) async {
+    await into(articleEntries).insertOnConflictUpdate(
+      ArticleEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        categorie: categorie,
+        nom: nom,
+        prixUnitaireDefaut: prixUnitaireDefaut,
+        quantiteStock: quantiteStock,
+        seuilAlerte: seuilAlerte,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  Future<ArticleEntry?> articleParId(String id) {
+    return (select(articleEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  Future<List<ArticleEntry>> tousArticlesDeLAtelier(String atelierId) {
+    return (select(articleEntries)..where((t) => t.atelierId.equals(atelierId))).get();
+  }
+
+  /// Catalogue d'articles de l'atelier, triés par nom — utilisé par l'écran
+  /// "Gestion du stock" et par le formulaire d'enregistrement d'une vente.
+  Stream<List<ArticleEntry>> observerArticlesDeLAtelier(String atelierId) {
+    return (select(articleEntries)
+          ..where((t) => t.atelierId.equals(atelierId))
+          ..orderBy([(t) => OrderingTerm.asc(t.nom)]))
         .watch();
   }
 

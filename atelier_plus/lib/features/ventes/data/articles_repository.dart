@@ -1,0 +1,183 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../../data/local/database.dart';
+import '../../../data/models/article.dart';
+import '../../../data/models/categorie_vente.dart';
+import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../abonnement/data/abonnement_guard.dart';
+
+/// Catalogue d'articles suivis en stock (prêt-à-porter, tissu, article de
+/// couture) : création, réapprovisionnement et décrémentation automatique
+/// lors d'une vente (voir `VentesRepository.enregistrerVente`).
+///
+/// N'est appelé QUE depuis des écrans déjà réservés au propriétaire — même
+/// garantie RLS que `VentesRepository` (voir supabase/schema.sql).
+class ArticlesRepository {
+  ArticlesRepository({required SupabaseClient client, required AppDatabase baseLocale})
+      : _client = client,
+        _baseLocale = baseLocale;
+
+  final SupabaseClient _client;
+  final AppDatabase _baseLocale;
+  static const _uuid = Uuid();
+
+  Article _depuisLigne(ArticleEntry ligne) => Article(
+        id: ligne.id,
+        atelierId: ligne.atelierId,
+        categorie: CategorieVente.depuisJson(ligne.categorie),
+        nom: ligne.nom,
+        prixUnitaireDefaut: ligne.prixUnitaireDefaut,
+        quantiteStock: ligne.quantiteStock,
+        seuilAlerte: ligne.seuilAlerte,
+        createdAt: ligne.createdAt,
+        updatedAt: ligne.updatedAt,
+      );
+
+  Future<Article> ajouterArticle({
+    required String atelierId,
+    required CategorieVente categorie,
+    required String nom,
+    required double prixUnitaireDefaut,
+    required double quantiteInitiale,
+    required double seuilAlerte,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
+    final maintenant = DateTime.now().toUtc();
+    final article = Article(
+      id: _uuid.v4(),
+      atelierId: atelierId,
+      categorie: categorie,
+      nom: nom,
+      prixUnitaireDefaut: prixUnitaireDefaut,
+      quantiteStock: quantiteInitiale,
+      seuilAlerte: seuilAlerte,
+      createdAt: maintenant,
+      updatedAt: maintenant,
+    );
+
+    await _mettreEnCache(article);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'articles',
+      recordId: article.id,
+      operation: 'insert',
+      payload: article.versJson(),
+    );
+    return article;
+  }
+
+  /// Corrige nom/prix par défaut/seuil d'alerte, sans toucher au stock
+  /// (voir [reapprovisionner] et la décrémentation automatique à la vente).
+  Future<Article> modifierArticle({
+    required Article article,
+    required String nom,
+    required double prixUnitaireDefaut,
+    required double seuilAlerte,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, article.atelierId);
+    final miseAJour = Article(
+      id: article.id,
+      atelierId: article.atelierId,
+      categorie: article.categorie,
+      nom: nom,
+      prixUnitaireDefaut: prixUnitaireDefaut,
+      quantiteStock: article.quantiteStock,
+      seuilAlerte: seuilAlerte,
+      createdAt: article.createdAt,
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    await _mettreEnCache(miseAJour);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'articles',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
+    );
+    return miseAJour;
+  }
+
+  /// Ajoute [quantiteAjoutee] au stock (nouvelle livraison reçue).
+  Future<Article> reapprovisionner({
+    required Article article,
+    required double quantiteAjoutee,
+  }) {
+    return _ajusterStock(article, article.quantiteStock + quantiteAjoutee);
+  }
+
+  /// Retire [quantiteVendue] du stock suite à une vente — jamais négatif
+  /// (une vente plus grande que le stock restant, confirmée malgré
+  /// l'avertissement, ramène simplement le stock à zéro).
+  Future<Article> decrementerStock({
+    required Article article,
+    required double quantiteVendue,
+  }) {
+    final nouveauStock = article.quantiteStock - quantiteVendue;
+    return _ajusterStock(article, nouveauStock < 0 ? 0 : nouveauStock);
+  }
+
+  Future<Article> _ajusterStock(Article article, double nouvelleQuantite) async {
+    await verifierEcritureAutorisee(_baseLocale, article.atelierId);
+    final miseAJour = Article(
+      id: article.id,
+      atelierId: article.atelierId,
+      categorie: article.categorie,
+      nom: article.nom,
+      prixUnitaireDefaut: article.prixUnitaireDefaut,
+      quantiteStock: nouvelleQuantite,
+      seuilAlerte: article.seuilAlerte,
+      createdAt: article.createdAt,
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    await _mettreEnCache(miseAJour);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'articles',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
+    );
+    return miseAJour;
+  }
+
+  /// Catalogue de l'atelier, trié par nom — pour l'écran "Gestion du
+  /// stock" et le choix d'article dans le formulaire de vente.
+  Stream<List<Article>> observerArticles(String atelierId) {
+    return _baseLocale
+        .observerArticlesDeLAtelier(atelierId)
+        .map((lignes) => lignes.map(_depuisLigne).toList());
+  }
+
+  /// Rapatriement initial best-effort depuis Supabase (autres appareils, ou
+  /// articles ajoutés avant l'installation de cet appareil).
+  Future<void> chargerDepuisServeur(String atelierId) async {
+    try {
+      final lignes = await _client.from('articles').select().eq('atelier_id', atelierId);
+      for (final ligne in lignes) {
+        await _mettreEnCache(Article.depuisJson(ligne));
+      }
+    } catch (_) {
+      // Hors-ligne : le cache existant reste utilisable.
+    }
+  }
+
+  Future<void> _mettreEnCache(Article article) {
+    return _baseLocale.enregistrerArticle(
+      id: article.id,
+      atelierId: article.atelierId,
+      categorie: article.categorie.valeurJson,
+      nom: article.nom,
+      prixUnitaireDefaut: article.prixUnitaireDefaut,
+      quantiteStock: article.quantiteStock,
+      seuilAlerte: article.seuilAlerte,
+      createdAt: article.createdAt,
+      updatedAt: article.updatedAt,
+    );
+  }
+}
