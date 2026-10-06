@@ -81,6 +81,10 @@ dependencies:
   # à côté du numéro, comme dans l'ancienne application) ---
   url_launcher: ^6.3.1
 
+  # --- Signature manuscrite du tailleur (dessinée une fois dans Paramètres,
+  # réutilisée sur chaque facture PDF) ---
+  signature: ^5.5.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

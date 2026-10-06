@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -11,6 +13,7 @@ import '../../../data/remote/stockage_repository.dart';
 import 'exceptions_auth.dart';
 
 const String bucketLogosAteliers = 'logos-ateliers';
+const String bucketSignaturesAteliers = 'signatures-ateliers';
 
 /// Authentification et cycle de vie du compte atelier.
 ///
@@ -106,6 +109,39 @@ class AuthRepository {
     final utilisateur = Utilisateur.depuisJson(ligneUtilisateur);
     await _mettreEnCache(atelier: atelier, utilisateur: utilisateur, permissions: null);
     return utilisateur;
+  }
+
+  /// Enregistre (ou remplace) la signature manuscrite du tailleur, dessinée
+  /// une fois dans Paramètres puis réutilisée sur chaque facture PDF.
+  /// Nécessite une connexion (écriture directe Supabase, hors file de
+  /// synchronisation) : une signature est rare à modifier et toujours
+  /// dessinée par le propriétaire, déjà en ligne au moment de l'enregistrer.
+  Future<String> enregistrerSignatureAtelier({
+    required Atelier atelierActuel,
+    required Uint8List signaturePng,
+  }) async {
+    final signatureUrl = await _stockage.televerserBinaire(
+      octets: signaturePng,
+      bucket: bucketSignaturesAteliers,
+      dossier: atelierActuel.id,
+      extension: 'png',
+      contentType: 'image/png',
+    );
+
+    await _client
+        .from('ateliers')
+        .update({'signature_url': signatureUrl})
+        .eq('id', atelierActuel.id);
+
+    await _baseLocale.enregistrerAtelier(
+      id: atelierActuel.id,
+      nom: atelierActuel.nom,
+      logoUrl: atelierActuel.logoUrl,
+      signatureUrl: signatureUrl,
+      updatedAt: DateTime.now(),
+    );
+
+    return signatureUrl;
   }
 
   /// Connexion par téléphone + PIN, sur cet appareil ou un nouvel appareil.
@@ -206,6 +242,7 @@ class AuthRepository {
       id: atelier.id,
       nom: atelier.nom,
       logoUrl: atelier.logoUrl,
+      signatureUrl: atelier.signatureUrl,
       updatedAt: atelier.updatedAt,
     );
     await _baseLocale.enregistrerUtilisateur(

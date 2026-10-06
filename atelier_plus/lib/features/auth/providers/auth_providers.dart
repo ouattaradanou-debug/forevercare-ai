@@ -45,7 +45,13 @@ final atelierCourantProvider = FutureProvider<Atelier?>((ref) async {
   final ligne = await baseLocale.atelierParId(utilisateur.atelierId);
   if (ligne == null) return null;
 
-  return Atelier(id: ligne.id, nom: ligne.nom, logoUrl: ligne.logoUrl, updatedAt: ligne.updatedAt);
+  return Atelier(
+    id: ligne.id,
+    nom: ligne.nom,
+    logoUrl: ligne.logoUrl,
+    signatureUrl: ligne.signatureUrl,
+    updatedAt: ligne.updatedAt,
+  );
 });
 
 /// Utilisateurs (propriétaire + apprentis) de l'atelier courant, lus depuis

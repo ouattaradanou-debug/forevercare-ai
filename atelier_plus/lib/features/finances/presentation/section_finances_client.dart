@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:printing/printing.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../data/models/commande.dart';
+import '../../../data/models/paiement.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../branding/providers/branding_providers.dart';
+import '../../clients/providers/clients_providers.dart';
 import '../data/calcul_solde.dart';
 import '../providers/finances_providers.dart';
 
@@ -253,6 +257,24 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
     );
   }
 
+  /// Ouvre l'aperçu d'impression/partage du système avec la facture de la
+  /// commande en cours (montants, QR code de vérification, signature du
+  /// tailleur).
+  Future<void> _imprimerFacture(Commande courante, List<Paiement> paiements) async {
+    final atelier = await ref.read(atelierCourantProvider.future);
+    final client = await ref.read(clientParIdProvider(widget.clientId).future);
+    if (!mounted || atelier == null || client == null) return;
+
+    await Printing.layoutPdf(
+      onLayout: (_) => ref.read(pdfExportServiceProvider).genererFacturePdf(
+            atelier: atelier,
+            client: client,
+            commande: courante,
+            paiements: paiements,
+          ),
+    );
+  }
+
   Future<void> _basculerTenueRetiree(Commande courante, bool? valeur) async {
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
@@ -377,6 +399,19 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () =>
+                  _imprimerFacture(courante, paiements.valueOrNull ?? const []),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _bleuSeda,
+                side: const BorderSide(color: _bleuSeda),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              label: const Text('Imprimer la facture'),
             ),
             const SizedBox(height: 16),
             const Text(

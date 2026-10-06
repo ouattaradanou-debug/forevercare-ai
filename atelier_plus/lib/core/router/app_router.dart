@@ -14,6 +14,7 @@ import '../../features/auth/presentation/ecran_creation_apprenti.dart';
 import '../../features/auth/presentation/ecran_creation_compte_atelier.dart';
 import '../../features/auth/presentation/ecran_gestion_apprentis.dart';
 import '../../features/auth/presentation/ecran_parametres.dart';
+import '../../features/auth/presentation/ecran_signature_atelier.dart';
 import '../../features/auth/providers/auth_providers.dart';
 import '../../features/clients/presentation/ecran_fiche_client.dart';
 import '../../features/clients/presentation/ecran_formulaire_client.dart';
@@ -73,6 +74,7 @@ class AppRoutes {
   static const String creationTypeTenue = '/types-tenue/nouveau';
   static const String _gestionChampsTemplate = '/types-tenue/:id/champs';
   static const String champsDeMesure = '/champs-de-mesure';
+  static const String signatureAtelier = '/signature-atelier';
 
   static String gestionChampsTypeTenue(String id) => '/types-tenue/$id/champs';
 
@@ -197,6 +199,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.champsDeMesure,
         builder: (context, state) => const EcranChampsDeMesure(),
+      ),
+      GoRoute(
+        path: AppRoutes.signatureAtelier,
+        builder: (context, state) => const EcranSignatureAtelier(),
       ),
       GoRoute(
         path: AppRoutes.rendezVous,

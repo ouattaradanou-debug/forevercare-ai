@@ -58,6 +58,27 @@ class StockageRepository {
     return _client.storage.from(bucket).getPublicUrl(nomFichier);
   }
 
+  /// Envoie des octets bruts (ex. PNG de signature dessinée à l'écran) tels
+  /// quels, sans compression. `upsert: true` : contrairement aux photos, la
+  /// signature d'un atelier est unique et remplacée à chaque nouveau dessin.
+  Future<String> televerserBinaire({
+    required Uint8List octets,
+    required String bucket,
+    required String dossier,
+    required String extension,
+    required String contentType,
+  }) async {
+    final nomFichier = '$dossier/${_uuid.v4()}.$extension';
+
+    await _client.storage.from(bucket).uploadBinary(
+          nomFichier,
+          octets,
+          fileOptions: FileOptions(contentType: contentType, upsert: true),
+        );
+
+    return _client.storage.from(bucket).getPublicUrl(nomFichier);
+  }
+
   Future<Uint8List> _compresser(XFile fichier) async {
     final dossierTemp = await getTemporaryDirectory();
     final cheminSortie = p.join(

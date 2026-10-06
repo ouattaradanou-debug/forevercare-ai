@@ -19,6 +19,9 @@ class AtelierEntries extends Table {
   TextColumn get id => text()();
   TextColumn get nom => text()();
   TextColumn get logoUrl => text().nullable()();
+  // Signature manuscrite du tailleur, dessinée une fois dans Paramètres et
+  // réutilisée sur chaque facture PDF (voir EcranSignatureAtelier).
+  TextColumn get signatureUrl => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -320,7 +323,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -401,6 +404,13 @@ class AppDatabase extends _$AppDatabase {
               await m.addColumn(commandeEntries, commandeEntries.createdAt);
             }
           }
+          if (from < 12) {
+            // atelierEntries existe depuis la toute première version du
+            // schéma (jamais créée conditionnellement dans un bloc
+            // précédent) : la colonne manque donc toujours sur un appareil
+            // déjà installé, sans précaution `from >=` à vérifier ici.
+            await m.addColumn(atelierEntries, atelierEntries.signatureUrl);
+          }
         },
       );
 
@@ -423,6 +433,7 @@ class AppDatabase extends _$AppDatabase {
     required String id,
     required String nom,
     String? logoUrl,
+    String? signatureUrl,
     required DateTime updatedAt,
   }) async {
     await into(atelierEntries).insertOnConflictUpdate(
@@ -430,6 +441,7 @@ class AppDatabase extends _$AppDatabase {
         id: id,
         nom: nom,
         logoUrl: Value(logoUrl),
+        signatureUrl: Value(signatureUrl),
         updatedAt: updatedAt,
       ),
     );

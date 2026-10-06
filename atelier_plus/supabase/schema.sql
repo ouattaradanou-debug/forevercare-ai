@@ -31,14 +31,19 @@ create extension if not exists "pgcrypto";
 
 -- Un atelier = un compte "entreprise" (le tailleur et ses éventuels apprentis).
 create table if not exists public.ateliers (
-  id          uuid primary key default gen_random_uuid(),
-  nom         text not null,
-  logo_url    text,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+  id            uuid primary key default gen_random_uuid(),
+  nom           text not null,
+  logo_url      text,
+  signature_url text,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
 );
 
 comment on table public.ateliers is 'Un atelier de couture = un compte client de l''application.';
+
+-- Signature manuscrite du tailleur (dessinée une fois dans Paramètres,
+-- réutilisée sur chaque facture PDF).
+alter table public.ateliers add column if not exists signature_url text;
 
 -- Un utilisateur applicatif = auth.users(id) + informations métier (atelier, rôle).
 -- utilisateurs.id doit être identique à auth.users.id (créé lors du sign-up).
@@ -1097,7 +1102,8 @@ insert into storage.buckets (id, name, public)
 values
   ('photos-clients', 'photos-clients', true),
   ('logos-ateliers', 'logos-ateliers', true),
-  ('audios-clients', 'audios-clients', true)
+  ('audios-clients', 'audios-clients', true),
+  ('signatures-ateliers', 'signatures-ateliers', true)
 on conflict (id) do nothing;
 
 drop policy if exists photos_clients_insert on storage.objects;
@@ -1125,6 +1131,22 @@ drop policy if exists logos_ateliers_select on storage.objects;
 create policy logos_ateliers_select on storage.objects
   for select to authenticated
   using (bucket_id = 'logos-ateliers');
+
+drop policy if exists signatures_ateliers_insert on storage.objects;
+create policy signatures_ateliers_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'signatures-ateliers');
+
+drop policy if exists signatures_ateliers_update on storage.objects;
+create policy signatures_ateliers_update on storage.objects
+  for update to authenticated
+  using (bucket_id = 'signatures-ateliers')
+  with check (bucket_id = 'signatures-ateliers');
+
+drop policy if exists signatures_ateliers_select on storage.objects;
+create policy signatures_ateliers_select on storage.objects
+  for select to authenticated
+  using (bucket_id = 'signatures-ateliers');
 
 drop policy if exists audios_clients_insert on storage.objects;
 create policy audios_clients_insert on storage.objects
