@@ -44,9 +44,12 @@ final recapitulatifMensuelProvider =
 /// `autoDispose` : ces données financières ne doivent pas rester en mémoire
 /// au-delà de la consultation de l'écran qui les affiche (déjà réservé au
 /// propriétaire), par précaution supplémentaire.
-final commandeDuClientProvider =
-    FutureProvider.family.autoDispose<Commande?, String>((ref, clientId) {
-  return ref.watch(financesRepositoryProvider).commandeDuClient(clientId);
+///
+/// Toutes les commandes du client (une par couture successive), de la plus
+/// récente à la plus ancienne — la première est "la commande en cours".
+final commandesDuClientProvider =
+    FutureProvider.family.autoDispose<List<Commande>, String>((ref, clientId) {
+  return ref.watch(financesRepositoryProvider).commandesDuClient(clientId);
 });
 
 final paiementsDeLaCommandeProvider =

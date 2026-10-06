@@ -183,6 +183,10 @@ class CommandeEntries extends Table {
   RealColumn get montantTotal => real()();
   RealColumn get avance => real()();
   BoolColumn get tenueRetiree => boolean().withDefault(const Constant(false))();
+  // Nullable pour la même raison que Client.createdAt (migration sans
+  // casser le cache existant) : déjà présent côté serveur de longue date,
+  // seulement pas encore mirroré localement avant cet ajout.
+  DateTimeColumn get createdAt => dateTime().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -316,7 +320,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -387,6 +391,14 @@ class AppDatabase extends _$AppDatabase {
             // précaution que ci-dessus pour un appareil déjà en version >= 2.
             if (from >= 2) {
               await m.addColumn(clientEntries, clientEntries.createdAt);
+            }
+          }
+          if (from < 11) {
+            // commandeEntries est créée (avec createdAt déjà présent dans
+            // sa définition Dart actuelle) dans le bloc `from < 3` : même
+            // précaution que ci-dessus pour un appareil déjà en version >= 3.
+            if (from >= 3) {
+              await m.addColumn(commandeEntries, commandeEntries.createdAt);
             }
           }
         },
@@ -771,6 +783,7 @@ class AppDatabase extends _$AppDatabase {
     required double montantTotal,
     required double avance,
     bool tenueRetiree = false,
+    required DateTime createdAt,
     required DateTime updatedAt,
   }) async {
     await into(commandeEntries).insertOnConflictUpdate(
@@ -781,14 +794,20 @@ class AppDatabase extends _$AppDatabase {
         montantTotal: montantTotal,
         avance: avance,
         tenueRetiree: Value(tenueRetiree),
+        createdAt: Value(createdAt),
         updatedAt: updatedAt,
       ),
     );
   }
 
-  Future<CommandeEntry?> commandeDuClient(String clientId) {
-    return (select(commandeEntries)..where((t) => t.clientId.equals(clientId)))
-        .getSingleOrNull();
+  /// Toutes les commandes du client, de la plus récente à la plus ancienne
+  /// — un client peut revenir pour plusieurs coutures successives, chacune
+  /// avec son propre montant/avance/paiements (voir FinancesRepository).
+  Future<List<CommandeEntry>> commandesDuClient(String clientId) {
+    return (select(commandeEntries)
+          ..where((t) => t.clientId.equals(clientId))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .get();
   }
 
   // --- Paiements (financier — jamais consulté pour un apprenti) ---

@@ -17,10 +17,13 @@ import '../../abonnement/data/abonnement_guard.dart';
 /// que soit sa permission (aucune colonne financière n'existe même dans
 /// permissions_apprenti).
 ///
-/// Un seul enregistrement `commandes` par client dans ce modèle simplifié
-/// (montant total + avance ajustables), conforme à l'écran "finances par
-/// client" décrit au cahier des charges plutôt qu'une liste de commandes
-/// distinctes.
+/// Un client peut avoir PLUSIEURS commandes (une par couture successive) :
+/// revenir pour une nouvelle commande ne touche jamais au montant, à
+/// l'avance ni à l'historique des paiements des précédentes — chacune
+/// garde son propre enregistrement `commandes`, distingué par sa date de
+/// création. La plus récente est "la commande en cours" affichée en
+/// premier sur la fiche client ; les autres restent consultables comme
+/// historique.
 class FinancesRepository {
   FinancesRepository({required SupabaseClient client, required AppDatabase baseLocale})
       : _client = client,
@@ -30,38 +33,42 @@ class FinancesRepository {
   final AppDatabase _baseLocale;
   static const _uuid = Uuid();
 
-  Future<Commande?> commandeDuClient(String clientId) async {
-    final ligne = await _baseLocale.commandeDuClient(clientId);
-    if (ligne == null) return null;
-    return Commande(
-      id: ligne.id,
-      atelierId: ligne.atelierId,
-      clientId: ligne.clientId,
-      montantTotal: ligne.montantTotal,
-      avance: ligne.avance,
-      tenueRetiree: ligne.tenueRetiree,
-      updatedAt: ligne.updatedAt,
-    );
+  Commande _depuisLigne(CommandeEntry ligne) => Commande(
+        id: ligne.id,
+        atelierId: ligne.atelierId,
+        clientId: ligne.clientId,
+        montantTotal: ligne.montantTotal,
+        avance: ligne.avance,
+        tenueRetiree: ligne.tenueRetiree,
+        createdAt: ligne.createdAt ?? ligne.updatedAt,
+        updatedAt: ligne.updatedAt,
+      );
+
+  /// Toutes les commandes du client, de la plus récente à la plus
+  /// ancienne.
+  Future<List<Commande>> commandesDuClient(String clientId) async {
+    final lignes = await _baseLocale.commandesDuClient(clientId);
+    return lignes.map(_depuisLigne).toList();
   }
 
-  /// Crée la commande du client si elle n'existe pas encore, sinon met à
-  /// jour son montant total et son avance.
-  Future<Commande> definirCommande({
+  /// Crée une toute nouvelle commande pour ce client (nouvelle couture),
+  /// sans jamais toucher aux commandes précédentes.
+  Future<Commande> creerNouvelleCommande({
     required String atelierId,
     required String clientId,
     required double montantTotal,
     required double avance,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, atelierId);
-    final existante = await commandeDuClient(clientId);
+    final maintenant = DateTime.now().toUtc();
     final commande = Commande(
-      id: existante?.id ?? _uuid.v4(),
+      id: _uuid.v4(),
       atelierId: atelierId,
       clientId: clientId,
       montantTotal: montantTotal,
       avance: avance,
-      tenueRetiree: existante?.tenueRetiree ?? false,
-      updatedAt: DateTime.now().toUtc(),
+      createdAt: maintenant,
+      updatedAt: maintenant,
     );
 
     await _mettreEnCacheCommande(commande);
@@ -70,42 +77,80 @@ class FinancesRepository {
       baseLocale: _baseLocale,
       table: 'commandes',
       recordId: commande.id,
-      operation: existante == null ? 'insert' : 'update',
+      operation: 'insert',
       payload: commande.versJson(),
     );
     return commande;
   }
 
-  /// Marque (ou démarque) la tenue d'un client comme retirée — ne fait rien
-  /// si le client n'a pas encore de commande (rien à marquer).
-  Future<void> definirTenueRetiree({
+  /// Corrige le montant total et l'avance d'une commande déjà existante
+  /// (sans en créer une nouvelle) — pour rectifier une erreur de saisie sur
+  /// la commande en cours.
+  Future<Commande> modifierCommande({
     required String atelierId,
-    required String clientId,
-    required bool tenueRetiree,
+    required Commande commande,
+    required double montantTotal,
+    required double avance,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, atelierId);
-    final existante = await commandeDuClient(clientId);
-    if (existante == null) return;
-
-    final commande = Commande(
-      id: existante.id,
-      atelierId: existante.atelierId,
-      clientId: existante.clientId,
-      montantTotal: existante.montantTotal,
-      avance: existante.avance,
-      tenueRetiree: tenueRetiree,
+    final miseAJour = Commande(
+      id: commande.id,
+      atelierId: commande.atelierId,
+      clientId: commande.clientId,
+      montantTotal: montantTotal,
+      avance: avance,
+      tenueRetiree: commande.tenueRetiree,
+      createdAt: commande.createdAt,
       updatedAt: DateTime.now().toUtc(),
     );
 
-    await _mettreEnCacheCommande(commande);
+    await _mettreEnCacheCommande(miseAJour);
     await ecrireEtSynchroniser(
       client: _client,
       baseLocale: _baseLocale,
       table: 'commandes',
-      recordId: commande.id,
+      recordId: miseAJour.id,
       operation: 'update',
-      payload: commande.versJson(),
+      payload: miseAJour.versJson(),
     );
+    return miseAJour;
+  }
+
+  /// Marque (ou démarque) la tenue d'une commande comme retirée.
+  Future<void> definirTenueRetiree({
+    required String atelierId,
+    required Commande commande,
+    required bool tenueRetiree,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
+    final miseAJour = Commande(
+      id: commande.id,
+      atelierId: commande.atelierId,
+      clientId: commande.clientId,
+      montantTotal: commande.montantTotal,
+      avance: commande.avance,
+      tenueRetiree: tenueRetiree,
+      createdAt: commande.createdAt,
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    await _mettreEnCacheCommande(miseAJour);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'commandes',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
+    );
+  }
+
+  /// Somme des paiements reçus pour une commande — utilisé pour afficher le
+  /// reste à payer des commandes précédentes (lecture ponctuelle, pas
+  /// besoin d'un flux réactif pour un historique figé).
+  Future<double> sommePaiements(String commandeId) async {
+    final paiements = await observerPaiements(commandeId).first;
+    return paiements.fold<double>(0, (total, p) => total + p.montant);
   }
 
   Future<Paiement> ajouterPaiement({
@@ -254,23 +299,22 @@ class FinancesRepository {
   }
 
   /// Rapatriement initial best-effort — appelé uniquement par l'écran
-  /// finances, déjà réservé au propriétaire.
+  /// finances, déjà réservé au propriétaire. Toutes les commandes du
+  /// client (pas seulement la plus récente), pour que l'historique des
+  /// commandes précédentes reste consultable hors-ligne.
   Future<void> chargerDepuisServeur(String clientId) async {
     try {
-      final ligneCommande = await _client
-          .from('commandes')
-          .select()
-          .eq('client_id', clientId)
-          .maybeSingle();
-      if (ligneCommande == null) return;
+      final lignesCommandes =
+          await _client.from('commandes').select().eq('client_id', clientId);
+      for (final ligneCommande in lignesCommandes) {
+        final commande = Commande.depuisJson(ligneCommande);
+        await _mettreEnCacheCommande(commande);
 
-      final commande = Commande.depuisJson(ligneCommande);
-      await _mettreEnCacheCommande(commande);
-
-      final lignesPaiements =
-          await _client.from('paiements').select().eq('commande_id', commande.id);
-      for (final lignePaiement in lignesPaiements) {
-        await _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement));
+        final lignesPaiements =
+            await _client.from('paiements').select().eq('commande_id', commande.id);
+        for (final lignePaiement in lignesPaiements) {
+          await _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement));
+        }
       }
     } catch (_) {
       // Hors-ligne : le cache existant reste utilisable.
@@ -285,6 +329,7 @@ class FinancesRepository {
       montantTotal: commande.montantTotal,
       avance: commande.avance,
       tenueRetiree: commande.tenueRetiree,
+      createdAt: commande.createdAt,
       updatedAt: commande.updatedAt,
     );
   }

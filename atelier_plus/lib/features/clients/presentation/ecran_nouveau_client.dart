@@ -19,6 +19,7 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/ecran_photo_plein_ecran.dart';
 import '../../../core/widgets/en_tete_section.dart';
 import '../../../data/models/client.dart';
+import '../../../data/models/commande.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -66,6 +67,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
   final Map<String, TextEditingController> _controleursMesure = {};
 
   Client? _client;
+  Commande? _commandeCreee;
   bool _enregistrementClientEnCours = false;
   bool _mesuresEnregistrees = false;
   bool _financesEnregistrees = false;
@@ -382,14 +384,30 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     if (montantTotal <= 0 && avance <= 0) return;
 
     try {
-      await ref.read(financesRepositoryProvider).definirCommande(
-            atelierId: client.atelierId,
-            clientId: client.id,
-            montantTotal: montantTotal,
-            avance: avance,
-          );
+      final repo = ref.read(financesRepositoryProvider);
+      // Premier enregistrement : crée la commande. Les champs Montant/
+      // Avance déclenchent chacun une sauvegarde à la perte du focus — les
+      // appels suivants, pendant le remplissage du même formulaire,
+      // corrigent donc cette même commande plutôt que d'en créer une
+      // nouvelle à chaque fois.
+      final commande = _commandeCreee == null
+          ? await repo.creerNouvelleCommande(
+              atelierId: client.atelierId,
+              clientId: client.id,
+              montantTotal: montantTotal,
+              avance: avance,
+            )
+          : await repo.modifierCommande(
+              atelierId: client.atelierId,
+              commande: _commandeCreee!,
+              montantTotal: montantTotal,
+              avance: avance,
+            );
       if (mounted) {
-        setState(() => _financesEnregistrees = true);
+        setState(() {
+          _commandeCreee = commande;
+          _financesEnregistrees = true;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Finances enregistrées.')),
         );

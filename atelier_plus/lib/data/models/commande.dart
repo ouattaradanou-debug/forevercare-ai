@@ -7,6 +7,7 @@ class Commande {
     required this.montantTotal,
     required this.avance,
     this.tenueRetiree = false,
+    required this.createdAt,
     required this.updatedAt,
   });
 
@@ -16,6 +17,7 @@ class Commande {
   final double montantTotal;
   final double avance;
   final bool tenueRetiree;
+  final DateTime createdAt;
   final DateTime updatedAt;
 
   factory Commande.depuisJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class Commande {
       montantTotal: double.parse(json['montant_total'].toString()),
       avance: double.parse(json['avance'].toString()),
       tenueRetiree: json['tenue_retiree'] as bool? ?? false,
+      createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
@@ -43,6 +46,7 @@ class Commande {
       'montant_total': montantTotal,
       'avance': avance,
       'tenue_retiree': tenueRetiree,
+      'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
   }

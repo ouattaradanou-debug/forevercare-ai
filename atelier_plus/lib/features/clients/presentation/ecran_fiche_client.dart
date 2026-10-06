@@ -92,7 +92,7 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
     if (client == null) return null;
 
     if (ref.read(estProprietaireProvider)) {
-      unawaited(ref.read(commandeDuClientProvider(widget.clientId).future));
+      unawaited(ref.read(commandesDuClientProvider(widget.clientId).future));
     }
 
     // Dernière mesure du client, quel que soit le gabarit sous lequel elle a

@@ -140,6 +140,8 @@ class SyncEngine {
           clientId: c.clientId,
           montantTotal: c.montantTotal,
           avance: c.avance,
+          tenueRetiree: c.tenueRetiree,
+          createdAt: c.createdAt,
           updatedAt: c.updatedAt,
         );
         break;
