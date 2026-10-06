@@ -553,11 +553,38 @@ class AppDatabase extends _$AppDatabase {
   /// supprimerClient).
   Future<void> supprimerClientEtDependances(String clientId) async {
     await transaction(() async {
+      // Retire d'abord toute tâche encore en file d'attente pour le client
+      // et chacune de ses dépendances (ajout fait hors-ligne, jamais encore
+      // envoyé au serveur) : sans ça, la suppression ci-dessous serait
+      // "ressuscitée" dès que la file d'attente serait rejouée — voir
+      // ClientsRepository.supprimerClient.
       final commandes =
           await (select(commandeEntries)..where((t) => t.clientId.equals(clientId))).get();
       for (final commande in commandes) {
+        final paiements =
+            await (select(paiementEntries)..where((t) => t.commandeId.equals(commande.id))).get();
+        for (final paiement in paiements) {
+          await retirerTachesPourEnregistrement('paiements', paiement.id);
+        }
+        await retirerTachesPourEnregistrement('commandes', commande.id);
         await (delete(paiementEntries)..where((t) => t.commandeId.equals(commande.id))).go();
       }
+
+      final mesures = await (select(mesureEntries)..where((t) => t.clientId.equals(clientId))).get();
+      for (final mesure in mesures) {
+        await retirerTachesPourEnregistrement('mesures', mesure.id);
+      }
+      final photos = await (select(photoEntries)..where((t) => t.clientId.equals(clientId))).get();
+      for (final photo in photos) {
+        await retirerTachesPourEnregistrement('photos', photo.id);
+      }
+      final rendezVous =
+          await (select(rendezVousEntries)..where((t) => t.clientId.equals(clientId))).get();
+      for (final rdv in rendezVous) {
+        await retirerTachesPourEnregistrement('rendez_vous', rdv.id);
+      }
+      await retirerTachesPourEnregistrement('clients', clientId);
+
       await (delete(commandeEntries)..where((t) => t.clientId.equals(clientId))).go();
       await (delete(mesureEntries)..where((t) => t.clientId.equals(clientId))).go();
       await (delete(photoEntries)..where((t) => t.clientId.equals(clientId))).go();
@@ -1026,6 +1053,21 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> retirerTacheSync(int id) {
     return (delete(syncQueueEntries)..where((t) => t.id.equals(id))).go();
+  }
+
+  /// Retire toute tâche en attente concernant un enregistrement précis.
+  ///
+  /// Indispensable avant de supprimer localement une ligne dont l'envoi au
+  /// serveur a pu échouer et être mis en file d'attente (hors-ligne,
+  /// coupure réseau) : sans ce nettoyage, la tâche en attente finirait par
+  /// être rejouée par `SyncEngine` et "ressusciterait" côté serveur une
+  /// ligne pourtant supprimée (et de nouveau dans le cache local via
+  /// `_appliquerLocalement`) — voir ClientsRepository.supprimerClient et
+  /// FinancesRepository.definirPaiementTotal.
+  Future<void> retirerTachesPourEnregistrement(String nomTable, String recordId) {
+    return (delete(syncQueueEntries)
+          ..where((t) => t.nomTable.equals(nomTable) & t.recordId.equals(recordId)))
+        .go();
   }
 
   Future<void> enregistrerEchecSync(int id, String erreur) async {

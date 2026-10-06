@@ -192,6 +192,17 @@ class FinancesRepository {
     required double nouveauTotal,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, atelierId);
+
+    // Retire d'abord toute tâche encore en file d'attente pour ces
+    // paiements (ajout fait hors-ligne, jamais encore envoyé au serveur) :
+    // sans ça, la suppression ci-dessous serait "ressuscitée" dès que la
+    // file d'attente serait rejouée, le paiement réapparaissant comme si
+    // de rien n'était.
+    final anciens = await observerPaiements(commande.id).first;
+    for (final ancien in anciens) {
+      await _baseLocale.retirerTachesPourEnregistrement('paiements', ancien.id);
+    }
+
     await _client.from('paiements').delete().eq('commande_id', commande.id);
     await _baseLocale.supprimerPaiementsDeLaCommande(commande.id);
 
