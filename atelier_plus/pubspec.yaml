@@ -36,6 +36,10 @@ dependencies:
   # --- Photos : capture caméra ET galerie obligatoires, avec compression ---
   image_picker: ^1.1.2
   flutter_image_compress: ^2.3.0
+  # Mise en cache disque des photos de tissu/modèle (Supabase Storage) :
+  # affichage instantané aux visites suivantes de la fiche client, au lieu
+  # de retélécharger l'image à chaque fois.
+  cached_network_image: ^3.4.1
 
   # --- Note vocale de description sous chaque photo (tissu/modèle) ---
   # Version 7.x requise : 5.2.x résout une combinaison record_linux/

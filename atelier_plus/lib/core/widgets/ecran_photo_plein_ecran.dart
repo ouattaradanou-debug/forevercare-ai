@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 /// Affichage plein écran d'une photo (ouverte en appuyant sur sa vignette),
@@ -18,7 +19,7 @@ class EcranPhotoPleinEcran extends StatelessWidget {
       ),
       body: Center(
         child: InteractiveViewer(
-          child: Image.network(url),
+          child: CachedNetworkImage(imageUrl: url),
         ),
       ),
     );

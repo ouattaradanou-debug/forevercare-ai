@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -419,7 +420,16 @@ class _VignettePhoto extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             child: AspectRatio(
               aspectRatio: 1,
-              child: Image.network(photo.url, fit: BoxFit.cover),
+              child: CachedNetworkImage(
+                imageUrl: photo.url,
+                fit: BoxFit.cover,
+                fadeInDuration: Duration.zero,
+                placeholder: (context, url) => Container(color: const Color(0xFFEDEAE4)),
+                errorWidget: (context, url, error) => Container(
+                  color: const Color(0xFFEDEAE4),
+                  child: const Icon(Icons.broken_image_outlined, color: Color(0xFF6F6259)),
+                ),
+              ),
             ),
           ),
         ),
