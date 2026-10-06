@@ -209,6 +209,8 @@ class _LigneInfo extends StatelessWidget {
             child: Text(
               valeur,
               textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
@@ -274,8 +276,7 @@ class _CarteInfos extends StatelessWidget {
     return _Carte(
       child: Column(
         children: [
-          _LigneInfo('Nom', client.nom),
-          _LigneInfo('Prénom', client.prenom),
+          _LigneInfo('Nom', client.nomComplet),
           _LigneTelephone(client.telephone),
           _LigneInfo('Sexe', client.sexe),
           _LigneInfo('Date de prise des mesures', Formatters.dateLongue(client.datePriseMesures)),
