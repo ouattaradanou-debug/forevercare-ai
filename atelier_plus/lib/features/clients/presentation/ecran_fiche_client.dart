@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,12 +12,14 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../core/widgets/ecran_photo_plein_ecran.dart';
 import '../../../core/widgets/en_tete_section.dart';
+import '../../../data/models/champ_mesure.dart';
 import '../../../data/models/client.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../data/models/rendez_vous.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../branding/providers/branding_providers.dart';
 import '../../finances/presentation/section_finances_client.dart';
+import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
 import '../../mesures/providers/mesures_providers.dart';
 import '../../mesures/utils/choix_gabarit.dart';
@@ -25,6 +29,25 @@ import '../providers/clients_providers.dart';
 import '../providers/photos_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
+
+/// Toutes les données de la fiche, rassemblées en un seul chargement pour
+/// que la page s'affiche d'un bloc — plutôt que chaque section n'apparaisse
+/// l'une après l'autre avec sa propre roue de chargement.
+class _DonneesFiche {
+  const _DonneesFiche({
+    required this.client,
+    required this.mesures,
+    required this.tissu,
+    required this.modele,
+    required this.prochainRdv,
+  });
+
+  final Client client;
+  final List<MapEntry<String, String>> mesures;
+  final PhotoClient? tissu;
+  final PhotoClient? modele;
+  final RendezVous? prochainRdv;
+}
 
 /// Fiche client fidèle à l'ancienne application : une seule page qui
 /// affiche directement les informations, les mesures, les photos, le
@@ -44,36 +67,87 @@ class EcranFicheClient extends ConsumerStatefulWidget {
 }
 
 class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
+  late Future<_DonneesFiche?> _chargement;
+
   @override
   void initState() {
     super.initState();
-    // Rapatriement best-effort (silencieux hors-ligne) de tout ce que cette
-    // page affiche désormais directement : la fiche reste utilisable
-    // immédiatement via le cache local pendant ce chargement.
-    Future.microtask(() async {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
-      if (utilisateur == null) return;
-      await ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
-      await ref.read(rendezVousRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
-      await ref.read(photosRepositoryProvider).chargerDepuisServeur(widget.clientId);
-    });
+    _chargement = _charger();
+  }
+
+  /// Rassemble en un seul chargement tout ce qu'affiche la fiche (infos,
+  /// mesures, photos, rendez-vous), lu depuis le cache local (rapide, pas
+  /// de réseau) : la page s'affiche donc d'un coup, une fois prête, plutôt
+  /// que section par section. Le rapatriement serveur reste en arrière-plan
+  /// (jamais attendu ici) pour ne jamais ralentir cet affichage.
+  Future<_DonneesFiche?> _charger() async {
+    final utilisateur = await ref.read(utilisateurCourantProvider.future);
+    if (utilisateur == null) return null;
+
+    unawaited(ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId));
+    unawaited(ref.read(rendezVousRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId));
+    unawaited(ref.read(photosRepositoryProvider).chargerDepuisServeur(widget.clientId));
+
+    final client = await ref.read(clientParIdProvider(widget.clientId).future);
+    if (client == null) return null;
+
+    if (ref.read(estProprietaireProvider)) {
+      unawaited(ref.read(commandeDuClientProvider(widget.clientId).future));
+    }
+
+    final types = await ref.read(typesTenueVisiblesProvider.future);
+    final gabarit = choisirGabaritPourSexe(types, utilisateur.atelierId, client.sexe);
+
+    final champsFuture = gabarit == null
+        ? Future.value(<ChampMesure>[])
+        : ref.read(champsActifsProvider(gabarit.id).future);
+    final valeursFuture = gabarit == null
+        ? Future<Map<String, String>?>.value(null)
+        : ref.read(mesuresRepositoryProvider).dernieresValeurs(widget.clientId, gabarit.id);
+    final photosFuture = ref.read(photosDuClientProvider(widget.clientId).future);
+    final rdvFuture = ref.read(rendezVousTriesProvider.future);
+
+    final champsListe = await champsFuture;
+    final valeurs = await valeursFuture;
+    final photos = await photosFuture;
+    final rdvTous = await rdvFuture;
+
+    final mesures = <MapEntry<String, String>>[
+      for (final champ in champsListe)
+        if (valeurs?[champ.id] != null) MapEntry(champ.nom, valeurs![champ.id]!),
+    ];
+
+    return _DonneesFiche(
+      client: client,
+      mesures: mesures,
+      tissu: _premierDuType(photos, TypePhoto.tissu),
+      modele: _premierDuType(photos, TypePhoto.modele),
+      prochainRdv: _prochainRendezVous(rdvTous, widget.clientId),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final client = ref.watch(clientParIdProvider(widget.clientId));
     final permissions = ref.watch(mesPermissionsProvider);
     final estProprietaire = ref.watch(estProprietaireProvider);
     final peutModifier = estProprietaire || (permissions.valueOrNull?.modifierClient ?? false);
     final peutPrendreMesure = estProprietaire || (permissions.valueOrNull?.prendreMesures ?? false);
 
-    return client.when(
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (erreur, _) => Scaffold(body: Center(child: Text('Erreur : $erreur'))),
-      data: (client) {
-        if (client == null) {
+    return FutureBuilder<_DonneesFiche?>(
+      future: _chargement,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snapshot.hasError) {
+          return Scaffold(body: Center(child: Text('Erreur : ${snapshot.error}')));
+        }
+        final donnees = snapshot.data;
+        if (donnees == null) {
           return const Scaffold(body: Center(child: Text('Client introuvable.')));
         }
+        final client = donnees.client;
+
         return Scaffold(
           appBar: AppBar(
             title: Text(client.nomComplet, overflow: TextOverflow.ellipsis),
@@ -108,7 +182,7 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                     : null,
               ),
               const SizedBox(height: 12),
-              _SectionMesures(clientId: client.id, sexe: client.sexe),
+              _carteMesures(donnees.mesures),
               const SizedBox(height: 28),
               EnTeteSection(
                 icone: Icons.photo_library_outlined,
@@ -118,7 +192,7 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                 onTap: () => context.push(AppRoutes.photosClient(client.id)),
               ),
               const SizedBox(height: 12),
-              _SectionPhotos(clientId: client.id),
+              _cartePhotos(donnees.tissu, donnees.modele),
               const SizedBox(height: 28),
               EnTeteSection(
                 icone: Icons.event_available_outlined,
@@ -128,7 +202,7 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                 onTap: () => context.push(AppRoutes.creationRendezVous, extra: client),
               ),
               const SizedBox(height: 12),
-              _SectionRendezVous(clientId: client.id),
+              _carteRendezVous(donnees.prochainRdv),
               if (estProprietaire) ...[
                 const SizedBox(height: 28),
                 const EnTeteSection(
@@ -290,62 +364,15 @@ class _CarteInfos extends StatelessWidget {
 /// liste que celle pré-remplie en prise de mesure, affichée ici en lecture
 /// seule (nom du champ à gauche, valeur à droite), comme dans l'ancienne
 /// application.
-class _SectionMesures extends ConsumerWidget {
-  const _SectionMesures({required this.clientId, required this.sexe});
-
-  final String clientId;
-  final String sexe;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final utilisateur = ref.watch(utilisateurCourantProvider).valueOrNull;
-    final types = ref.watch(typesTenueVisiblesProvider);
-
-    return types.when(
-      loading: () => const _Carte(child: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const _Carte(child: Text('Impossible de charger les mesures.')),
-      data: (liste) {
-        if (utilisateur == null) {
-          return const _Carte(child: Center(child: CircularProgressIndicator()));
-        }
-        final gabarit = choisirGabaritPourSexe(liste, utilisateur.atelierId, sexe);
-        if (gabarit == null) {
-          return const _Carte(
-            child: Text(
-              'Connectez-vous à internet une première fois pour récupérer les champs de mesure.',
-            ),
-          );
-        }
-
-        final champs = ref.watch(champsActifsProvider(gabarit.id));
-        return champs.when(
-          loading: () => const _Carte(child: Center(child: CircularProgressIndicator())),
-          error: (_, __) => const _Carte(child: Text('Impossible de charger les mesures.')),
-          data: (champsListe) => FutureBuilder<Map<String, String>?>(
-            future: ref.read(mesuresRepositoryProvider).dernieresValeurs(clientId, gabarit.id),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const _Carte(child: Center(child: CircularProgressIndicator()));
-              }
-              final valeurs = snapshot.data;
-              final lignes = <MapEntry<String, String>>[
-                for (final champ in champsListe)
-                  if (valeurs?[champ.id] != null) MapEntry(champ.nom, valeurs![champ.id]!),
-              ];
-              if (lignes.isEmpty) {
-                return const _Carte(child: Text('Aucune mesure enregistrée pour ce client.'));
-              }
-              return _Carte(
-                child: Column(
-                  children: [for (final ligne in lignes) _LigneInfo(ligne.key, ligne.value)],
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
+Widget _carteMesures(List<MapEntry<String, String>> mesures) {
+  if (mesures.isEmpty) {
+    return const _Carte(child: Text('Aucune mesure enregistrée pour ce client.'));
   }
+  return _Carte(
+    child: Column(
+      children: [for (final ligne in mesures) _LigneInfo(ligne.key, ligne.value)],
+    ),
+  );
 }
 
 PhotoClient? _premierDuType(List<PhotoClient> liste, TypePhoto type) {
@@ -356,36 +383,17 @@ PhotoClient? _premierDuType(List<PhotoClient> liste, TypePhoto type) {
 }
 
 /// Dernières photos (tissu et modèle) du client, affichées directement.
-class _SectionPhotos extends ConsumerWidget {
-  const _SectionPhotos({required this.clientId});
-
-  final String clientId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final photos = ref.watch(photosDuClientProvider(clientId));
-
-    return photos.when(
-      loading: () => const _Carte(child: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const _Carte(child: Text('Impossible de charger les photos.')),
-      data: (liste) {
-        final tissu = _premierDuType(liste, TypePhoto.tissu);
-        final modele = _premierDuType(liste, TypePhoto.modele);
-        if (tissu == null && modele == null) {
-          return const _Carte(child: Text('Aucune photo pour ce client.'));
-        }
-        return Row(
-          children: [
-            if (tissu != null)
-              Expanded(child: _VignettePhoto(titre: 'Tissu', url: tissu.url)),
-            if (tissu != null && modele != null) const SizedBox(width: 16),
-            if (modele != null)
-              Expanded(child: _VignettePhoto(titre: 'Modèle', url: modele.url)),
-          ],
-        );
-      },
-    );
+Widget _cartePhotos(PhotoClient? tissu, PhotoClient? modele) {
+  if (tissu == null && modele == null) {
+    return const _Carte(child: Text('Aucune photo pour ce client.'));
   }
+  return Row(
+    children: [
+      if (tissu != null) Expanded(child: _VignettePhoto(titre: 'Tissu', url: tissu.url)),
+      if (tissu != null && modele != null) const SizedBox(width: 16),
+      if (modele != null) Expanded(child: _VignettePhoto(titre: 'Modèle', url: modele.url)),
+    ],
+  );
 }
 
 class _VignettePhoto extends StatelessWidget {
@@ -430,38 +438,22 @@ RendezVous? _prochainRendezVous(List<RendezVous> tous, String clientId) {
 
 /// Prochain rendez-vous à venir du client (la liste est déjà triée par
 /// date croissante — le premier qui correspond est donc le plus proche).
-class _SectionRendezVous extends ConsumerWidget {
-  const _SectionRendezVous({required this.clientId});
-
-  final String clientId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tous = ref.watch(rendezVousTriesProvider);
-
-    return tous.when(
-      loading: () => const _Carte(child: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const _Carte(child: Text('Impossible de charger les rendez-vous.')),
-      data: (liste) {
-        final prochain = _prochainRendezVous(liste, clientId);
-        if (prochain == null) {
-          return const _Carte(child: Text('Aucun rendez-vous programmé.'));
-        }
-        return _Carte(
-          child: Row(
-            children: [
-              const Icon(Icons.event_available_outlined, color: Color(0xFFA47B1B)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  Formatters.rendezVousComplet(prochain.dateHeure),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+Widget _carteRendezVous(RendezVous? prochain) {
+  if (prochain == null) {
+    return const _Carte(child: Text('Aucun rendez-vous programmé.'));
   }
+  return _Carte(
+    child: Row(
+      children: [
+        const Icon(Icons.event_available_outlined, color: Color(0xFFA47B1B)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            Formatters.rendezVousComplet(prochain.dateHeure),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    ),
+  );
 }
