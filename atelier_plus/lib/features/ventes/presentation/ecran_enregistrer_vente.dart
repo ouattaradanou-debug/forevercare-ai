@@ -54,7 +54,7 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
   double get _prixUnitaire => double.tryParse(_prixUnitaireCtrl.text.replaceAll(',', '.')) ?? 0;
   double get _montantTotal => _quantite * _prixUnitaire;
 
-  void _choisirArticle(Article? article) {
+  void _appliquerChoixArticle(Article? article) {
     setState(() {
       _articleChoisi = article;
       if (article != null) {
@@ -62,6 +62,15 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
         _prixUnitaireCtrl.text = article.prixUnitaireDefaut.toStringAsFixed(0);
       }
     });
+  }
+
+  Future<void> _ouvrirChoixArticle(List<Article> articles) async {
+    final resultat = await showDialog<_ChoixArticle>(
+      context: context,
+      builder: (context) =>
+          _DialogueChoixArticle(articles: articles, articleActuel: _articleChoisi),
+    );
+    if (resultat != null) _appliquerChoixArticle(resultat.article);
   }
 
   Future<void> _choisirDate() async {
@@ -167,28 +176,23 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (articlesCategorie.isNotEmpty) ...[
-                DropdownButtonFormField<Article?>(
-                  value: _articleChoisi,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Article du catalogue'),
-                  items: [
-                    const DropdownMenuItem<Article?>(
-                      value: null,
-                      child: Text(
-                        'Vente libre (non suivie en stock)',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    for (final a in articlesCategorie)
-                      DropdownMenuItem<Article?>(
-                        value: a,
-                        child: Text(
-                          '${a.nom} — ${Formatters.nombre(a.quantiteStock)} ${a.uniteAffichee} en stock',
-                          overflow: TextOverflow.ellipsis,
+                InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _ouvrirChoixArticle(articlesCategorie),
+                  child: InputDecorator(
+                    decoration: const InputDecoration(labelText: 'Article du catalogue'),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _articleChoisi?.nom ?? 'Vente libre (non suivie en stock)',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                  ],
-                  onChanged: _choisirArticle,
+                        const Icon(Icons.arrow_drop_down, color: _bleuSeda),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -266,6 +270,139 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Résultat du choix dans [_DialogueChoixArticle] : `article` null signifie
+/// explicitement "Vente libre" — à distinguer d'une fermeture du dialogue
+/// sans choix (qui renvoie `null` tout court via showDialog).
+class _ChoixArticle {
+  const _ChoixArticle(this.article);
+  final Article? article;
+}
+
+/// Liste des articles de la catégorie sous forme de petit tableau (nom à
+/// gauche, quantité en stock à l'extrême droite), plus lisible que le menu
+/// déroulant standard pour un tailleur peu à l'aise à l'écrit.
+class _DialogueChoixArticle extends StatelessWidget {
+  const _DialogueChoixArticle({required this.articles, required this.articleActuel});
+
+  final List<Article> articles;
+  final Article? articleActuel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Choisir un article',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: _bleuSeda),
+            ),
+            const SizedBox(height: 14),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 360),
+              child: SingleChildScrollView(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: _bleuSeda, width: 2),
+                    ),
+                    child: Table(
+                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                      columnWidths: const {1: FixedColumnWidth(92)},
+                      children: [
+                        const TableRow(
+                          decoration: BoxDecoration(color: _bleuSeda),
+                          children: [
+                            _CelluleChoix('Article', entete: true),
+                            _CelluleChoix('Stock', entete: true),
+                          ],
+                        ),
+                        _ligneChoix(
+                          context,
+                          article: null,
+                          nom: 'Vente libre (non suivie en stock)',
+                          stock: null,
+                          selectionne: articleActuel == null,
+                        ),
+                        for (final a in articles)
+                          _ligneChoix(
+                            context,
+                            article: a,
+                            nom: a.nom,
+                            stock: '${Formatters.nombre(a.quantiteStock)} ${a.uniteAffichee}',
+                            selectionne: articleActuel?.id == a.id,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              child: const Text('Annuler'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  TableRow _ligneChoix(
+    BuildContext context, {
+    required Article? article,
+    required String nom,
+    required String? stock,
+    required bool selectionne,
+  }) {
+    final fond = selectionne ? const Color(0xFFE3EAF7) : Colors.white;
+    void choisir() => Navigator.pop(context, _ChoixArticle(article));
+    return TableRow(
+      decoration: BoxDecoration(color: fond),
+      children: [
+        GestureDetector(onTap: choisir, child: _CelluleChoix(nom)),
+        GestureDetector(onTap: choisir, child: _CelluleChoix(stock ?? '—', alignDroite: true)),
+      ],
+    );
+  }
+}
+
+class _CelluleChoix extends StatelessWidget {
+  const _CelluleChoix(this.texte, {this.entete = false, this.alignDroite = false});
+
+  final String texte;
+  final bool entete;
+  final bool alignDroite;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      child: Text(
+        texte,
+        textAlign: alignDroite ? TextAlign.right : TextAlign.left,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontWeight: entete ? FontWeight.bold : FontWeight.w600,
+          color: entete ? Colors.white : const Color(0xFF231A14),
+          fontSize: entete ? 13 : 14,
         ),
       ),
     );
