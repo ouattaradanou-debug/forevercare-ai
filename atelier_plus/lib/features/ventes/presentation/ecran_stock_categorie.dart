@@ -46,53 +46,59 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
     final nomCtrl = TextEditingController();
     final prixCtrl = TextEditingController();
     final quantiteCtrl = TextEditingController();
+    var uniteChoisie = widget.categorie.uniteLabel;
 
     final confirme = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Nouvel article', style: TextStyle(color: _bleuSeda)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nomCtrl,
-              autofocus: true,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                labelText: 'Nom de l\'article',
-                hintText: widget.categorie.exempleDesignation,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: const Text('Nouvel article', style: TextStyle(color: _bleuSeda)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nomCtrl,
+                autofocus: true,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  labelText: 'Nom de l\'article',
+                  hintText: widget.categorie.exempleDesignation,
+                ),
               ),
+              if (widget.categorie.uniteModifiable) ...[
+                const SizedBox(height: 12),
+                _SelecteurUnite(
+                  uniteChoisie: uniteChoisie,
+                  onChange: (u) => setStateDialog(() => uniteChoisie = u),
+                ),
+              ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: prixCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(labelText: 'Prix par $uniteChoisie (FCFA)'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: quantiteCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(labelText: 'Quantité en stock ($uniteChoisie)'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              child: const Text('Annuler'),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: prixCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Prix par ${widget.categorie.uniteLabel} (FCFA)',
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: quantiteCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Quantité en stock (${widget.categorie.uniteLabel})',
-              ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+              child: const Text('Ajouter'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
-            child: const Text('Ajouter'),
-          ),
-        ],
       ),
     );
     if (confirme != true) return;
@@ -112,6 +118,7 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
             prixUnitaireDefaut: prix,
             quantiteInitiale: quantite,
             seuilAlerte: _seuilAlerteParDefaut,
+            unite: widget.categorie.uniteModifiable ? uniteChoisie : null,
           );
     } catch (e) {
       if (mounted) {
@@ -131,7 +138,7 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
-            labelText: 'Quantité reçue (${article.categorie.uniteLabel})',
+            labelText: 'Quantité reçue (${article.uniteAffichee})',
           ),
         ),
         actions: [
@@ -170,51 +177,59 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
     final quantiteCtrl = TextEditingController(
       text: Formatters.nombre(article.quantiteStock),
     );
+    var uniteChoisie = article.uniteAffichee;
 
     final confirme = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Modifier l\'article', style: TextStyle(color: _bleuSeda)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nomCtrl,
-              autofocus: true,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(labelText: 'Nom de l\'article'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: prixCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Prix par ${article.categorie.uniteLabel} (FCFA)',
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: const Text('Modifier l\'article', style: TextStyle(color: _bleuSeda)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nomCtrl,
+                autofocus: true,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(labelText: 'Nom de l\'article'),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: quantiteCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Quantité en stock (${article.categorie.uniteLabel})',
-                helperText: 'À corriger seulement en cas d\'erreur de saisie',
+              if (article.categorie.uniteModifiable) ...[
+                const SizedBox(height: 12),
+                _SelecteurUnite(
+                  uniteChoisie: uniteChoisie,
+                  onChange: (u) => setStateDialog(() => uniteChoisie = u),
+                ),
+              ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: prixCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(labelText: 'Prix par $uniteChoisie (FCFA)'),
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: quantiteCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Quantité en stock ($uniteChoisie)',
+                  helperText: 'À corriger seulement en cas d\'erreur de saisie',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+              child: const Text('Enregistrer'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
-            child: const Text('Enregistrer'),
-          ),
-        ],
       ),
     );
     if (confirme != true) return;
@@ -236,6 +251,7 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
         nom: nom,
         prixUnitaireDefaut: prix,
         seuilAlerte: article.seuilAlerte,
+        unite: article.categorie.uniteModifiable ? uniteChoisie : null,
       );
       if (quantite != article.quantiteStock) {
         await repo.corrigerStock(article: miseAJour, nouvelleQuantite: quantite);
@@ -398,12 +414,41 @@ class _PastilleStock extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        '${Formatters.nombre(article.quantiteStock)} ${article.categorie.uniteLabel}',
+        '${Formatters.nombre(article.quantiteStock)} ${article.uniteAffichee}',
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 12,
           color: bas ? _rougeAlerte : const Color(0xFF2E7D32),
         ),
+      ),
+    );
+  }
+}
+
+/// Choix de l'unité d'un tissu (mètre ou pagne), affiché uniquement pour
+/// les catégories où ce choix a du sens (voir CategorieVente.uniteModifiable).
+class _SelecteurUnite extends StatelessWidget {
+  const _SelecteurUnite({required this.uniteChoisie, required this.onChange});
+
+  final String uniteChoisie;
+  final ValueChanged<String> onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: SegmentedButton<String>(
+        style: SegmentedButton.styleFrom(
+          selectedBackgroundColor: _bleuSeda,
+          selectedForegroundColor: Colors.white,
+          foregroundColor: _bleuSeda,
+        ),
+        segments: [
+          for (final u in unitesTissuDisponibles)
+            ButtonSegment(value: u, label: Text(u[0].toUpperCase() + u.substring(1))),
+        ],
+        selected: {uniteChoisie},
+        onSelectionChanged: (selection) => onChange(selection.first),
       ),
     );
   }

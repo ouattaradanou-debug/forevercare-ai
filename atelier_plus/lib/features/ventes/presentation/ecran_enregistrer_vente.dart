@@ -97,7 +97,7 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
           title: const Text('Stock insuffisant'),
           content: Text(
             'Il ne reste que ${Formatters.nombre(article.quantiteStock)} '
-            '${article.categorie.uniteLabel} en stock pour « ${article.nom} ». '
+            '${article.uniteAffichee} en stock pour « ${article.nom} ». '
             'Enregistrer cette vente quand même ?',
           ),
           actions: [
@@ -179,7 +179,7 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
                       DropdownMenuItem<Article?>(
                         value: a,
                         child: Text(
-                          '${a.nom} — ${Formatters.nombre(a.quantiteStock)} ${a.categorie.uniteLabel} en stock',
+                          '${a.nom} — ${Formatters.nombre(a.quantiteStock)} ${a.uniteAffichee} en stock',
                         ),
                       ),
                   ],
@@ -202,7 +202,7 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
                 controller: _quantiteCtrl,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Quantité (${categorie.uniteLabel})',
+                  labelText: 'Quantité (${_articleChoisi?.uniteAffichee ?? categorie.uniteLabel})',
                 ),
               ),
               const SizedBox(height: 16),
@@ -210,7 +210,8 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
                 controller: _prixUnitaireCtrl,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Prix par ${categorie.uniteLabel} (FCFA)',
+                  labelText:
+                      'Prix par ${_articleChoisi?.uniteAffichee ?? categorie.uniteLabel} (FCFA)',
                 ),
               ),
               const SizedBox(height: 16),

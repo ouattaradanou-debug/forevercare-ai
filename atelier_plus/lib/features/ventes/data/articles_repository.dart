@@ -32,6 +32,7 @@ class ArticlesRepository {
         seuilAlerte: ligne.seuilAlerte,
         createdAt: ligne.createdAt,
         updatedAt: ligne.updatedAt,
+        unite: ligne.unite,
       );
 
   Future<Article> ajouterArticle({
@@ -41,6 +42,7 @@ class ArticlesRepository {
     required double prixUnitaireDefaut,
     required double quantiteInitiale,
     required double seuilAlerte,
+    String? unite,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, atelierId);
     final maintenant = DateTime.now().toUtc();
@@ -54,6 +56,7 @@ class ArticlesRepository {
       seuilAlerte: seuilAlerte,
       createdAt: maintenant,
       updatedAt: maintenant,
+      unite: unite,
     );
 
     await _mettreEnCache(article);
@@ -68,13 +71,15 @@ class ArticlesRepository {
     return article;
   }
 
-  /// Corrige nom/prix par défaut/seuil d'alerte, sans toucher au stock
-  /// (voir [reapprovisionner] et la décrémentation automatique à la vente).
+  /// Corrige nom/prix par défaut/seuil d'alerte/unité, sans toucher au
+  /// stock (voir [reapprovisionner] et la décrémentation automatique à la
+  /// vente).
   Future<Article> modifierArticle({
     required Article article,
     required String nom,
     required double prixUnitaireDefaut,
     required double seuilAlerte,
+    String? unite,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, article.atelierId);
     final miseAJour = Article(
@@ -87,6 +92,7 @@ class ArticlesRepository {
       seuilAlerte: seuilAlerte,
       createdAt: article.createdAt,
       updatedAt: DateTime.now().toUtc(),
+      unite: unite ?? article.unite,
     );
 
     await _mettreEnCache(miseAJour);
@@ -144,6 +150,7 @@ class ArticlesRepository {
       seuilAlerte: article.seuilAlerte,
       createdAt: article.createdAt,
       updatedAt: DateTime.now().toUtc(),
+      unite: article.unite,
     );
 
     await _mettreEnCache(miseAJour);
@@ -198,6 +205,7 @@ class ArticlesRepository {
       seuilAlerte: article.seuilAlerte,
       createdAt: article.createdAt,
       updatedAt: article.updatedAt,
+      unite: article.unite,
     );
   }
 }

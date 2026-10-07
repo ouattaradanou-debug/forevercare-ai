@@ -268,6 +268,10 @@ class ArticleEntries extends Table {
   RealColumn get seuilAlerte => real()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  // Unité choisie pour cet article (ex. "mètre" ou "pagne" pour un tissu) :
+  // nullable, un article créé avant ce choix retombe sur l'unité par
+  // défaut de sa catégorie (voir Article.uniteAffichee).
+  TextColumn get unite => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -374,7 +378,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -474,6 +478,14 @@ class AppDatabase extends _$AppDatabase {
             // précaution pour éviter un "duplicate column".
             if (from >= 13) {
               await m.addColumn(venteEntries, venteEntries.articleId);
+            }
+          }
+          if (from < 15) {
+            // articleEntries créée dans le bloc `from < 14` ci-dessus
+            // inclut déjà `unite` dans la définition Dart actuelle : même
+            // précaution que ci-dessus pour un appareil déjà en version >= 14.
+            if (from >= 14) {
+              await m.addColumn(articleEntries, articleEntries.unite);
             }
           }
         },
@@ -1073,6 +1085,7 @@ class AppDatabase extends _$AppDatabase {
     required double seuilAlerte,
     required DateTime createdAt,
     required DateTime updatedAt,
+    String? unite,
   }) async {
     await into(articleEntries).insertOnConflictUpdate(
       ArticleEntriesCompanion.insert(
@@ -1085,6 +1098,7 @@ class AppDatabase extends _$AppDatabase {
         seuilAlerte: seuilAlerte,
         createdAt: createdAt,
         updatedAt: updatedAt,
+        unite: Value(unite),
       ),
     );
   }

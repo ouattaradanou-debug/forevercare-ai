@@ -301,8 +301,15 @@ create table if not exists public.articles (
   quantite_stock        numeric(12, 2) not null default 0 check (quantite_stock >= 0),
   seuil_alerte          numeric(12, 2) not null default 3 check (seuil_alerte >= 0),
   created_at            timestamptz not null default now(),
-  updated_at            timestamptz not null default now()
+  updated_at            timestamptz not null default now(),
+  -- Unité choisie pour cet article (ex. "mètre" ou "pagne" pour un tissu) ;
+  -- null = unité par défaut de la catégorie (voir Article.uniteAffichee).
+  unite                 text
 );
+
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante).
+alter table public.articles add column if not exists unite text;
 
 create index if not exists idx_articles_atelier on public.articles (atelier_id, categorie);
 

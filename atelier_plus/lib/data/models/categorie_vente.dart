@@ -39,4 +39,13 @@ enum CategorieVente {
         CategorieVente.tissu => 'Ex : Wax bleu motif fleurs',
         CategorieVente.articleCouture => 'Ex : Fermeture éclair 20 cm',
       };
+
+  /// Vrai pour les catégories où l'unité se choisit article par article
+  /// (voir `Article.unite`) plutôt que d'être fixe pour toute la catégorie.
+  bool get uniteModifiable => this == CategorieVente.tissu;
 }
+
+/// Unités proposées au choix pour un article de la catégorie "Tissu" — un
+/// tailleur peut suivre son stock au mètre ou en nombre de pagnes, selon
+/// la façon dont il achète et revend son tissu.
+const List<String> unitesTissuDisponibles = ['mètre', 'pagne'];

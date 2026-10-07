@@ -15,6 +15,7 @@ class Article {
     required this.seuilAlerte,
     required this.createdAt,
     required this.updatedAt,
+    this.unite,
   });
 
   final String id;
@@ -26,10 +27,19 @@ class Article {
   final double seuilAlerte;
   final DateTime createdAt;
   final DateTime updatedAt;
+  /// Unité choisie pour cet article (ex. "mètre" ou "pagne" pour un tissu) —
+  /// nullable : un article créé avant ce choix, ou d'une catégorie qui ne
+  /// le propose pas, retombe sur l'unité par défaut de sa catégorie (voir
+  /// [uniteAffichee]).
+  final String? unite;
 
   /// Vrai quand il est temps de réapprovisionner — affiché en alerte sur
   /// l'écran "Gestion du stock".
   bool get stockBas => quantiteStock <= seuilAlerte;
+
+  /// Unité à afficher pour cet article : celle choisie à la création,
+  /// sinon celle par défaut de sa catégorie.
+  String get uniteAffichee => unite ?? categorie.uniteLabel;
 
   factory Article.depuisJson(Map<String, dynamic> json) {
     return Article(
@@ -44,6 +54,7 @@ class Article {
       seuilAlerte: double.parse(json['seuil_alerte'].toString()),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      unite: json['unite'] as String?,
     );
   }
 
@@ -58,6 +69,7 @@ class Article {
       'seuil_alerte': seuilAlerte,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'unite': unite,
     };
   }
 }

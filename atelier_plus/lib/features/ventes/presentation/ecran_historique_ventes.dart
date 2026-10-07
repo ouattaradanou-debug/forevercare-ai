@@ -45,6 +45,14 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
   /// Corrige une vente déjà enregistrée (erreur de saisie : désignation,
   /// quantité, prix ou date).
   Future<void> _modifier(Vente vente) async {
+    // Reprend l'unité choisie pour l'article vendu (ex. "pagne"), si la
+    // vente en référence un, plutôt que l'unité par défaut de la
+    // catégorie — pour que les champs affichent la bonne unité.
+    final articleId = vente.articleId;
+    final article =
+        articleId == null ? null : await ref.read(articlesRepositoryProvider).articleParId(articleId);
+    final unite = article?.uniteAffichee ?? vente.categorie.uniteLabel;
+
     final designationCtrl = TextEditingController(text: vente.designation);
     final quantiteCtrl = TextEditingController(text: Formatters.nombre(vente.quantite));
     final prixCtrl = TextEditingController(text: vente.prixUnitaire.toStringAsFixed(0));
@@ -69,7 +77,7 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
                 controller: quantiteCtrl,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Quantité (${vente.categorie.uniteLabel})',
+                  labelText: 'Quantité ($unite)',
                 ),
               ),
               const SizedBox(height: 12),
@@ -77,7 +85,7 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
                 controller: prixCtrl,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Prix par ${vente.categorie.uniteLabel} (FCFA)',
+                  labelText: 'Prix par $unite (FCFA)',
                 ),
               ),
               const SizedBox(height: 12),
