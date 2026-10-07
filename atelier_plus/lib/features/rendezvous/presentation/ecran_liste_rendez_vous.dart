@@ -46,7 +46,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     var type = rdv.type;
     var urgent = rdv.urgent;
 
-    final confirme = await showDialog<bool>(
+    final resultat = await showDialog<String>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
@@ -108,12 +108,17 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.pop(context, 'annuler_rdv'),
+              style: TextButton.styleFrom(foregroundColor: _rougeAlerte),
+              child: const Text('Annuler le rendez-vous'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
               style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-              child: const Text('Annuler'),
+              child: const Text('Fermer'),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(context, 'enregistrer'),
               style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
               child: const Text('Enregistrer'),
             ),
@@ -121,7 +126,18 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
         ),
       ),
     );
-    if (confirme != true) return;
+    if (resultat == null || !mounted) return;
+
+    if (resultat == 'annuler_rdv') {
+      await executerAvecErreurAffichee(
+        context,
+        () => ref.read(rendezVousRepositoryProvider).changerStatutParId(
+              rdv.id,
+              AppConstants.rdvAnnule,
+            ),
+      );
+      return;
+    }
 
     final dateHeure = DateTime(date.year, date.month, date.day, heure.hour, heure.minute);
     await executerAvecErreurAffichee(
