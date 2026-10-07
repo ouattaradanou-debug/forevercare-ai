@@ -136,6 +136,14 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                             couleurIcone: const Color(0xFF2E7D32),
                             onTap: () => context.push(AppRoutes.ventes),
                           ),
+                        if (estProprietaire)
+                          _CarteAction(
+                            icone: Icons.inventory_2_outlined,
+                            libelle: 'Stock',
+                            fondIcone: const Color(0xFFE3EAF7),
+                            couleurIcone: const Color(0xFF1B4FA0),
+                            onTap: () => context.push(AppRoutes.gestionStock),
+                          ),
                       ],
                     ),
                     if (estProprietaire) ...[

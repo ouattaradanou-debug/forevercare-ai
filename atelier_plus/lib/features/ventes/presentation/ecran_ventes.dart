@@ -80,18 +80,6 @@ class EcranVentes extends ConsumerWidget {
             ],
             const SizedBox(height: 8),
             OutlinedButton.icon(
-              onPressed: () => context.push(AppRoutes.gestionStock),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _bleuSeda,
-                side: const BorderSide(color: _bleuSeda),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-              icon: const Icon(Icons.inventory_2_outlined),
-              label: const Text('Gérer mon stock'),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
               onPressed: () => context.push(AppRoutes.historiqueVentes),
               style: OutlinedButton.styleFrom(
                 foregroundColor: _bleuSeda,
