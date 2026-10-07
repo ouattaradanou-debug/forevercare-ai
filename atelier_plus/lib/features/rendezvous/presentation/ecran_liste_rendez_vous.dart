@@ -95,6 +95,11 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
               child: const Text('Annuler le rendez-vous'),
             ),
             TextButton(
+              onPressed: () => Navigator.pop(context, 'terminer'),
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              child: const Text('Marquer comme terminé'),
+            ),
+            TextButton(
               onPressed: () => Navigator.pop(context),
               style: TextButton.styleFrom(foregroundColor: _bleuSeda),
               child: const Text('Fermer'),
@@ -110,12 +115,12 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     );
     if (resultat == null || !mounted) return;
 
-    if (resultat == 'annuler_rdv') {
+    if (resultat == 'annuler_rdv' || resultat == 'terminer') {
       await executerAvecErreurAffichee(
         context,
         () => ref.read(rendezVousRepositoryProvider).changerStatutParId(
               rdv.id,
-              AppConstants.rdvAnnule,
+              resultat == 'annuler_rdv' ? AppConstants.rdvAnnule : AppConstants.rdvTermine,
             ),
       );
       return;
@@ -218,7 +223,9 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     final fondLigne = rdv.urgent
         ? const Color(0xFFFBE4E1)
         : (index.isEven ? Colors.white : const Color(0xFFF6F3EE));
-    final afficherBadges = rdv.urgent || rdv.statut == AppConstants.rdvConfirme;
+    final afficherBadges = rdv.urgent ||
+        rdv.statut == AppConstants.rdvConfirme ||
+        rdv.statut == AppConstants.rdvTermine;
 
     return TableRow(
       decoration: BoxDecoration(color: fondLigne),
@@ -319,9 +326,9 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
   }
 }
 
-/// N'affiche une pastille que pour le statut "confirme" — "planifie" (le
-/// statut par défaut de la quasi-totalité des rendez-vous) et "terminé"
-/// n'apportent pas d'information utile au premier coup d'œil.
+/// N'affiche une pastille que pour les statuts "confirme" et "termine" —
+/// "planifie" (le statut par défaut de la quasi-totalité des rendez-vous)
+/// n'apporte pas d'information utile au premier coup d'œil.
 class _PuceStatut extends StatelessWidget {
   const _PuceStatut({required this.statut});
 
@@ -335,6 +342,10 @@ class _PuceStatut extends StatelessWidget {
       case AppConstants.rdvConfirme:
         couleur = const Color(0xFF2E7D32);
         libelle = 'Confirmé';
+        break;
+      case AppConstants.rdvTermine:
+        couleur = const Color(0xFF546E7A);
+        libelle = 'Terminé';
         break;
       default:
         return const SizedBox.shrink();
