@@ -313,7 +313,7 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: _orangeSeda, width: 2),
+                        border: Border.all(color: _bleuSeda, width: 2),
                         boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 10)],
                       ),
                       child: Table(
