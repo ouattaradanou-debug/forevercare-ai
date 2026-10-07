@@ -160,6 +160,14 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      'Touchez une ligne pour changer le statut. '
+                      'Touchez "+" pour corriger ou marquer urgent.',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
+                    ),
+                  ),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(18),
                     child: Container(
