@@ -306,7 +306,7 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
                     padding: EdgeInsets.only(bottom: 8),
                     child: Text(
                       'Touchez une ligne pour corriger le nom ou le prix. '
-                      'Touchez "+" pour un nouvel article.',
+                      'Touchez "+" pour un nouveau article.',
                       style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
                     ),
                   ),
