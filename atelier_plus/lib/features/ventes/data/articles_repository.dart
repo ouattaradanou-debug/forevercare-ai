@@ -192,11 +192,22 @@ class ArticlesRepository {
 
   /// Rapatriement initial best-effort depuis Supabase (autres appareils, ou
   /// articles ajoutés avant l'installation de cet appareil).
+  ///
+  /// "Dernière modification gagne" : si le cache local a déjà une version
+  /// plus récente de cet article (ex. une correction tout juste faite dont
+  /// l'envoi au serveur a échoué sans lever d'erreur visible), on ne la
+  /// laisse jamais régresser vers l'ancienne valeur renvoyée par le
+  /// serveur — une correction reste donc acquise tant qu'aucune nouvelle
+  /// modification n'est faite, même si la synchronisation est en retard.
   Future<void> chargerDepuisServeur(String atelierId) async {
     try {
       final lignes = await _client.from('articles').select().eq('atelier_id', atelierId);
       for (final ligne in lignes) {
-        await _mettreEnCache(Article.depuisJson(ligne));
+        final distant = Article.depuisJson(ligne);
+        final local = await _baseLocale.articleParId(distant.id);
+        if (local == null || !local.updatedAt.isAfter(distant.updatedAt)) {
+          await _mettreEnCache(distant);
+        }
       }
     } catch (_) {
       // Hors-ligne : le cache existant reste utilisable.

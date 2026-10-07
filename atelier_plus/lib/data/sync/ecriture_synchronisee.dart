@@ -26,7 +26,21 @@ Future<void> ecrireEtSynchroniser({
     if (operation == 'insert') {
       await client.from(table).insert(payload);
     } else {
-      await client.from(table).update(payload).eq('id', recordId);
+      // `.select()` force Supabase à renvoyer les lignes réellement
+      // modifiées : un update filtré par une politique RLS (aucune ligne
+      // ne correspond à la condition `using`) réussit normalement sans
+      // lever d'erreur et ne modifie rien — silencieusement. Sans cette
+      // vérification, une telle écriture semblait "réussie" alors que
+      // rien n'avait changé côté serveur, et la correction locale
+      // pourtant correcte finissait par être écrasée par l'ancienne
+      // valeur au prochain rechargement depuis le serveur.
+      final lignesModifiees =
+          await client.from(table).update(payload).eq('id', recordId).select();
+      if (lignesModifiees.isEmpty) {
+        throw StateError(
+          'update sur $table (id=$recordId) n\'a modifié aucune ligne côté serveur',
+        );
+      }
     }
   } catch (e) {
     // Diagnostic temporaire (voir le terminal `flutter run`) : la cause
