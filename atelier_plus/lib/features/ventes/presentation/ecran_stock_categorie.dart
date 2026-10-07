@@ -167,6 +167,9 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
   Future<void> _modifier(Article article) async {
     final nomCtrl = TextEditingController(text: article.nom);
     final prixCtrl = TextEditingController(text: article.prixUnitaireDefaut.toStringAsFixed(0));
+    final quantiteCtrl = TextEditingController(
+      text: Formatters.nombre(article.quantiteStock),
+    );
 
     final confirme = await showDialog<bool>(
       context: context,
@@ -187,6 +190,15 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: 'Prix par ${article.categorie.uniteLabel} (FCFA)',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: quantiteCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: 'Quantité en stock (${article.categorie.uniteLabel})',
+                helperText: 'À corriger seulement en cas d\'erreur de saisie',
               ),
             ),
           ],
@@ -210,14 +222,24 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
     final nom = nomCtrl.text.trim();
     if (nom.isEmpty) return;
     final prix = double.tryParse(prixCtrl.text.replaceAll(',', '.')) ?? 0;
+    final quantite = double.tryParse(quantiteCtrl.text.replaceAll(',', '.')) ?? 0;
 
     try {
-      await ref.read(articlesRepositoryProvider).modifierArticle(
-            article: article,
-            nom: nom,
-            prixUnitaireDefaut: prix,
-            seuilAlerte: article.seuilAlerte,
-          );
+      final repo = ref.read(articlesRepositoryProvider);
+      // corrigerStock s'appuie sur le résultat de modifierArticle (pas sur
+      // l'article d'origine) : sinon, si les deux ont changé à la fois,
+      // la correction de stock écraserait le nouveau nom/prix avec les
+      // anciennes valeurs (elle reconstruit l'article complet à partir de
+      // celui qu'on lui passe).
+      final miseAJour = await repo.modifierArticle(
+        article: article,
+        nom: nom,
+        prixUnitaireDefaut: prix,
+        seuilAlerte: article.seuilAlerte,
+      );
+      if (quantite != article.quantiteStock) {
+        await repo.corrigerStock(article: miseAJour, nouvelleQuantite: quantite);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));

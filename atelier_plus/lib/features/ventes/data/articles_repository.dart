@@ -101,6 +101,18 @@ class ArticlesRepository {
     return miseAJour;
   }
 
+  /// Remplace directement la quantité en stock par [nouvelleQuantite] —
+  /// contrairement à [reapprovisionner] (qui ajoute) ou [decrementerStock]
+  /// (qui retire), pour corriger une erreur de saisie (mauvaise quantité de
+  /// départ, mauvais nombre reçu lors d'une livraison, comptage physique
+  /// différent...). Jamais négatif.
+  Future<Article> corrigerStock({
+    required Article article,
+    required double nouvelleQuantite,
+  }) {
+    return _ajusterStock(article, nouvelleQuantite < 0 ? 0 : nouvelleQuantite);
+  }
+
   /// Ajoute [quantiteAjoutee] au stock (nouvelle livraison reçue).
   Future<Article> reapprovisionner({
     required Article article,
