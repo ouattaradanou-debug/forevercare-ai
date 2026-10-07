@@ -82,6 +82,12 @@ class ArticlesRepository {
     String? unite,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, article.atelierId);
+    // Purge toute tâche encore en file d'attente pour cet article (ex. un
+    // essai précédent resté bloqué hors-ligne, avec des valeurs erronées) :
+    // sans ça, SyncEngine la rejouerait plus tard et écraserait cette
+    // correction avec l'ancienne valeur — voir
+    // AppDatabase.retirerTachesPourEnregistrement.
+    await _baseLocale.retirerTachesPourEnregistrement('articles', article.id);
     final miseAJour = Article(
       id: article.id,
       atelierId: article.atelierId,
@@ -140,6 +146,9 @@ class ArticlesRepository {
 
   Future<Article> _ajusterStock(Article article, double nouvelleQuantite) async {
     await verifierEcritureAutorisee(_baseLocale, article.atelierId);
+    // Même précaution que dans modifierArticle : purge d'abord toute tâche
+    // de synchronisation périmée pour cet article.
+    await _baseLocale.retirerTachesPourEnregistrement('articles', article.id);
     final miseAJour = Article(
       id: article.id,
       atelierId: article.atelierId,

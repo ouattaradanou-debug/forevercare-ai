@@ -99,6 +99,11 @@ class VentesRepository {
     required DateTime date,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, vente.atelierId);
+    // Même précaution que ArticlesRepository.modifierArticle : purge
+    // d'abord toute tâche de synchronisation périmée pour cette vente,
+    // pour qu'un essai précédent resté bloqué hors-ligne ne vienne pas
+    // écraser cette correction plus tard.
+    await _baseLocale.retirerTachesPourEnregistrement('ventes', vente.id);
     final miseAJour = Vente(
       id: vente.id,
       atelierId: vente.atelierId,
