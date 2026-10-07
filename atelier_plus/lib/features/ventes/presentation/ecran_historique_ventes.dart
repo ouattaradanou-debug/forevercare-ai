@@ -62,6 +62,7 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
+          scrollable: true,
           title: const Text('Modifier la vente', style: TextStyle(color: _bleuSeda)),
           content: Column(
             mainAxisSize: MainAxisSize.min,

@@ -326,7 +326,10 @@ class _DialogueChoixArticleState extends State<_DialogueChoixArticle> {
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
+      // Le clavier (recherche) réduit l'espace disponible : sans ce
+      // SingleChildScrollView, le contenu du dialogue déborderait au lieu
+      // de simplement défiler.
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,

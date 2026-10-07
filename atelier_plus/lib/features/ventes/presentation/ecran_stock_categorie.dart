@@ -52,6 +52,7 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
+          scrollable: true,
           title: const Text('Nouvel article', style: TextStyle(color: _bleuSeda)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -132,6 +133,7 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
     final confirme = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: Text('Nouvelle livraison : ${article.nom}', style: const TextStyle(color: _bleuSeda)),
         content: TextField(
           controller: quantiteCtrl,
@@ -183,6 +185,7 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
+          scrollable: true,
           title: const Text('Modifier l\'article', style: TextStyle(color: _bleuSeda)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
