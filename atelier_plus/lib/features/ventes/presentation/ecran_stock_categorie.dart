@@ -302,12 +302,28 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      'Touchez une ligne pour corriger le nom ou le prix. '
-                      'Touchez "+" pour ajouter un nouveau article.',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 6),
+                          child: Text(
+                            'Touchez une ligne pour corriger le nom ou le prix.',
+                            style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
+                          ),
+                        ),
+                        _LegendeBouton(
+                          couleur: _orangeSeda,
+                          texte: 'pour ajouter une nouvelle livraison',
+                        ),
+                        SizedBox(height: 6),
+                        _LegendeBouton(
+                          couleur: _bleuSeda,
+                          texte: 'pour ajouter un nouveau article',
+                        ),
+                      ],
                     ),
                   ),
                   ClipRRect(
@@ -396,6 +412,35 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
               icon: const Icon(Icons.add, size: 20),
             ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Légende associant une icône "+" (de la même couleur que le vrai bouton
+/// qu'elle représente) à son rôle — pour que les deux boutons "+" de
+/// l'écran (livraison en orange, nouvel article en bleu) ne soient plus
+/// confondus l'un avec l'autre.
+class _LegendeBouton extends StatelessWidget {
+  const _LegendeBouton({required this.couleur, required this.texte});
+
+  final Color couleur;
+  final String texte;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          decoration: BoxDecoration(color: couleur, shape: BoxShape.circle),
+          child: const Icon(Icons.add, size: 14, color: Colors.white),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(texte, style: const TextStyle(fontSize: 13, color: Color(0xFF6F6259))),
         ),
       ],
     );
