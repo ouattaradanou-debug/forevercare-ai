@@ -220,8 +220,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     final fondLigne = rdv.urgent
         ? const Color(0xFFFBE4E1)
         : (index.isEven ? Colors.white : const Color(0xFFF6F3EE));
-    final afficherBadges =
-        rdv.urgent || rdv.statut == AppConstants.rdvConfirme || rdv.statut == AppConstants.rdvTermine;
+    final afficherBadges = rdv.urgent || rdv.statut == AppConstants.rdvConfirme;
 
     return TableRow(
       decoration: BoxDecoration(color: fondLigne),
@@ -322,9 +321,9 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
   }
 }
 
-/// N'affiche rien pour le statut "planifie" (statut par défaut, celui de
-/// la grande majorité des rendez-vous) — seuls les statuts qui demandent
-/// une action ou confirment un changement méritent une pastille.
+/// N'affiche une pastille que pour le statut "confirme" — "planifie" (le
+/// statut par défaut de la quasi-totalité des rendez-vous) et "terminé"
+/// n'apportent pas d'information utile au premier coup d'œil.
 class _PuceStatut extends StatelessWidget {
   const _PuceStatut({required this.statut});
 
@@ -338,10 +337,6 @@ class _PuceStatut extends StatelessWidget {
       case AppConstants.rdvConfirme:
         couleur = const Color(0xFF2E7D32);
         libelle = 'Confirmé';
-        break;
-      case AppConstants.rdvTermine:
-        couleur = const Color(0xFF546E7A);
-        libelle = 'Terminé';
         break;
       default:
         return const SizedBox.shrink();
