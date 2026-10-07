@@ -285,16 +285,45 @@ class _ChoixArticle {
 }
 
 /// Liste des articles de la catégorie sous forme de petit tableau (nom à
-/// gauche, quantité en stock à l'extrême droite), plus lisible que le menu
-/// déroulant standard pour un tailleur peu à l'aise à l'écrit.
-class _DialogueChoixArticle extends StatelessWidget {
+/// gauche, prix à l'extrême droite), avec une recherche rapide par nom —
+/// plus lisible et plus rapide qu'un menu déroulant classique pour un
+/// tailleur peu à l'aise à l'écrit.
+class _DialogueChoixArticle extends StatefulWidget {
   const _DialogueChoixArticle({required this.articles, required this.articleActuel});
 
   final List<Article> articles;
   final Article? articleActuel;
 
   @override
+  State<_DialogueChoixArticle> createState() => _DialogueChoixArticleState();
+}
+
+class _DialogueChoixArticleState extends State<_DialogueChoixArticle> {
+  final _rechercheCtrl = TextEditingController();
+  String _recherche = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _rechercheCtrl.addListener(() {
+      setState(() => _recherche = _rechercheCtrl.text.trim().toLowerCase());
+    });
+  }
+
+  @override
+  void dispose() {
+    _rechercheCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final articlesFiltres = _recherche.isEmpty
+        ? widget.articles
+        : widget.articles.where((a) => a.nom.toLowerCase().contains(_recherche)).toList();
+    final venteLibreVisible =
+        _recherche.isEmpty || 'vente libre'.contains(_recherche);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
@@ -308,9 +337,18 @@ class _DialogueChoixArticle extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: _bleuSeda),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _rechercheCtrl,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Rechercher un article',
+                prefixIcon: Icon(Icons.search, color: _bleuSeda),
+              ),
+            ),
+            const SizedBox(height: 12),
             ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 360),
+              constraints: const BoxConstraints(maxHeight: 320),
               child: SingleChildScrollView(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(14),
@@ -328,23 +366,31 @@ class _DialogueChoixArticle extends StatelessWidget {
                           decoration: BoxDecoration(color: _bleuSeda),
                           children: [
                             _CelluleChoix('Article', entete: true),
-                            _CelluleChoix('Stock', entete: true),
+                            _CelluleChoix('Prix', entete: true),
                           ],
                         ),
-                        _ligneChoix(
-                          context,
-                          article: null,
-                          nom: 'Vente libre (non suivie en stock)',
-                          stock: null,
-                          selectionne: articleActuel == null,
-                        ),
-                        for (final a in articles)
+                        if (venteLibreVisible)
+                          _ligneChoix(
+                            context,
+                            article: null,
+                            nom: 'Vente libre (non suivie en stock)',
+                            prix: null,
+                            selectionne: widget.articleActuel == null,
+                          ),
+                        for (final a in articlesFiltres)
                           _ligneChoix(
                             context,
                             article: a,
                             nom: a.nom,
-                            stock: '${Formatters.nombre(a.quantiteStock)} ${a.uniteAffichee}',
-                            selectionne: articleActuel?.id == a.id,
+                            prix: Formatters.montant(a.prixUnitaireDefaut),
+                            selectionne: widget.articleActuel?.id == a.id,
+                          ),
+                        if (!venteLibreVisible && articlesFiltres.isEmpty)
+                          TableRow(
+                            children: const [
+                              _CelluleChoix('Aucun article trouvé'),
+                              _CelluleChoix(''),
+                            ],
                           ),
                       ],
                     ),
@@ -368,7 +414,7 @@ class _DialogueChoixArticle extends StatelessWidget {
     BuildContext context, {
     required Article? article,
     required String nom,
-    required String? stock,
+    required String? prix,
     required bool selectionne,
   }) {
     final fond = selectionne ? const Color(0xFFE3EAF7) : Colors.white;
@@ -377,7 +423,7 @@ class _DialogueChoixArticle extends StatelessWidget {
       decoration: BoxDecoration(color: fond),
       children: [
         GestureDetector(onTap: choisir, child: _CelluleChoix(nom)),
-        GestureDetector(onTap: choisir, child: _CelluleChoix(stock ?? '—', alignDroite: true)),
+        GestureDetector(onTap: choisir, child: _CelluleChoix(prix ?? '—', alignDroite: true)),
       ],
     );
   }
