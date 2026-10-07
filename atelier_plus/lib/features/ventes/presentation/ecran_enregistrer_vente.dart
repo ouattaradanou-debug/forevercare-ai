@@ -169,17 +169,22 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
               if (articlesCategorie.isNotEmpty) ...[
                 DropdownButtonFormField<Article?>(
                   value: _articleChoisi,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Article du catalogue'),
                   items: [
                     const DropdownMenuItem<Article?>(
                       value: null,
-                      child: Text('Vente libre (non suivie en stock)'),
+                      child: Text(
+                        'Vente libre (non suivie en stock)',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     for (final a in articlesCategorie)
                       DropdownMenuItem<Article?>(
                         value: a,
                         child: Text(
                           '${a.nom} — ${Formatters.nombre(a.quantiteStock)} ${a.uniteAffichee} en stock',
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                   ],

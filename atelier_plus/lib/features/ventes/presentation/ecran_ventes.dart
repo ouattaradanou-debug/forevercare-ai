@@ -74,7 +74,7 @@ class EcranVentes extends ConsumerWidget {
             for (final categorie in CategorieVente.values) ...[
               _CarteCategorie(
                 categorie: categorie,
-                onTap: () => context.push(AppRoutes.nouvelleVente, extra: categorie),
+                onTap: () => context.push(AppRoutes.nouvelleVente(categorie)),
               ),
               const SizedBox(height: 12),
             ],

@@ -60,7 +60,7 @@ class EcranGestionStock extends ConsumerWidget {
                 nombreEnAlerte: articles
                     .where((a) => a.categorie == categorie && a.stockBas)
                     .length,
-                onTap: () => context.push(AppRoutes.stockCategorie, extra: categorie),
+                onTap: () => context.push(AppRoutes.stockCategorie(categorie)),
               ),
               const SizedBox(height: 12),
             ],

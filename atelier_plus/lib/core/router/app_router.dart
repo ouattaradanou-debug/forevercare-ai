@@ -108,10 +108,20 @@ class AppRoutes {
       '/uniformes/membres/$membreId/mesures/$typeTenueId';
 
   static const String ventes = '/ventes';
-  static const String nouvelleVente = '/ventes/nouvelle';
+  static const String _nouvelleVenteTemplate = '/ventes/nouvelle/:categorie';
   static const String historiqueVentes = '/ventes/historique';
   static const String gestionStock = '/ventes/stock';
-  static const String stockCategorie = '/ventes/stock/categorie';
+  static const String _stockCategorieTemplate = '/ventes/stock/categorie/:categorie';
+
+  // La catégorie est encodée dans l'URL (plutôt que passée via `extra`) :
+  // `extra` ne survit pas à un recalcul de route par go_router (ex. retour
+  // système, redirection réévaluée), ce qui provoquait un plantage
+  // "type 'Null' is not a subtype of type 'CategorieVente'" en rouvrant
+  // l'écran après une telle réévaluation.
+  static String nouvelleVente(CategorieVente categorie) =>
+      '/ventes/nouvelle/${categorie.valeurJson}';
+  static String stockCategorie(CategorieVente categorie) =>
+      '/ventes/stock/categorie/${categorie.valeurJson}';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -273,9 +283,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const EcranVentes(),
       ),
       GoRoute(
-        path: AppRoutes.nouvelleVente,
-        builder: (context, state) =>
-            EcranEnregistrerVente(categorie: state.extra as CategorieVente),
+        path: AppRoutes._nouvelleVenteTemplate,
+        builder: (context, state) => EcranEnregistrerVente(
+          categorie: CategorieVente.depuisJson(state.pathParameters['categorie']!),
+        ),
       ),
       GoRoute(
         path: AppRoutes.historiqueVentes,
@@ -286,9 +297,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const EcranGestionStock(),
       ),
       GoRoute(
-        path: AppRoutes.stockCategorie,
-        builder: (context, state) =>
-            EcranStockCategorie(categorie: state.extra as CategorieVente),
+        path: AppRoutes._stockCategorieTemplate,
+        builder: (context, state) => EcranStockCategorie(
+          categorie: CategorieVente.depuisJson(state.pathParameters['categorie']!),
+        ),
       ),
     ],
   );
