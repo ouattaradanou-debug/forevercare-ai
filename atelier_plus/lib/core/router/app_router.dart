@@ -42,6 +42,7 @@ import '../../data/models/categorie_vente.dart';
 import '../../features/ventes/presentation/ecran_enregistrer_vente.dart';
 import '../../features/ventes/presentation/ecran_gestion_stock.dart';
 import '../../features/ventes/presentation/ecran_historique_ventes.dart';
+import '../../features/ventes/presentation/ecran_stock_categorie.dart';
 import '../../features/ventes/presentation/ecran_ventes.dart';
 
 /// Chemins nommés des routes de l'application, centralisés pour éviter les
@@ -110,6 +111,7 @@ class AppRoutes {
   static const String nouvelleVente = '/ventes/nouvelle';
   static const String historiqueVentes = '/ventes/historique';
   static const String gestionStock = '/ventes/stock';
+  static const String stockCategorie = '/ventes/stock/categorie';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -282,6 +284,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.gestionStock,
         builder: (context, state) => const EcranGestionStock(),
+      ),
+      GoRoute(
+        path: AppRoutes.stockCategorie,
+        builder: (context, state) =>
+            EcranStockCategorie(categorie: state.extra as CategorieVente),
       ),
     ],
   );
