@@ -256,6 +256,7 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           child: Table(
+                            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                             columnWidths: const {
                               0: FixedColumnWidth(80),
                               3: FixedColumnWidth(50),

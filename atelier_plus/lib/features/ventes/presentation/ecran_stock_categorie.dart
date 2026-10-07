@@ -317,6 +317,7 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
                         boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 10)],
                       ),
                       child: Table(
+                        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                         columnWidths: const {
                           0: FlexColumnWidth(1.3),
                           1: FixedColumnWidth(78),
