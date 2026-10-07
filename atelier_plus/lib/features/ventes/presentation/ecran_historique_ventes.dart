@@ -267,9 +267,9 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
                                 ),
                                 children: const [
                                   _Cellule('Date', entete: true),
-                                  _Cellule('Désignation', entete: true, centre: true),
-                                  _Cellule('Montant', entete: true, alignDroite: true),
-                                  _Cellule('Qté', entete: true, alignDroite: true),
+                                  _Cellule('Désignation', entete: true),
+                                  _Cellule('Montant', entete: true),
+                                  _Cellule('Qté', entete: true),
                                 ],
                               ),
                               for (final vente in filtrees) _ligne(vente),
@@ -313,9 +313,9 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
     return TableRow(children: [
       for (final cellule in [
         _Cellule(Formatters.dateCourte(vente.date)),
-        _Cellule(vente.designation, centre: true, tronquer: false),
-        _Cellule(Formatters.nombre(vente.montantTotal), alignDroite: true),
-        _Cellule(Formatters.nombre(vente.quantite), alignDroite: true),
+        _Cellule(vente.designation, tronquer: false),
+        _Cellule(Formatters.nombre(vente.montantTotal)),
+        _Cellule(Formatters.nombre(vente.quantite)),
       ])
         GestureDetector(onTap: () => _modifier(vente), child: cellule),
     ]);
@@ -371,15 +371,11 @@ class _Cellule extends StatelessWidget {
   const _Cellule(
     this.texte, {
     this.entete = false,
-    this.alignDroite = false,
-    this.centre = false,
     this.tronquer = true,
   });
 
   final String texte;
   final bool entete;
-  final bool alignDroite;
-  final bool centre;
   final bool tronquer;
 
   @override
@@ -388,9 +384,7 @@ class _Cellule extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       child: Text(
         texte,
-        textAlign: centre
-            ? TextAlign.center
-            : (alignDroite ? TextAlign.right : TextAlign.left),
+        textAlign: TextAlign.center,
         maxLines: tronquer ? 1 : null,
         overflow: tronquer ? TextOverflow.ellipsis : TextOverflow.visible,
         style: TextStyle(

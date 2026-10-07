@@ -328,8 +328,8 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
                             decoration: const BoxDecoration(color: _bleuSeda),
                             children: const [
                               _Cellule('Article', entete: true),
-                              _Cellule('Prix', entete: true, alignDroite: true),
-                              _Cellule('Stock', entete: true, alignDroite: true),
+                              _Cellule('Prix', entete: true),
+                              _Cellule('Stock', entete: true),
                               SizedBox.shrink(),
                             ],
                           ),
@@ -365,31 +365,32 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
         ),
         GestureDetector(
           onTap: () => _modifier(article),
-          child: _Cellule(Formatters.nombre(article.prixUnitaireDefaut), alignDroite: true),
+          child: _Cellule(Formatters.nombre(article.prixUnitaireDefaut)),
         ),
         GestureDetector(
           onTap: () => _modifier(article),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            child: Align(
-              alignment: Alignment.centerRight,
+            child: Center(
               child: _PastilleStock(article: article),
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: IconButton(
-            onPressed: () => _reapprovisionner(article),
-            tooltip: 'Nouvelle livraison',
-            style: IconButton.styleFrom(
-              backgroundColor: _orangeSeda,
-              foregroundColor: Colors.white,
-              shape: const CircleBorder(),
-              minimumSize: const Size(36, 36),
-              padding: EdgeInsets.zero,
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: IconButton(
+              onPressed: () => _reapprovisionner(article),
+              tooltip: 'Nouvelle livraison',
+              style: IconButton.styleFrom(
+                backgroundColor: _orangeSeda,
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+                minimumSize: const Size(36, 36),
+                padding: EdgeInsets.zero,
+              ),
+              icon: const Icon(Icons.add, size: 20),
             ),
-            icon: const Icon(Icons.add, size: 20),
           ),
         ),
       ],
@@ -459,13 +460,11 @@ class _Cellule extends StatelessWidget {
   const _Cellule(
     this.texte, {
     this.entete = false,
-    this.alignDroite = false,
     this.tronquer = true,
   });
 
   final String texte;
   final bool entete;
-  final bool alignDroite;
   final bool tronquer;
 
   @override
@@ -474,7 +473,7 @@ class _Cellule extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: entete ? 14 : 12, horizontal: 8),
       child: Text(
         texte,
-        textAlign: alignDroite ? TextAlign.right : TextAlign.left,
+        textAlign: TextAlign.center,
         maxLines: tronquer ? 1 : null,
         overflow: tronquer ? TextOverflow.ellipsis : TextOverflow.visible,
         style: TextStyle(
