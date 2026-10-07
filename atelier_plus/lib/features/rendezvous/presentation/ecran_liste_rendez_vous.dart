@@ -220,6 +220,8 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     final fondLigne = rdv.urgent
         ? const Color(0xFFFBE4E1)
         : (index.isEven ? Colors.white : const Color(0xFFF6F3EE));
+    final afficherBadges =
+        rdv.urgent || rdv.statut == AppConstants.rdvConfirme || rdv.statut == AppConstants.rdvTermine;
 
     return TableRow(
       decoration: BoxDecoration(color: fondLigne),
@@ -240,16 +242,18 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 4),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: [
-                    _PuceStatut(statut: rdv.statut),
-                    if (rdv.urgent) const _PuceUrgent(),
-                  ],
-                ),
+                if (afficherBadges) ...[
+                  const SizedBox(height: 4),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      _PuceStatut(statut: rdv.statut),
+                      if (rdv.urgent) const _PuceUrgent(),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -318,6 +322,9 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
   }
 }
 
+/// N'affiche rien pour le statut "planifie" (statut par défaut, celui de
+/// la grande majorité des rendez-vous) — seuls les statuts qui demandent
+/// une action ou confirment un changement méritent une pastille.
 class _PuceStatut extends StatelessWidget {
   const _PuceStatut({required this.statut});
 
@@ -337,8 +344,7 @@ class _PuceStatut extends StatelessWidget {
         libelle = 'Terminé';
         break;
       default:
-        couleur = _orangeSeda;
-        libelle = 'Planifié';
+        return const SizedBox.shrink();
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
