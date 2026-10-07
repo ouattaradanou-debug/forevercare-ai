@@ -31,6 +31,7 @@ final rendezVousTriesProvider = StreamProvider<List<RendezVous>>((ref) async* {
                 dateHeure: ligne.dateHeure,
                 type: ligne.type,
                 statut: ligne.statut,
+                urgent: ligne.urgent,
                 updatedAt: ligne.updatedAt,
               ),
             )

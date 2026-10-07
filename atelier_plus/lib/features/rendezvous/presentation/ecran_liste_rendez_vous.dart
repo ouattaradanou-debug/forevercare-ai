@@ -6,12 +6,19 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
+import '../../../data/models/rendez_vous.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../clients/providers/clients_providers.dart';
 import '../providers/rendezvous_providers.dart';
 
+const _bleuSeda = Color(0xFF1B4FA0);
+const _orangeSeda = Color(0xFFF5821F);
+const _rougeAlerte = Color(0xFFB3261E);
+
 /// Liste des rendez-vous de l'atelier, triée par date — lecture locale
-/// (hors-ligne au quotidien).
+/// (hors-ligne au quotidien), sous forme de tableau (Nom / Date et heure)
+/// avec un bouton "+" orange pour corriger un rendez-vous (date, heure,
+/// type, urgence) directement depuis la liste.
 class EcranListeRendezVous extends ConsumerStatefulWidget {
   const EcranListeRendezVous({super.key});
 
@@ -31,46 +38,240 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     });
   }
 
+  /// Corrige un rendez-vous déjà enregistré (date, heure, type) et permet
+  /// de le marquer urgent.
+  Future<void> _modifier(RendezVous rdv, String nomClient) async {
+    var date = rdv.dateHeure;
+    var heure = TimeOfDay.fromDateTime(rdv.dateHeure);
+    var type = rdv.type;
+    var urgent = rdv.urgent;
+
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          scrollable: true,
+          title: Text('Modifier : $nomClient', style: const TextStyle(color: _bleuSeda)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.calendar_today_outlined, color: _bleuSeda),
+                title: Text(Formatters.dateLongue(date)),
+                onTap: () async {
+                  final choisie = await showDatePicker(
+                    context: context,
+                    initialDate: date,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (choisie != null) setStateDialog(() => date = choisie);
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.access_time, color: _bleuSeda),
+                title: Text(heure.format(context)),
+                onTap: () async {
+                  final choisie = await showTimePicker(context: context, initialTime: heure);
+                  if (choisie != null) setStateDialog(() => heure = choisie);
+                },
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<String>(
+                  style: SegmentedButton.styleFrom(
+                    selectedBackgroundColor: _bleuSeda,
+                    selectedForegroundColor: Colors.white,
+                    foregroundColor: _bleuSeda,
+                  ),
+                  segments: const [
+                    ButtonSegment(value: AppConstants.rdvEssayage, label: Text('Essayage')),
+                    ButtonSegment(value: AppConstants.rdvLivraison, label: Text('Livraison')),
+                  ],
+                  selected: {type},
+                  onSelectionChanged: (selection) => setStateDialog(() => type = selection.first),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                activeColor: _rougeAlerte,
+                value: urgent,
+                onChanged: (valeur) => setStateDialog(() => urgent = valeur),
+                title: const Text('Urgent'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirme != true) return;
+
+    final dateHeure = DateTime(date.year, date.month, date.day, heure.hour, heure.minute);
+    await executerAvecErreurAffichee(
+      context,
+      () => ref.read(rendezVousRepositoryProvider).modifierRendezVous(
+            existant: rdv,
+            dateHeure: dateHeure,
+            type: type,
+            urgent: urgent,
+            nomClientPourRappel: nomClient,
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final rdvs = ref.watch(rendezVousTriesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Rendez-vous')),
-      body: rdvs.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
-        data: (liste) {
-          final actifs = liste.where((r) => r.statut != AppConstants.rdvAnnule).toList();
-          if (actifs.isEmpty) {
-            return const Center(child: Text('Aucun rendez-vous à venir.'));
-          }
-          return ListView.builder(
-            itemCount: actifs.length,
-            itemBuilder: (context, index) {
-              final rdv = actifs[index];
-              final client = ref.watch(clientParIdProvider(rdv.clientId));
-              return ListTile(
-                leading: Icon(
-                  rdv.type == AppConstants.rdvEssayage ? Icons.checkroom : Icons.local_shipping,
-                ),
-                title: Text(client.valueOrNull?.nomComplet ?? '…'),
-                subtitle: Text(
-                  '${Formatters.dateHeure(rdv.dateHeure)} — '
-                  '${rdv.type == AppConstants.rdvEssayage ? 'Essayage' : 'Livraison'}',
-                ),
-                trailing: _PuceStatut(statut: rdv.statut),
-                onTap: () => _afficherActions(context, ref, rdv.id, rdv.statut),
-              );
-            },
-          );
-        },
+      appBar: AppBar(
+        title: const Text('Rendez-vous'),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
+      ),
+      body: SafeArea(
+        child: rdvs.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
+          data: (liste) {
+            final actifs = liste.where((r) => r.statut != AppConstants.rdvAnnule).toList();
+            if (actifs.isEmpty) {
+              return const Center(child: Text('Aucun rendez-vous à venir.'));
+            }
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      'Touchez une ligne pour changer le statut. '
+                      'Touchez "+" pour corriger ou marquer urgent.',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
+                    ),
+                  ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: _bleuSeda, width: 2),
+                        boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 10)],
+                      ),
+                      child: Table(
+                        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                        columnWidths: const {
+                          1: FixedColumnWidth(150),
+                          2: FixedColumnWidth(56),
+                        },
+                        children: [
+                          TableRow(
+                            decoration: const BoxDecoration(color: _bleuSeda),
+                            children: const [
+                              _Cellule('Nom', entete: true),
+                              _Cellule('Date et heure', entete: true),
+                              SizedBox.shrink(),
+                            ],
+                          ),
+                          for (final entree in actifs.asMap().entries)
+                            _ligne(entree.value, entree.key),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
         onPressed: () => context.push(AppRoutes.creationRendezVous),
         icon: const Icon(Icons.add),
         label: const Text('Nouveau rendez-vous'),
       ),
+    );
+  }
+
+  TableRow _ligne(RendezVous rdv, int index) {
+    final client = ref.watch(clientParIdProvider(rdv.clientId));
+    final nomClient = client.valueOrNull?.nomComplet ?? '…';
+    final fondLigne = rdv.urgent
+        ? const Color(0xFFFBE4E1)
+        : (index.isEven ? Colors.white : const Color(0xFFF6F3EE));
+
+    return TableRow(
+      decoration: BoxDecoration(color: fondLigne),
+      children: [
+        GestureDetector(
+          onTap: () => _afficherActions(context, ref, rdv.id, rdv.statut),
+          child: _Cellule(nomClient, tronquer: false),
+        ),
+        GestureDetector(
+          onTap: () => _afficherActions(context, ref, rdv.id, rdv.statut),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  Formatters.dateHeure(rdv.dateHeure),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    _PuceStatut(statut: rdv.statut),
+                    if (rdv.urgent) const _PuceUrgent(),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: IconButton(
+              onPressed: () => _modifier(rdv, nomClient),
+              tooltip: 'Modifier',
+              style: IconButton.styleFrom(
+                backgroundColor: _orangeSeda,
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+                minimumSize: const Size(36, 36),
+                padding: EdgeInsets.zero,
+              ),
+              icon: const Icon(Icons.add, size: 20),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -86,17 +287,17 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.check_circle_outline),
+              leading: const Icon(Icons.check_circle_outline, color: _bleuSeda),
               title: const Text('Confirmer'),
               onTap: () => Navigator.pop(context, AppConstants.rdvConfirme),
             ),
             ListTile(
-              leading: const Icon(Icons.done_all),
+              leading: const Icon(Icons.done_all, color: _bleuSeda),
               title: const Text('Marquer comme terminé'),
               onTap: () => Navigator.pop(context, AppConstants.rdvTermine),
             ),
             ListTile(
-              leading: const Icon(Icons.cancel_outlined),
+              leading: const Icon(Icons.cancel_outlined, color: _rougeAlerte),
               title: const Text('Annuler ce rendez-vous'),
               onTap: () => Navigator.pop(context, AppConstants.rdvAnnule),
             ),
@@ -128,22 +329,73 @@ class _PuceStatut extends StatelessWidget {
     final String libelle;
     switch (statut) {
       case AppConstants.rdvConfirme:
-        couleur = Colors.green;
+        couleur = const Color(0xFF2E7D32);
         libelle = 'Confirmé';
         break;
       case AppConstants.rdvTermine:
-        couleur = Colors.blueGrey;
+        couleur = const Color(0xFF546E7A);
         libelle = 'Terminé';
         break;
       default:
-        couleur = Colors.orange;
+        couleur = _orangeSeda;
         libelle = 'Planifié';
     }
-    return Chip(
-      label: Text(libelle, style: const TextStyle(fontSize: 11, color: Colors.white)),
-      backgroundColor: couleur,
-      padding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: couleur, borderRadius: BorderRadius.circular(20)),
+      child: Text(
+        libelle,
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+    );
+  }
+}
+
+/// Pastille "Urgent" — même code couleur que l'alerte de stock bas, pour
+/// rester cohérent dans toute l'application.
+class _PuceUrgent extends StatelessWidget {
+  const _PuceUrgent();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: _rougeAlerte, borderRadius: BorderRadius.circular(20)),
+      child: const Text(
+        'Urgent',
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+    );
+  }
+}
+
+class _Cellule extends StatelessWidget {
+  const _Cellule(
+    this.texte, {
+    this.entete = false,
+    this.tronquer = true,
+  });
+
+  final String texte;
+  final bool entete;
+  final bool tronquer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: entete ? 14 : 12, horizontal: 8),
+      child: Text(
+        texte,
+        textAlign: TextAlign.center,
+        maxLines: tronquer ? 1 : null,
+        overflow: tronquer ? TextOverflow.ellipsis : TextOverflow.visible,
+        style: TextStyle(
+          fontWeight: entete ? FontWeight.bold : FontWeight.w600,
+          color: entete ? Colors.white : const Color(0xFF231A14),
+          fontSize: entete ? 13 : 14,
+          letterSpacing: entete ? 0.3 : 0,
+        ),
+      ),
     );
   }
 }

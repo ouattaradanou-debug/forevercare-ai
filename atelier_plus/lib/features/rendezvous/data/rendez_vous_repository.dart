@@ -22,6 +22,17 @@ class RendezVousRepository {
   final AppDatabase _baseLocale;
   static const _uuid = Uuid();
 
+  RendezVous _depuisLigne(RendezVousEntry ligne) => RendezVous(
+        id: ligne.id,
+        atelierId: ligne.atelierId,
+        clientId: ligne.clientId,
+        dateHeure: ligne.dateHeure,
+        type: ligne.type,
+        statut: ligne.statut,
+        urgent: ligne.urgent,
+        updatedAt: ligne.updatedAt,
+      );
+
   Future<RendezVous> creerRendezVous({
     required String atelierId,
     required String clientId,
@@ -60,15 +71,7 @@ class RendezVousRepository {
   Future<RendezVous?> changerStatutParId(String rendezVousId, String nouveauStatut) async {
     final ligne = await _baseLocale.rendezVousParId(rendezVousId);
     if (ligne == null) return null;
-    final existant = RendezVous(
-      id: ligne.id,
-      atelierId: ligne.atelierId,
-      clientId: ligne.clientId,
-      dateHeure: ligne.dateHeure,
-      type: ligne.type,
-      statut: ligne.statut,
-      updatedAt: ligne.updatedAt,
-    );
+    final existant = _depuisLigne(ligne);
     return changerStatut(existant, nouveauStatut);
   }
 
@@ -86,6 +89,36 @@ class RendezVousRepository {
     );
     if (nouveauStatut == AppConstants.rdvAnnule) {
       await NotificationsService.instance.annulerRappel(miseAJour.id);
+    }
+    return miseAJour;
+  }
+
+  /// Corrige un rendez-vous déjà enregistré (erreur de saisie sur la date,
+  /// l'heure ou le type) et permet de le marquer urgent. [nomClientPourRappel]
+  /// permet de reprogrammer le rappel si la date ou l'heure a changé.
+  Future<RendezVous> modifierRendezVous({
+    required RendezVous existant,
+    required DateTime dateHeure,
+    required String type,
+    required bool urgent,
+    required String nomClientPourRappel,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, existant.atelierId);
+    // Même précaution que ArticlesRepository.modifierArticle : purge
+    // d'abord toute tâche de synchronisation périmée pour ce rendez-vous.
+    await _baseLocale.retirerTachesPourEnregistrement('rendez_vous', existant.id);
+    final miseAJour = existant.copierAvec(dateHeure: dateHeure, type: type, urgent: urgent);
+    await _mettreEnCache(miseAJour);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'rendez_vous',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
+    );
+    if (miseAJour.statut != AppConstants.rdvAnnule) {
+      await _planifierRappel(miseAJour, nomClientPourRappel);
     }
     return miseAJour;
   }
@@ -120,6 +153,7 @@ class RendezVousRepository {
       dateHeure: rdv.dateHeure,
       type: rdv.type,
       statut: rdv.statut,
+      urgent: rdv.urgent,
       updatedAt: rdv.updatedAt,
     );
   }

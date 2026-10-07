@@ -232,9 +232,12 @@ create table if not exists public.rendez_vous (
   date_heure  timestamptz not null,
   type        text not null check (type in ('essayage', 'livraison')),
   statut      text not null default 'planifie' check (statut in ('planifie', 'confirme', 'termine', 'annule')),
+  urgent      boolean not null default false,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
+
+alter table public.rendez_vous add column if not exists urgent boolean not null default false;
 
 create index if not exists idx_rdv_atelier_date on public.rendez_vous (atelier_id, date_heure);
 create index if not exists idx_rdv_client on public.rendez_vous (client_id);

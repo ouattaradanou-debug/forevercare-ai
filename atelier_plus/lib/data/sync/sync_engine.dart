@@ -129,6 +129,7 @@ class SyncEngine {
           dateHeure: r.dateHeure,
           type: r.type,
           statut: r.statut,
+          urgent: r.urgent,
           updatedAt: r.updatedAt,
         );
         break;

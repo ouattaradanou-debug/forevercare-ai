@@ -169,6 +169,7 @@ class RendezVousEntries extends Table {
   DateTimeColumn get dateHeure => dateTime()();
   TextColumn get type => text()();
   TextColumn get statut => text()();
+  BoolColumn get urgent => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime()();
 
   @override
@@ -378,7 +379,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -486,6 +487,12 @@ class AppDatabase extends _$AppDatabase {
             // précaution que ci-dessus pour un appareil déjà en version >= 14.
             if (from >= 14) {
               await m.addColumn(articleEntries, articleEntries.unite);
+            }
+          }
+          if (from < 16) {
+            // rendezVousEntries créée dans le bloc `from < 3` ci-dessus.
+            if (from >= 3) {
+              await m.addColumn(rendezVousEntries, rendezVousEntries.urgent);
             }
           }
         },
@@ -867,6 +874,7 @@ class AppDatabase extends _$AppDatabase {
     required DateTime dateHeure,
     required String type,
     required String statut,
+    bool urgent = false,
     required DateTime updatedAt,
   }) async {
     await into(rendezVousEntries).insertOnConflictUpdate(
@@ -877,6 +885,7 @@ class AppDatabase extends _$AppDatabase {
         dateHeure: dateHeure,
         type: type,
         statut: statut,
+        urgent: Value(urgent),
         updatedAt: updatedAt,
       ),
     );

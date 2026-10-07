@@ -7,6 +7,7 @@ class RendezVous {
     required this.dateHeure,
     required this.type,
     required this.statut,
+    this.urgent = false,
     required this.updatedAt,
   });
 
@@ -16,6 +17,7 @@ class RendezVous {
   final DateTime dateHeure;
   final String type; // 'essayage' | 'livraison'
   final String statut; // 'planifie' | 'confirme' | 'termine' | 'annule'
+  final bool urgent;
   final DateTime updatedAt;
 
   factory RendezVous.depuisJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class RendezVous {
       dateHeure: DateTime.parse(json['date_heure'] as String),
       type: json['type'] as String,
       statut: json['statut'] as String,
+      urgent: json['urgent'] as bool? ?? false,
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }
@@ -40,11 +43,17 @@ class RendezVous {
       'date_heure': dateHeure.toIso8601String(),
       'type': type,
       'statut': statut,
+      'urgent': urgent,
       'updated_at': updatedAt.toIso8601String(),
     };
   }
 
-  RendezVous copierAvec({DateTime? dateHeure, String? type, String? statut}) {
+  RendezVous copierAvec({
+    DateTime? dateHeure,
+    String? type,
+    String? statut,
+    bool? urgent,
+  }) {
     return RendezVous(
       id: id,
       atelierId: atelierId,
@@ -52,6 +61,7 @@ class RendezVous {
       dateHeure: dateHeure ?? this.dateHeure,
       type: type ?? this.type,
       statut: statut ?? this.statut,
+      urgent: urgent ?? this.urgent,
       updatedAt: DateTime.now().toUtc(),
     );
   }
