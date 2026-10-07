@@ -251,6 +251,7 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: _orangeSeda, width: 2),
                             boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 6)],
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
