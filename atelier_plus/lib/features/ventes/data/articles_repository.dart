@@ -146,6 +146,14 @@ class ArticlesRepository {
     return miseAJour;
   }
 
+  /// Article du catalogue par id, lu depuis le cache local — utilisé par
+  /// `VentesRepository.modifierVente` pour ajuster le stock d'un article
+  /// quand la quantité d'une vente déjà enregistrée est corrigée.
+  Future<Article?> articleParId(String id) async {
+    final ligne = await _baseLocale.articleParId(id);
+    return ligne == null ? null : _depuisLigne(ligne);
+  }
+
   /// Catalogue de l'atelier, trié par nom — pour l'écran "Gestion du
   /// stock" et le choix d'article dans le formulaire de vente.
   Stream<List<Article>> observerArticles(String atelierId) {

@@ -42,6 +42,100 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
     });
   }
 
+  /// Corrige une vente déjà enregistrée (erreur de saisie : désignation,
+  /// quantité, prix ou date).
+  Future<void> _modifier(Vente vente) async {
+    final designationCtrl = TextEditingController(text: vente.designation);
+    final quantiteCtrl = TextEditingController(text: Formatters.nombre(vente.quantite));
+    final prixCtrl = TextEditingController(text: vente.prixUnitaire.toStringAsFixed(0));
+    var date = vente.date;
+
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: const Text('Modifier la vente', style: TextStyle(color: _bleuSeda)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: designationCtrl,
+                autofocus: true,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(labelText: 'Désignation'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: quantiteCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Quantité (${vente.categorie.uniteLabel})',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: prixCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Prix par ${vente.categorie.uniteLabel} (FCFA)',
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.calendar_today_outlined, color: _bleuSeda),
+                title: const Text('Date'),
+                subtitle: Text(Formatters.dateLongue(date)),
+                onTap: () async {
+                  final choisie = await showDatePicker(
+                    context: context,
+                    initialDate: date,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                  );
+                  if (choisie != null) setStateDialog(() => date = choisie);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirme != true) return;
+
+    final designation = designationCtrl.text.trim();
+    if (designation.isEmpty) return;
+    final quantite = double.tryParse(quantiteCtrl.text.replaceAll(',', '.')) ?? 0;
+    final prix = double.tryParse(prixCtrl.text.replaceAll(',', '.')) ?? 0;
+    if (quantite <= 0 || prix <= 0) return;
+
+    try {
+      await ref.read(ventesRepositoryProvider).modifierVente(
+            vente: vente,
+            designation: designation,
+            quantite: quantite,
+            prixUnitaire: prix,
+            date: date,
+          );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
   (DateTime, DateTime) _bornesPeriode(_Periode periode) {
     final now = DateTime.now();
     switch (periode) {
@@ -138,6 +232,13 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
                       children: [
                         _RecapitulatifParCategorie(ventes: dePeriode),
                         const SizedBox(height: 16),
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            'Touchez une vente pour corriger une erreur de saisie.',
+                            style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
+                          ),
+                        ),
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -201,10 +302,13 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
 
   TableRow _ligne(Vente vente) {
     return TableRow(children: [
-      _Cellule(Formatters.dateCourte(vente.date)),
-      _Cellule(vente.designation, centre: true, tronquer: false),
-      _Cellule(Formatters.nombre(vente.montantTotal), alignDroite: true),
-      _Cellule(Formatters.nombre(vente.quantite), alignDroite: true),
+      for (final cellule in [
+        _Cellule(Formatters.dateCourte(vente.date)),
+        _Cellule(vente.designation, centre: true, tronquer: false),
+        _Cellule(Formatters.nombre(vente.montantTotal), alignDroite: true),
+        _Cellule(Formatters.nombre(vente.quantite), alignDroite: true),
+      ])
+        GestureDetector(onTap: () => _modifier(vente), child: cellule),
     ]);
   }
 }

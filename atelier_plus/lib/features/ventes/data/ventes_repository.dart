@@ -85,6 +85,64 @@ class VentesRepository {
     return vente;
   }
 
+  /// Corrige une vente déjà enregistrée (erreur de saisie : désignation,
+  /// quantité, prix ou date). Si la vente est liée à un article du
+  /// catalogue et que la quantité change, ajuste le stock de la différence
+  /// (une quantité revue à la hausse retire la différence du stock, une
+  /// quantité revue à la baisse la lui rend) — jamais négatif, comme à
+  /// l'enregistrement initial.
+  Future<Vente> modifierVente({
+    required Vente vente,
+    required String designation,
+    required double quantite,
+    required double prixUnitaire,
+    required DateTime date,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, vente.atelierId);
+    final miseAJour = Vente(
+      id: vente.id,
+      atelierId: vente.atelierId,
+      categorie: vente.categorie,
+      designation: designation,
+      quantite: quantite,
+      prixUnitaire: prixUnitaire,
+      montantTotal: quantite * prixUnitaire,
+      date: date,
+      createdAt: vente.createdAt,
+      articleId: vente.articleId,
+    );
+
+    await _mettreEnCache(miseAJour);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'ventes',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
+    );
+
+    final articleId = vente.articleId;
+    final difference = quantite - vente.quantite;
+    if (articleId != null && difference != 0) {
+      final article = await _articlesRepository.articleParId(articleId);
+      if (article != null) {
+        if (difference > 0) {
+          await _articlesRepository.decrementerStock(
+            article: article,
+            quantiteVendue: difference,
+          );
+        } else {
+          await _articlesRepository.reapprovisionner(
+            article: article,
+            quantiteAjoutee: -difference,
+          );
+        }
+      }
+    }
+    return miseAJour;
+  }
+
   /// Historique des ventes de l'atelier, du plus récent au plus ancien —
   /// pour l'écran "Historique des ventes" (filtrable ensuite par période et
   /// par catégorie côté écran).
