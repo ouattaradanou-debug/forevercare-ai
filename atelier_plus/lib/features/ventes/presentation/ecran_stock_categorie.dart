@@ -269,34 +269,35 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
                       style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
                     ),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 6)],
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Table(
-                      columnWidths: const {
-                        0: FlexColumnWidth(1.3),
-                        1: FixedColumnWidth(80),
-                        2: FixedColumnWidth(92),
-                        3: FixedColumnWidth(52),
-                      },
-                      children: [
-                        TableRow(
-                          decoration: const BoxDecoration(
-                            border: Border(bottom: BorderSide(color: _orangeSeda, width: 2)),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 10)],
+                      ),
+                      child: Table(
+                        columnWidths: const {
+                          0: FlexColumnWidth(1.3),
+                          1: FixedColumnWidth(78),
+                          2: FixedColumnWidth(96),
+                          3: FixedColumnWidth(56),
+                        },
+                        children: [
+                          TableRow(
+                            decoration: const BoxDecoration(color: _bleuSeda),
+                            children: const [
+                              _Cellule('Article', entete: true),
+                              _Cellule('Prix', entete: true, alignDroite: true),
+                              _Cellule('Stock', entete: true, alignDroite: true),
+                              SizedBox.shrink(),
+                            ],
                           ),
-                          children: const [
-                            _Cellule('Article', entete: true),
-                            _Cellule('Prix', entete: true, alignDroite: true),
-                            _Cellule('Stock', entete: true, alignDroite: true),
-                            SizedBox.shrink(),
-                          ],
-                        ),
-                        for (final article in filtrees) _ligne(article),
-                      ],
+                          for (final entree in filtrees.asMap().entries)
+                            _ligne(entree.value, entree.key),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -314,41 +315,75 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
     );
   }
 
-  TableRow _ligne(Article article) {
-    final couleurStock = article.stockBas ? _rougeAlerte : null;
-    return TableRow(children: [
-      GestureDetector(
-        onTap: () => _modifier(article),
-        child: _Cellule(article.nom, tronquer: false),
-      ),
-      GestureDetector(
-        onTap: () => _modifier(article),
-        child: _Cellule(Formatters.nombre(article.prixUnitaireDefaut), alignDroite: true),
-      ),
-      GestureDetector(
-        onTap: () => _modifier(article),
-        child: _Cellule(
-          '${Formatters.nombre(article.quantiteStock)} ${article.categorie.uniteLabel}',
-          alignDroite: true,
-          couleur: couleurStock,
+  TableRow _ligne(Article article, int index) {
+    final fondLigne = index.isEven ? Colors.white : const Color(0xFFF6F3EE);
+    return TableRow(
+      decoration: BoxDecoration(color: fondLigne),
+      children: [
+        GestureDetector(
+          onTap: () => _modifier(article),
+          child: _Cellule(article.nom, tronquer: false),
         ),
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: IconButton(
-          onPressed: () => _reapprovisionner(article),
-          tooltip: 'Nouvelle livraison',
-          style: IconButton.styleFrom(
-            backgroundColor: _orangeSeda,
-            foregroundColor: Colors.white,
-            shape: const CircleBorder(),
-            minimumSize: const Size(36, 36),
-            padding: EdgeInsets.zero,
+        GestureDetector(
+          onTap: () => _modifier(article),
+          child: _Cellule(Formatters.nombre(article.prixUnitaireDefaut), alignDroite: true),
+        ),
+        GestureDetector(
+          onTap: () => _modifier(article),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: _PastilleStock(article: article),
+            ),
           ),
-          icon: const Icon(Icons.add, size: 20),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: IconButton(
+            onPressed: () => _reapprovisionner(article),
+            tooltip: 'Nouvelle livraison',
+            style: IconButton.styleFrom(
+              backgroundColor: _orangeSeda,
+              foregroundColor: Colors.white,
+              shape: const CircleBorder(),
+              minimumSize: const Size(36, 36),
+              padding: EdgeInsets.zero,
+            ),
+            icon: const Icon(Icons.add, size: 20),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Pastille arrondie affichant la quantité restante — verte si le stock est
+/// confortable, rouge dès qu'il atteint le seuil d'alerte : plus visible
+/// d'un coup d'œil qu'un simple texte coloré.
+class _PastilleStock extends StatelessWidget {
+  const _PastilleStock({required this.article});
+
+  final Article article;
+
+  @override
+  Widget build(BuildContext context) {
+    final bas = article.stockBas;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bas ? const Color(0xFFFBE4E1) : const Color(0xFFDCEADF),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        '${Formatters.nombre(article.quantiteStock)} ${article.categorie.uniteLabel}',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          color: bas ? _rougeAlerte : const Color(0xFF2E7D32),
         ),
       ),
-    ]);
+    );
   }
 }
 
@@ -358,28 +393,27 @@ class _Cellule extends StatelessWidget {
     this.entete = false,
     this.alignDroite = false,
     this.tronquer = true,
-    this.couleur,
   });
 
   final String texte;
   final bool entete;
   final bool alignDroite;
   final bool tronquer;
-  final Color? couleur;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      padding: EdgeInsets.symmetric(vertical: entete ? 14 : 12, horizontal: 8),
       child: Text(
         texte,
         textAlign: alignDroite ? TextAlign.right : TextAlign.left,
         maxLines: tronquer ? 1 : null,
         overflow: tronquer ? TextOverflow.ellipsis : TextOverflow.visible,
         style: TextStyle(
-          fontWeight: entete || couleur != null ? FontWeight.bold : FontWeight.normal,
-          color: entete ? _bleuSeda : (couleur ?? const Color(0xFF231A14)),
+          fontWeight: entete ? FontWeight.bold : FontWeight.w600,
+          color: entete ? Colors.white : const Color(0xFF231A14),
           fontSize: entete ? 13 : 14,
+          letterSpacing: entete ? 0.3 : 0,
         ),
       ),
     );
