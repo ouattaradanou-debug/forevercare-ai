@@ -1,5 +1,6 @@
 import '../../../data/models/depense.dart';
 import '../../../data/models/paiement.dart';
+import '../../../data/models/vente.dart';
 
 /// Recettes/dépenses cumulées sur une période — calcul pur, testable sans
 /// dépendance réseau/base de données (même esprit que `etat_abonnement.dart`).
@@ -42,14 +43,28 @@ double _sommeDepenses(List<Depense> depenses, DateTime debut, DateTime finExclus
   return total;
 }
 
+/// Les ventes directes (prêt-à-porter, tissu, article de couture) sont une
+/// recette comme les paiements de commande — elles doivent être
+/// comptabilisées ici aussi, quel que soit l'écran où elles ont été
+/// enregistrées (voir VentesRepository).
+double _sommeVentes(List<Vente> ventes, DateTime debut, DateTime finExclusive) {
+  var total = 0.0;
+  for (final v in ventes) {
+    if (!v.date.isBefore(debut) && v.date.isBefore(finExclusive)) total += v.montantTotal;
+  }
+  return total;
+}
+
 RecapitulatifPeriode calculerPeriode({
   required List<Paiement> paiements,
+  required List<Vente> ventes,
   required List<Depense> depenses,
   required DateTime debut,
   required DateTime finExclusive,
 }) {
   return RecapitulatifPeriode(
-    recettes: _sommePaiements(paiements, debut, finExclusive),
+    recettes: _sommePaiements(paiements, debut, finExclusive) +
+        _sommeVentes(ventes, debut, finExclusive),
     depenses: _sommeDepenses(depenses, debut, finExclusive),
   );
 }
@@ -72,6 +87,7 @@ class RecapitulatifGlobal {
 
 RecapitulatifGlobal calculerRecapitulatifGlobal({
   required List<Paiement> paiements,
+  required List<Vente> ventes,
   required List<Depense> depenses,
   DateTime? maintenant,
 }) {
@@ -84,24 +100,28 @@ RecapitulatifGlobal calculerRecapitulatifGlobal({
   return RecapitulatifGlobal(
     jour: calculerPeriode(
       paiements: paiements,
+      ventes: ventes,
       depenses: depenses,
       debut: debutDuJour(now),
       finExclusive: finJour,
     ),
     semaine: calculerPeriode(
       paiements: paiements,
+      ventes: ventes,
       depenses: depenses,
       debut: debutDeLaSemaine(now),
       finExclusive: finSemaine,
     ),
     mois: calculerPeriode(
       paiements: paiements,
+      ventes: ventes,
       depenses: depenses,
       debut: debutDuMois(now),
       finExclusive: finMois,
     ),
     annee: calculerPeriode(
       paiements: paiements,
+      ventes: ventes,
       depenses: depenses,
       debut: debutDeLAnnee(now),
       finExclusive: finAnnee,
@@ -112,6 +132,7 @@ RecapitulatifGlobal calculerRecapitulatifGlobal({
 /// Une ligne par mois de [annee] (index 0 = janvier ... 11 = décembre).
 List<RecapitulatifPeriode> calculerRecapitulatifMensuel({
   required List<Paiement> paiements,
+  required List<Vente> ventes,
   required List<Depense> depenses,
   required int annee,
 }) {
@@ -119,6 +140,7 @@ List<RecapitulatifPeriode> calculerRecapitulatifMensuel({
     final mois = index + 1;
     return calculerPeriode(
       paiements: paiements,
+      ventes: ventes,
       depenses: depenses,
       debut: DateTime(annee, mois),
       finExclusive: DateTime(annee, mois + 1),

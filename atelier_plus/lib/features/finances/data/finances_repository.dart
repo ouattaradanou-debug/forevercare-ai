@@ -2,11 +2,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../data/local/database.dart';
+import '../../../data/models/categorie_vente.dart';
 import '../../../data/models/commande.dart';
 import '../../../data/models/depense.dart';
 import '../../../data/models/paiement.dart';
+import '../../../data/models/vente.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
 import '../../abonnement/data/abonnement_guard.dart';
+import '../../ventes/data/ventes_repository.dart';
 
 /// Gestion des commandes et paiements — données financières.
 ///
@@ -25,12 +28,17 @@ import '../../abonnement/data/abonnement_guard.dart';
 /// premier sur la fiche client ; les autres restent consultables comme
 /// historique.
 class FinancesRepository {
-  FinancesRepository({required SupabaseClient client, required AppDatabase baseLocale})
-      : _client = client,
-        _baseLocale = baseLocale;
+  FinancesRepository({
+    required SupabaseClient client,
+    required AppDatabase baseLocale,
+    required VentesRepository ventesRepository,
+  })  : _client = client,
+        _baseLocale = baseLocale,
+        _ventesRepository = ventesRepository;
 
   final SupabaseClient _client;
   final AppDatabase _baseLocale;
+  final VentesRepository _ventesRepository;
   static const _uuid = Uuid();
 
   Commande _depuisLigne(CommandeEntry ligne) => Commande(
@@ -282,12 +290,14 @@ class FinancesRepository {
         );
   }
 
-  /// Paiements et dépenses de tout l'atelier (tous clients confondus),
-  /// utilisés pour le récapitulatif global de l'écran "Suivi des finances".
-  Future<({List<Paiement> paiements, List<Depense> depenses})> recapitulatifBrut(
-    String atelierId,
-  ) async {
+  /// Paiements, ventes directes et dépenses de tout l'atelier (tous
+  /// clients confondus), utilisés pour le récapitulatif global de l'écran
+  /// "Suivi des finances" — toute recette ou dépense enregistrée dans
+  /// l'application, quel que soit l'écran, doit s'y retrouver.
+  Future<({List<Paiement> paiements, List<Vente> ventes, List<Depense> depenses})>
+      recapitulatifBrut(String atelierId) async {
     final lignesPaiements = await _baseLocale.tousPaiementsDeLAtelier(atelierId);
+    final lignesVentes = await _baseLocale.toutesVentesDeLAtelier(atelierId);
     final lignesDepenses = await _baseLocale.toutesDepensesDeLAtelier(atelierId);
     return (
       paiements: lignesPaiements
@@ -298,6 +308,22 @@ class FinancesRepository {
               commandeId: l.commandeId,
               montant: l.montant,
               datePaiement: l.datePaiement,
+            ),
+          )
+          .toList(),
+      ventes: lignesVentes
+          .map(
+            (l) => Vente(
+              id: l.id,
+              atelierId: l.atelierId,
+              categorie: CategorieVente.depuisJson(l.categorie),
+              designation: l.designation,
+              quantite: l.quantite,
+              prixUnitaire: l.prixUnitaire,
+              montantTotal: l.montantTotal,
+              date: l.date,
+              createdAt: l.createdAt,
+              articleId: l.articleId,
             ),
           )
           .toList(),
@@ -316,10 +342,10 @@ class FinancesRepository {
     );
   }
 
-  /// Rapatrie TOUS les paiements et dépenses de l'atelier (contrairement à
-  /// [chargerDepuisServeur], limité à un client) — nécessaire pour que le
-  /// récapitulatif global reste exact même sans avoir visité chaque fiche
-  /// client individuellement.
+  /// Rapatrie TOUS les paiements, ventes et dépenses de l'atelier
+  /// (contrairement à [chargerDepuisServeur], limité à un client) —
+  /// nécessaire pour que le récapitulatif global reste exact même sans
+  /// avoir visité chaque fiche client ou l'écran "Ventes" individuellement.
   Future<void> chargerRecapitulatifDepuisServeur(String atelierId) async {
     try {
       final lignesPaiements =
@@ -327,6 +353,8 @@ class FinancesRepository {
       for (final ligne in lignesPaiements) {
         await _mettreEnCachePaiement(Paiement.depuisJson(ligne));
       }
+
+      await _ventesRepository.chargerDepuisServeur(atelierId);
 
       final lignesDepenses =
           await _client.from('depenses').select().eq('atelier_id', atelierId);

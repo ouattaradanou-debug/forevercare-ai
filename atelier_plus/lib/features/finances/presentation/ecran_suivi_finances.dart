@@ -5,6 +5,10 @@ import '../../../core/utils/formatters.dart';
 import '../data/recapitulatif_finances.dart';
 import '../providers/finances_providers.dart';
 
+const _bleuSeda = Color(0xFF1B4FA0);
+const _vertBenefice = Color(0xFF2E7D32);
+const _rougeDeficit = Color(0xFFB3261E);
+
 const List<String> _nomsMois = [
   'Janvier',
   'Février',
@@ -22,7 +26,11 @@ const List<String> _nomsMois = [
 
 /// Récapitulatif financier global de l'atelier (tous clients confondus) :
 /// recettes/dépenses du jour, de la semaine, du mois et de l'année en cours,
-/// puis un détail mois par mois pour l'année choisie.
+/// puis un détail mois par mois pour l'année choisie. "Recettes" regroupe
+/// aussi bien les paiements de commande que les ventes directes
+/// (prêt-à-porter/tissu/article de couture) : toute entrée d'argent
+/// enregistrée dans l'application, quel que soit l'écran, est comptabilisée
+/// ici (voir FinancesRepository.recapitulatifBrut).
 class EcranSuiviFinances extends ConsumerStatefulWidget {
   const EcranSuiviFinances({super.key});
 
@@ -40,7 +48,11 @@ class _EcranSuiviFinancesState extends ConsumerState<EcranSuiviFinances> {
     final maintenant = DateTime.now();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Suivi des finances')),
+      appBar: AppBar(
+        title: const Text('Suivi des finances'),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -53,36 +65,39 @@ class _EcranSuiviFinancesState extends ConsumerState<EcranSuiviFinances> {
               error: (_, __) => const Text('Impossible de charger le récapitulatif.'),
               data: (recap) => _TableauPeriodes(recap: recap),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Le compteur de l\'année repart automatiquement à zéro au 1er '
-              'janvier — aucun paiement ni aucune dépense n\'est supprimé, '
-              'c\'est seulement la période affichée qui change. Le récapitulatif '
-              'ci-dessous permet de revoir n\'importe quelle année, mois par mois.',
-              style: TextStyle(color: Color(0xFF6F6259)),
+            const SizedBox(height: 28),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _bleuSeda, width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left, color: _bleuSeda),
+                    onPressed: () => setState(() => _annee -= 1),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Récapitulatif $_annee',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: _bleuSeda,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right, color: _bleuSeda),
+                    onPressed: () => setState(() => _annee += 1),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () => setState(() => _annee -= 1),
-                ),
-                Text(
-                  'Récapitulatif $_annee',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontFamily: 'serif', fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: () => setState(() => _annee += 1),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             recapMensuel.when(
               loading: () => const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
@@ -110,42 +125,54 @@ class _TableauPeriodes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 6)],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Table(
-        columnWidths: const {0: FlexColumnWidth(1.2)},
-        children: [
-          const TableRow(children: [
-            _Cellule('Période', entete: true),
-            _Cellule('Recettes', entete: true, alignDroite: true),
-            _Cellule('Dépenses', entete: true, alignDroite: true),
-            _Cellule('Solde', entete: true, alignDroite: true),
-          ]),
-          _ligne('Jour', recap.jour),
-          _ligne('Semaine', recap.semaine),
-          _ligne('Mois', recap.mois),
-          _ligne('Année', recap.annee),
-        ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _bleuSeda, width: 2),
+          boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 10)],
+        ),
+        child: Table(
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          columnWidths: const {0: FlexColumnWidth(1.1)},
+          children: [
+            TableRow(
+              decoration: const BoxDecoration(color: _bleuSeda),
+              children: const [
+                _Cellule('Période', entete: true),
+                _Cellule('Recettes', entete: true),
+                _Cellule('Dépenses', entete: true),
+                _Cellule('Bénéfice', entete: true),
+              ],
+            ),
+            _ligne('Jour', recap.jour, 0),
+            _ligne('Semaine', recap.semaine, 1),
+            _ligne('Mois', recap.mois, 2),
+            _ligne('Année', recap.annee, 3),
+          ],
+        ),
       ),
     );
   }
 
-  TableRow _ligne(String libelle, RecapitulatifPeriode periode) {
-    return TableRow(children: [
-      _Cellule(libelle),
-      _Cellule(Formatters.nombre(periode.recettes), alignDroite: true),
-      _Cellule(Formatters.nombre(periode.depenses), alignDroite: true),
-      _Cellule(
-        Formatters.nombre(periode.solde),
-        alignDroite: true,
-        couleur: periode.solde < 0 ? const Color(0xFFB3261E) : const Color(0xFF2E7D32),
+  TableRow _ligne(String libelle, RecapitulatifPeriode periode, int index) {
+    return TableRow(
+      decoration: BoxDecoration(
+        color: index.isEven ? Colors.white : const Color(0xFFF6F3EE),
       ),
-    ]);
+      children: [
+        _Cellule(libelle, gras: true),
+        _Cellule(Formatters.nombre(periode.recettes)),
+        _Cellule(Formatters.nombre(periode.depenses)),
+        _Cellule(
+          Formatters.nombre(periode.solde),
+          gras: true,
+          couleur: periode.solde < 0 ? _rougeDeficit : _vertBenefice,
+        ),
+      ],
+    );
   }
 }
 
@@ -162,32 +189,49 @@ class _TableauMensuel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 6)],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Table(
-        children: [
-          const TableRow(children: [
-            _Cellule('Mois', entete: true),
-            _Cellule('Recettes', entete: true, alignDroite: true),
-            _Cellule('Dépenses', entete: true, alignDroite: true),
-          ]),
-          for (var i = 0; i < 12; i++)
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _bleuSeda, width: 2),
+          boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 10)],
+        ),
+        child: Table(
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          columnWidths: const {0: FlexColumnWidth(1.1)},
+          children: [
             TableRow(
-              decoration: moisCourantSurligne == i + 1
-                  ? const BoxDecoration(color: Color(0xFFF5E3E3))
-                  : null,
-              children: [
-                _Cellule(_nomsMois[i], gras: moisCourantSurligne == i + 1),
-                _Cellule(Formatters.nombre(moisParPeriode[i].recettes), alignDroite: true),
-                _Cellule(Formatters.nombre(moisParPeriode[i].depenses), alignDroite: true),
+              decoration: const BoxDecoration(color: _bleuSeda),
+              children: const [
+                _Cellule('Mois', entete: true),
+                _Cellule('Recettes', entete: true),
+                _Cellule('Dépenses', entete: true),
+                _Cellule('Bénéfice', entete: true),
               ],
             ),
-        ],
+            for (var i = 0; i < 12; i++)
+              TableRow(
+                decoration: BoxDecoration(
+                  color: moisCourantSurligne == i + 1
+                      ? const Color(0xFFFCE4CC)
+                      : (i.isEven ? Colors.white : const Color(0xFFF6F3EE)),
+                ),
+                children: [
+                  _Cellule(_nomsMois[i], gras: moisCourantSurligne == i + 1),
+                  _Cellule(Formatters.nombre(moisParPeriode[i].recettes)),
+                  _Cellule(Formatters.nombre(moisParPeriode[i].depenses)),
+                  _Cellule(
+                    Formatters.nombre(moisParPeriode[i].solde),
+                    gras: true,
+                    couleur:
+                        moisParPeriode[i].solde < 0 ? _rougeDeficit : _vertBenefice,
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -197,27 +241,28 @@ class _Cellule extends StatelessWidget {
   const _Cellule(
     this.texte, {
     this.entete = false,
-    this.alignDroite = false,
     this.gras = false,
     this.couleur,
   });
 
   final String texte;
   final bool entete;
-  final bool alignDroite;
   final bool gras;
   final Color? couleur;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
       child: Text(
         texte,
-        textAlign: alignDroite ? TextAlign.right : TextAlign.left,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontWeight: entete || gras ? FontWeight.bold : FontWeight.normal,
-          color: couleur ?? const Color(0xFF231A14),
+          color: entete ? Colors.white : (couleur ?? const Color(0xFF231A14)),
+          fontSize: entete ? 13 : 13.5,
         ),
       ),
     );
