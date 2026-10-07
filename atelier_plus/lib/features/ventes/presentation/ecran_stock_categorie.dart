@@ -256,77 +256,51 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
               );
             }
 
-            return ListView.separated(
+            return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              itemCount: filtrees.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final article = filtrees[index];
-                return Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  elevation: 1,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(14),
-                    onTap: () => _modifier(article),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  article.nom,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  Formatters.montant(article.prixUnitaireDefaut),
-                                  style: const TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    if (article.stockBas)
-                                      const Padding(
-                                        padding: EdgeInsets.only(right: 6),
-                                        child: Icon(
-                                          Icons.warning_amber_outlined,
-                                          color: _rougeAlerte,
-                                          size: 18,
-                                        ),
-                                      ),
-                                    Text(
-                                      '${Formatters.nombre(article.quantiteStock)} ${article.categorie.uniteLabel} en stock',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                        color: article.stockBas ? _rougeAlerte : _bleuSeda,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () => _reapprovisionner(article),
-                            tooltip: 'Nouvelle livraison',
-                            style: IconButton.styleFrom(
-                              backgroundColor: _orangeSeda,
-                              foregroundColor: Colors.white,
-                              shape: const CircleBorder(),
-                            ),
-                            icon: const Icon(Icons.add, size: 28),
-                          ),
-                        ],
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'Touchez une ligne pour corriger le nom ou le prix. '
+                      'Touchez "+" pour une nouvelle livraison.',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
                     ),
                   ),
-                );
-              },
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 6)],
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Table(
+                      columnWidths: const {
+                        0: FlexColumnWidth(1.3),
+                        1: FixedColumnWidth(80),
+                        2: FixedColumnWidth(92),
+                        3: FixedColumnWidth(52),
+                      },
+                      children: [
+                        TableRow(
+                          decoration: const BoxDecoration(
+                            border: Border(bottom: BorderSide(color: _orangeSeda, width: 2)),
+                          ),
+                          children: const [
+                            _Cellule('Article', entete: true),
+                            _Cellule('Prix', entete: true, alignDroite: true),
+                            _Cellule('Stock', entete: true, alignDroite: true),
+                            SizedBox.shrink(),
+                          ],
+                        ),
+                        for (final article in filtrees) _ligne(article),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         ),
@@ -336,6 +310,77 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
         onPressed: _ajouterArticle,
         tooltip: 'Nouvel article',
         child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  TableRow _ligne(Article article) {
+    final couleurStock = article.stockBas ? _rougeAlerte : null;
+    return TableRow(children: [
+      GestureDetector(
+        onTap: () => _modifier(article),
+        child: _Cellule(article.nom, tronquer: false),
+      ),
+      GestureDetector(
+        onTap: () => _modifier(article),
+        child: _Cellule(Formatters.nombre(article.prixUnitaireDefaut), alignDroite: true),
+      ),
+      GestureDetector(
+        onTap: () => _modifier(article),
+        child: _Cellule(
+          '${Formatters.nombre(article.quantiteStock)} ${article.categorie.uniteLabel}',
+          alignDroite: true,
+          couleur: couleurStock,
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: IconButton(
+          onPressed: () => _reapprovisionner(article),
+          tooltip: 'Nouvelle livraison',
+          style: IconButton.styleFrom(
+            backgroundColor: _orangeSeda,
+            foregroundColor: Colors.white,
+            shape: const CircleBorder(),
+            minimumSize: const Size(36, 36),
+            padding: EdgeInsets.zero,
+          ),
+          icon: const Icon(Icons.add, size: 20),
+        ),
+      ),
+    ]);
+  }
+}
+
+class _Cellule extends StatelessWidget {
+  const _Cellule(
+    this.texte, {
+    this.entete = false,
+    this.alignDroite = false,
+    this.tronquer = true,
+    this.couleur,
+  });
+
+  final String texte;
+  final bool entete;
+  final bool alignDroite;
+  final bool tronquer;
+  final Color? couleur;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      child: Text(
+        texte,
+        textAlign: alignDroite ? TextAlign.right : TextAlign.left,
+        maxLines: tronquer ? 1 : null,
+        overflow: tronquer ? TextOverflow.ellipsis : TextOverflow.visible,
+        style: TextStyle(
+          fontWeight: entete || couleur != null ? FontWeight.bold : FontWeight.normal,
+          color: entete ? _bleuSeda : (couleur ?? const Color(0xFF231A14)),
+          fontSize: entete ? 13 : 14,
+        ),
       ),
     );
   }
