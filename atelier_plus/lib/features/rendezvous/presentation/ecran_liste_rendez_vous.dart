@@ -43,7 +43,6 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
   Future<void> _modifier(RendezVous rdv, String nomClient) async {
     var date = rdv.dateHeure;
     var heure = TimeOfDay.fromDateTime(rdv.dateHeure);
-    var type = rdv.type;
     var urgent = rdv.urgent;
 
     final resultat = await showDialog<String>(
@@ -78,23 +77,6 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                   final choisie = await showTimePicker(context: context, initialTime: heure);
                   if (choisie != null) setStateDialog(() => heure = choisie);
                 },
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: SegmentedButton<String>(
-                  style: SegmentedButton.styleFrom(
-                    selectedBackgroundColor: _bleuSeda,
-                    selectedForegroundColor: Colors.white,
-                    foregroundColor: _bleuSeda,
-                  ),
-                  segments: const [
-                    ButtonSegment(value: AppConstants.rdvEssayage, label: Text('Essayage')),
-                    ButtonSegment(value: AppConstants.rdvLivraison, label: Text('Livraison')),
-                  ],
-                  selected: {type},
-                  onSelectionChanged: (selection) => setStateDialog(() => type = selection.first),
-                ),
               ),
               const SizedBox(height: 8),
               SwitchListTile(
@@ -145,7 +127,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
       () => ref.read(rendezVousRepositoryProvider).modifierRendezVous(
             existant: rdv,
             dateHeure: dateHeure,
-            type: type,
+            type: rdv.type,
             urgent: urgent,
             nomClientPourRappel: nomClient,
           ),
