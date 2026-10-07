@@ -175,40 +175,35 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: SegmentedButton<_Periode>(
-                style: SegmentedButton.styleFrom(
-                  selectedBackgroundColor: _orangeSeda,
-                  selectedForegroundColor: Colors.white,
-                  foregroundColor: _bleuSeda,
-                ),
-                segments: const [
-                  ButtonSegment(value: _Periode.jour, label: Text('Jour')),
-                  ButtonSegment(value: _Periode.semaine, label: Text('Semaine')),
-                  ButtonSegment(value: _Periode.mois, label: Text('Mois')),
-                  ButtonSegment(value: _Periode.annee, label: Text('Année')),
+              child: _GrilleFiltres(
+                nombreColonnes: 4,
+                enfants: [
+                  for (final p in _Periode.values)
+                    _BoutonFiltre(
+                      libelle: _libellePeriode(p),
+                      selectionne: _periode == p,
+                      onTap: () => setState(() => _periode = p),
+                    ),
                 ],
-                selected: {_periode},
-                onSelectionChanged: (selection) => setState(() => _periode = selection.first),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: SizedBox(
-                width: double.infinity,
-                child: SegmentedButton<CategorieVente?>(
-                  style: SegmentedButton.styleFrom(
-                    selectedBackgroundColor: _bleuSeda,
-                    selectedForegroundColor: Colors.white,
-                    foregroundColor: _bleuSeda,
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: _GrilleFiltres(
+                nombreColonnes: 2,
+                enfants: [
+                  _BoutonFiltre(
+                    libelle: 'Toutes',
+                    selectionne: _categorie == null,
+                    onTap: () => setState(() => _categorie = null),
                   ),
-                  segments: [
-                    const ButtonSegment(value: null, label: Text('Toutes')),
-                    for (final c in CategorieVente.values)
-                      ButtonSegment(value: c, label: Text(c.libelle)),
-                  ],
-                  selected: {_categorie},
-                  onSelectionChanged: (selection) => setState(() => _categorie = selection.first),
-                ),
+                  for (final c in CategorieVente.values)
+                    _BoutonFiltre(
+                      libelle: _libelleCourtCategorie(c),
+                      selectionne: _categorie == c,
+                      onTap: () => setState(() => _categorie = c),
+                    ),
+                ],
               ),
             ),
             Expanded(
@@ -364,6 +359,94 @@ class _RecapitulatifParCategorie extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+String _libellePeriode(_Periode p) {
+  switch (p) {
+    case _Periode.jour:
+      return 'Jour';
+    case _Periode.semaine:
+      return 'Semaine';
+    case _Periode.mois:
+      return 'Mois';
+    case _Periode.annee:
+      return 'Année';
+  }
+}
+
+/// Libellé court pour la grille à 2 colonnes : "Article de couture" ne
+/// tiendrait pas sur une ligne dans la largeur disponible.
+String _libelleCourtCategorie(CategorieVente c) {
+  return c == CategorieVente.articleCouture ? 'Couture' : c.libelle;
+}
+
+/// Grille de boutons de filtre en pleine largeur, à hauteur fixe pour que
+/// le texte ("Semaine", "Article de couture"...) ne se coupe jamais sur
+/// plusieurs lignes — remplace les anciens `SegmentedButton`, trop étroits
+/// pour des tailleurs peu à l'aise avec la lecture.
+class _GrilleFiltres extends StatelessWidget {
+  const _GrilleFiltres({required this.nombreColonnes, required this.enfants});
+
+  final int nombreColonnes;
+  final List<Widget> enfants;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: nombreColonnes,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        mainAxisExtent: 44,
+      ),
+      children: enfants,
+    );
+  }
+}
+
+class _BoutonFiltre extends StatelessWidget {
+  const _BoutonFiltre({
+    required this.libelle,
+    required this.selectionne,
+    required this.onTap,
+  });
+
+  final String libelle;
+  final bool selectionne;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selectionne ? _orangeSeda : Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: _bleuSeda, width: selectionne ? 0 : 1.5),
+          ),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            libelle,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.bold,
+              color: selectionne ? Colors.white : _bleuSeda,
+            ),
+          ),
+        ),
       ),
     );
   }
