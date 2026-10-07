@@ -13,12 +13,14 @@ const _orangeSeda = Color(0xFFF5821F);
 
 enum _Periode { jour, semaine, mois, annee }
 
-/// Historique de toutes les ventes (les trois catégories confondues),
-/// filtrable par période et par catégorie, avec le détail du montant total
-/// par catégorie sur la période choisie — le cœur du "suivi efficace"
-/// demandé : voir en un coup d'œil ce qui se vend le mieux.
+/// Historique des ventes d'une seule catégorie (choisie sur l'écran
+/// précédent — voir `EcranHistoriqueVentesMenu`), filtrable par période —
+/// le cœur du "suivi efficace" demandé : voir en un coup d'œil ce qui s'est
+/// vendu, sans mélanger les trois catégories sur un même écran.
 class EcranHistoriqueVentes extends ConsumerStatefulWidget {
-  const EcranHistoriqueVentes({super.key});
+  const EcranHistoriqueVentes({super.key, required this.categorie});
+
+  final CategorieVente categorie;
 
   @override
   ConsumerState<EcranHistoriqueVentes> createState() => _EcranHistoriqueVentesState();
@@ -26,7 +28,6 @@ class EcranHistoriqueVentes extends ConsumerStatefulWidget {
 
 class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
   _Periode _periode = _Periode.mois;
-  CategorieVente? _categorie;
 
   @override
   void initState() {
@@ -166,7 +167,7 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historique des ventes'),
+        title: Text('Historique - ${widget.categorie.libelle}'),
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
       ),
@@ -187,36 +188,15 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: _GrilleFiltres(
-                nombreColonnes: 2,
-                enfants: [
-                  _BoutonFiltre(
-                    libelle: 'Toutes',
-                    selectionne: _categorie == null,
-                    onTap: () => setState(() => _categorie = null),
-                  ),
-                  for (final c in CategorieVente.values)
-                    _BoutonFiltre(
-                      libelle: _libelleCourtCategorie(c),
-                      selectionne: _categorie == c,
-                      onTap: () => setState(() => _categorie = c),
-                    ),
-                ],
-              ),
-            ),
             Expanded(
               child: ventes.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
                 data: (liste) {
-                  final dePeriode = liste
+                  final filtrees = liste
                       .where((v) => !v.date.isBefore(debut) && v.date.isBefore(finExclusive))
+                      .where((v) => v.categorie == widget.categorie)
                       .toList();
-                  final filtrees = _categorie == null
-                      ? dePeriode
-                      : dePeriode.where((v) => v.categorie == _categorie).toList();
 
                   if (filtrees.isEmpty) {
                     return const Center(
@@ -234,8 +214,6 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _RecapitulatifParCategorie(ventes: dePeriode),
-                        const SizedBox(height: 16),
                         const Padding(
                           padding: EdgeInsets.only(bottom: 8),
                           child: Text(
@@ -319,51 +297,6 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
   }
 }
 
-/// Montant total par catégorie sur la période affichée (toujours les trois
-/// catégories, indépendamment du filtre catégorie en cours) : la vue
-/// d'ensemble qui permet de voir en un coup d'œil ce qui se vend le mieux.
-class _RecapitulatifParCategorie extends StatelessWidget {
-  const _RecapitulatifParCategorie({required this.ventes});
-
-  final List<Vente> ventes;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Par catégorie, sur la période',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _bleuSeda),
-          ),
-          const SizedBox(height: 10),
-          for (final categorie in CategorieVente.values)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(categorie.libelle, style: const TextStyle(fontSize: 14)),
-                  Text(
-                    Formatters.montant(
-                      ventes
-                          .where((v) => v.categorie == categorie)
-                          .fold<double>(0, (s, v) => s + v.montantTotal),
-                    ),
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 String _libellePeriode(_Periode p) {
   switch (p) {
     case _Periode.jour:
@@ -375,12 +308,6 @@ String _libellePeriode(_Periode p) {
     case _Periode.annee:
       return 'Année';
   }
-}
-
-/// Libellé court pour la grille à 2 colonnes : "Article de couture" ne
-/// tiendrait pas sur une ligne dans la largeur disponible.
-String _libelleCourtCategorie(CategorieVente c) {
-  return c == CategorieVente.articleCouture ? 'Couture' : c.libelle;
 }
 
 /// Grille de boutons de filtre en pleine largeur, à hauteur fixe pour que

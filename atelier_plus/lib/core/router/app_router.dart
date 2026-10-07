@@ -42,6 +42,7 @@ import '../../data/models/categorie_vente.dart';
 import '../../features/ventes/presentation/ecran_enregistrer_vente.dart';
 import '../../features/ventes/presentation/ecran_gestion_stock.dart';
 import '../../features/ventes/presentation/ecran_historique_ventes.dart';
+import '../../features/ventes/presentation/ecran_historique_ventes_menu.dart';
 import '../../features/ventes/presentation/ecran_stock_categorie.dart';
 import '../../features/ventes/presentation/ecran_ventes.dart';
 
@@ -110,6 +111,7 @@ class AppRoutes {
   static const String ventes = '/ventes';
   static const String _nouvelleVenteTemplate = '/ventes/nouvelle/:categorie';
   static const String historiqueVentes = '/ventes/historique';
+  static const String _historiqueVentesCategorieTemplate = '/ventes/historique/:categorie';
   static const String gestionStock = '/ventes/stock';
   static const String _stockCategorieTemplate = '/ventes/stock/categorie/:categorie';
 
@@ -122,6 +124,8 @@ class AppRoutes {
       '/ventes/nouvelle/${categorie.valeurJson}';
   static String stockCategorie(CategorieVente categorie) =>
       '/ventes/stock/categorie/${categorie.valeurJson}';
+  static String historiqueVentesCategorie(CategorieVente categorie) =>
+      '/ventes/historique/${categorie.valeurJson}';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -290,7 +294,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.historiqueVentes,
-        builder: (context, state) => const EcranHistoriqueVentes(),
+        builder: (context, state) => const EcranHistoriqueVentesMenu(),
+      ),
+      GoRoute(
+        path: AppRoutes._historiqueVentesCategorieTemplate,
+        builder: (context, state) => EcranHistoriqueVentes(
+          categorie: CategorieVente.depuisJson(state.pathParameters['categorie']!),
+        ),
       ),
       GoRoute(
         path: AppRoutes.gestionStock,
