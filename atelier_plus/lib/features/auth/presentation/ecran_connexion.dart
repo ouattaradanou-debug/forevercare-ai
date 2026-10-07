@@ -76,6 +76,8 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
+                  const SizedBox(height: 24),
+                  Image.asset('assets/images/logo_seda_tech.png', height: 36),
                   const SizedBox(height: 32),
                   TextFormField(
                     controller: _telephoneCtrl,

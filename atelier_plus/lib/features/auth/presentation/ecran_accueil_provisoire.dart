@@ -18,17 +18,16 @@ import '../../clients/providers/clients_providers.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/auth_providers.dart';
 
-/// Couleurs propres à cet écran (en-tête bleu marine), distinctes de la
-/// palette terre cuite/doré utilisée partout ailleurs dans l'app : choix
-/// visuel demandé pour l'accueil uniquement, pas un changement de thème
-/// global.
+/// Couleurs propres à l'en-tête de l'accueil — bleu SEDA Tech en dégradé,
+/// et orange SEDA Tech pour le rappel d'essai gratuit (voir AppColors pour
+/// la palette globale, qui reprend les mêmes couleurs de marque).
 class _CouleursAccueil {
   const _CouleursAccueil._();
 
-  static const Color enteteHaut = Color(0xFF2A3A70);
-  static const Color enteteBas = Color(0xFF141B3E);
-  static const Color carteEssaiFond = Color(0xFFF3E6C9);
-  static const Color carteEssaiIcone = Color(0xFFD4A24C);
+  static const Color enteteHaut = Color(0xFF1B4FA0);
+  static const Color enteteBas = Color(0xFF0F3570);
+  static const Color carteEssaiFond = Color(0xFFFCE4CC);
+  static const Color carteEssaiIcone = Color(0xFFF5821F);
 }
 
 /// Écran d'accueil : en-tête bleu marine (logo/nom d'atelier, bouton de
@@ -428,7 +427,7 @@ class _CarteStat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icone, color: const Color(0xFF2A3A70)),
+          Icon(icone, color: const Color(0xFF1B4FA0)),
           const SizedBox(height: 10),
           Text(valeur, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
           const SizedBox(height: 2),
@@ -470,7 +469,7 @@ class _CarteRappel extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.notifications_outlined, color: Color(0xFFD4A24C)),
+              const Icon(Icons.notifications_outlined, color: Color(0xFFF5821F)),
               const SizedBox(width: 10),
               const Expanded(
                 child: Text(
@@ -552,7 +551,7 @@ class _LienNavigation extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(icone, color: const Color(0xFF2A3A70)),
+              Icon(icone, color: const Color(0xFF1B4FA0)),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(libelle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
