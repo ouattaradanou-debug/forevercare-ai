@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../core/utils/telephone.dart';
-import '../../../data/models/membre_groupe_uniforme.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../shared/widgets/grille_photos.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
@@ -77,15 +76,6 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
     } finally {
       if (mounted) setState(() => _photoEnCours[cle] = false);
     }
-  }
-
-  Future<void> _basculerTenueTerminee(MembreGroupeUniforme membre) async {
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
-    if (utilisateur == null) return;
-    await ref.read(membresGroupeUniformeRepositoryProvider).basculerTenueTerminee(
-          atelierId: utilisateur.atelierId,
-          membre: membre,
-        );
   }
 
   Future<void> _appeler(String telephone) => executerAvecErreurAffichee(
@@ -328,20 +318,6 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                                   const _PuceTermine(),
                                                 ],
                                               ],
-                                            ),
-                                            trailing: IconButton(
-                                              tooltip: membre.tenueTerminee
-                                                  ? 'Tenue terminée'
-                                                  : 'Marquer la tenue comme terminée',
-                                              icon: Icon(
-                                                membre.tenueTerminee
-                                                    ? Icons.check_circle
-                                                    : Icons.check_circle_outline,
-                                                color: membre.tenueTerminee
-                                                    ? const Color(0xFF2E7D32)
-                                                    : const Color(0xFF6F6259),
-                                              ),
-                                              onPressed: () => _basculerTenueTerminee(membre),
                                             ),
                                             onTap: () => context.push(
                                               AppRoutes.ficheMembre(membre.id),
