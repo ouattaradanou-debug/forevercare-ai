@@ -8,6 +8,8 @@ import '../../../data/models/membre_groupe_uniforme.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../branding/data/donnees_export_client.dart';
 import '../../branding/providers/branding_providers.dart';
+import '../../mesures/providers/gabarits_providers.dart';
+import '../../mesures/utils/choix_gabarit.dart';
 import '../providers/uniformes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -36,6 +38,12 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
     super.initState();
     _membre = widget.membre;
     _chargement = _charger();
+    Future.microtask(() async {
+      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      if (utilisateur != null) {
+        await ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
+      }
+    });
   }
 
   Future<List<GroupeMesureExport>> _charger() {
@@ -52,10 +60,29 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
     if (mounted) setState(() => _membre = miseAJour);
   }
 
-  /// Ouvre "Quel type de tenue ?" pour ajouter ou mettre à jour une mesure —
-  /// un membre peut avoir plusieurs types de tenue, contrairement à un
-  /// client (voir EcranSelectionTypeTenueMembre).
+  /// Ouvre directement la prise de mesure pour le gabarit par défaut du
+  /// sexe du membre (même résolution que EcranFicheClient._ouvrirPriseMesure),
+  /// sans passer par la liste "Quel type de tenue ?" — repli sur cette
+  /// liste seulement si le sexe n'est pas renseigné ou qu'aucun gabarit par
+  /// défaut n'existe pour ce sexe.
   Future<void> _ouvrirPriseMesure() async {
+    final utilisateur = await ref.read(utilisateurCourantProvider.future);
+    if (utilisateur == null || !mounted) return;
+
+    if (_membre.sexe != null) {
+      final types = await ref.read(typesTenueVisiblesProvider.future);
+      if (!mounted) return;
+      final gabarit = choisirGabaritPourSexe(types, utilisateur.atelierId, _membre.sexe!);
+      if (gabarit != null) {
+        await context.push(
+          AppRoutes.priseMesureMembre(_membre.id, gabarit.id),
+          extra: _membre.nomComplet,
+        );
+        if (mounted) setState(() => _chargement = _charger());
+        return;
+      }
+    }
+
     await context.push(
       AppRoutes.selectionTypeTenueMembre(_membre.id),
       extra: _membre.nomComplet,
