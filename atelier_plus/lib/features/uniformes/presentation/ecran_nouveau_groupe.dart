@@ -13,6 +13,9 @@ import '../../../shared/widgets/grille_photos.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../clients/providers/photos_providers.dart';
+import '../../finances/presentation/dialogue_montants.dart';
+import '../../finances/presentation/section_finances_groupe.dart';
+import '../../finances/providers/finances_groupe_providers.dart';
 import '../providers/uniformes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -214,6 +217,31 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
     context.pushReplacement(AppRoutes.detailGroupeUniforme(groupe.id));
   }
 
+  /// Crée le groupe si besoin (même principe que _ajouterPhoto), puis la
+  /// toute première commande du groupe à partir du montant/avance saisis —
+  /// ensuite, la section Finances prend le relais (SectionFinancesGroupe,
+  /// partagée avec le détail du groupe).
+  Future<void> _creerCommandeGroupe() async {
+    final groupe = await _assurerGroupeCree();
+    if (groupe == null || !mounted) return;
+
+    final valeurs = await demanderMontantsCommande(context: context, titre: 'Commande du groupe');
+    if (valeurs == null || !mounted) return;
+
+    final utilisateur = await ref.read(utilisateurCourantProvider.future);
+    if (utilisateur == null || !mounted) return;
+    await executerAvecErreurAffichee(
+      context,
+      () => ref.read(financesGroupeRepositoryProvider).creerNouvelleCommande(
+            atelierId: utilisateur.atelierId,
+            groupeId: groupe.id,
+            montantTotal: valeurs.montant,
+            avance: valeurs.avance,
+          ),
+    );
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final photosGroupe = _groupe == null
@@ -222,6 +250,7 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
     List<PhotoClient> filtrerPhotos(TypePhoto type, String sexe) =>
         photosGroupe.where((p) => p.type == type && p.sexe == sexe).toList();
 
+    final estProprietaire = ref.watch(estProprietaireProvider);
     final enCours = _enregistrementGroupeEnCours || _enregistrementFinalEnCours;
 
     return Scaffold(
@@ -327,6 +356,32 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
                     onAjouterHomme: () => _ajouterPhoto(TypePhoto.modele, 'Homme'),
                     onAjouterFemme: () => _ajouterPhoto(TypePhoto.modele, 'Femme'),
                   ),
+                  // Donnée financière : jamais montrée à un apprenti, même
+                  // règle que dans le détail du groupe.
+                  if (estProprietaire) ...[
+                    const SizedBox(height: 28),
+                    EnTeteSection(
+                      icone: Icons.payments_outlined,
+                      couleurFond: const Color(0xFFDCEADF),
+                      couleurIcone: const Color(0xFF2E7D32),
+                      titre: 'Finances',
+                    ),
+                    const SizedBox(height: 12),
+                    if (_groupe == null)
+                      OutlinedButton.icon(
+                        onPressed: _creerCommandeGroupe,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _bleuSeda,
+                          side: const BorderSide(color: _bleuSeda),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Créer une commande pour ce groupe'),
+                      )
+                    else
+                      SectionFinancesGroupe(groupeId: _groupe!.id),
+                  ],
                 ],
               ),
         ),

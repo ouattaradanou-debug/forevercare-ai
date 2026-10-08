@@ -7,6 +7,7 @@ import '../../../data/models/commande_groupe.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../data/calcul_solde.dart';
 import '../providers/finances_groupe_providers.dart';
+import 'dialogue_montants.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
 const _orangeSeda = Color(0xFFF5821F);
@@ -40,64 +41,8 @@ class _SectionFinancesGroupeState extends ConsumerState<SectionFinancesGroupe> {
     );
   }
 
-  Future<({double montant, double avance})?> _demanderMontants({
-    required String titre,
-    double? montantActuel,
-    double? avanceActuelle,
-  }) async {
-    final montantCtrl = TextEditingController(text: montantActuel?.toStringAsFixed(0) ?? '');
-    final avanceCtrl = TextEditingController(text: avanceActuelle?.toStringAsFixed(0) ?? '');
-
-    final confirme = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(titre, style: const TextStyle(color: _bleuSeda)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: montantCtrl,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 15),
-              decoration: const InputDecoration(
-                labelText: 'Montant total convenu (FCFA)',
-                labelStyle: TextStyle(fontSize: 13),
-              ),
-            ),
-            TextField(
-              controller: avanceCtrl,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 15),
-              decoration: const InputDecoration(
-                labelText: 'Avance payée (FCFA)',
-                labelStyle: TextStyle(fontSize: 13),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
-            child: const Text('Enregistrer'),
-          ),
-        ],
-      ),
-    );
-    if (confirme != true) return null;
-    return (
-      montant: double.tryParse(montantCtrl.text.replaceAll(',', '.')) ?? 0,
-      avance: double.tryParse(avanceCtrl.text.replaceAll(',', '.')) ?? 0,
-    );
-  }
-
   Future<void> _creerNouvelleCommande() async {
-    final valeurs = await _demanderMontants(titre: 'Commande du groupe');
+    final valeurs = await demanderMontantsCommande(context: context, titre: 'Commande du groupe');
     if (valeurs == null) return;
 
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
