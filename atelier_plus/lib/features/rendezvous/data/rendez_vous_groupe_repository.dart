@@ -69,9 +69,80 @@ class RendezVousGroupeRepository {
     return ligne == null ? null : _depuisLigne(ligne);
   }
 
+  /// Variante pratique pour les écrans qui n'ont que l'id sous la main (ex.
+  /// une liste) — même principe que RendezVousRepository.changerStatutParId.
+  Future<RendezVousGroupe?> changerStatutParId(String rendezVousId, String nouveauStatut) async {
+    final ligne = await _baseLocale.rendezVousGroupeParId(rendezVousId);
+    if (ligne == null) return null;
+    return changerStatut(_depuisLigne(ligne), nouveauStatut);
+  }
+
+  Future<RendezVousGroupe> changerStatut(RendezVousGroupe existant, String nouveauStatut) async {
+    await verifierEcritureAutorisee(_baseLocale, existant.atelierId);
+    final miseAJour = existant.copierAvec(statut: nouveauStatut);
+    await _mettreEnCache(miseAJour);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'rendez_vous_groupe',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
+    );
+    if (nouveauStatut == AppConstants.rdvAnnule) {
+      await NotificationsService.instance.annulerRappel(miseAJour.id);
+    }
+    return miseAJour;
+  }
+
+  /// Corrige un rendez-vous de groupe déjà enregistré (date, heure, type)
+  /// et permet de le marquer urgent — même principe que
+  /// RendezVousRepository.modifierRendezVous.
+  Future<RendezVousGroupe> modifierRendezVous({
+    required RendezVousGroupe existant,
+    required DateTime dateHeure,
+    required String type,
+    required bool urgent,
+    required String nomGroupePourRappel,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, existant.atelierId);
+    await _baseLocale.retirerTachesPourEnregistrement('rendez_vous_groupe', existant.id);
+    final miseAJour = existant.copierAvec(dateHeure: dateHeure, type: type, urgent: urgent);
+    await _mettreEnCache(miseAJour);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'rendez_vous_groupe',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
+    );
+    if (miseAJour.statut != AppConstants.rdvAnnule) {
+      await _planifierRappel(miseAJour, nomGroupePourRappel);
+    }
+    return miseAJour;
+  }
+
   Future<void> chargerDepuisServeur(String groupeId) async {
     try {
       final lignes = await _client.from('rendez_vous_groupe').select().eq('groupe_id', groupeId);
+      for (final ligne in lignes) {
+        await _mettreEnCache(RendezVousGroupe.depuisJson(ligne));
+      }
+    } catch (_) {
+      // Hors-ligne : le cache local existant reste utilisable.
+    }
+  }
+
+  /// Rapatriement best-effort des rendez-vous de TOUS les groupes de
+  /// l'atelier (et non d'un seul groupe) — même principe que
+  /// RendezVousRepository.chargerDepuisServeur, utilisé par l'écran
+  /// "Rendez-vous" et la carte "Aujourd'hui" de l'accueil pour fusionner
+  /// les deux sources sans avoir à visiter chaque groupe individuellement.
+  Future<void> chargerTousDepuisServeur(String atelierId) async {
+    try {
+      final lignes =
+          await _client.from('rendez_vous_groupe').select().eq('atelier_id', atelierId);
       for (final ligne in lignes) {
         await _mettreEnCache(RendezVousGroupe.depuisJson(ligne));
       }

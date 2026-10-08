@@ -7,9 +7,41 @@ import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../data/models/rendez_vous.dart';
+import '../../../data/models/rendez_vous_groupe.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../clients/providers/clients_providers.dart';
+import '../../uniformes/providers/uniformes_providers.dart';
+import '../providers/rendez_vous_groupe_providers.dart';
 import '../providers/rendezvous_providers.dart';
+
+/// Représentation unifiée d'un rendez-vous de client ou de groupe
+/// d'uniformes, pour que l'écran "Rendez-vous" les affiche et les gère
+/// ensemble dans une seule liste triée par date — les deux viennent de
+/// tables séparées (`rendez_vous`/`rendez_vous_groupe`, voir
+/// RendezVousGroupeEntries) donc de deux repositories séparés, vers
+/// lesquels les actions (changer de statut, modifier) sont redirigées
+/// selon `estGroupe`.
+class _RdvUnifie {
+  const _RdvUnifie.client(RendezVous rdv)
+      : _rdv = rdv,
+        _rdvGroupe = null;
+
+  const _RdvUnifie.groupe(RendezVousGroupe rdvGroupe)
+      : _rdv = null,
+        _rdvGroupe = rdvGroupe;
+
+  final RendezVous? _rdv;
+  final RendezVousGroupe? _rdvGroupe;
+
+  bool get estGroupe => _rdvGroupe != null;
+  RendezVous get rdv => _rdv!;
+  RendezVousGroupe get rdvGroupe => _rdvGroupe!;
+
+  String get id => _rdv?.id ?? _rdvGroupe!.id;
+  DateTime get dateHeure => _rdv?.dateHeure ?? _rdvGroupe!.dateHeure;
+  String get statut => _rdv?.statut ?? _rdvGroupe!.statut;
+  bool get urgent => _rdv?.urgent ?? _rdvGroupe!.urgent;
+}
 
 const _bleuSeda = Color(0xFF1B4FA0);
 const _orangeSeda = Color(0xFFF5821F);
@@ -34,23 +66,26 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
       final utilisateur = await ref.read(utilisateurCourantProvider.future);
       if (utilisateur != null) {
         await ref.read(rendezVousRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
+        await ref
+            .read(rendezVousGroupeRepositoryProvider)
+            .chargerTousDepuisServeur(utilisateur.atelierId);
       }
     });
   }
 
   /// Corrige un rendez-vous déjà enregistré (date, heure, type) et permet
-  /// de le marquer urgent.
-  Future<void> _modifier(RendezVous rdv, String nomClient) async {
-    var date = rdv.dateHeure;
-    var heure = TimeOfDay.fromDateTime(rdv.dateHeure);
-    var urgent = rdv.urgent;
+  /// de le marquer urgent — client ou groupe selon `item.estGroupe`.
+  Future<void> _modifier(_RdvUnifie item, String nom) async {
+    var date = item.dateHeure;
+    var heure = TimeOfDay.fromDateTime(item.dateHeure);
+    var urgent = item.urgent;
 
     final resultat = await showDialog<String>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
           scrollable: true,
-          title: Text('Modifier : $nomClient', style: const TextStyle(color: _bleuSeda)),
+          title: Text('Modifier : $nom', style: const TextStyle(color: _bleuSeda)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,12 +151,19 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     if (resultat == null || !mounted) return;
 
     if (resultat == 'annuler_rdv' || resultat == 'terminer') {
+      final nouveauStatut =
+          resultat == 'annuler_rdv' ? AppConstants.rdvAnnule : AppConstants.rdvTermine;
       await executerAvecErreurAffichee(
         context,
-        () => ref.read(rendezVousRepositoryProvider).changerStatutParId(
-              rdv.id,
-              resultat == 'annuler_rdv' ? AppConstants.rdvAnnule : AppConstants.rdvTermine,
-            ),
+        () => item.estGroupe
+            ? ref.read(rendezVousGroupeRepositoryProvider).changerStatutParId(
+                  item.id,
+                  nouveauStatut,
+                )
+            : ref.read(rendezVousRepositoryProvider).changerStatutParId(
+                  item.id,
+                  nouveauStatut,
+                ),
       );
       return;
     }
@@ -129,19 +171,28 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     final dateHeure = DateTime(date.year, date.month, date.day, heure.hour, heure.minute);
     await executerAvecErreurAffichee(
       context,
-      () => ref.read(rendezVousRepositoryProvider).modifierRendezVous(
-            existant: rdv,
-            dateHeure: dateHeure,
-            type: rdv.type,
-            urgent: urgent,
-            nomClientPourRappel: nomClient,
-          ),
+      () => item.estGroupe
+          ? ref.read(rendezVousGroupeRepositoryProvider).modifierRendezVous(
+                existant: item.rdvGroupe,
+                dateHeure: dateHeure,
+                type: item.rdvGroupe.type,
+                urgent: urgent,
+                nomGroupePourRappel: nom,
+              )
+          : ref.read(rendezVousRepositoryProvider).modifierRendezVous(
+                existant: item.rdv,
+                dateHeure: dateHeure,
+                type: item.rdv.type,
+                urgent: urgent,
+                nomClientPourRappel: nom,
+              ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final rdvs = ref.watch(rendezVousTriesProvider);
+    final rdvsClients = ref.watch(rendezVousTriesProvider);
+    final rdvsGroupes = ref.watch(rendezVousGroupeTriesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -150,10 +201,21 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: rdvs.when(
+        child: rdvsClients.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
-          data: (liste) {
+          data: (listeClients) => rdvsGroupes.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
+          data: (listeGroupes) {
+            // Fusionne clients et groupes d'uniformes en une seule liste
+            // triée par date — chaque source est déjà triée individuellement
+            // (observerRendezVousTries/observerTousRendezVousGroupeTries),
+            // donc un simple tri stable sur l'ensemble suffit.
+            final liste = [
+              ...listeClients.map(_RdvUnifie.client),
+              ...listeGroupes.map(_RdvUnifie.groupe),
+            ]..sort((a, b) => a.dateHeure.compareTo(b.dateHeure));
             final actifs = liste.where((r) => r.statut != AppConstants.rdvAnnule).toList();
             if (actifs.isEmpty) {
               return const Center(child: Text('Aucun rendez-vous à venir.'));
@@ -205,6 +267,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
               ),
             );
           },
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -217,32 +280,38 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     );
   }
 
-  TableRow _ligne(RendezVous rdv, int index) {
-    final client = ref.watch(clientParIdProvider(rdv.clientId));
-    final nomClient = client.valueOrNull?.nomComplet ?? '…';
-    final fondLigne = rdv.urgent
+  TableRow _ligne(_RdvUnifie item, int index) {
+    final String nom;
+    if (item.estGroupe) {
+      final groupe = ref.watch(groupeUniformeParIdProvider(item.rdvGroupe.groupeId));
+      nom = groupe.valueOrNull?.nom ?? '…';
+    } else {
+      final client = ref.watch(clientParIdProvider(item.rdv.clientId));
+      nom = client.valueOrNull?.nomComplet ?? '…';
+    }
+    final fondLigne = item.urgent
         ? const Color(0xFFFBE4E1)
         : (index.isEven ? Colors.white : const Color(0xFFF6F3EE));
-    final afficherBadges = rdv.urgent ||
-        rdv.statut == AppConstants.rdvConfirme ||
-        rdv.statut == AppConstants.rdvTermine;
+    final afficherBadges = item.urgent ||
+        item.statut == AppConstants.rdvConfirme ||
+        item.statut == AppConstants.rdvTermine;
 
     return TableRow(
       decoration: BoxDecoration(color: fondLigne),
       children: [
         GestureDetector(
-          onTap: () => _afficherActions(context, ref, rdv.id, rdv.statut),
-          child: _Cellule(nomClient, tronquer: false),
+          onTap: () => _afficherActions(context, ref, item),
+          child: _Cellule(nom, tronquer: false),
         ),
         GestureDetector(
-          onTap: () => _afficherActions(context, ref, rdv.id, rdv.statut),
+          onTap: () => _afficherActions(context, ref, item),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  Formatters.dateHeure(rdv.dateHeure),
+                  Formatters.dateHeure(item.dateHeure),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
@@ -253,8 +322,8 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                     spacing: 4,
                     runSpacing: 4,
                     children: [
-                      _PuceStatut(statut: rdv.statut),
-                      if (rdv.urgent) const _PuceUrgent(),
+                      _PuceStatut(statut: item.statut),
+                      if (item.urgent) const _PuceUrgent(),
                     ],
                   ),
                 ],
@@ -266,7 +335,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: IconButton(
-              onPressed: () => _modifier(rdv, nomClient),
+              onPressed: () => _modifier(item, nom),
               tooltip: 'Modifier',
               style: IconButton.styleFrom(
                 backgroundColor: _orangeSeda,
@@ -286,8 +355,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
   Future<void> _afficherActions(
     BuildContext context,
     WidgetRef ref,
-    String rendezVousId,
-    String statutActuel,
+    _RdvUnifie item,
   ) async {
     final nouveauStatut = await showModalBottomSheet<String>(
       context: context,
@@ -314,13 +382,18 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
       ),
     );
 
-    if (nouveauStatut != null && nouveauStatut != statutActuel) {
+    if (nouveauStatut != null && nouveauStatut != item.statut) {
       await executerAvecErreurAffichee(
         context,
-        () => ref.read(rendezVousRepositoryProvider).changerStatutParId(
-              rendezVousId,
-              nouveauStatut,
-            ),
+        () => item.estGroupe
+            ? ref.read(rendezVousGroupeRepositoryProvider).changerStatutParId(
+                  item.id,
+                  nouveauStatut,
+                )
+            : ref.read(rendezVousRepositoryProvider).changerStatutParId(
+                  item.id,
+                  nouveauStatut,
+                ),
       );
     }
   }

@@ -1049,6 +1049,17 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  /// Rendez-vous de TOUS les groupes de l'atelier, triés par date —
+  /// équivalent de `observerRendezVousTries` (clients) pour que l'écran
+  /// "Rendez-vous" et la carte "Aujourd'hui" de l'accueil affichent aussi
+  /// ceux des groupes d'uniformes.
+  Stream<List<RendezVousGroupeEntry>> observerTousRendezVousGroupeTries(String atelierId) {
+    return (select(rendezVousGroupeEntries)
+          ..where((t) => t.atelierId.equals(atelierId))
+          ..orderBy([(t) => OrderingTerm.asc(t.dateHeure)]))
+        .watch();
+  }
+
   // --- Commandes (financier — jamais consulté pour un apprenti) ---
 
   Future<void> enregistrerCommande({

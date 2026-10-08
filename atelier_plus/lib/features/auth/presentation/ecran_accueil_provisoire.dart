@@ -9,14 +9,36 @@ import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/atelier.dart';
 import '../../../data/models/client.dart';
+import '../../../data/models/groupe_uniforme.dart';
 import '../../../data/models/rendez_vous.dart';
+import '../../../data/models/rendez_vous_groupe.dart';
 import '../../../data/models/utilisateur.dart';
 import '../../../data/sync/sync_providers.dart';
 import '../../abonnement/data/etat_abonnement.dart';
 import '../../abonnement/providers/abonnement_providers.dart';
 import '../../clients/providers/clients_providers.dart';
+import '../../rendezvous/providers/rendez_vous_groupe_providers.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
+import '../../uniformes/providers/uniformes_providers.dart';
 import '../providers/auth_providers.dart';
+
+/// Un rendez-vous (client ou groupe) prêt à afficher dans la carte
+/// "Rendez-vous aujourd'hui" — même principe que la fusion de l'écran
+/// "Rendez-vous" (voir ecran_liste_rendez_vous.dart), simplifié ici car
+/// purement en lecture (pas d'action de statut depuis l'accueil).
+class _RdvAujourdhui {
+  const _RdvAujourdhui({
+    required this.id,
+    required this.nom,
+    required this.dateHeure,
+    required this.estGroupe,
+  });
+
+  final String id;
+  final String nom;
+  final DateTime dateHeure;
+  final bool estGroupe;
+}
 
 /// Couleurs propres à l'en-tête de l'accueil — bleu SEDA Tech en dégradé,
 /// et orange SEDA Tech pour le rappel d'essai gratuit (voir AppColors pour
@@ -361,16 +383,39 @@ class _SectionAujourdhui extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final clients = ref.watch(rechercheClientsProvider('')).valueOrNull ?? const <Client>[];
     final rendezVous = ref.watch(rendezVousTriesProvider).valueOrNull ?? const <RendezVous>[];
+    final rendezVousGroupe =
+        ref.watch(rendezVousGroupeTriesProvider).valueOrNull ?? const <RendezVousGroupe>[];
+    final groupes = ref.watch(groupesUniformesProvider).valueOrNull ?? const <GroupeUniforme>[];
+    final parGroupe = {for (final g in groupes) g.id: g};
+    final parClient = {for (final c in clients) c.id: c};
 
     final maintenant = DateTime.now();
     final debutJour = DateTime(maintenant.year, maintenant.month, maintenant.day);
     final finJour = debutJour.add(const Duration(days: 1));
-    final rdvAujourdhui = rendezVous.where((r) {
-      if (r.statut == AppConstants.rdvAnnule) return false;
-      final local = r.dateHeure.toLocal();
+    bool estAujourdhui(DateTime dateHeure, String statut) {
+      if (statut == AppConstants.rdvAnnule) return false;
+      final local = dateHeure.toLocal();
       return !local.isBefore(debutJour) && local.isBefore(finJour);
-    }).toList()
-      ..sort((a, b) => a.dateHeure.compareTo(b.dateHeure));
+    }
+
+    final rdvAujourdhui = [
+      ...rendezVous.where((r) => estAujourdhui(r.dateHeure, r.statut)).map(
+            (r) => _RdvAujourdhui(
+              id: r.clientId,
+              nom: parClient[r.clientId]?.nomComplet ?? '…',
+              dateHeure: r.dateHeure,
+              estGroupe: false,
+            ),
+          ),
+      ...rendezVousGroupe.where((r) => estAujourdhui(r.dateHeure, r.statut)).map(
+            (r) => _RdvAujourdhui(
+              id: r.groupeId,
+              nom: parGroupe[r.groupeId]?.nom ?? '…',
+              dateHeure: r.dateHeure,
+              estGroupe: true,
+            ),
+          ),
+    ]..sort((a, b) => a.dateHeure.compareTo(b.dateHeure));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -392,7 +437,7 @@ class _SectionAujourdhui extends ConsumerWidget {
                 libelle: 'Rendez-vous\naujourd\'hui',
                 onTap: rdvAujourdhui.isEmpty
                     ? null
-                    : () => _afficherRdvAujourdhui(context, rdvAujourdhui, clients),
+                    : () => _afficherRdvAujourdhui(context, rdvAujourdhui),
               ),
             ),
           ],
@@ -416,16 +461,14 @@ class _SectionAujourdhui extends ConsumerWidget {
   }
 }
 
-/// Liste, dans une boîte en bas d'écran, les clients ayant rendez-vous
-/// aujourd'hui (déjà triés par heure) — touchée depuis la carte "Rendez-vous
-/// aujourd'hui". Toucher un client ouvre directement sa fiche.
+/// Liste, dans une boîte en bas d'écran, les clients et groupes d'uniformes
+/// ayant rendez-vous aujourd'hui (déjà triés par heure) — touchée depuis la
+/// carte "Rendez-vous aujourd'hui". Toucher une ligne ouvre directement la
+/// fiche du client ou le détail du groupe concerné.
 void _afficherRdvAujourdhui(
   BuildContext context,
-  List<RendezVous> rdvAujourdhui,
-  List<Client> clients,
+  List<_RdvAujourdhui> rdvAujourdhui,
 ) {
-  final parClient = {for (final c in clients) c.id: c};
-
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -453,13 +496,20 @@ void _afficherRdvAujourdhui(
                     for (final r in rdvAujourdhui)
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.person_outline, color: Color(0xFF1B4FA0)),
-                        title: Text(parClient[r.clientId]?.nomComplet ?? '…'),
+                        leading: Icon(
+                          r.estGroupe ? Icons.groups_outlined : Icons.person_outline,
+                          color: const Color(0xFF1B4FA0),
+                        ),
+                        title: Text(r.nom),
                         subtitle: Text(Formatters.heure(r.dateHeure.toLocal())),
                         trailing: const Icon(Icons.chevron_right, color: Color(0xFF6F6259)),
                         onTap: () {
                           Navigator.pop(context);
-                          context.push(AppRoutes.ficheClient(r.clientId));
+                          context.push(
+                            r.estGroupe
+                                ? AppRoutes.detailGroupeUniforme(r.id)
+                                : AppRoutes.ficheClient(r.id),
+                          );
                         },
                       ),
                   ],
