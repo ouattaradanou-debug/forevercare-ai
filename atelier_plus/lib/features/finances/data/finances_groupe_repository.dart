@@ -197,6 +197,23 @@ class FinancesGroupeRepository {
     }
   }
 
+  /// Rapatriement best-effort des paiements de TOUS les groupes de
+  /// l'atelier (et non d'un seul groupe) — utilisé par
+  /// `FinancesRepository.chargerRecapitulatifDepuisServeur` pour que les
+  /// paiements de groupe soient comptabilisés dans "Suivi des finances" au
+  /// même titre que les paiements clients (voir `recapitulatifBrut`).
+  Future<void> chargerTousPaiementsDepuisServeur(String atelierId) async {
+    try {
+      final lignes =
+          await _client.from('paiements_groupe').select().eq('atelier_id', atelierId);
+      for (final ligne in lignes) {
+        await _mettreEnCachePaiement(Paiement.depuisJson(ligne));
+      }
+    } catch (_) {
+      // Hors-ligne : le cache existant reste utilisable.
+    }
+  }
+
   Future<void> _mettreEnCacheCommande(CommandeGroupe commande) {
     return _baseLocale.enregistrerCommandeGroupe(
       id: commande.id,

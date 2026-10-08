@@ -1189,6 +1189,13 @@ class AppDatabase extends _$AppDatabase {
         .go();
   }
 
+  /// Tous les paiements de groupe de l'atelier (tous groupes confondus) —
+  /// équivalent de `tousPaiementsDeLAtelier` pour les paiements de groupe,
+  /// utilisé pour que "Suivi des finances" les comptabilise aussi.
+  Future<List<PaiementGroupeEntry>> tousPaiementsGroupeDeLAtelier(String atelierId) {
+    return (select(paiementGroupeEntries)..where((t) => t.atelierId.equals(atelierId))).get();
+  }
+
   /// Tous les paiements de l'atelier (tous clients confondus), utilisé par
   /// l'écran "Suivi des finances" pour le récapitulatif global.
   Future<List<PaiementEntry>> tousPaiementsDeLAtelier(String atelierId) {

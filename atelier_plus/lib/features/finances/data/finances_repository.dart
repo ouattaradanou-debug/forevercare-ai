@@ -10,6 +10,7 @@ import '../../../data/models/vente.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 import '../../ventes/data/ventes_repository.dart';
+import 'finances_groupe_repository.dart';
 
 /// Gestion des commandes et paiements — données financières.
 ///
@@ -32,13 +33,16 @@ class FinancesRepository {
     required SupabaseClient client,
     required AppDatabase baseLocale,
     required VentesRepository ventesRepository,
+    required FinancesGroupeRepository financesGroupeRepository,
   })  : _client = client,
         _baseLocale = baseLocale,
-        _ventesRepository = ventesRepository;
+        _ventesRepository = ventesRepository,
+        _financesGroupeRepository = financesGroupeRepository;
 
   final SupabaseClient _client;
   final AppDatabase _baseLocale;
   final VentesRepository _ventesRepository;
+  final FinancesGroupeRepository _financesGroupeRepository;
   static const _uuid = Uuid();
 
   Commande _depuisLigne(CommandeEntry ligne) => Commande(
@@ -291,26 +295,42 @@ class FinancesRepository {
   }
 
   /// Paiements, ventes directes et dépenses de tout l'atelier (tous
-  /// clients confondus), utilisés pour le récapitulatif global de l'écran
-  /// "Suivi des finances" — toute recette ou dépense enregistrée dans
-  /// l'application, quel que soit l'écran, doit s'y retrouver.
+  /// clients ET tous groupes d'uniformes confondus), utilisés pour le
+  /// récapitulatif global de l'écran "Suivi des finances" — toute recette
+  /// ou dépense enregistrée dans l'application, quel que soit l'écran, doit
+  /// s'y retrouver. Les paiements de groupe (table dédiée paiements_groupe,
+  /// voir FinancesGroupeRepository) sont donc fusionnés ici avec ceux des
+  /// clients : `Paiement.commandeId` pointe alors vers une ligne de
+  /// `commandes_groupe` plutôt que `commandes`, ce qui n'a pas d'incidence
+  /// ici puisque seuls `montant` et `datePaiement` sont utilisés pour le
+  /// calcul.
   Future<({List<Paiement> paiements, List<Vente> ventes, List<Depense> depenses})>
       recapitulatifBrut(String atelierId) async {
     final lignesPaiements = await _baseLocale.tousPaiementsDeLAtelier(atelierId);
+    final lignesPaiementsGroupe = await _baseLocale.tousPaiementsGroupeDeLAtelier(atelierId);
     final lignesVentes = await _baseLocale.toutesVentesDeLAtelier(atelierId);
     final lignesDepenses = await _baseLocale.toutesDepensesDeLAtelier(atelierId);
     return (
-      paiements: lignesPaiements
-          .map(
-            (l) => Paiement(
-              id: l.id,
-              atelierId: l.atelierId,
-              commandeId: l.commandeId,
-              montant: l.montant,
-              datePaiement: l.datePaiement,
-            ),
-          )
-          .toList(),
+      paiements: [
+        ...lignesPaiements.map(
+          (l) => Paiement(
+            id: l.id,
+            atelierId: l.atelierId,
+            commandeId: l.commandeId,
+            montant: l.montant,
+            datePaiement: l.datePaiement,
+          ),
+        ),
+        ...lignesPaiementsGroupe.map(
+          (l) => Paiement(
+            id: l.id,
+            atelierId: l.atelierId,
+            commandeId: l.commandeGroupeId,
+            montant: l.montant,
+            datePaiement: l.datePaiement,
+          ),
+        ),
+      ],
       ventes: lignesVentes
           .map(
             (l) => Vente(
@@ -353,6 +373,7 @@ class FinancesRepository {
       for (final ligne in lignesPaiements) {
         await _mettreEnCachePaiement(Paiement.depuisJson(ligne));
       }
+      await _financesGroupeRepository.chargerTousPaiementsDepuisServeur(atelierId);
 
       await _ventesRepository.chargerDepuisServeur(atelierId);
 

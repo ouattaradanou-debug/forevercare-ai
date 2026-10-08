@@ -9,12 +9,14 @@ import '../../auth/providers/auth_providers.dart';
 import '../../ventes/providers/ventes_providers.dart';
 import '../data/finances_repository.dart';
 import '../data/recapitulatif_finances.dart';
+import 'finances_groupe_providers.dart';
 
 final financesRepositoryProvider = Provider<FinancesRepository>((ref) {
   return FinancesRepository(
     client: ref.watch(supabaseClientProvider),
     baseLocale: ref.watch(baseLocaleProvider),
     ventesRepository: ref.watch(ventesRepositoryProvider),
+    financesGroupeRepository: ref.watch(financesGroupeRepositoryProvider),
   );
 });
 
