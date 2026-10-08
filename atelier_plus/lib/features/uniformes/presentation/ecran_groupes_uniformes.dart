@@ -260,10 +260,11 @@ class _BoutonContact extends StatelessWidget {
         backgroundColor: couleur,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
-        minimumSize: const Size(32, 32),
+        minimumSize: const Size(30, 30),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: EdgeInsets.zero,
       ),
-      icon: Icon(icone, size: 16),
+      icon: Icon(icone, size: 14),
     );
   }
 }
