@@ -139,6 +139,7 @@ class SyncEngine {
           id: c.id,
           atelierId: c.atelierId,
           clientId: c.clientId,
+          groupeId: c.groupeId,
           montantTotal: c.montantTotal,
           avance: c.avance,
           tenueRetiree: c.tenueRetiree,

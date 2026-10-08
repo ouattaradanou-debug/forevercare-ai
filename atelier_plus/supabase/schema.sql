@@ -257,12 +257,16 @@ alter table public.rendez_vous add column if not exists urgent boolean not null 
 create index if not exists idx_rdv_atelier_date on public.rendez_vous (atelier_id, date_heure);
 create index if not exists idx_rdv_client on public.rendez_vous (client_id);
 
--- Commandes (montant total, avance). Table financière — jamais accessible
+-- Commandes (montant total, avance), pour un client OU un groupe
+-- d'uniformes (exactement l'un des deux, voir le check
+-- `commandes_client_ou_groupe` ci-dessous — un groupe a une seule commande
+-- globale plutôt qu'une par membre). Table financière — jamais accessible
 -- à un apprenti, quelle que soit sa permission.
 create table if not exists public.commandes (
   id             uuid primary key default gen_random_uuid(),
   atelier_id     uuid not null references public.ateliers (id) on delete cascade,
-  client_id      uuid not null references public.clients (id) on delete cascade,
+  client_id      uuid references public.clients (id) on delete cascade,
+  groupe_id      uuid references public.groupes_uniformes (id) on delete cascade,
   montant_total  numeric(12, 2) not null default 0 check (montant_total >= 0),
   avance         numeric(12, 2) not null default 0 check (avance >= 0),
   tenue_retiree  boolean not null default false,
@@ -270,12 +274,21 @@ create table if not exists public.commandes (
   updated_at     timestamptz not null default now()
 );
 
--- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- Ajouts a posteriori sur une base déjà créée (create table if not exists
 -- ci-dessus ne modifie jamais une table existante) : le client est-il venu
--- récupérer sa tenue terminée ? (case à cocher sur la fiche client).
+-- récupérer sa tenue terminée ? (case à cocher sur la fiche client) ; puis
+-- rattachement possible à un groupe d'uniformes à la place d'un client
+-- (client_id devient nullable).
 alter table public.commandes add column if not exists tenue_retiree boolean not null default false;
+alter table public.commandes alter column client_id drop not null;
+alter table public.commandes add column if not exists groupe_id uuid references public.groupes_uniformes (id) on delete cascade;
+
+alter table public.commandes drop constraint if exists commandes_client_ou_groupe;
+alter table public.commandes add constraint commandes_client_ou_groupe
+  check ((client_id is null) <> (groupe_id is null));
 
 create index if not exists idx_commandes_client on public.commandes (client_id);
+create index if not exists idx_commandes_groupe on public.commandes (groupe_id);
 create index if not exists idx_commandes_atelier on public.commandes (atelier_id);
 
 -- Paiements successifs sur une commande. Table financière — même règle.

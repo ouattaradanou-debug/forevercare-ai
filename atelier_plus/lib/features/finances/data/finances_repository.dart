@@ -45,6 +45,7 @@ class FinancesRepository {
         id: ligne.id,
         atelierId: ligne.atelierId,
         clientId: ligne.clientId,
+        groupeId: ligne.groupeId,
         montantTotal: ligne.montantTotal,
         avance: ligne.avance,
         tenueRetiree: ligne.tenueRetiree,
@@ -59,20 +60,34 @@ class FinancesRepository {
     return lignes.map(_depuisLigne).toList();
   }
 
-  /// Crée une toute nouvelle commande pour ce client (nouvelle couture),
-  /// sans jamais toucher aux commandes précédentes.
+  /// Toutes les commandes d'un groupe d'uniformes — un groupe a une seule
+  /// commande globale (pas une par membre).
+  Future<List<Commande>> commandesDuGroupe(String groupeId) async {
+    final lignes = await _baseLocale.commandesDuGroupe(groupeId);
+    return lignes.map(_depuisLigne).toList();
+  }
+
+  /// Crée une toute nouvelle commande pour ce client OU ce groupe
+  /// d'uniformes (exactement l'un des deux), sans jamais toucher aux
+  /// commandes précédentes.
   Future<Commande> creerNouvelleCommande({
     required String atelierId,
-    required String clientId,
+    String? clientId,
+    String? groupeId,
     required double montantTotal,
     required double avance,
   }) async {
+    assert(
+      (clientId != null) != (groupeId != null),
+      'creerNouvelleCommande : fournir clientId OU groupeId, jamais les deux ni aucun.',
+    );
     await verifierEcritureAutorisee(_baseLocale, atelierId);
     final maintenant = DateTime.now().toUtc();
     final commande = Commande(
       id: _uuid.v4(),
       atelierId: atelierId,
       clientId: clientId,
+      groupeId: groupeId,
       montantTotal: montantTotal,
       avance: avance,
       createdAt: maintenant,
@@ -105,6 +120,7 @@ class FinancesRepository {
       id: commande.id,
       atelierId: commande.atelierId,
       clientId: commande.clientId,
+      groupeId: commande.groupeId,
       montantTotal: montantTotal,
       avance: avance,
       tenueRetiree: commande.tenueRetiree,
@@ -135,6 +151,7 @@ class FinancesRepository {
       id: commande.id,
       atelierId: commande.atelierId,
       clientId: commande.clientId,
+      groupeId: commande.groupeId,
       montantTotal: commande.montantTotal,
       avance: commande.avance,
       tenueRetiree: tenueRetiree,
@@ -389,11 +406,33 @@ class FinancesRepository {
     }
   }
 
+  /// Équivalent de [chargerDepuisServeur] pour les commandes d'un groupe
+  /// d'uniformes.
+  Future<void> chargerDepuisGroupeServeur(String groupeId) async {
+    try {
+      final lignesCommandes =
+          await _client.from('commandes').select().eq('groupe_id', groupeId);
+      for (final ligneCommande in lignesCommandes) {
+        final commande = Commande.depuisJson(ligneCommande);
+        await _mettreEnCacheCommande(commande);
+
+        final lignesPaiements =
+            await _client.from('paiements').select().eq('commande_id', commande.id);
+        for (final lignePaiement in lignesPaiements) {
+          await _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement));
+        }
+      }
+    } catch (_) {
+      // Hors-ligne : le cache existant reste utilisable.
+    }
+  }
+
   Future<void> _mettreEnCacheCommande(Commande commande) {
     return _baseLocale.enregistrerCommande(
       id: commande.id,
       atelierId: commande.atelierId,
       clientId: commande.clientId,
+      groupeId: commande.groupeId,
       montantTotal: commande.montantTotal,
       avance: commande.avance,
       tenueRetiree: commande.tenueRetiree,
