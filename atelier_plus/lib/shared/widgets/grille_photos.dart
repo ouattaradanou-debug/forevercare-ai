@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -170,6 +171,7 @@ class _TuilePhotoState extends ConsumerState<TuilePhoto> {
   bool _enregistrement = false;
   bool _enCoursEnvoi = false;
   bool _lecture = false;
+  bool _suppressionEnCours = false;
 
   @override
   void initState() {
@@ -281,6 +283,48 @@ class _TuilePhotoState extends ConsumerState<TuilePhoto> {
 
   void _ouvrirPleinEcran() => ouvrirPhotoPleinEcran(context, widget.photo.url);
 
+  /// Supprime définitivement la photo (pas seulement sa note vocale) —
+  /// demande confirmation, comme pour un groupe ou un client.
+  Future<void> _supprimerPhoto() async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer cette photo ?'),
+        content: const Text('Cette action est définitive.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFB3261E)),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true) return;
+
+    if (_lecture) {
+      await _player.stop();
+      if (mounted) setState(() => _lecture = false);
+    }
+
+    setState(() => _suppressionEnCours = true);
+    try {
+      await ref.read(photosRepositoryProvider).supprimerPhoto(widget.photo);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Échec de la suppression : $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _suppressionEnCours = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final aUnAudio = widget.photo.audioUrl != null;
@@ -290,12 +334,67 @@ class _TuilePhotoState extends ConsumerState<TuilePhoto> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GestureDetector(
-            onTap: _ouvrirPleinEcran,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(widget.photo.url, width: 90, height: 90, fit: BoxFit.cover),
-            ),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              GestureDetector(
+                onTap: _ouvrirPleinEcran,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: CachedNetworkImage(
+                    imageUrl: widget.photo.url,
+                    width: 90,
+                    height: 90,
+                    fit: BoxFit.cover,
+                    fadeInDuration: Duration.zero,
+                    placeholder: (context, url) => Container(
+                      width: 90,
+                      height: 90,
+                      color: const Color(0xFFEDEAE4),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 90,
+                      height: 90,
+                      color: const Color(0xFFEDEAE4),
+                      child: const Icon(Icons.broken_image_outlined, color: Color(0xFF6F6259)),
+                    ),
+                  ),
+                ),
+              ),
+              if (_suppressionEnCours)
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      color: Colors.black38,
+                      child: const Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Positioned(
+                  top: -6,
+                  right: -6,
+                  child: _BoutonRondPhoto(
+                    icone: Icons.close,
+                    couleurFond: const Color(0xFF8A2E2E),
+                    onTap: _supprimerPhoto,
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 6),
           if (_enCoursEnvoi)
