@@ -291,6 +291,38 @@ create table if not exists public.paiements (
 create index if not exists idx_paiements_commande on public.paiements (commande_id);
 create index if not exists idx_paiements_atelier on public.paiements (atelier_id);
 
+-- Commande globale d'un groupe d'uniformes (montant total, avance) — table
+-- dédiée et séparée de `commandes` (clients) : un groupe a une seule
+-- commande plutôt qu'une par membre, et cette séparation évite tout ALTER
+-- sur une table déjà en production. Table financière — même règle.
+create table if not exists public.commandes_groupe (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  groupe_id      uuid not null references public.groupes_uniformes (id) on delete cascade,
+  montant_total  numeric(12, 2) not null default 0 check (montant_total >= 0),
+  avance         numeric(12, 2) not null default 0 check (avance >= 0),
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+create index if not exists idx_commandes_groupe_groupe on public.commandes_groupe (groupe_id);
+create index if not exists idx_commandes_groupe_atelier on public.commandes_groupe (atelier_id);
+
+-- Paiements successifs sur une commande de groupe — même principe que
+-- `paiements` (clients), table dédiée pour la même raison que
+-- `commandes_groupe`.
+create table if not exists public.paiements_groupe (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  commande_id    uuid not null references public.commandes_groupe (id) on delete cascade,
+  montant        numeric(12, 2) not null check (montant > 0),
+  date_paiement  timestamptz not null default now(),
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists idx_paiements_groupe_commande on public.paiements_groupe (commande_id);
+create index if not exists idx_paiements_groupe_atelier on public.paiements_groupe (atelier_id);
+
 -- Dépenses de l'atelier (loyer, fournitures, etc.). Table financière — même
 -- règle que commandes/paiements : jamais accessible à un apprenti.
 create table if not exists public.depenses (
@@ -406,7 +438,8 @@ begin
     select unnest(array[
       'ateliers', 'utilisateurs', 'permissions_apprenti', 'clients',
       'types_tenue', 'champs_mesure', 'mesures', 'rendez_vous',
-      'commandes', 'abonnements', 'groupes_uniformes', 'membres_groupe_uniforme', 'articles'
+      'commandes', 'abonnements', 'groupes_uniformes', 'membres_groupe_uniforme', 'articles',
+      'commandes_groupe'
     ])
   loop
     execute format(
@@ -565,6 +598,8 @@ alter table public.photos enable row level security;
 alter table public.rendez_vous enable row level security;
 alter table public.commandes enable row level security;
 alter table public.paiements enable row level security;
+alter table public.commandes_groupe enable row level security;
+alter table public.paiements_groupe enable row level security;
 alter table public.depenses enable row level security;
 alter table public.ventes enable row level security;
 alter table public.articles enable row level security;
@@ -894,6 +929,23 @@ create policy commandes_all on public.commandes
 -- -----------------------------------------------------------------------------
 drop policy if exists paiements_all on public.paiements;
 create policy paiements_all on public.paiements
+  for all to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.10bis COMMANDES_GROUPE / PAIEMENTS_GROUPE — même garantie que
+--         commandes/paiements, pour la commande globale d'un groupe
+--         d'uniformes.
+-- -----------------------------------------------------------------------------
+drop policy if exists commandes_groupe_all on public.commandes_groupe;
+create policy commandes_groupe_all on public.commandes_groupe
+  for all to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists paiements_groupe_all on public.paiements_groupe;
+create policy paiements_groupe_all on public.paiements_groupe
   for all to authenticated
   using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
   with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());

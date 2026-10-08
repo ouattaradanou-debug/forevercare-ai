@@ -212,6 +212,39 @@ class PaiementEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Commande globale d'un groupe d'uniformes (un groupe a une seule commande
+/// plutôt qu'une par membre) — table dédiée et séparée de CommandeEntries
+/// (clients) : jamais d'ALTER sur une table existante contenant déjà des
+/// données réelles, uniquement une création de table toute neuve, sans
+/// aucun risque pour la table `commandes` des clients.
+@DataClassName('CommandeGroupeEntry')
+class CommandeGroupeEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get groupeId => text()();
+  RealColumn get montantTotal => real()();
+  RealColumn get avance => real()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Paiements sur une commande de groupe — même principe que PaiementEntries,
+/// table dédiée pour la même raison que CommandeGroupeEntries.
+@DataClassName('PaiementGroupeEntry')
+class PaiementGroupeEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get commandeGroupeId => text()();
+  RealColumn get montant => real()();
+  DateTimeColumn get datePaiement => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Cache local des dépenses — même remarque que CommandeEntries/PaiementEntries
 /// : donnée financière, jamais alimentée ni lue pour un apprenti.
 @DataClassName('DepenseEntry')
@@ -376,12 +409,14 @@ class AbonnementEntries extends Table {
   MesureUniformeEntries,
   VenteEntries,
   ArticleEntries,
+  CommandeGroupeEntries,
+  PaiementGroupeEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -518,6 +553,14 @@ class AppDatabase extends _$AppDatabase {
             if (from >= 2) {
               await m.alterTable(TableMigration(photoEntries));
             }
+          }
+          if (from < 19) {
+            // Tables toutes neuves (commande/paiement d'un groupe
+            // d'uniformes) : simple création, jamais d'ALTER sur une table
+            // existante — contrairement au bloc `from < 18` ci-dessus, donc
+            // aucun risque pour les données déjà présentes.
+            await m.createTable(commandeGroupeEntries);
+            await m.createTable(paiementGroupeEntries);
           }
         },
       );
@@ -1013,6 +1056,74 @@ class AppDatabase extends _$AppDatabase {
     return (delete(paiementEntries)..where((t) => t.commandeId.equals(commandeId))).go();
   }
 
+  // --- Commande et paiements d'un groupe d'uniformes (financier — jamais
+  // consulté pour un apprenti) : tables dédiées, voir CommandeGroupeEntries.
+
+  Future<void> enregistrerCommandeGroupe({
+    required String id,
+    required String atelierId,
+    required String groupeId,
+    required double montantTotal,
+    required double avance,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) async {
+    await into(commandeGroupeEntries).insertOnConflictUpdate(
+      CommandeGroupeEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        groupeId: groupeId,
+        montantTotal: montantTotal,
+        avance: avance,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  /// Toutes les commandes du groupe, de la plus récente à la plus ancienne
+  /// — un groupe a une seule commande globale (pas une par membre), mais la
+  /// liste reste utile pour retrouver "la commande en cours" en premier,
+  /// comme `commandesDuClient`.
+  Future<List<CommandeGroupeEntry>> commandesDuGroupe(String groupeId) {
+    return (select(commandeGroupeEntries)
+          ..where((t) => t.groupeId.equals(groupeId))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .get();
+  }
+
+  Future<void> enregistrerPaiementGroupe({
+    required String id,
+    required String atelierId,
+    required String commandeGroupeId,
+    required double montant,
+    required DateTime datePaiement,
+  }) async {
+    await into(paiementGroupeEntries).insertOnConflictUpdate(
+      PaiementGroupeEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        commandeGroupeId: commandeGroupeId,
+        montant: montant,
+        datePaiement: datePaiement,
+      ),
+    );
+  }
+
+  Stream<List<PaiementGroupeEntry>> observerPaiementsDeLaCommandeGroupe(String commandeGroupeId) {
+    return (select(paiementGroupeEntries)
+          ..where((t) => t.commandeGroupeId.equals(commandeGroupeId))
+          ..orderBy([(t) => OrderingTerm.desc(t.datePaiement)]))
+        .watch();
+  }
+
+  /// Équivalent de `supprimerPaiementsDeLaCommande` pour un groupe.
+  Future<void> supprimerPaiementsDeLaCommandeGroupe(String commandeGroupeId) {
+    return (delete(paiementGroupeEntries)
+          ..where((t) => t.commandeGroupeId.equals(commandeGroupeId)))
+        .go();
+  }
+
   /// Tous les paiements de l'atelier (tous clients confondus), utilisé par
   /// l'écran "Suivi des finances" pour le récapitulatif global.
   Future<List<PaiementEntry>> tousPaiementsDeLAtelier(String atelierId) {
@@ -1227,9 +1338,25 @@ class AppDatabase extends _$AppDatabase {
       for (final photo in photos) {
         await retirerTachesPourEnregistrement('photos', photo.id);
       }
+      final commandesGroupe = await (select(commandeGroupeEntries)
+            ..where((t) => t.groupeId.equals(groupeId)))
+          .get();
+      for (final commande in commandesGroupe) {
+        final paiements = await (select(paiementGroupeEntries)
+              ..where((t) => t.commandeGroupeId.equals(commande.id)))
+            .get();
+        for (final paiement in paiements) {
+          await retirerTachesPourEnregistrement('paiements_groupe', paiement.id);
+        }
+        await retirerTachesPourEnregistrement('commandes_groupe', commande.id);
+        await (delete(paiementGroupeEntries)
+              ..where((t) => t.commandeGroupeId.equals(commande.id)))
+            .go();
+      }
       await retirerTachesPourEnregistrement('groupes_uniformes', groupeId);
 
       await (delete(photoEntries)..where((t) => t.groupeId.equals(groupeId))).go();
+      await (delete(commandeGroupeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(membreGroupeUniformeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(groupeUniformeEntries)..where((t) => t.id.equals(groupeId))).go();
     });
