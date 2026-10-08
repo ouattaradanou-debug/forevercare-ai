@@ -159,44 +159,55 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                 BoxShadow(color: Color(0x1F000000), blurRadius: 10),
                               ],
                             ),
-                            child: Table(
-                              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                              columnWidths: const {1: FixedColumnWidth(84)},
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                TableRow(
+                                Container(
                                   decoration: const BoxDecoration(color: _bleuSeda),
-                                  children: const [
-                                    _CelluleRepondant('Nom du répondant', entete: true),
-                                    SizedBox.shrink(),
-                                  ],
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  child: const Text(
+                                    'Nom du répondant',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                 ),
-                                TableRow(
+                                Table(
+                                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                                  columnWidths: const {1: FixedColumnWidth(84)},
                                   children: [
-                                    _CelluleRepondant(g.repondantNom ?? 'Non renseigné'),
-                                    Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 6),
-                                        child: telephone == null || telephone.isEmpty
-                                            ? const SizedBox.shrink()
-                                            : Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  _BoutonContact(
-                                                    icone: Icons.call,
-                                                    couleur: _bleuSeda,
-                                                    tooltip: 'Appeler',
-                                                    onTap: () => _appeler(telephone),
+                                    TableRow(
+                                      children: [
+                                        _CelluleRepondant(g.repondantNom ?? 'Non renseigné'),
+                                        Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 6),
+                                            child: telephone == null || telephone.isEmpty
+                                                ? const SizedBox.shrink()
+                                                : Row(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      _BoutonContact(
+                                                        icone: Icons.call,
+                                                        couleur: _bleuSeda,
+                                                        tooltip: 'Appeler',
+                                                        onTap: () => _appeler(telephone),
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      _BoutonContact(
+                                                        icone: Icons.chat,
+                                                        couleur: _vertWhatsapp,
+                                                        tooltip: 'WhatsApp',
+                                                        onTap: () => _whatsapp(telephone),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  const SizedBox(width: 6),
-                                                  _BoutonContact(
-                                                    icone: Icons.chat,
-                                                    couleur: _vertWhatsapp,
-                                                    tooltip: 'WhatsApp',
-                                                    onTap: () => _whatsapp(telephone),
-                                                  ),
-                                                ],
-                                              ),
-                                      ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -282,13 +293,9 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
 }
 
 class _CelluleRepondant extends StatelessWidget {
-  const _CelluleRepondant(
-    this.texte, {
-    this.entete = false,
-  });
+  const _CelluleRepondant(this.texte);
 
   final String texte;
-  final bool entete;
 
   @override
   Widget build(BuildContext context) {
@@ -299,10 +306,10 @@ class _CelluleRepondant extends StatelessWidget {
         textAlign: TextAlign.center,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontWeight: entete ? FontWeight.bold : FontWeight.w600,
-          color: entete ? Colors.white : const Color(0xFF231A14),
-          fontSize: entete ? 13 : 14,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF231A14),
+          fontSize: 14,
         ),
       ),
     );
