@@ -369,7 +369,8 @@ class _SectionAujourdhui extends ConsumerWidget {
       if (r.statut == AppConstants.rdvAnnule) return false;
       final local = r.dateHeure.toLocal();
       return !local.isBefore(debutJour) && local.isBefore(finJour);
-    }).length;
+    }).toList()
+      ..sort((a, b) => a.dateHeure.compareTo(b.dateHeure));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -387,8 +388,11 @@ class _SectionAujourdhui extends ConsumerWidget {
             Expanded(
               child: _CarteStat(
                 icone: Icons.event_outlined,
-                valeur: '$rdvAujourdhui',
+                valeur: '${rdvAujourdhui.length}',
                 libelle: 'Rendez-vous\naujourd\'hui',
+                onTap: rdvAujourdhui.isEmpty
+                    ? null
+                    : () => _afficherRdvAujourdhui(context, rdvAujourdhui, clients),
               ),
             ),
           ],
@@ -412,27 +416,104 @@ class _SectionAujourdhui extends ConsumerWidget {
   }
 }
 
+/// Liste, dans une boîte en bas d'écran, les clients ayant rendez-vous
+/// aujourd'hui (déjà triés par heure) — touchée depuis la carte "Rendez-vous
+/// aujourd'hui". Toucher un client ouvre directement sa fiche.
+void _afficherRdvAujourdhui(
+  BuildContext context,
+  List<RendezVous> rdvAujourdhui,
+  List<Client> clients,
+) {
+  final parClient = {for (final c in clients) c.id: c};
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) => SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Rendez-vous aujourd\'hui',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B4FA0)),
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final r in rdvAujourdhui)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.person_outline, color: Color(0xFF1B4FA0)),
+                        title: Text(parClient[r.clientId]?.nomComplet ?? '…'),
+                        subtitle: Text(Formatters.heure(r.dateHeure.toLocal())),
+                        trailing: const Icon(Icons.chevron_right, color: Color(0xFF6F6259)),
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push(AppRoutes.ficheClient(r.clientId));
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class _CarteStat extends StatelessWidget {
-  const _CarteStat({required this.icone, required this.valeur, required this.libelle});
+  const _CarteStat({
+    required this.icone,
+    required this.valeur,
+    required this.libelle,
+    this.onTap,
+  });
 
   final IconData icone;
   final String valeur;
   final String libelle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icone, color: const Color(0xFF1B4FA0)),
-          const SizedBox(height: 10),
-          Text(valeur, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 2),
-          Text(libelle, style: const TextStyle(color: Color(0xFF6F6259))),
-        ],
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(icone, color: const Color(0xFF1B4FA0)),
+                  if (onTap != null)
+                    const Icon(Icons.chevron_right, color: Color(0xFF6F6259), size: 20),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(valeur, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 2),
+              Text(libelle, style: const TextStyle(color: Color(0xFF6F6259))),
+            ],
+          ),
+        ),
       ),
     );
   }
