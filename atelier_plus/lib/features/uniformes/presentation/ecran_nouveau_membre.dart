@@ -164,11 +164,10 @@ class _EcranNouveauMembreState extends ConsumerState<EcranNouveauMembre> {
         elevation: 0,
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-              child: Column(
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+          child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   EnTeteSection(
@@ -240,28 +239,31 @@ class _EcranNouveauMembreState extends ConsumerState<EcranNouveauMembre> {
                   ],
                 ],
               ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFAF6F1),
+            boxShadow: [BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, -2))],
+          ),
+          child: FilledButton(
+            onPressed: _enregistrementEnCours ? null : _enregistrer,
+            style: FilledButton.styleFrom(
+              backgroundColor: _orangeSeda,
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
             ),
-            Positioned(
-              left: 20,
-              right: 20,
-              bottom: 16,
-              child: FilledButton(
-                onPressed: _enregistrementEnCours ? null : _enregistrer,
-                style: FilledButton.styleFrom(
-                  backgroundColor: _orangeSeda,
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-                ),
-                child: _enregistrementEnCours
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Ajouter le membre'),
-              ),
-            ),
-          ],
+            child: _enregistrementEnCours
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Text('Ajouter le membre'),
+          ),
         ),
       ),
     );
