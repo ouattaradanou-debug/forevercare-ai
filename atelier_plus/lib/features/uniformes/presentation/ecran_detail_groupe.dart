@@ -165,6 +165,7 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                 Container(
                                   decoration: const BoxDecoration(color: _bleuSeda),
                                   padding: const EdgeInsets.symmetric(vertical: 12),
+                                  alignment: Alignment.center,
                                   child: const Text(
                                     'Nom du répondant',
                                     textAlign: TextAlign.center,
