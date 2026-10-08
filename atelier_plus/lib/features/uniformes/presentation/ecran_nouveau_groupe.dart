@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/gestion_erreurs.dart';
@@ -37,10 +38,13 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
   final _repondantNomCtrl = TextEditingController();
   final _repondantTelCtrl = TextEditingController();
   final Map<String, bool> _photoEnCours = {};
+  final _dicteeVocale = stt.SpeechToText();
 
   GroupeUniforme? _groupe;
   bool _enregistrementGroupeEnCours = false;
   bool _enregistrementFinalEnCours = false;
+  bool _dicteeDisponible = false;
+  String? _champEnDictee;
   String? _erreur;
 
   @override
@@ -48,7 +52,62 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
     _nomCtrl.dispose();
     _repondantNomCtrl.dispose();
     _repondantTelCtrl.dispose();
+    _dicteeVocale.stop();
     super.dispose();
+  }
+
+  /// Démarre/arrête la dictée vocale pour [champ] — même principe que
+  /// EcranNouveauClient._basculerDictee : un seul champ à la fois peut être
+  /// en cours de dictée.
+  Future<void> _basculerDictee(
+    String champ,
+    TextEditingController controleur, {
+    bool chiffresSeulement = false,
+  }) async {
+    if (_champEnDictee == champ) {
+      await _dicteeVocale.stop();
+      if (mounted) setState(() => _champEnDictee = null);
+      return;
+    }
+
+    if (_champEnDictee != null) {
+      await _dicteeVocale.stop();
+    }
+
+    if (!_dicteeDisponible) {
+      _dicteeDisponible = await _dicteeVocale.initialize(
+        onStatus: (statut) {
+          if ((statut == 'done' || statut == 'notListening') && mounted) {
+            setState(() => _champEnDictee = null);
+          }
+        },
+        onError: (_) {
+          if (mounted) setState(() => _champEnDictee = null);
+        },
+      );
+      if (!_dicteeDisponible) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
+          );
+        }
+        return;
+      }
+    }
+
+    setState(() => _champEnDictee = champ);
+    await _dicteeVocale.listen(
+      localeId: 'fr_FR',
+      onResult: (resultat) {
+        var texte = resultat.recognizedWords;
+        if (chiffresSeulement) {
+          texte = texte.replaceAll(RegExp(r'[^0-9]'), '');
+        }
+        controleur.text = texte;
+        controleur.selection = TextSelection.collapsed(offset: controleur.text.length);
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   /// Crée le groupe si ce n'est pas déjà fait, à partir des informations
@@ -191,22 +250,46 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
                   TextField(
                     controller: _nomCtrl,
                     autofocus: true,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Nom du groupe',
                       hintText: 'Ex. : Promotion 2026, Équipe commerciale...',
+                      prefixIcon: IconButton(
+                        icon: Icon(_champEnDictee == 'nom' ? Icons.mic : Icons.mic_none),
+                        color: _champEnDictee == 'nom' ? Colors.red : _bleuSeda,
+                        tooltip: 'Dicter le nom du groupe',
+                        onPressed: () => _basculerDictee('nom', _nomCtrl),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _repondantNomCtrl,
-                    decoration: const InputDecoration(labelText: 'Nom du répondant (optionnel)'),
+                    decoration: InputDecoration(
+                      labelText: 'Nom du répondant (optionnel)',
+                      prefixIcon: IconButton(
+                        icon: Icon(_champEnDictee == 'repondantNom' ? Icons.mic : Icons.mic_none),
+                        color: _champEnDictee == 'repondantNom' ? Colors.red : _bleuSeda,
+                        tooltip: 'Dicter le nom du répondant',
+                        onPressed: () => _basculerDictee('repondantNom', _repondantNomCtrl),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _repondantTelCtrl,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Téléphone du répondant (optionnel)',
+                      prefixIcon: IconButton(
+                        icon: Icon(_champEnDictee == 'repondantTel' ? Icons.mic : Icons.mic_none),
+                        color: _champEnDictee == 'repondantTel' ? Colors.red : _bleuSeda,
+                        tooltip: 'Dicter le téléphone du répondant',
+                        onPressed: () => _basculerDictee(
+                          'repondantTel',
+                          _repondantTelCtrl,
+                          chiffresSeulement: true,
+                        ),
+                      ),
                     ),
                   ),
                   if (_erreur != null) ...[

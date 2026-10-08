@@ -381,7 +381,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -498,16 +498,25 @@ class AppDatabase extends _$AppDatabase {
             }
           }
           if (from < 17) {
-            // photoEntries créée dans le bloc `from < 2` ci-dessus. `clientId`
-            // devient nullable (une photo peut désormais appartenir à un
-            // groupe d'uniformes au lieu d'un client) : SQLite ne permet pas
-            // de relâcher une contrainte NOT NULL via ALTER TABLE, mais
-            // Drift gère déjà toute lecture/écriture via les Companions
-            // générés à partir de la définition Dart actuelle, donc seules
-            // les deux nouvelles colonnes doivent être ajoutées explicitement.
+            // photoEntries créée dans le bloc `from < 2` ci-dessus.
             if (from >= 2) {
               await m.addColumn(photoEntries, photoEntries.groupeId);
               await m.addColumn(photoEntries, photoEntries.sexe);
+            }
+          }
+          if (from < 18) {
+            // `clientId` devient nullable (une photo peut désormais
+            // appartenir à un groupe d'uniformes au lieu d'un client) :
+            // SQLite ne permet pas de relâcher une contrainte NOT NULL via
+            // un simple ALTER TABLE, contrairement à ce que le bloc
+            // `from < 17` ci-dessus supposait à tort (l'ajout des colonnes
+            // réussissait, mais la contrainte NOT NULL d'origine sur
+            // client_id restait active en base, faisant échouer l'insertion
+            // de toute photo de groupe). `alterTable` recrée la table à
+            // partir de la définition Dart actuelle (client_id nullable) et
+            // recopie les données existantes par nom de colonne.
+            if (from >= 2) {
+              await m.alterTable(TableMigration(photoEntries));
             }
           }
         },
