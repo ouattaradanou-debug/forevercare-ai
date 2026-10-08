@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/gestion_erreurs.dart';
-import '../../../core/utils/telephone.dart';
 import '../../../data/models/groupe_uniforme.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/uniformes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
 const _orangeSeda = Color(0xFFF5821F);
-const _vertWhatsapp = Color(0xFF25D366);
 
 /// Groupes de mesures d'uniformes (promotion, établissement, équipe) :
 /// permet de prendre les mesures de plusieurs personnes à la fois, en
-/// dehors des fiches clients individuelles. Organisés en tableau avec
-/// contact direct (appel/WhatsApp) du répondant du groupe.
+/// dehors des fiches clients individuelles. Organisés en tableau, avec
+/// modification/suppression du groupe directement depuis la ligne.
 class EcranGroupesUniformes extends ConsumerStatefulWidget {
   const EcranGroupesUniformes({super.key});
 
@@ -100,16 +97,6 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
         );
   }
 
-  Future<void> _appeler(String telephone) => executerAvecErreurAffichee(
-        context,
-        () => launchUrl(Uri(scheme: 'tel', path: telephone)),
-      );
-
-  Future<void> _whatsapp(String telephone) => executerAvecErreurAffichee(
-        context,
-        () => launchUrl(Uri.parse('https://wa.me/${Telephone.normaliser(telephone)}')),
-      );
-
   @override
   Widget build(BuildContext context) {
     final groupes = ref.watch(groupesUniformesProvider);
@@ -151,7 +138,7 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
                             const Padding(
                               padding: EdgeInsets.only(bottom: 10),
                               child: _LegendeBouton(
-                                texte: 'pour modifier le groupe ou contacter le répondant',
+                                texte: 'pour modifier ou supprimer le groupe',
                               ),
                             ),
                             ClipRRect(
@@ -245,14 +232,12 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
     );
   }
 
-  /// Corrige le nom du groupe et/ou les coordonnées du répondant, avec
-  /// appel/WhatsApp directement depuis la même boîte — ouverte par le "+"
-  /// de chaque ligne.
+  /// Corrige le nom du groupe et/ou les coordonnées du répondant, ou
+  /// supprime le groupe — ouverte par le "+" de chaque ligne.
   Future<void> _modifierGroupe(GroupeUniforme groupe) async {
     final nomCtrl = TextEditingController(text: groupe.nom);
     final repondantNomCtrl = TextEditingController(text: groupe.repondantNom ?? '');
     final repondantTelCtrl = TextEditingController(text: groupe.repondantTelephone ?? '');
-    final telephoneActuel = groupe.repondantTelephone;
 
     final resultat = await showDialog<String>(
       context: context,
@@ -288,26 +273,6 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
             icon: const Icon(Icons.delete_outline),
             label: const Text('Supprimer le groupe'),
           ),
-          if (telephoneActuel != null && telephoneActuel.isNotEmpty) ...[
-            TextButton.icon(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                _appeler(telephoneActuel);
-              },
-              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-              icon: const Icon(Icons.call),
-              label: const Text('Appeler'),
-            ),
-            TextButton.icon(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                _whatsapp(telephoneActuel);
-              },
-              style: TextButton.styleFrom(foregroundColor: _vertWhatsapp),
-              icon: const Icon(Icons.chat),
-              label: const Text('WhatsApp'),
-            ),
-          ],
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             style: TextButton.styleFrom(foregroundColor: _bleuSeda),
