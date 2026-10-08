@@ -14,6 +14,8 @@ import '../../../shared/widgets/grille_photos.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../clients/providers/photos_providers.dart';
+import '../../mesures/providers/gabarits_providers.dart';
+import '../../mesures/utils/choix_gabarit.dart';
 import '../providers/uniformes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -88,14 +90,27 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
     if (resultat == null || !mounted) return;
 
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
-    if (utilisateur == null) return;
-    await ref.read(membresGroupeUniformeRepositoryProvider).ajouterMembre(
+    if (utilisateur == null || !mounted) return;
+    final membre = await ref.read(membresGroupeUniformeRepositoryProvider).ajouterMembre(
           atelierId: utilisateur.atelierId,
           groupeId: widget.groupeId,
           nom: resultat.nom,
           prenom: null,
           sexe: resultat.sexe,
         );
+    if (!mounted || resultat.sexe == null) return;
+
+    // Ouvre directement la prise de mesure du gabarit par défaut pour ce
+    // sexe (même principe que EcranNouveauClient._idGabaritPourSexe), au
+    // lieu de laisser retrouver le membre dans la liste puis choisir
+    // manuellement un type de tenue.
+    final gabarits = await ref.read(typesTenueVisiblesProvider.future);
+    final gabarit = choisirGabaritPourSexe(gabarits, utilisateur.atelierId, resultat.sexe!);
+    if (!mounted || gabarit == null) return;
+    context.push(
+      AppRoutes.priseMesureMembre(membre.id, gabarit.id),
+      extra: membre.nomComplet,
+    );
   }
 
   Future<void> _basculerTenueTerminee(MembreGroupeUniforme membre) async {
