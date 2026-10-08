@@ -113,23 +113,34 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
     // lieu de laisser retrouver le membre dans la liste puis choisir
     // manuellement un type de tenue. Si aucun sexe n'a été renseigné, ou
     // qu'aucun gabarit par défaut n'existe pour ce sexe, on retombe sur le
-    // choix manuel habituel plutôt que de ne rien faire.
-    if (resultat.sexe != null) {
-      final gabarits = await ref.read(typesTenueVisiblesProvider.future);
-      if (!mounted) return;
-      final gabarit = choisirGabaritPourSexe(gabarits, utilisateur.atelierId, resultat.sexe!);
-      if (gabarit != null) {
-        context.push(
-          AppRoutes.priseMesureMembre(membre.id, gabarit.id),
-          extra: membre.nomComplet,
+    // choix manuel habituel plutôt que de ne rien faire. Tout est entouré
+    // d'un try/catch : le membre est déjà enregistré à ce stade, une
+    // erreur ici ne doit jamais rester silencieuse ni faire croire à un
+    // échec complet.
+    try {
+      if (resultat.sexe != null) {
+        final gabarits = await ref.read(typesTenueVisiblesProvider.future);
+        if (!mounted) return;
+        final gabarit = choisirGabaritPourSexe(gabarits, utilisateur.atelierId, resultat.sexe!);
+        if (gabarit != null) {
+          context.push(
+            AppRoutes.priseMesureMembre(membre.id, gabarit.id),
+            extra: membre.nomComplet,
+          );
+          return;
+        }
+      }
+      context.push(
+        AppRoutes.selectionTypeTenueMembre(membre.id),
+        extra: membre.nomComplet,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Membre ajouté, mais impossible d\'ouvrir les mesures : $e')),
         );
-        return;
       }
     }
-    context.push(
-      AppRoutes.selectionTypeTenueMembre(membre.id),
-      extra: membre.nomComplet,
-    );
   }
 
   Future<void> _basculerTenueTerminee(MembreGroupeUniforme membre) async {
