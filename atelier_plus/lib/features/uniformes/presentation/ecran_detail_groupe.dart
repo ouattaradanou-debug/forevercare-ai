@@ -296,6 +296,7 @@ class _CelluleRepondant extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
       child: Text(
         texte,
+        textAlign: TextAlign.center,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
