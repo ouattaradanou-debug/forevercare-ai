@@ -78,6 +78,19 @@ class GroupesUniformesRepository {
     return miseAJour;
   }
 
+  /// Supprime définitivement un groupe et tout ce qui lui est associé
+  /// (membres, mesures) — réservé au propriétaire, la RLS l'impose de toute
+  /// façon côté serveur. Contrairement aux autres écritures de ce
+  /// repository, nécessite une connexion : il n'existe pas d'opération
+  /// "delete" dans la file d'attente de synchronisation (même principe que
+  /// ClientsRepository.supprimerClient), une suppression ne peut donc
+  /// jamais être mise en attente hors-ligne.
+  Future<void> supprimerGroupe(GroupeUniforme groupe) async {
+    await verifierEcritureAutorisee(_baseLocale, groupe.atelierId);
+    await _client.from('groupes_uniformes').delete().eq('id', groupe.id);
+    await _baseLocale.supprimerGroupeUniformeEtDependances(groupe.id);
+  }
+
   Stream<List<GroupeUniforme>> observerGroupes(String atelierId) {
     return _baseLocale.observerGroupesUniformes(atelierId).map(
           (lignes) => lignes.map(_depuisLigne).toList(),

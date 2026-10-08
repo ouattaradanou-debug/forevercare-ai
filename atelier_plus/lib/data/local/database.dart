@@ -1162,6 +1162,36 @@ class AppDatabase extends _$AppDatabase {
     return (select(groupeUniformeEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
+  /// Supprime un groupe d'uniformes du cache local, avec ses membres et
+  /// leurs mesures — miroir local du `on delete cascade` déjà en place côté
+  /// serveur, appelé après une suppression réussie sur Supabase (voir
+  /// GroupesUniformesRepository.supprimerGroupe).
+  Future<void> supprimerGroupeUniformeEtDependances(String groupeId) async {
+    await transaction(() async {
+      // Même précaution que supprimerClientEtDependances : purge d'abord
+      // toute tâche encore en file d'attente pour le groupe et chacune de
+      // ses dépendances, sinon la suppression serait "ressuscitée" dès que
+      // la file d'attente serait rejouée.
+      final membres = await (select(membreGroupeUniformeEntries)
+            ..where((t) => t.groupeId.equals(groupeId)))
+          .get();
+      for (final membre in membres) {
+        final mesures = await (select(mesureUniformeEntries)
+              ..where((t) => t.membreId.equals(membre.id)))
+            .get();
+        for (final mesure in mesures) {
+          await retirerTachesPourEnregistrement('mesures_uniforme', mesure.id);
+        }
+        await retirerTachesPourEnregistrement('membres_groupe_uniforme', membre.id);
+        await (delete(mesureUniformeEntries)..where((t) => t.membreId.equals(membre.id))).go();
+      }
+      await retirerTachesPourEnregistrement('groupes_uniformes', groupeId);
+
+      await (delete(membreGroupeUniformeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
+      await (delete(groupeUniformeEntries)..where((t) => t.id.equals(groupeId))).go();
+    });
+  }
+
   // --- Membres d'un groupe d'uniformes ---
 
   Future<void> enregistrerMembreGroupeUniforme({

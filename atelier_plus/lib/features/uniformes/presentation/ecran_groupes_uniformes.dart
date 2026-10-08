@@ -254,7 +254,7 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
     final repondantTelCtrl = TextEditingController(text: groupe.repondantTelephone ?? '');
     final telephoneActuel = groupe.repondantTelephone;
 
-    final resultat = await showDialog<bool>(
+    final resultat = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         scrollable: true,
@@ -282,10 +282,16 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
           ],
         ),
         actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, 'supprimer'),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFB3261E)),
+            icon: const Icon(Icons.delete_outline),
+            label: const Text('Supprimer le groupe'),
+          ),
           if (telephoneActuel != null && telephoneActuel.isNotEmpty) ...[
             TextButton.icon(
               onPressed: () {
-                Navigator.pop(dialogContext, false);
+                Navigator.pop(dialogContext);
                 _appeler(telephoneActuel);
               },
               style: TextButton.styleFrom(foregroundColor: _bleuSeda),
@@ -294,7 +300,7 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
             ),
             TextButton.icon(
               onPressed: () {
-                Navigator.pop(dialogContext, false);
+                Navigator.pop(dialogContext);
                 _whatsapp(telephoneActuel);
               },
               style: TextButton.styleFrom(foregroundColor: _vertWhatsapp),
@@ -303,20 +309,26 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
             ),
           ],
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
+            onPressed: () => Navigator.pop(dialogContext),
             style: TextButton.styleFrom(foregroundColor: _bleuSeda),
             child: const Text('Annuler'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
+            onPressed: () => Navigator.pop(dialogContext, 'enregistrer'),
             style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
             child: const Text('Enregistrer'),
           ),
         ],
       ),
     );
-    if (resultat != true || nomCtrl.text.trim().isEmpty || !mounted) return;
+    if (resultat == null || !mounted) return;
 
+    if (resultat == 'supprimer') {
+      await _confirmerSuppressionGroupe(groupe);
+      return;
+    }
+
+    if (nomCtrl.text.trim().isEmpty) return;
     await executerAvecErreurAffichee(
       context,
       () => ref.read(groupesUniformesRepositoryProvider).modifierGroupe(
@@ -327,6 +339,40 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
             repondantTelephone:
                 repondantTelCtrl.text.trim().isEmpty ? null : repondantTelCtrl.text.trim(),
           ),
+    );
+  }
+
+  /// Confirmation avant suppression définitive — réservé au propriétaire,
+  /// supprime aussi tous les membres du groupe et leurs mesures. Impossible
+  /// à annuler, comme la suppression d'un client.
+  Future<void> _confirmerSuppressionGroupe(GroupeUniforme groupe) async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer ce groupe ?'),
+        content: Text(
+          'Cette action supprime définitivement "${groupe.nom}", ainsi que tous '
+          'ses membres et leurs mesures. Impossible à annuler.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFB3261E)),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true || !mounted) return;
+
+    await executerAvecErreurAffichee(
+      context,
+      () => ref.read(groupesUniformesRepositoryProvider).supprimerGroupe(groupe),
     );
   }
 }
