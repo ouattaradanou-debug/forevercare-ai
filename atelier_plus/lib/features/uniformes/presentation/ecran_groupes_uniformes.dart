@@ -192,7 +192,6 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
   }
 
   TableRow _ligne(GroupeUniforme groupe, int index) {
-    final telephone = groupe.repondantTelephone;
     final fondLigne = index.isEven ? Colors.white : const Color(0xFFF6F3EE);
 
     return TableRow(
@@ -206,65 +205,97 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
           onTap: () => context.push(AppRoutes.detailGroupeUniforme(groupe.id)),
           child: _Cellule(groupe.repondantNom ?? '—', tronquer: false),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: telephone == null || telephone.isEmpty
-              ? const SizedBox.shrink()
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _BoutonContact(
-                      icone: Icons.call,
-                      couleur: _bleuSeda,
-                      tooltip: 'Appeler',
-                      onTap: () => _appeler(telephone),
-                    ),
-                    const SizedBox(width: 6),
-                    _BoutonContact(
-                      icone: Icons.chat,
-                      couleur: _vertWhatsapp,
-                      tooltip: 'WhatsApp',
-                      onTap: () => _whatsapp(telephone),
-                    ),
-                  ],
-                ),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: IconButton(
+              onPressed: () => _afficherInfosGroupe(groupe),
+              tooltip: 'Informations',
+              style: IconButton.styleFrom(
+                backgroundColor: _orangeSeda,
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+                minimumSize: const Size(36, 36),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.zero,
+              ),
+              icon: const Icon(Icons.add, size: 20),
+            ),
+          ),
         ),
       ],
     );
   }
+
+  /// Fiche rapide du groupe (nom, répondant, téléphone) avec appel/WhatsApp
+  /// directement depuis la boîte — ouverte par le "+" de chaque ligne.
+  Future<void> _afficherInfosGroupe(GroupeUniforme groupe) async {
+    final telephone = groupe.repondantTelephone;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        scrollable: true,
+        title: Text(groupe.nom, style: const TextStyle(color: _bleuSeda)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _LigneInfoGroupe('Répondant', groupe.repondantNom ?? 'Non renseigné'),
+            const SizedBox(height: 8),
+            _LigneInfoGroupe('Téléphone', telephone ?? 'Non renseigné'),
+          ],
+        ),
+        actions: [
+          if (telephone != null && telephone.isNotEmpty) ...[
+            TextButton.icon(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _appeler(telephone);
+              },
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              icon: const Icon(Icons.call),
+              label: const Text('Appeler'),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _whatsapp(telephone);
+              },
+              style: TextButton.styleFrom(foregroundColor: _vertWhatsapp),
+              icon: const Icon(Icons.chat),
+              label: const Text('WhatsApp'),
+            ),
+          ],
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-/// Petit bouton rond coloré pour contacter le répondant d'un groupe — même
-/// langage visuel que les autres boutons d'action ronds de l'application
-/// (orange "+" du stock, etc.), ici avec la couleur propre à chaque moyen
-/// de contact (bleu SEDA pour l'appel, vert WhatsApp pour WhatsApp).
-class _BoutonContact extends StatelessWidget {
-  const _BoutonContact({
-    required this.icone,
-    required this.couleur,
-    required this.tooltip,
-    required this.onTap,
-  });
+class _LigneInfoGroupe extends StatelessWidget {
+  const _LigneInfoGroupe(this.libelle, this.valeur);
 
-  final IconData icone;
-  final Color couleur;
-  final String tooltip;
-  final VoidCallback onTap;
+  final String libelle;
+  final String valeur;
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      tooltip: tooltip,
-      style: IconButton.styleFrom(
-        backgroundColor: couleur,
-        foregroundColor: Colors.white,
-        shape: const CircleBorder(),
-        minimumSize: const Size(30, 30),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: EdgeInsets.zero,
-      ),
-      icon: Icon(icone, size: 14),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(libelle, style: const TextStyle(color: Color(0xFF6F6259))),
+        ),
+        Expanded(
+          child: Text(valeur, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ),
+      ],
     );
   }
 }
