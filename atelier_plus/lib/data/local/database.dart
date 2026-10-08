@@ -185,8 +185,7 @@ class RendezVousEntries extends Table {
 class CommandeEntries extends Table {
   TextColumn get id => text()();
   TextColumn get atelierId => text()();
-  TextColumn get clientId => text().nullable()();
-  TextColumn get groupeId => text().nullable()();
+  TextColumn get clientId => text()();
   RealColumn get montantTotal => real()();
   RealColumn get avance => real()();
   BoolColumn get tenueRetiree => boolean().withDefault(const Constant(false))();
@@ -382,7 +381,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -518,20 +517,6 @@ class AppDatabase extends _$AppDatabase {
             // recopie les données existantes par nom de colonne.
             if (from >= 2) {
               await m.alterTable(TableMigration(photoEntries));
-            }
-          }
-          if (from < 19) {
-            // commandeEntries créée dans le bloc `from < 3` ci-dessus, avec
-            // `client_id` NOT NULL à l'origine. Une commande peut désormais
-            // appartenir à un groupe d'uniformes (groupe_id) à la place d'un
-            // client : `alterTable` recrée la table en une seule étape à
-            // partir de la définition Dart actuelle (client_id nullable,
-            // nouvelle colonne groupe_id) et recopie les données existantes
-            // — voir le bloc `from < 18` ci-dessus pour la même opération
-            // sur photoEntries, où le faire en deux temps (addColumn puis
-            // alterTable séparément) s'était révélé buggé.
-            if (from >= 3) {
-              await m.alterTable(TableMigration(commandeEntries));
             }
           }
         },
@@ -961,8 +946,7 @@ class AppDatabase extends _$AppDatabase {
   Future<void> enregistrerCommande({
     required String id,
     required String atelierId,
-    String? clientId,
-    String? groupeId,
+    required String clientId,
     required double montantTotal,
     required double avance,
     bool tenueRetiree = false,
@@ -973,8 +957,7 @@ class AppDatabase extends _$AppDatabase {
       CommandeEntriesCompanion.insert(
         id: id,
         atelierId: atelierId,
-        clientId: Value(clientId),
-        groupeId: Value(groupeId),
+        clientId: clientId,
         montantTotal: montantTotal,
         avance: avance,
         tenueRetiree: Value(tenueRetiree),
@@ -990,15 +973,6 @@ class AppDatabase extends _$AppDatabase {
   Future<List<CommandeEntry>> commandesDuClient(String clientId) {
     return (select(commandeEntries)
           ..where((t) => t.clientId.equals(clientId))
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-        .get();
-  }
-
-  /// Commandes d'un groupe d'uniformes — un groupe a une seule commande
-  /// globale (pas une par membre), de la plus récente à la plus ancienne.
-  Future<List<CommandeEntry>> commandesDuGroupe(String groupeId) {
-    return (select(commandeEntries)
-          ..where((t) => t.groupeId.equals(groupeId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .get();
   }
@@ -1253,22 +1227,9 @@ class AppDatabase extends _$AppDatabase {
       for (final photo in photos) {
         await retirerTachesPourEnregistrement('photos', photo.id);
       }
-      final commandes =
-          await (select(commandeEntries)..where((t) => t.groupeId.equals(groupeId))).get();
-      for (final commande in commandes) {
-        final paiements = await (select(paiementEntries)
-              ..where((t) => t.commandeId.equals(commande.id)))
-            .get();
-        for (final paiement in paiements) {
-          await retirerTachesPourEnregistrement('paiements', paiement.id);
-        }
-        await retirerTachesPourEnregistrement('commandes', commande.id);
-        await (delete(paiementEntries)..where((t) => t.commandeId.equals(commande.id))).go();
-      }
       await retirerTachesPourEnregistrement('groupes_uniformes', groupeId);
 
       await (delete(photoEntries)..where((t) => t.groupeId.equals(groupeId))).go();
-      await (delete(commandeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(membreGroupeUniformeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(groupeUniformeEntries)..where((t) => t.id.equals(groupeId))).go();
     });

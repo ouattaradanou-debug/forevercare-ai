@@ -1,13 +1,9 @@
-/// Modèle miroir de la table `commandes` — associée soit à un client
-/// ([clientId]), soit à un groupe d'uniformes ([groupeId], une seule
-/// commande globale plutôt qu'une par membre). Exactement l'un des deux
-/// doit être renseigné.
+/// Modèle miroir de la table `commandes`.
 class Commande {
   const Commande({
     required this.id,
     required this.atelierId,
-    this.clientId,
-    this.groupeId,
+    required this.clientId,
     required this.montantTotal,
     required this.avance,
     this.tenueRetiree = false,
@@ -17,8 +13,7 @@ class Commande {
 
   final String id;
   final String atelierId;
-  final String? clientId;
-  final String? groupeId;
+  final String clientId;
   final double montantTotal;
   final double avance;
   final bool tenueRetiree;
@@ -29,8 +24,7 @@ class Commande {
     return Commande(
       id: json['id'] as String,
       atelierId: json['atelier_id'] as String,
-      clientId: json['client_id'] as String?,
-      groupeId: json['groupe_id'] as String?,
+      clientId: json['client_id'] as String,
       // PostgREST peut renvoyer une colonne `numeric` en JSON comme nombre
       // OU comme texte selon la configuration : double.parse(toString())
       // gère les deux cas sans risque de perte de précision.
@@ -49,7 +43,6 @@ class Commande {
       'id': id,
       'atelier_id': atelierId,
       'client_id': clientId,
-      'groupe_id': groupeId,
       'montant_total': montantTotal,
       'avance': avance,
       'tenue_retiree': tenueRetiree,
