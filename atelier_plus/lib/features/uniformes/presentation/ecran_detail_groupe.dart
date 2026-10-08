@@ -312,9 +312,22 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                                   : Icons.male,
                                               color: _bleuSeda,
                                             ),
-                                            title: Text(
-                                              membre.nomComplet,
-                                              style: const TextStyle(fontWeight: FontWeight.w600),
+                                            title: Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    membre.nomComplet,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
+                                                if (membre.tenueTerminee) ...[
+                                                  const SizedBox(width: 8),
+                                                  const _PuceTermine(),
+                                                ],
+                                              ],
                                             ),
                                             trailing: IconButton(
                                               tooltip: membre.tenueTerminee
@@ -421,6 +434,28 @@ class _BoutonContact extends StatelessWidget {
         padding: EdgeInsets.zero,
       ),
       icon: Icon(icone, size: 14),
+    );
+  }
+}
+
+/// Pastille "Terminé" — même pastille que pour un rendez-vous terminé
+/// (voir _PuceStatut dans ecran_liste_rendez_vous.dart), affichée à côté
+/// du nom dès que la tenue du membre est marquée comme terminée.
+class _PuceTermine extends StatelessWidget {
+  const _PuceTermine();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFF546E7A),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Text(
+        'Terminé',
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
     );
   }
 }
