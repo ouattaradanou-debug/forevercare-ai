@@ -37,6 +37,7 @@ import '../../features/rendezvous/presentation/ecran_liste_rendez_vous.dart';
 import '../../features/uniformes/presentation/ecran_detail_groupe.dart';
 import '../../features/uniformes/presentation/ecran_groupes_uniformes.dart';
 import '../../features/uniformes/presentation/ecran_nouveau_groupe.dart';
+import '../../features/uniformes/presentation/ecran_nouveau_membre.dart';
 import '../../features/uniformes/presentation/ecran_prise_mesure_membre.dart';
 import '../../features/uniformes/presentation/ecran_selection_type_tenue_membre.dart';
 import '../../data/models/categorie_vente.dart';
@@ -101,11 +102,13 @@ class AppRoutes {
   static const String groupesUniformes = '/uniformes';
   static const String creationGroupeUniforme = '/uniformes/nouveau';
   static const String _detailGroupeUniformeTemplate = '/uniformes/:id';
+  static const String _creationMembreGroupeTemplate = '/uniformes/:id/membres/nouveau';
   static const String _selectionTypeTenueMembreTemplate = '/uniformes/membres/:membreId/mesures';
   static const String _priseMesureMembreTemplate =
       '/uniformes/membres/:membreId/mesures/:typeTenueId';
 
   static String detailGroupeUniforme(String id) => '/uniformes/$id';
+  static String creationMembreGroupe(String groupeId) => '/uniformes/$groupeId/membres/nouveau';
   static String selectionTypeTenueMembre(String membreId) => '/uniformes/membres/$membreId/mesures';
   static String priseMesureMembre(String membreId, String typeTenueId) =>
       '/uniformes/membres/$membreId/mesures/$typeTenueId';
@@ -268,6 +271,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.creationGroupeUniforme,
         builder: (context, state) => const EcranNouveauGroupe(),
+      ),
+      GoRoute(
+        path: AppRoutes._creationMembreGroupeTemplate,
+        builder: (context, state) => EcranNouveauMembre(groupeId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutes._detailGroupeUniformeTemplate,

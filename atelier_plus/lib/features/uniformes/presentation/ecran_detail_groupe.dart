@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/router/app_router.dart';
@@ -14,8 +13,6 @@ import '../../../shared/widgets/grille_photos.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../clients/providers/photos_providers.dart';
-import '../../mesures/providers/gabarits_providers.dart';
-import '../../mesures/utils/choix_gabarit.dart';
 import '../providers/uniformes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -44,14 +41,6 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
     Future.microtask(() async {
       await ref.read(membresGroupeUniformeRepositoryProvider).chargerDepuisServeur(widget.groupeId);
       await ref.read(photosRepositoryProvider).chargerPhotosGroupeDepuisServeur(widget.groupeId);
-      // Nécessaire pour que _ajouterMembre puisse trouver un gabarit par
-      // sexe dès l'ajout : sans ce chargement, le cache local des types de
-      // tenue peut être vide sur un appareil n'étant jamais passé par
-      // "Nouveau client" ou l'ancien écran de sélection manuelle.
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
-      if (utilisateur != null) {
-        await ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
-      }
     });
   }
 
@@ -87,59 +76,6 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
       }
     } finally {
       if (mounted) setState(() => _photoEnCours[cle] = false);
-    }
-  }
-
-  Future<void> _ajouterMembre() async {
-    final resultat = await showDialog<_ResultatNouveauMembre>(
-      context: context,
-      builder: (dialogContext) => const _DialogueNouveauMembre(),
-    );
-    if (resultat == null || !mounted) return;
-
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
-    if (utilisateur == null || !mounted) return;
-    final membre = await ref.read(membresGroupeUniformeRepositoryProvider).ajouterMembre(
-          atelierId: utilisateur.atelierId,
-          groupeId: widget.groupeId,
-          nom: resultat.nom,
-          prenom: null,
-          sexe: resultat.sexe,
-        );
-    if (!mounted) return;
-
-    // Ouvre directement la prise de mesure du gabarit par défaut pour ce
-    // sexe (même principe que EcranNouveauClient._idGabaritPourSexe), au
-    // lieu de laisser retrouver le membre dans la liste puis choisir
-    // manuellement un type de tenue. Si aucun sexe n'a été renseigné, ou
-    // qu'aucun gabarit par défaut n'existe pour ce sexe, on retombe sur le
-    // choix manuel habituel plutôt que de ne rien faire. Tout est entouré
-    // d'un try/catch : le membre est déjà enregistré à ce stade, une
-    // erreur ici ne doit jamais rester silencieuse ni faire croire à un
-    // échec complet.
-    try {
-      if (resultat.sexe != null) {
-        final gabarits = await ref.read(typesTenueVisiblesProvider.future);
-        if (!mounted) return;
-        final gabarit = choisirGabaritPourSexe(gabarits, utilisateur.atelierId, resultat.sexe!);
-        if (gabarit != null) {
-          context.push(
-            AppRoutes.priseMesureMembre(membre.id, gabarit.id),
-            extra: membre.nomComplet,
-          );
-          return;
-        }
-      }
-      context.push(
-        AppRoutes.selectionTypeTenueMembre(membre.id),
-        extra: membre.nomComplet,
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Membre ajouté, mais impossible d\'ouvrir les mesures : $e')),
-        );
-      }
     }
   }
 
@@ -415,7 +351,7 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
               right: 16,
               bottom: 24,
               child: FilledButton.icon(
-                onPressed: _ajouterMembre,
+                onPressed: () => context.push(AppRoutes.creationMembreGroupe(widget.groupeId)),
                 style: FilledButton.styleFrom(
                   backgroundColor: _bleuSeda,
                   minimumSize: const Size.fromHeight(52),
@@ -489,127 +425,3 @@ class _BoutonContact extends StatelessWidget {
   }
 }
 
-class _ResultatNouveauMembre {
-  const _ResultatNouveauMembre({required this.nom, required this.sexe});
-
-  final String nom;
-  final String? sexe;
-}
-
-/// Formulaire "Nouveau membre" : un seul champ nom + prénom (au lieu de
-/// deux cases séparées), avec dictée vocale — pratique pour un tailleur
-/// peu à l'aise à l'écrit, comme pour le nom d'un client.
-class _DialogueNouveauMembre extends StatefulWidget {
-  const _DialogueNouveauMembre();
-
-  @override
-  State<_DialogueNouveauMembre> createState() => _DialogueNouveauMembreState();
-}
-
-class _DialogueNouveauMembreState extends State<_DialogueNouveauMembre> {
-  final _nomCtrl = TextEditingController();
-  String? _sexe;
-  final _dicteeVocale = stt.SpeechToText();
-  bool _dicteeDisponible = false;
-  bool _enEcoute = false;
-
-  @override
-  void dispose() {
-    _dicteeVocale.stop();
-    _nomCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _basculerDictee() async {
-    if (_enEcoute) {
-      await _dicteeVocale.stop();
-      if (mounted) setState(() => _enEcoute = false);
-      return;
-    }
-
-    if (!_dicteeDisponible) {
-      _dicteeDisponible = await _dicteeVocale.initialize(
-        onStatus: (statut) {
-          if ((statut == 'done' || statut == 'notListening') && mounted) {
-            setState(() => _enEcoute = false);
-          }
-        },
-        onError: (_) {
-          if (mounted) setState(() => _enEcoute = false);
-        },
-      );
-      if (!_dicteeDisponible) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
-          );
-        }
-        return;
-      }
-    }
-
-    setState(() => _enEcoute = true);
-    await _dicteeVocale.listen(
-      localeId: 'fr_FR',
-      onResult: (resultat) {
-        _nomCtrl.text = resultat.recognizedWords;
-        _nomCtrl.selection = TextSelection.collapsed(offset: _nomCtrl.text.length);
-        if (mounted) setState(() {});
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      scrollable: true,
-      title: const Text('Nouveau membre', style: TextStyle(color: _bleuSeda)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _nomCtrl,
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: 'Nom et prénom',
-              prefixIcon: IconButton(
-                icon: Icon(_enEcoute ? Icons.mic : Icons.mic_none),
-                color: _enEcoute ? Colors.red : _bleuSeda,
-                tooltip: 'Dicter le nom',
-                onPressed: _basculerDictee,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'Homme', label: Text('Homme')),
-              ButtonSegment(value: 'Femme', label: Text('Femme')),
-            ],
-            selected: _sexe == null ? {} : {_sexe!},
-            emptySelectionAllowed: true,
-            onSelectionChanged: (selection) =>
-                setState(() => _sexe = selection.isEmpty ? null : selection.first),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-          child: const Text('Annuler'),
-        ),
-        FilledButton(
-          onPressed: () {
-            final nom = _nomCtrl.text.trim();
-            if (nom.isEmpty) return;
-            Navigator.of(context).pop(_ResultatNouveauMembre(nom: nom, sexe: _sexe));
-          },
-          style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
-          child: const Text('Ajouter'),
-        ),
-      ],
-    );
-  }
-}

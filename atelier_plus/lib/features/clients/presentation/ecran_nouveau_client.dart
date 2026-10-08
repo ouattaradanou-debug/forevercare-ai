@@ -17,6 +17,7 @@ import '../../../data/models/commande.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../shared/widgets/grille_photos.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
+import '../../../shared/widgets/selection_sexe_et_mesures.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
@@ -545,7 +546,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                   Row(
                     children: [
                       Expanded(
-                        child: _CarteSexe(
+                        child: CarteSexe(
                           icone: Icons.male,
                           libelle: 'Homme',
                           selectionne: _sexe == 'Homme',
@@ -554,7 +555,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _CarteSexe(
+                        child: CarteSexe(
                           icone: Icons.female,
                           libelle: 'Femme',
                           selectionne: _sexe == 'Femme',
@@ -577,7 +578,7 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                       style: TextStyle(color: Color(0xFF6F6259)),
                     )
                   else
-                    _SectionMesures(
+                    SectionMesuresParSexe(
                       sexe: _sexe!,
                       controleurPour: _controleurMesure,
                     ),
@@ -767,101 +768,6 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _CarteSexe extends StatelessWidget {
-  const _CarteSexe({
-    required this.icone,
-    required this.libelle,
-    required this.selectionne,
-    required this.onTap,
-  });
-
-  final IconData icone;
-  final String libelle;
-  final bool selectionne;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: selectionne ? _bleuSeda : const Color(0xFFDDD3C8),
-              width: selectionne ? 2 : 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(icone, size: 28),
-              const SizedBox(height: 8),
-              Text(libelle),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Liste fixe des champs de mesure selon le sexe du client — pas de choix
-/// de type de tenue à cette étape (contrairement aux groupes d'uniformes) :
-/// l'ancienne application affiche directement, dès le sexe choisi, la même
-/// liste de champs, personnalisable via "Paramètres > Champs de mesure".
-class _SectionMesures extends ConsumerWidget {
-  const _SectionMesures({required this.sexe, required this.controleurPour});
-
-  final String sexe;
-  final TextEditingController Function(String champId) controleurPour;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final utilisateur = ref.watch(utilisateurCourantProvider).valueOrNull;
-    final types = ref.watch(typesTenueVisiblesProvider);
-
-    return types.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const Text('Impossible de charger les champs de mesure.'),
-      data: (liste) {
-        if (utilisateur == null) return const Center(child: CircularProgressIndicator());
-        final gabarit = choisirGabaritPourSexe(liste, utilisateur.atelierId, sexe);
-        if (gabarit == null) {
-          return const Text(
-            'Connectez-vous à internet une première fois pour récupérer les champs de mesure.',
-            style: TextStyle(color: Color(0xFF6F6259)),
-          );
-        }
-
-        final champs = ref.watch(champsActifsProvider(gabarit.id));
-        return champs.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const Text('Impossible de charger les champs de mesure.'),
-          data: (champsListe) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final champ in champsListe)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: TextField(
-                    controller: controleurPour(champ.id),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(labelText: '${champ.nom} (${champ.unite})'),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
