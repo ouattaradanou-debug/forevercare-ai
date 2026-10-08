@@ -64,12 +64,12 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     super.initState();
     Future.microtask(() async {
       final utilisateur = await ref.read(utilisateurCourantProvider.future);
-      if (utilisateur != null) {
-        await ref.read(rendezVousRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
-        await ref
-            .read(rendezVousGroupeRepositoryProvider)
-            .chargerTousDepuisServeur(utilisateur.atelierId);
-      }
+      if (utilisateur == null || !mounted) return;
+      await ref.read(rendezVousRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
+      if (!mounted) return;
+      await ref
+          .read(rendezVousGroupeRepositoryProvider)
+          .chargerTousDepuisServeur(utilisateur.atelierId);
     });
   }
 
