@@ -1266,6 +1266,23 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  /// Supprime un membre du cache local, avec ses mesures — même principe
+  /// que `supprimerGroupeUniformeEtDependances`, pour un seul membre plutôt
+  /// que tout le groupe (voir MembresGroupeUniformeRepository.supprimerMembre).
+  Future<void> supprimerMembreGroupeUniformeEtDependances(String membreId) async {
+    await transaction(() async {
+      final mesures =
+          await (select(mesureUniformeEntries)..where((t) => t.membreId.equals(membreId))).get();
+      for (final mesure in mesures) {
+        await retirerTachesPourEnregistrement('mesures_uniforme', mesure.id);
+      }
+      await retirerTachesPourEnregistrement('membres_groupe_uniforme', membreId);
+
+      await (delete(mesureUniformeEntries)..where((t) => t.membreId.equals(membreId))).go();
+      await (delete(membreGroupeUniformeEntries)..where((t) => t.id.equals(membreId))).go();
+    });
+  }
+
   // --- Mesures des membres de groupe ---
 
   Future<void> enregistrerMesureUniforme({

@@ -60,6 +60,126 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
     if (mounted) setState(() => _membre = miseAJour);
   }
 
+  /// Formulaire "Modifier le membre" (nom et sexe), avec un accès direct à
+  /// la suppression — même principe que
+  /// EcranGroupesUniformes._modifierGroupe.
+  Future<void> _modifierMembre() async {
+    final nomCtrl = TextEditingController(text: _membre.nomComplet);
+    String? sexe = _membre.sexe;
+
+    final resultat = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          scrollable: true,
+          title: const Text('Modifier le membre', style: TextStyle(color: _bleuSeda)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nomCtrl,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(labelText: 'Nom et prénom'),
+              ),
+              const SizedBox(height: 12),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'Homme', label: Text('Homme')),
+                  ButtonSegment(value: 'Femme', label: Text('Femme')),
+                ],
+                selected: sexe == null ? {} : {sexe!},
+                emptySelectionAllowed: true,
+                onSelectionChanged: (selection) =>
+                    setDialogState(() => sexe = selection.isEmpty ? null : selection.first),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () => Navigator.pop(dialogContext, 'supprimer'),
+              style: TextButton.styleFrom(foregroundColor: const Color(0xFFB3261E)),
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Supprimer le membre'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, 'enregistrer'),
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFF5821F)),
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (resultat == null || !mounted) return;
+
+    if (resultat == 'supprimer') {
+      await _confirmerSuppressionMembre();
+      return;
+    }
+
+    final nom = nomCtrl.text.trim();
+    if (nom.isEmpty) return;
+
+    final utilisateur = await ref.read(utilisateurCourantProvider.future);
+    if (utilisateur == null || !mounted) return;
+    final miseAJour = await ref.read(membresGroupeUniformeRepositoryProvider).modifierMembre(
+          atelierId: utilisateur.atelierId,
+          membre: _membre,
+          nom: nom,
+          sexe: sexe,
+        );
+    if (mounted) setState(() => _membre = miseAJour);
+  }
+
+  /// Confirmation avant suppression définitive — supprime aussi toutes les
+  /// mesures du membre. Impossible à annuler, comme la suppression d'un
+  /// groupe ou d'un client.
+  Future<void> _confirmerSuppressionMembre() async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Supprimer ce membre ?'),
+        content: Text(
+          'Cette action supprime définitivement "${_membre.nomComplet}", ainsi que '
+          'toutes ses mesures. Impossible à annuler.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFB3261E)),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true || !mounted) return;
+
+    final utilisateur = await ref.read(utilisateurCourantProvider.future);
+    if (utilisateur == null || !mounted) return;
+    try {
+      await ref.read(membresGroupeUniformeRepositoryProvider).supprimerMembre(
+            atelierId: utilisateur.atelierId,
+            membre: _membre,
+          );
+      if (mounted) context.pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
   /// Ouvre directement la prise de mesure pour le gabarit par défaut du
   /// sexe du membre (même résolution que EcranFicheClient._ouvrirPriseMesure),
   /// sans passer par la liste "Quel type de tenue ?" — repli sur cette
@@ -97,6 +217,13 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
         title: Text(_membre.nomComplet, overflow: TextOverflow.ellipsis),
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: 'Modifier ou supprimer le membre',
+            onPressed: _modifierMembre,
+          ),
+        ],
       ),
       body: FutureBuilder<List<GroupeMesureExport>>(
         future: _chargement,

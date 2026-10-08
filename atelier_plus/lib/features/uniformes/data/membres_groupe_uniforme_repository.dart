@@ -67,6 +67,52 @@ class MembresGroupeUniformeRepository {
     return miseAJour;
   }
 
+  /// Corrige le nom et/ou le sexe d'un membre (erreur de saisie, ou
+  /// changement) — même principe que GroupesUniformesRepository.modifierGroupe.
+  Future<MembreGroupeUniforme> modifierMembre({
+    required String atelierId,
+    required MembreGroupeUniforme membre,
+    required String nom,
+    String? sexe,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
+    // Purge d'abord toute tâche de synchronisation périmée pour ce membre.
+    await _baseLocale.retirerTachesPourEnregistrement('membres_groupe_uniforme', membre.id);
+    final miseAJour = MembreGroupeUniforme(
+      id: membre.id,
+      groupeId: membre.groupeId,
+      nom: nom,
+      prenom: null,
+      sexe: sexe,
+      tenueTerminee: membre.tenueTerminee,
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    await _mettreEnCache(miseAJour);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'membres_groupe_uniforme',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
+    );
+    return miseAJour;
+  }
+
+  /// Supprime définitivement un membre et ses mesures — nécessite une
+  /// connexion, comme GroupesUniformesRepository.supprimerGroupe : il
+  /// n'existe pas d'opération "delete" dans la file d'attente de
+  /// synchronisation.
+  Future<void> supprimerMembre({
+    required String atelierId,
+    required MembreGroupeUniforme membre,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
+    await _client.from('membres_groupe_uniforme').delete().eq('id', membre.id);
+    await _baseLocale.supprimerMembreGroupeUniformeEtDependances(membre.id);
+  }
+
   Stream<List<MembreGroupeUniforme>> observerMembres(String groupeId) {
     return _baseLocale.observerMembresDuGroupe(groupeId).map(
           (lignes) => lignes
