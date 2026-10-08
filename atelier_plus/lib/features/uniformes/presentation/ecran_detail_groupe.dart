@@ -12,6 +12,7 @@ import '../../../shared/widgets/grille_photos.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../clients/providers/photos_providers.dart';
+import '../../finances/presentation/section_finances_groupe.dart';
 import '../providers/uniformes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -92,6 +93,7 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
   Widget build(BuildContext context) {
     final groupe = ref.watch(groupeUniformeParIdProvider(widget.groupeId));
     final membres = ref.watch(membresDuGroupeProvider(widget.groupeId));
+    final estProprietaire = ref.watch(estProprietaireProvider);
     final photosGroupe = ref.watch(photosDuGroupeProvider(widget.groupeId)).valueOrNull ?? [];
     List<PhotoClient> filtrerPhotos(TypePhoto type, String sexe) =>
         photosGroupe.where((p) => p.type == type && p.sexe == sexe).toList();
@@ -232,6 +234,21 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                     ],
                                   ),
                                 ),
+                                // Donnée financière : jamais montrée à un
+                                // apprenti, même règle que SectionFinancesClient.
+                                if (estProprietaire) ...[
+                                  const Divider(height: 1, color: Color(0xFFE4E7EE)),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const SousTitrePhotos('Finances'),
+                                        SectionFinancesGroupe(groupeId: widget.groupeId),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
