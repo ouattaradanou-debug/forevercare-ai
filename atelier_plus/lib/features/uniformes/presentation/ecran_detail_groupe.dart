@@ -44,6 +44,14 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
     Future.microtask(() async {
       await ref.read(membresGroupeUniformeRepositoryProvider).chargerDepuisServeur(widget.groupeId);
       await ref.read(photosRepositoryProvider).chargerPhotosGroupeDepuisServeur(widget.groupeId);
+      // Nécessaire pour que _ajouterMembre puisse trouver un gabarit par
+      // sexe dès l'ajout : sans ce chargement, le cache local des types de
+      // tenue peut être vide sur un appareil n'étant jamais passé par
+      // "Nouveau client" ou l'ancien écran de sélection manuelle.
+      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      if (utilisateur != null) {
+        await ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
+      }
     });
   }
 
@@ -98,17 +106,28 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
           prenom: null,
           sexe: resultat.sexe,
         );
-    if (!mounted || resultat.sexe == null) return;
+    if (!mounted) return;
 
     // Ouvre directement la prise de mesure du gabarit par défaut pour ce
     // sexe (même principe que EcranNouveauClient._idGabaritPourSexe), au
     // lieu de laisser retrouver le membre dans la liste puis choisir
-    // manuellement un type de tenue.
-    final gabarits = await ref.read(typesTenueVisiblesProvider.future);
-    final gabarit = choisirGabaritPourSexe(gabarits, utilisateur.atelierId, resultat.sexe!);
-    if (!mounted || gabarit == null) return;
+    // manuellement un type de tenue. Si aucun sexe n'a été renseigné, ou
+    // qu'aucun gabarit par défaut n'existe pour ce sexe, on retombe sur le
+    // choix manuel habituel plutôt que de ne rien faire.
+    if (resultat.sexe != null) {
+      final gabarits = await ref.read(typesTenueVisiblesProvider.future);
+      if (!mounted) return;
+      final gabarit = choisirGabaritPourSexe(gabarits, utilisateur.atelierId, resultat.sexe!);
+      if (gabarit != null) {
+        context.push(
+          AppRoutes.priseMesureMembre(membre.id, gabarit.id),
+          extra: membre.nomComplet,
+        );
+        return;
+      }
+    }
     context.push(
-      AppRoutes.priseMesureMembre(membre.id, gabarit.id),
+      AppRoutes.selectionTypeTenueMembre(membre.id),
       extra: membre.nomComplet,
     );
   }
