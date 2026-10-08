@@ -149,7 +149,9 @@ class MesureEntries extends Table {
 class PhotoEntries extends Table {
   TextColumn get id => text()();
   TextColumn get atelierId => text()();
-  TextColumn get clientId => text()();
+  TextColumn get clientId => text().nullable()();
+  TextColumn get groupeId => text().nullable()();
+  TextColumn get sexe => text().nullable()();
   TextColumn get type => text()();
   TextColumn get url => text()();
   TextColumn get source => text()();
@@ -379,7 +381,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -493,6 +495,19 @@ class AppDatabase extends _$AppDatabase {
             // rendezVousEntries créée dans le bloc `from < 3` ci-dessus.
             if (from >= 3) {
               await m.addColumn(rendezVousEntries, rendezVousEntries.urgent);
+            }
+          }
+          if (from < 17) {
+            // photoEntries créée dans le bloc `from < 2` ci-dessus. `clientId`
+            // devient nullable (une photo peut désormais appartenir à un
+            // groupe d'uniformes au lieu d'un client) : SQLite ne permet pas
+            // de relâcher une contrainte NOT NULL via ALTER TABLE, mais
+            // Drift gère déjà toute lecture/écriture via les Companions
+            // générés à partir de la définition Dart actuelle, donc seules
+            // les deux nouvelles colonnes doivent être ajoutées explicitement.
+            if (from >= 2) {
+              await m.addColumn(photoEntries, photoEntries.groupeId);
+              await m.addColumn(photoEntries, photoEntries.sexe);
             }
           }
         },
@@ -826,7 +841,9 @@ class AppDatabase extends _$AppDatabase {
   Future<void> enregistrerPhoto({
     required String id,
     required String atelierId,
-    required String clientId,
+    String? clientId,
+    String? groupeId,
+    String? sexe,
     required String type,
     required String url,
     required String source,
@@ -837,7 +854,9 @@ class AppDatabase extends _$AppDatabase {
       PhotoEntriesCompanion.insert(
         id: id,
         atelierId: atelierId,
-        clientId: clientId,
+        clientId: Value(clientId),
+        groupeId: Value(groupeId),
+        sexe: Value(sexe),
         type: type,
         url: url,
         source: source,
@@ -857,6 +876,16 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<PhotoEntry>> observerPhotosDuClient(String clientId) {
     return (select(photoEntries)
           ..where((t) => t.clientId.equals(clientId))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .watch();
+  }
+
+  /// Équivalent de [observerPhotosDuClient] pour les photos d'un groupe
+  /// d'uniformes (tissus/modèles, hommes/femmes confondus — filtrées côté
+  /// écran, voir PhotosRepository.observerPhotosDuGroupe).
+  Stream<List<PhotoEntry>> observerPhotosDuGroupe(String groupeId) {
+    return (select(photoEntries)
+          ..where((t) => t.groupeId.equals(groupeId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .watch();
   }
@@ -1185,8 +1214,13 @@ class AppDatabase extends _$AppDatabase {
         await retirerTachesPourEnregistrement('membres_groupe_uniforme', membre.id);
         await (delete(mesureUniformeEntries)..where((t) => t.membreId.equals(membre.id))).go();
       }
+      final photos = await (select(photoEntries)..where((t) => t.groupeId.equals(groupeId))).get();
+      for (final photo in photos) {
+        await retirerTachesPourEnregistrement('photos', photo.id);
+      }
       await retirerTachesPourEnregistrement('groupes_uniformes', groupeId);
 
+      await (delete(photoEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(membreGroupeUniformeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(groupeUniformeEntries)..where((t) => t.id.equals(groupeId))).go();
     });

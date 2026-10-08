@@ -204,11 +204,17 @@ comment on column public.mesures.valeurs is
 create index if not exists idx_mesures_client on public.mesures (client_id, type_tenue_id, date_prise desc);
 create index if not exists idx_mesures_atelier on public.mesures (atelier_id);
 
--- Photos de tissus ou de modèles associées à un client.
+-- Photos de tissus ou de modèles associées à un client, OU à un groupe
+-- d'uniformes séparé par sexe (exactement l'un des deux doit être renseigné :
+-- voir le check `photos_client_ou_groupe` ci-dessous). Une seule table pour
+-- les deux usages afin que toute évolution côté client s'applique aussi aux
+-- groupes (voir PhotosRepository côté application).
 create table if not exists public.photos (
   id          uuid primary key default gen_random_uuid(),
   atelier_id  uuid not null references public.ateliers (id) on delete cascade,
-  client_id   uuid not null references public.clients (id) on delete cascade,
+  client_id   uuid references public.clients (id) on delete cascade,
+  groupe_id   uuid references public.groupes_uniformes (id) on delete cascade,
+  sexe        text check (sexe in ('Homme', 'Femme')),
   type        text not null check (type in ('tissu', 'modele')),
   url         text not null,
   source      text not null check (source in ('camera', 'galerie')),
@@ -216,12 +222,21 @@ create table if not exists public.photos (
   created_at  timestamptz not null default now()
 );
 
--- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- Ajouts a posteriori sur une base déjà créée (create table if not exists
 -- ci-dessus ne modifie jamais une table existante) : note vocale de
--- description optionnelle, une par photo.
+-- description optionnelle, une par photo ; puis rattachement possible à un
+-- groupe d'uniformes au lieu d'un client (client_id devient nullable).
 alter table public.photos add column if not exists audio_url text;
+alter table public.photos alter column client_id drop not null;
+alter table public.photos add column if not exists groupe_id uuid references public.groupes_uniformes (id) on delete cascade;
+alter table public.photos add column if not exists sexe text check (sexe in ('Homme', 'Femme'));
+
+alter table public.photos drop constraint if exists photos_client_ou_groupe;
+alter table public.photos add constraint photos_client_ou_groupe
+  check ((client_id is null) <> (groupe_id is null));
 
 create index if not exists idx_photos_client on public.photos (client_id);
+create index if not exists idx_photos_groupe on public.photos (groupe_id);
 create index if not exists idx_photos_atelier on public.photos (atelier_id);
 
 -- Rendez-vous (essayage ou livraison).

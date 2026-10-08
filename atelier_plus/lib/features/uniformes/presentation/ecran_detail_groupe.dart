@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -8,7 +9,11 @@ import '../../../core/router/app_router.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../core/utils/telephone.dart';
 import '../../../data/models/membre_groupe_uniforme.dart';
+import '../../../data/models/photo_client.dart';
+import '../../../shared/widgets/grille_photos.dart';
+import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../clients/providers/photos_providers.dart';
 import '../providers/uniformes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -29,12 +34,50 @@ class EcranDetailGroupe extends ConsumerStatefulWidget {
 }
 
 class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
+  final Map<String, bool> _photoEnCours = {};
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() async {
       await ref.read(membresGroupeUniformeRepositoryProvider).chargerDepuisServeur(widget.groupeId);
+      await ref.read(photosRepositoryProvider).chargerPhotosGroupeDepuisServeur(widget.groupeId);
     });
+  }
+
+  String _cleEnCours(TypePhoto type, String sexe) => '${type.name}_$sexe';
+
+  /// Ajoute une photo de tissu ou de modèle au groupe, séparée par sexe —
+  /// même logique que EcranNouveauClient._ajouterPhoto, via le même
+  /// PhotosRepository partagé (voir GrillePhotosSection).
+  Future<void> _ajouterPhotoGroupe(TypePhoto type, String sexe) async {
+    final resultat = await choisirSourceEtImage(context);
+    if (resultat == null || !mounted) return;
+    final (fichier, sourceImage) = resultat;
+
+    final utilisateur = await ref.read(utilisateurCourantProvider.future);
+    if (utilisateur == null || !mounted) return;
+
+    final cle = _cleEnCours(type, sexe);
+    setState(() => _photoEnCours[cle] = true);
+    try {
+      await ref.read(photosRepositoryProvider).ajouterPhoto(
+            atelierId: utilisateur.atelierId,
+            groupeId: widget.groupeId,
+            sexe: sexe,
+            type: type,
+            source: sourceImage == ImageSource.camera ? SourcePhoto.camera : SourcePhoto.galerie,
+            fichier: fichier,
+          );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Échec de l\'envoi : $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _photoEnCours[cle] = false);
+    }
   }
 
   Future<void> _ajouterMembre() async {
@@ -78,6 +121,9 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
   Widget build(BuildContext context) {
     final groupe = ref.watch(groupeUniformeParIdProvider(widget.groupeId));
     final membres = ref.watch(membresDuGroupeProvider(widget.groupeId));
+    final photosGroupe = ref.watch(photosDuGroupeProvider(widget.groupeId)).valueOrNull ?? [];
+    List<PhotoClient> filtrerPhotos(TypePhoto type, String sexe) =>
+        photosGroupe.where((p) => p.type == type && p.sexe == sexe).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -97,7 +143,7 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                     loading: () => const SizedBox.shrink(),
                     error: (_, __) => const SizedBox.shrink(),
                     data: (g) {
-                      if (g == null || (g.repondantNom == null && g.repondantTelephone == null)) {
+                      if (g == null) {
                         return const SizedBox.shrink();
                       }
                       final telephone = g.repondantTelephone;
@@ -166,6 +212,38 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                       ],
                                     ),
                                   ],
+                                ),
+                                const Divider(height: 1, color: Color(0xFFE4E7EE)),
+                                const _SousTitrePhotos('Tissu'),
+                                _LigneSexesPhotos(
+                                  photosHomme: filtrerPhotos(TypePhoto.tissu, 'Homme'),
+                                  photosFemme: filtrerPhotos(TypePhoto.tissu, 'Femme'),
+                                  enCoursHomme:
+                                      _photoEnCours[_cleEnCours(TypePhoto.tissu, 'Homme')] ??
+                                          false,
+                                  enCoursFemme:
+                                      _photoEnCours[_cleEnCours(TypePhoto.tissu, 'Femme')] ??
+                                          false,
+                                  onAjouterHomme: () =>
+                                      _ajouterPhotoGroupe(TypePhoto.tissu, 'Homme'),
+                                  onAjouterFemme: () =>
+                                      _ajouterPhotoGroupe(TypePhoto.tissu, 'Femme'),
+                                ),
+                                const Divider(height: 1, color: Color(0xFFE4E7EE)),
+                                const _SousTitrePhotos('Modèle'),
+                                _LigneSexesPhotos(
+                                  photosHomme: filtrerPhotos(TypePhoto.modele, 'Homme'),
+                                  photosFemme: filtrerPhotos(TypePhoto.modele, 'Femme'),
+                                  enCoursHomme:
+                                      _photoEnCours[_cleEnCours(TypePhoto.modele, 'Homme')] ??
+                                          false,
+                                  enCoursFemme:
+                                      _photoEnCours[_cleEnCours(TypePhoto.modele, 'Femme')] ??
+                                          false,
+                                  onAjouterHomme: () =>
+                                      _ajouterPhotoGroupe(TypePhoto.modele, 'Homme'),
+                                  onAjouterFemme: () =>
+                                      _ajouterPhotoGroupe(TypePhoto.modele, 'Femme'),
                                 ),
                               ],
                             ),
@@ -348,6 +426,101 @@ class _BoutonContact extends StatelessWidget {
         padding: EdgeInsets.zero,
       ),
       icon: Icon(icone, size: 14),
+    );
+  }
+}
+
+class _SousTitrePhotos extends StatelessWidget {
+  const _SousTitrePhotos(this.titre);
+
+  final String titre;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+      child: Text(
+        titre,
+        style: const TextStyle(fontWeight: FontWeight.bold, color: _bleuSeda, fontSize: 13),
+      ),
+    );
+  }
+}
+
+/// Deux colonnes Hommes/Femmes côte à côte pour une même catégorie de photo
+/// (tissu ou modèle) — chaque colonne est une [GrillePhotosSection], le
+/// composant partagé avec "Nouveau client" (voir lib/shared/widgets/
+/// grille_photos.dart) : toute évolution future de la grille photo s'y
+/// applique donc automatiquement ici aussi.
+class _LigneSexesPhotos extends StatelessWidget {
+  const _LigneSexesPhotos({
+    required this.photosHomme,
+    required this.photosFemme,
+    required this.enCoursHomme,
+    required this.enCoursFemme,
+    required this.onAjouterHomme,
+    required this.onAjouterFemme,
+  });
+
+  final List<PhotoClient> photosHomme;
+  final List<PhotoClient> photosFemme;
+  final bool enCoursHomme;
+  final bool enCoursFemme;
+  final VoidCallback onAjouterHomme;
+  final VoidCallback onAjouterFemme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _ColonneSexePhotos(
+              libelle: 'Hommes',
+              photos: photosHomme,
+              enCours: enCoursHomme,
+              onAjouter: onAjouterHomme,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _ColonneSexePhotos(
+              libelle: 'Femmes',
+              photos: photosFemme,
+              enCours: enCoursFemme,
+              onAjouter: onAjouterFemme,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColonneSexePhotos extends StatelessWidget {
+  const _ColonneSexePhotos({
+    required this.libelle,
+    required this.photos,
+    required this.enCours,
+    required this.onAjouter,
+  });
+
+  final String libelle;
+  final List<PhotoClient> photos;
+  final bool enCours;
+  final VoidCallback onAjouter;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(libelle, style: const TextStyle(fontSize: 12, color: Color(0xFF6F6259))),
+        const SizedBox(height: 6),
+        GrillePhotosSection(photos: photos, enCours: enCours, onAjouter: onAjouter),
+      ],
     );
   }
 }

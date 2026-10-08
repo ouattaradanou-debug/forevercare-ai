@@ -17,3 +17,7 @@ final photosRepositoryProvider = Provider<PhotosRepository>((ref) {
 final photosDuClientProvider = StreamProvider.family<List<PhotoClient>, String>((ref, clientId) {
   return ref.watch(photosRepositoryProvider).observerPhotosDuClient(clientId);
 });
+
+final photosDuGroupeProvider = StreamProvider.family<List<PhotoClient>, String>((ref, groupeId) {
+  return ref.watch(photosRepositoryProvider).observerPhotosDuGroupe(groupeId);
+});
