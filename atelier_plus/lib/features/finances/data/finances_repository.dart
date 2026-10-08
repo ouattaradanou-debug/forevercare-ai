@@ -11,6 +11,7 @@ import '../../../data/sync/ecriture_synchronisee.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 import '../../ventes/data/ventes_repository.dart';
 import 'finances_groupe_repository.dart';
+import 'recapitulatif_finances.dart';
 
 /// Gestion des commandes et paiements — données financières.
 ///
@@ -294,8 +295,8 @@ class FinancesRepository {
         );
   }
 
-  /// Paiements, ventes directes et dépenses de tout l'atelier (tous
-  /// clients ET tous groupes d'uniformes confondus), utilisés pour le
+  /// Paiements, ventes directes, dépenses et avances de tout l'atelier
+  /// (tous clients ET tous groupes d'uniformes confondus), utilisés pour le
   /// récapitulatif global de l'écran "Suivi des finances" — toute recette
   /// ou dépense enregistrée dans l'application, quel que soit l'écran, doit
   /// s'y retrouver. Les paiements de groupe (table dédiée paiements_groupe,
@@ -303,13 +304,18 @@ class FinancesRepository {
   /// clients : `Paiement.commandeId` pointe alors vers une ligne de
   /// `commandes_groupe` plutôt que `commandes`, ce qui n'a pas d'incidence
   /// ici puisque seuls `montant` et `datePaiement` sont utilisés pour le
-  /// calcul.
-  Future<({List<Paiement> paiements, List<Vente> ventes, List<Depense> depenses})>
-      recapitulatifBrut(String atelierId) async {
+  /// calcul. L'avance déclarée à la création d'une commande (client ou
+  /// groupe) est une composante distincte de la table `paiements` (voir
+  /// calcul_solde.resteAPayer) : sans `avances`, "Suivi des finances"
+  /// l'oublierait entièrement.
+  Future<({List<Paiement> paiements, List<Vente> ventes, List<Depense> depenses,
+      List<AvanceCommande> avances})> recapitulatifBrut(String atelierId) async {
     final lignesPaiements = await _baseLocale.tousPaiementsDeLAtelier(atelierId);
     final lignesPaiementsGroupe = await _baseLocale.tousPaiementsGroupeDeLAtelier(atelierId);
     final lignesVentes = await _baseLocale.toutesVentesDeLAtelier(atelierId);
     final lignesDepenses = await _baseLocale.toutesDepensesDeLAtelier(atelierId);
+    final lignesCommandes = await _baseLocale.toutesCommandesDeLAtelier(atelierId);
+    final lignesCommandesGroupe = await _baseLocale.toutesCommandesGroupeDeLAtelier(atelierId);
     return (
       paiements: [
         ...lignesPaiements.map(
@@ -359,6 +365,14 @@ class FinancesRepository {
             ),
           )
           .toList(),
+      avances: [
+        ...lignesCommandes.where((c) => c.avance > 0).map(
+              (c) => AvanceCommande(date: c.createdAt ?? c.updatedAt, montant: c.avance),
+            ),
+        ...lignesCommandesGroupe.where((c) => c.avance > 0).map(
+              (c) => AvanceCommande(date: c.createdAt, montant: c.avance),
+            ),
+      ],
     );
   }
 

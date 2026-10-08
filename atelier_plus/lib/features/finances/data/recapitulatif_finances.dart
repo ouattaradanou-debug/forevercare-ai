@@ -2,6 +2,21 @@ import '../../../data/models/depense.dart';
 import '../../../data/models/paiement.dart';
 import '../../../data/models/vente.dart';
 
+/// Avance déclarée sur une commande (client ou groupe), à la date de
+/// création de cette commande — c'est une recette au même titre qu'un
+/// paiement, mais stockée directement sur `Commande.avance`/
+/// `CommandeGroupe.avance` plutôt que dans la table `paiements`/
+/// `paiements_groupe` (voir `resteAPayer` dans calcul_solde.dart : montant
+/// total - avance - somme des paiements, deux composantes distinctes).
+/// "Suivi des finances" doit donc la compter séparément pour que l'avance
+/// versée à la création d'une commande ne soit pas oubliée des recettes.
+class AvanceCommande {
+  const AvanceCommande({required this.date, required this.montant});
+
+  final DateTime date;
+  final double montant;
+}
+
 /// Recettes/dépenses cumulées sur une période — calcul pur, testable sans
 /// dépendance réseau/base de données (même esprit que `etat_abonnement.dart`).
 class RecapitulatifPeriode {
@@ -55,16 +70,27 @@ double _sommeVentes(List<Vente> ventes, DateTime debut, DateTime finExclusive) {
   return total;
 }
 
+double _sommeAvances(List<AvanceCommande> avances, DateTime debut, DateTime finExclusive) {
+  var total = 0.0;
+  for (final a in avances) {
+    final local = a.date.toLocal();
+    if (!local.isBefore(debut) && local.isBefore(finExclusive)) total += a.montant;
+  }
+  return total;
+}
+
 RecapitulatifPeriode calculerPeriode({
   required List<Paiement> paiements,
   required List<Vente> ventes,
   required List<Depense> depenses,
+  required List<AvanceCommande> avances,
   required DateTime debut,
   required DateTime finExclusive,
 }) {
   return RecapitulatifPeriode(
     recettes: _sommePaiements(paiements, debut, finExclusive) +
-        _sommeVentes(ventes, debut, finExclusive),
+        _sommeVentes(ventes, debut, finExclusive) +
+        _sommeAvances(avances, debut, finExclusive),
     depenses: _sommeDepenses(depenses, debut, finExclusive),
   );
 }
@@ -89,6 +115,7 @@ RecapitulatifGlobal calculerRecapitulatifGlobal({
   required List<Paiement> paiements,
   required List<Vente> ventes,
   required List<Depense> depenses,
+  List<AvanceCommande> avances = const [],
   DateTime? maintenant,
 }) {
   final now = maintenant ?? DateTime.now();
@@ -102,6 +129,7 @@ RecapitulatifGlobal calculerRecapitulatifGlobal({
       paiements: paiements,
       ventes: ventes,
       depenses: depenses,
+      avances: avances,
       debut: debutDuJour(now),
       finExclusive: finJour,
     ),
@@ -109,6 +137,7 @@ RecapitulatifGlobal calculerRecapitulatifGlobal({
       paiements: paiements,
       ventes: ventes,
       depenses: depenses,
+      avances: avances,
       debut: debutDeLaSemaine(now),
       finExclusive: finSemaine,
     ),
@@ -116,6 +145,7 @@ RecapitulatifGlobal calculerRecapitulatifGlobal({
       paiements: paiements,
       ventes: ventes,
       depenses: depenses,
+      avances: avances,
       debut: debutDuMois(now),
       finExclusive: finMois,
     ),
@@ -123,6 +153,7 @@ RecapitulatifGlobal calculerRecapitulatifGlobal({
       paiements: paiements,
       ventes: ventes,
       depenses: depenses,
+      avances: avances,
       debut: debutDeLAnnee(now),
       finExclusive: finAnnee,
     ),
@@ -135,10 +166,12 @@ List<RecapitulatifPeriode> calculerRecapitulatifMensuel({
   required List<Vente> ventes,
   required List<Depense> depenses,
   required int annee,
+  List<AvanceCommande> avances = const [],
 }) {
   return List.generate(12, (index) {
     final mois = index + 1;
     return calculerPeriode(
+      avances: avances,
       paiements: paiements,
       ventes: ventes,
       depenses: depenses,

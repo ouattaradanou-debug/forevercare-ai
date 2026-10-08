@@ -1085,6 +1085,15 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
+  /// Toutes les commandes de l'atelier (tous clients confondus) — utilisé
+  /// par `FinancesRepository.recapitulatifBrut` pour que l'avance déclarée
+  /// à la création d'une commande soit comptée dans "Suivi des finances"
+  /// (l'avance est distincte de la table `paiements`, voir
+  /// calcul_solde.resteAPayer).
+  Future<List<CommandeEntry>> toutesCommandesDeLAtelier(String atelierId) {
+    return (select(commandeEntries)..where((t) => t.atelierId.equals(atelierId))).get();
+  }
+
   // --- Paiements (financier — jamais consulté pour un apprenti) ---
 
   Future<void> enregistrerPaiement({
@@ -1155,6 +1164,11 @@ class AppDatabase extends _$AppDatabase {
           ..where((t) => t.groupeId.equals(groupeId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .get();
+  }
+
+  /// Équivalent de `toutesCommandesDeLAtelier` pour les commandes de groupe.
+  Future<List<CommandeGroupeEntry>> toutesCommandesGroupeDeLAtelier(String atelierId) {
+    return (select(commandeGroupeEntries)..where((t) => t.atelierId.equals(atelierId))).get();
   }
 
   Future<void> enregistrerPaiementGroupe({

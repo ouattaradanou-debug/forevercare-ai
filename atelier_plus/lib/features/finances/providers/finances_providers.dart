@@ -36,6 +36,7 @@ final recapitulatifGlobalProvider = FutureProvider.autoDispose<RecapitulatifGlob
     paiements: brut.paiements,
     ventes: brut.ventes,
     depenses: brut.depenses,
+    avances: brut.avances,
   );
 });
 
@@ -54,6 +55,7 @@ final recapitulatifMensuelProvider =
     paiements: brut.paiements,
     ventes: brut.ventes,
     depenses: brut.depenses,
+    avances: brut.avances,
     annee: annee,
   );
 });
