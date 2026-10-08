@@ -4,15 +4,20 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../core/utils/telephone.dart';
+import '../../../data/models/groupe_uniforme.dart';
 import '../../../data/models/photo_client.dart';
+import '../../../data/models/rendez_vous_groupe.dart';
 import '../../../shared/widgets/grille_photos.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../clients/providers/photos_providers.dart';
 import '../../finances/presentation/section_finances_groupe.dart';
+import '../../rendezvous/providers/rendez_vous_groupe_providers.dart';
 import '../providers/uniformes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -79,6 +84,39 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
     }
   }
 
+  /// Calendrier puis horloge, enchaînés directement — même principe que
+  /// EcranNouveauGroupe._ajouterRendezVousManuel, sur la table dédiée
+  /// rendez_vous_groupe.
+  Future<void> _ajouterRendezVousGroupe(GroupeUniforme groupe) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (date == null || !mounted) return;
+
+    final heure = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 9, minute: 0),
+    );
+    if (heure == null || !mounted) return;
+
+    final dateHeure = DateTime(date.year, date.month, date.day, heure.hour, heure.minute);
+    final utilisateur = await ref.read(utilisateurCourantProvider.future);
+    if (!mounted) return;
+    await executerAvecErreurAffichee(
+      context,
+      () => ref.read(rendezVousGroupeRepositoryProvider).creerRendezVous(
+            atelierId: utilisateur!.atelierId,
+            groupeId: groupe.id,
+            dateHeure: dateHeure,
+            type: AppConstants.rdvEssayage,
+            nomGroupePourRappel: groupe.nom,
+          ),
+    );
+  }
+
   Future<void> _appeler(String telephone) => executerAvecErreurAffichee(
         context,
         () => launchUrl(Uri(scheme: 'tel', path: telephone)),
@@ -97,6 +135,8 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
     final photosGroupe = ref.watch(photosDuGroupeProvider(widget.groupeId)).valueOrNull ?? [];
     List<PhotoClient> filtrerPhotos(TypePhoto type, String sexe) =>
         photosGroupe.where((p) => p.type == type && p.sexe == sexe).toList();
+    final rdvGroupe = ref.watch(rendezVousDuGroupeProvider(widget.groupeId)).valueOrNull ?? [];
+    final prochainRdv = _prochainRendezVousGroupe(rdvGroupe);
 
     return Scaffold(
       appBar: AppBar(
@@ -231,6 +271,30 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                         onAjouterFemme: () =>
                                             _ajouterPhotoGroupe(TypePhoto.modele, 'Femme'),
                                       ),
+                                    ],
+                                  ),
+                                ),
+                                const Divider(height: 1, color: Color(0xFFE4E7EE)),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const SousTitrePhotos('Rendez-vous'),
+                                          IconButton(
+                                            onPressed: () => _ajouterRendezVousGroupe(g),
+                                            icon: const Icon(Icons.add, color: _bleuSeda),
+                                            tooltip: 'Ajouter un rendez-vous',
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      _carteRendezVousGroupe(prochainRdv),
                                     ],
                                   ),
                                 ),
@@ -372,6 +436,39 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
       ),
     );
   }
+}
+
+/// Prochain rendez-vous à venir du groupe — la liste est déjà triée par
+/// date croissante (voir `observerRendezVousDuGroupe`), donc le premier qui
+/// correspond est le plus proche. Même principe que
+/// EcranFicheClient._prochainRendezVous.
+RendezVousGroupe? _prochainRendezVousGroupe(List<RendezVousGroupe> tous) {
+  final maintenant = DateTime.now();
+  for (final rdv in tous) {
+    if (rdv.statut != AppConstants.rdvAnnule && rdv.dateHeure.isAfter(maintenant)) {
+      return rdv;
+    }
+  }
+  return null;
+}
+
+Widget _carteRendezVousGroupe(RendezVousGroupe? prochain) {
+  if (prochain == null) {
+    return const Text(
+      'Aucun rendez-vous programmé.',
+      style: TextStyle(color: Color(0xFF6B6056), fontSize: 13),
+    );
+  }
+  return Row(
+    children: [
+      const Icon(Icons.event_available_outlined, color: Color(0xFFA47B1B), size: 18),
+      const SizedBox(width: 8),
+      Text(
+        Formatters.rendezVousComplet(prochain.dateHeure),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+      ),
+    ],
+  );
 }
 
 class _CelluleRepondant extends StatelessWidget {
