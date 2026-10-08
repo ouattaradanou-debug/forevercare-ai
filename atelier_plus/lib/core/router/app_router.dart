@@ -36,6 +36,7 @@ import '../../features/rendezvous/presentation/ecran_formulaire_rendez_vous.dart
 import '../../features/rendezvous/presentation/ecran_liste_rendez_vous.dart';
 import '../../features/uniformes/presentation/ecran_detail_groupe.dart';
 import '../../features/uniformes/presentation/ecran_groupes_uniformes.dart';
+import '../../features/uniformes/presentation/ecran_nouveau_groupe.dart';
 import '../../features/uniformes/presentation/ecran_prise_mesure_membre.dart';
 import '../../features/uniformes/presentation/ecran_selection_type_tenue_membre.dart';
 import '../../data/models/categorie_vente.dart';
@@ -98,6 +99,7 @@ class AppRoutes {
   static const String historiqueDepenses = '/depenses/historique';
   static const String suiviFinances = '/finances';
   static const String groupesUniformes = '/uniformes';
+  static const String creationGroupeUniforme = '/uniformes/nouveau';
   static const String _detailGroupeUniformeTemplate = '/uniformes/:id';
   static const String _selectionTypeTenueMembreTemplate = '/uniformes/membres/:membreId/mesures';
   static const String _priseMesureMembreTemplate =
@@ -262,6 +264,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.groupesUniformes,
         builder: (context, state) => const EcranGroupesUniformes(),
+      ),
+      GoRoute(
+        path: AppRoutes.creationGroupeUniforme,
+        builder: (context, state) => const EcranNouveauGroupe(),
       ),
       GoRoute(
         path: AppRoutes._detailGroupeUniformeTemplate,

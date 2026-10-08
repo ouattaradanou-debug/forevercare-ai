@@ -57,6 +57,100 @@ class GrillePhotosSection extends StatelessWidget {
   }
 }
 
+/// Petit titre ("Tissu", "Modèle") au-dessus d'une [LigneSexesPhotos] —
+/// partagé entre le détail d'un groupe et sa création.
+class SousTitrePhotos extends StatelessWidget {
+  const SousTitrePhotos(this.titre, {super.key});
+
+  final String titre;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 4),
+      child: Text(
+        titre,
+        style: const TextStyle(fontWeight: FontWeight.bold, color: _bleuSeda, fontSize: 13),
+      ),
+    );
+  }
+}
+
+/// Deux colonnes Hommes/Femmes côte à côte pour une même catégorie de photo
+/// (tissu ou modèle) d'un groupe d'uniformes — partagé entre le détail d'un
+/// groupe et sa création, afin que toute évolution de cette disposition
+/// s'applique aux deux écrans.
+class LigneSexesPhotos extends StatelessWidget {
+  const LigneSexesPhotos({
+    super.key,
+    required this.photosHomme,
+    required this.photosFemme,
+    required this.enCoursHomme,
+    required this.enCoursFemme,
+    required this.onAjouterHomme,
+    required this.onAjouterFemme,
+  });
+
+  final List<PhotoClient> photosHomme;
+  final List<PhotoClient> photosFemme;
+  final bool enCoursHomme;
+  final bool enCoursFemme;
+  final VoidCallback onAjouterHomme;
+  final VoidCallback onAjouterFemme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _ColonneSexePhotos(
+            libelle: 'Hommes',
+            photos: photosHomme,
+            enCours: enCoursHomme,
+            onAjouter: onAjouterHomme,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _ColonneSexePhotos(
+            libelle: 'Femmes',
+            photos: photosFemme,
+            enCours: enCoursFemme,
+            onAjouter: onAjouterFemme,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ColonneSexePhotos extends StatelessWidget {
+  const _ColonneSexePhotos({
+    required this.libelle,
+    required this.photos,
+    required this.enCours,
+    required this.onAjouter,
+  });
+
+  final String libelle;
+  final List<PhotoClient> photos;
+  final bool enCours;
+  final VoidCallback onAjouter;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(libelle, style: const TextStyle(fontSize: 12, color: Color(0xFF6F6259))),
+        const SizedBox(height: 6),
+        GrillePhotosSection(photos: photos, enCours: enCours, onAjouter: onAjouter),
+      ],
+    );
+  }
+}
+
 /// Vignette d'une photo avec, en superposition, le contrôle de note vocale
 /// de description : un micro tant qu'aucun vocal n'existe (appui = démarre,
 /// appui = arrête et envoie), puis un bouton lecture/pause une fois un

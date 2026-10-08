@@ -34,69 +34,6 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
     });
   }
 
-  Future<void> _creerGroupe() async {
-    final nomCtrl = TextEditingController();
-    final repondantNomCtrl = TextEditingController();
-    final repondantTelCtrl = TextEditingController();
-    final resultat = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        scrollable: true,
-        title: const Text('Nouveau groupe', style: TextStyle(color: _bleuSeda)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nomCtrl,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nom du groupe',
-                  hintText: 'Ex. : Promotion 2026, Équipe commerciale...',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: repondantNomCtrl,
-                decoration: const InputDecoration(labelText: 'Nom du répondant (optionnel)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: repondantTelCtrl,
-                keyboardType: TextInputType.phone,
-                decoration:
-                    const InputDecoration(labelText: 'Téléphone du répondant (optionnel)'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
-            child: const Text('Créer'),
-          ),
-        ],
-      ),
-    );
-    if (resultat != true || nomCtrl.text.trim().isEmpty || !mounted) return;
-
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
-    if (utilisateur == null) return;
-    await ref.read(groupesUniformesRepositoryProvider).creerGroupe(
-          atelierId: utilisateur.atelierId,
-          nom: nomCtrl.text.trim(),
-          repondantNom: repondantNomCtrl.text.trim().isEmpty ? null : repondantNomCtrl.text.trim(),
-          repondantTelephone:
-              repondantTelCtrl.text.trim().isEmpty ? null : repondantTelCtrl.text.trim(),
-        );
-  }
-
   @override
   Widget build(BuildContext context) {
     final groupes = ref.watch(groupesUniformesProvider);
@@ -180,7 +117,7 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
               right: 24,
               bottom: 24,
               child: FilledButton.icon(
-                onPressed: _creerGroupe,
+                onPressed: () => context.push(AppRoutes.creationGroupeUniforme),
                 style: FilledButton.styleFrom(
                   backgroundColor: _bleuSeda,
                   minimumSize: const Size.fromHeight(52),

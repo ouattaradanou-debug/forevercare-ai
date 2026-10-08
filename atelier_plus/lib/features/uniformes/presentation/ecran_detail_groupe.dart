@@ -214,36 +214,52 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                   ],
                                 ),
                                 const Divider(height: 1, color: Color(0xFFE4E7EE)),
-                                const _SousTitrePhotos('Tissu'),
-                                _LigneSexesPhotos(
-                                  photosHomme: filtrerPhotos(TypePhoto.tissu, 'Homme'),
-                                  photosFemme: filtrerPhotos(TypePhoto.tissu, 'Femme'),
-                                  enCoursHomme:
-                                      _photoEnCours[_cleEnCours(TypePhoto.tissu, 'Homme')] ??
-                                          false,
-                                  enCoursFemme:
-                                      _photoEnCours[_cleEnCours(TypePhoto.tissu, 'Femme')] ??
-                                          false,
-                                  onAjouterHomme: () =>
-                                      _ajouterPhotoGroupe(TypePhoto.tissu, 'Homme'),
-                                  onAjouterFemme: () =>
-                                      _ajouterPhotoGroupe(TypePhoto.tissu, 'Femme'),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SousTitrePhotos('Tissu'),
+                                      LigneSexesPhotos(
+                                        photosHomme: filtrerPhotos(TypePhoto.tissu, 'Homme'),
+                                        photosFemme: filtrerPhotos(TypePhoto.tissu, 'Femme'),
+                                        enCoursHomme: _photoEnCours[
+                                                _cleEnCours(TypePhoto.tissu, 'Homme')] ??
+                                            false,
+                                        enCoursFemme: _photoEnCours[
+                                                _cleEnCours(TypePhoto.tissu, 'Femme')] ??
+                                            false,
+                                        onAjouterHomme: () =>
+                                            _ajouterPhotoGroupe(TypePhoto.tissu, 'Homme'),
+                                        onAjouterFemme: () =>
+                                            _ajouterPhotoGroupe(TypePhoto.tissu, 'Femme'),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 const Divider(height: 1, color: Color(0xFFE4E7EE)),
-                                const _SousTitrePhotos('Modèle'),
-                                _LigneSexesPhotos(
-                                  photosHomme: filtrerPhotos(TypePhoto.modele, 'Homme'),
-                                  photosFemme: filtrerPhotos(TypePhoto.modele, 'Femme'),
-                                  enCoursHomme:
-                                      _photoEnCours[_cleEnCours(TypePhoto.modele, 'Homme')] ??
-                                          false,
-                                  enCoursFemme:
-                                      _photoEnCours[_cleEnCours(TypePhoto.modele, 'Femme')] ??
-                                          false,
-                                  onAjouterHomme: () =>
-                                      _ajouterPhotoGroupe(TypePhoto.modele, 'Homme'),
-                                  onAjouterFemme: () =>
-                                      _ajouterPhotoGroupe(TypePhoto.modele, 'Femme'),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SousTitrePhotos('Modèle'),
+                                      LigneSexesPhotos(
+                                        photosHomme: filtrerPhotos(TypePhoto.modele, 'Homme'),
+                                        photosFemme: filtrerPhotos(TypePhoto.modele, 'Femme'),
+                                        enCoursHomme: _photoEnCours[
+                                                _cleEnCours(TypePhoto.modele, 'Homme')] ??
+                                            false,
+                                        enCoursFemme: _photoEnCours[
+                                                _cleEnCours(TypePhoto.modele, 'Femme')] ??
+                                            false,
+                                        onAjouterHomme: () =>
+                                            _ajouterPhotoGroupe(TypePhoto.modele, 'Homme'),
+                                        onAjouterFemme: () =>
+                                            _ajouterPhotoGroupe(TypePhoto.modele, 'Femme'),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -426,101 +442,6 @@ class _BoutonContact extends StatelessWidget {
         padding: EdgeInsets.zero,
       ),
       icon: Icon(icone, size: 14),
-    );
-  }
-}
-
-class _SousTitrePhotos extends StatelessWidget {
-  const _SousTitrePhotos(this.titre);
-
-  final String titre;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
-      child: Text(
-        titre,
-        style: const TextStyle(fontWeight: FontWeight.bold, color: _bleuSeda, fontSize: 13),
-      ),
-    );
-  }
-}
-
-/// Deux colonnes Hommes/Femmes côte à côte pour une même catégorie de photo
-/// (tissu ou modèle) — chaque colonne est une [GrillePhotosSection], le
-/// composant partagé avec "Nouveau client" (voir lib/shared/widgets/
-/// grille_photos.dart) : toute évolution future de la grille photo s'y
-/// applique donc automatiquement ici aussi.
-class _LigneSexesPhotos extends StatelessWidget {
-  const _LigneSexesPhotos({
-    required this.photosHomme,
-    required this.photosFemme,
-    required this.enCoursHomme,
-    required this.enCoursFemme,
-    required this.onAjouterHomme,
-    required this.onAjouterFemme,
-  });
-
-  final List<PhotoClient> photosHomme;
-  final List<PhotoClient> photosFemme;
-  final bool enCoursHomme;
-  final bool enCoursFemme;
-  final VoidCallback onAjouterHomme;
-  final VoidCallback onAjouterFemme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: _ColonneSexePhotos(
-              libelle: 'Hommes',
-              photos: photosHomme,
-              enCours: enCoursHomme,
-              onAjouter: onAjouterHomme,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _ColonneSexePhotos(
-              libelle: 'Femmes',
-              photos: photosFemme,
-              enCours: enCoursFemme,
-              onAjouter: onAjouterFemme,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ColonneSexePhotos extends StatelessWidget {
-  const _ColonneSexePhotos({
-    required this.libelle,
-    required this.photos,
-    required this.enCours,
-    required this.onAjouter,
-  });
-
-  final String libelle;
-  final List<PhotoClient> photos;
-  final bool enCours;
-  final VoidCallback onAjouter;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(libelle, style: const TextStyle(fontSize: 12, color: Color(0xFF6F6259))),
-        const SizedBox(height: 6),
-        GrillePhotosSection(photos: photos, enCours: enCours, onAjouter: onAjouter),
-      ],
     );
   }
 }
