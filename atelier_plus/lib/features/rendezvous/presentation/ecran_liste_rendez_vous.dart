@@ -205,8 +205,8 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
           data: (listeClients) => rdvsGroupes.when(
-          loading: () => const Center(child: Text('DIAGNOSTIC : groupes en chargement…')),
-          error: (erreur, _) => Center(child: Text('DIAGNOSTIC erreur groupes : $erreur')),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
           data: (listeGroupes) {
             // Fusionne clients et groupes d'uniformes en une seule liste
             // triée par date — chaque source est déjà triée individuellement
@@ -231,18 +231,6 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                       'Touchez une ligne pour changer le statut. '
                       'Touchez "+" pour corriger ou marquer urgent.',
                       style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      'DIAGNOSTIC : ${listeClients.length} clients, '
-                      '${listeGroupes.length} groupes trouvés.',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red,
-                      ),
                     ),
                   ),
                   ClipRRect(
