@@ -251,10 +251,10 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                       decoration: const BoxDecoration(color: _bleuSeda),
                                       padding: const EdgeInsets.symmetric(vertical: 12),
                                       alignment: Alignment.center,
-                                      child: const Text(
-                                        'Membres du groupe',
+                                      child: Text(
+                                        'Membres du groupe (${liste.length})',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                           fontSize: 13,
