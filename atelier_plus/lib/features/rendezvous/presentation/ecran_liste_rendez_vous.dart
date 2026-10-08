@@ -296,7 +296,11 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     final String nom;
     if (item.estGroupe) {
       final groupe = ref.watch(groupeUniformeParIdProvider(item.rdvGroupe.groupeId));
-      nom = groupe.valueOrNull?.nom ?? '…';
+      // Le nom du répondant (ex. "TINDANO Aboubacar") parle davantage au
+      // tailleur que le nom interne du groupe (ex. "DPAERAH") — la pastille
+      // "Uniforme" ci-dessous indique déjà qu'il s'agit d'un groupe.
+      final g = groupe.valueOrNull;
+      nom = g?.repondantNom ?? g?.nom ?? '…';
     } else {
       final client = ref.watch(clientParIdProvider(item.rdv.clientId));
       nom = client.valueOrNull?.nomComplet ?? '…';
@@ -304,7 +308,8 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     final fondLigne = item.urgent
         ? const Color(0xFFFBE4E1)
         : (index.isEven ? Colors.white : const Color(0xFFF6F3EE));
-    final afficherBadges = item.urgent ||
+    final afficherBadges = item.estGroupe ||
+        item.urgent ||
         item.statut == AppConstants.rdvConfirme ||
         item.statut == AppConstants.rdvTermine;
 
@@ -334,6 +339,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                     spacing: 4,
                     runSpacing: 4,
                     children: [
+                      if (item.estGroupe) const _PuceUniforme(),
                       _PuceStatut(statut: item.statut),
                       if (item.urgent) const _PuceUrgent(),
                     ],
@@ -441,6 +447,29 @@ class _PuceStatut extends StatelessWidget {
       child: Text(
         libelle,
         style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+    );
+  }
+}
+
+/// Pastille "Uniforme" — distingue un rendez-vous de groupe d'uniformes
+/// d'un rendez-vous client dans la liste fusionnée, le nom affiché
+/// (répondant) ne le laissant pas deviner à lui seul. Même violet que
+/// l'icône "groupes" de l'écran "Nouveau groupe"/"Mesures des uniformes".
+class _PuceUniforme extends StatelessWidget {
+  const _PuceUniforme();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3B3470),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Text(
+        'Uniforme',
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );
   }

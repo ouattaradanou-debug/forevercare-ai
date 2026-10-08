@@ -410,7 +410,9 @@ class _SectionAujourdhui extends ConsumerWidget {
       ...rendezVousGroupe.where((r) => estAujourdhui(r.dateHeure, r.statut)).map(
             (r) => _RdvAujourdhui(
               id: r.groupeId,
-              nom: parGroupe[r.groupeId]?.nom ?? '…',
+              // Nom du répondant (plus parlant que le nom interne du
+              // groupe) — même choix que l'écran "Rendez-vous".
+              nom: parGroupe[r.groupeId]?.repondantNom ?? parGroupe[r.groupeId]?.nom ?? '…',
               dateHeure: r.dateHeure,
               estGroupe: true,
             ),
