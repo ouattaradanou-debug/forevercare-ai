@@ -138,34 +138,52 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
                         ),
                       )
                     : SingleChildScrollView(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(18),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: _bleuSeda, width: 2),
-                              boxShadow: const [
-                                BoxShadow(color: Color(0x1F000000), blurRadius: 10),
-                              ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 10),
+                              child: Text(
+                                'Touchez une ligne pour voir le détail du groupe.',
+                                style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
+                              ),
                             ),
-                            child: Table(
-                              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                              columnWidths: const {2: FixedColumnWidth(84)},
-                              children: [
-                                TableRow(
-                                  decoration: const BoxDecoration(color: _bleuSeda),
-                                  children: const [
-                                    _Cellule('Groupe', entete: true),
-                                    _Cellule('Répondant', entete: true),
-                                    SizedBox.shrink(),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 10),
+                              child: _LegendeBouton(
+                                texte: 'pour modifier le groupe ou contacter le répondant',
+                              ),
+                            ),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(color: _bleuSeda, width: 2),
+                                  boxShadow: const [
+                                    BoxShadow(color: Color(0x1F000000), blurRadius: 10),
                                   ],
                                 ),
-                                for (final entree in liste.asMap().entries)
-                                  _ligne(entree.value, entree.key),
-                              ],
+                                child: Table(
+                                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                                  columnWidths: const {2: FixedColumnWidth(84)},
+                                  children: [
+                                    TableRow(
+                                      decoration: const BoxDecoration(color: _bleuSeda),
+                                      children: const [
+                                        _Cellule('Groupe', entete: true),
+                                        _Cellule('Répondant', entete: true),
+                                        SizedBox.shrink(),
+                                      ],
+                                    ),
+                                    for (final entree in liste.asMap().entries)
+                                      _ligne(entree.value, entree.key),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
               ),
@@ -309,6 +327,32 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
             repondantTelephone:
                 repondantTelCtrl.text.trim().isEmpty ? null : repondantTelCtrl.text.trim(),
           ),
+    );
+  }
+}
+
+/// Légende associant un rond "+" orange (même couleur que le vrai bouton de
+/// chaque ligne) à son rôle, comme sur l'écran de gestion du stock.
+class _LegendeBouton extends StatelessWidget {
+  const _LegendeBouton({required this.texte});
+
+  final String texte;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          decoration: const BoxDecoration(color: _orangeSeda, shape: BoxShape.circle),
+          child: const Icon(Icons.add, size: 14, color: Colors.white),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(texte, style: const TextStyle(fontSize: 13, color: Color(0xFF6F6259))),
+        ),
+      ],
     );
   }
 }
