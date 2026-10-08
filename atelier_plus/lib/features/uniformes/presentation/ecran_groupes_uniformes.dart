@@ -209,8 +209,8 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: IconButton(
-              onPressed: () => _afficherInfosGroupe(groupe),
-              tooltip: 'Informations',
+              onPressed: () => _modifierGroupe(groupe),
+              tooltip: 'Modifier',
               style: IconButton.styleFrom(
                 backgroundColor: _orangeSeda,
                 foregroundColor: Colors.white,
@@ -227,30 +227,48 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
     );
   }
 
-  /// Fiche rapide du groupe (nom, répondant, téléphone) avec appel/WhatsApp
-  /// directement depuis la boîte — ouverte par le "+" de chaque ligne.
-  Future<void> _afficherInfosGroupe(GroupeUniforme groupe) async {
-    final telephone = groupe.repondantTelephone;
-    await showDialog<void>(
+  /// Corrige le nom du groupe et/ou les coordonnées du répondant, avec
+  /// appel/WhatsApp directement depuis la même boîte — ouverte par le "+"
+  /// de chaque ligne.
+  Future<void> _modifierGroupe(GroupeUniforme groupe) async {
+    final nomCtrl = TextEditingController(text: groupe.nom);
+    final repondantNomCtrl = TextEditingController(text: groupe.repondantNom ?? '');
+    final repondantTelCtrl = TextEditingController(text: groupe.repondantTelephone ?? '');
+    final telephoneActuel = groupe.repondantTelephone;
+
+    final resultat = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         scrollable: true,
-        title: Text(groupe.nom, style: const TextStyle(color: _bleuSeda)),
+        title: Text('Modifier : ${groupe.nom}', style: const TextStyle(color: _bleuSeda)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _LigneInfoGroupe('Répondant', groupe.repondantNom ?? 'Non renseigné'),
-            const SizedBox(height: 8),
-            _LigneInfoGroupe('Téléphone', telephone ?? 'Non renseigné'),
+            TextField(
+              controller: nomCtrl,
+              autofocus: true,
+              decoration: const InputDecoration(labelText: 'Nom du groupe'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: repondantNomCtrl,
+              decoration: const InputDecoration(labelText: 'Nom du répondant (optionnel)'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: repondantTelCtrl,
+              keyboardType: TextInputType.phone,
+              decoration:
+                  const InputDecoration(labelText: 'Téléphone du répondant (optionnel)'),
+            ),
           ],
         ),
         actions: [
-          if (telephone != null && telephone.isNotEmpty) ...[
+          if (telephoneActuel != null && telephoneActuel.isNotEmpty) ...[
             TextButton.icon(
               onPressed: () {
-                Navigator.pop(dialogContext);
-                _appeler(telephone);
+                Navigator.pop(dialogContext, false);
+                _appeler(telephoneActuel);
               },
               style: TextButton.styleFrom(foregroundColor: _bleuSeda),
               icon: const Icon(Icons.call),
@@ -258,44 +276,39 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
             ),
             TextButton.icon(
               onPressed: () {
-                Navigator.pop(dialogContext);
-                _whatsapp(telephone);
+                Navigator.pop(dialogContext, false);
+                _whatsapp(telephoneActuel);
               },
               style: TextButton.styleFrom(foregroundColor: _vertWhatsapp),
               icon: const Icon(Icons.chat),
               label: const Text('WhatsApp'),
             ),
           ],
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+            child: const Text('Annuler'),
+          ),
           FilledButton(
-            onPressed: () => Navigator.pop(dialogContext),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
-            child: const Text('Fermer'),
+            child: const Text('Enregistrer'),
           ),
         ],
       ),
     );
-  }
-}
+    if (resultat != true || nomCtrl.text.trim().isEmpty || !mounted) return;
 
-class _LigneInfoGroupe extends StatelessWidget {
-  const _LigneInfoGroupe(this.libelle, this.valeur);
-
-  final String libelle;
-  final String valeur;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 90,
-          child: Text(libelle, style: const TextStyle(color: Color(0xFF6F6259))),
-        ),
-        Expanded(
-          child: Text(valeur, style: const TextStyle(fontWeight: FontWeight.bold)),
-        ),
-      ],
+    await executerAvecErreurAffichee(
+      context,
+      () => ref.read(groupesUniformesRepositoryProvider).modifierGroupe(
+            groupe: groupe,
+            nom: nomCtrl.text.trim(),
+            repondantNom:
+                repondantNomCtrl.text.trim().isEmpty ? null : repondantNomCtrl.text.trim(),
+            repondantTelephone:
+                repondantTelCtrl.text.trim().isEmpty ? null : repondantTelCtrl.text.trim(),
+          ),
     );
   }
 }

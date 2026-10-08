@@ -45,6 +45,39 @@ class GroupesUniformesRepository {
     return groupe;
   }
 
+  /// Corrige le nom du groupe et/ou les coordonnées du répondant (erreur de
+  /// saisie à la création, ou changement de répondant).
+  Future<GroupeUniforme> modifierGroupe({
+    required GroupeUniforme groupe,
+    required String nom,
+    String? repondantNom,
+    String? repondantTelephone,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, groupe.atelierId);
+    // Même précaution que les autres repositories "modifier" : purge
+    // d'abord toute tâche de synchronisation périmée pour ce groupe.
+    await _baseLocale.retirerTachesPourEnregistrement('groupes_uniformes', groupe.id);
+    final miseAJour = GroupeUniforme(
+      id: groupe.id,
+      atelierId: groupe.atelierId,
+      nom: nom,
+      repondantNom: repondantNom,
+      repondantTelephone: repondantTelephone,
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    await _mettreEnCache(miseAJour);
+    await ecrireEtSynchroniser(
+      client: _client,
+      baseLocale: _baseLocale,
+      table: 'groupes_uniformes',
+      recordId: miseAJour.id,
+      operation: 'update',
+      payload: miseAJour.versJson(),
+    );
+    return miseAJour;
+  }
+
   Stream<List<GroupeUniforme>> observerGroupes(String atelierId) {
     return _baseLocale.observerGroupesUniformes(atelierId).map(
           (lignes) => lignes.map(_depuisLigne).toList(),
