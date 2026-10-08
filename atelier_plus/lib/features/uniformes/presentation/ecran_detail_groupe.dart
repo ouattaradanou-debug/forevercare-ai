@@ -233,38 +233,85 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                 textAlign: TextAlign.center,
                               ),
                             )
-                          : ListView.separated(
-                              itemCount: liste.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 8),
-                              itemBuilder: (context, index) {
-                                final membre = liste[index];
-                                return Card(
-                                  child: ListTile(
-                                    leading: Icon(
-                                      membre.sexe == 'Femme' ? Icons.female : Icons.male,
-                                    ),
-                                    title: Text(membre.nomComplet),
-                                    trailing: IconButton(
-                                      tooltip: membre.tenueTerminee
-                                          ? 'Tenue terminée'
-                                          : 'Marquer la tenue comme terminée',
-                                      icon: Icon(
-                                        membre.tenueTerminee
-                                            ? Icons.check_circle
-                                            : Icons.check_circle_outline,
-                                        color: membre.tenueTerminee
-                                            ? const Color(0xFF2E7D32)
-                                            : const Color(0xFF6F6259),
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(color: _bleuSeda, width: 2),
+                                  boxShadow: const [
+                                    BoxShadow(color: Color(0x1F000000), blurRadius: 10),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Container(
+                                      decoration: const BoxDecoration(color: _bleuSeda),
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      alignment: Alignment.center,
+                                      child: const Text(
+                                        'Membres du groupe',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                        ),
                                       ),
-                                      onPressed: () => _basculerTenueTerminee(membre),
                                     ),
-                                    onTap: () => context.push(
-                                      AppRoutes.selectionTypeTenueMembre(membre.id),
-                                      extra: membre.nomComplet,
+                                    Expanded(
+                                      child: ListView.separated(
+                                        padding: EdgeInsets.zero,
+                                        itemCount: liste.length,
+                                        separatorBuilder: (_, __) => const Divider(
+                                          height: 1,
+                                          color: Color(0xFFE4E7EE),
+                                        ),
+                                        itemBuilder: (context, index) {
+                                          final membre = liste[index];
+                                          return Container(
+                                            color: index.isEven
+                                                ? Colors.white
+                                                : const Color(0xFFF6F3EE),
+                                            child: ListTile(
+                                              leading: Icon(
+                                                membre.sexe == 'Femme'
+                                                    ? Icons.female
+                                                    : Icons.male,
+                                                color: _bleuSeda,
+                                              ),
+                                              title: Text(
+                                                membre.nomComplet,
+                                                style: const TextStyle(fontWeight: FontWeight.w600),
+                                              ),
+                                              trailing: IconButton(
+                                                tooltip: membre.tenueTerminee
+                                                    ? 'Tenue terminée'
+                                                    : 'Marquer la tenue comme terminée',
+                                                icon: Icon(
+                                                  membre.tenueTerminee
+                                                      ? Icons.check_circle
+                                                      : Icons.check_circle_outline,
+                                                  color: membre.tenueTerminee
+                                                      ? const Color(0xFF2E7D32)
+                                                      : const Color(0xFF6F6259),
+                                                ),
+                                                onPressed: () => _basculerTenueTerminee(membre),
+                                              ),
+                                              onTap: () => context.push(
+                                                AppRoutes.selectionTypeTenueMembre(membre.id),
+                                                extra: membre.nomComplet,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
+                                  ],
+                                ),
+                              ),
                             ),
                     ),
                   ),
