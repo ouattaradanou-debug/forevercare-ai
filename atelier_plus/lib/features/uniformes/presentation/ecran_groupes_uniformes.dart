@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/gestion_erreurs.dart';
+import '../../../core/utils/telephone.dart';
+import '../../../data/models/groupe_uniforme.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/uniformes_providers.dart';
 
+const _bleuSeda = Color(0xFF1B4FA0);
+const _orangeSeda = Color(0xFFF5821F);
+const _vertWhatsapp = Color(0xFF25D366);
+
 /// Groupes de mesures d'uniformes (promotion, établissement, équipe) :
 /// permet de prendre les mesures de plusieurs personnes à la fois, en
-/// dehors des fiches clients individuelles.
+/// dehors des fiches clients individuelles. Organisés en tableau avec
+/// contact direct (appel/WhatsApp) du répondant du groupe.
 class EcranGroupesUniformes extends ConsumerStatefulWidget {
   const EcranGroupesUniformes({super.key});
 
@@ -35,7 +44,8 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
     final resultat = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Nouveau groupe'),
+        scrollable: true,
+        title: const Text('Nouveau groupe', style: TextStyle(color: _bleuSeda)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -66,10 +76,12 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
+            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
             child: const Text('Annuler'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
             child: const Text('Créer'),
           ),
         ],
@@ -88,17 +100,31 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
         );
   }
 
+  Future<void> _appeler(String telephone) => executerAvecErreurAffichee(
+        context,
+        () => launchUrl(Uri(scheme: 'tel', path: telephone)),
+      );
+
+  Future<void> _whatsapp(String telephone) => executerAvecErreurAffichee(
+        context,
+        () => launchUrl(Uri.parse('https://wa.me/${Telephone.normaliser(telephone)}')),
+      );
+
   @override
   Widget build(BuildContext context) {
     final groupes = ref.watch(groupesUniformesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mesures des uniformes')),
+      appBar: AppBar(
+        title: const Text('Mesures des uniformes'),
+        backgroundColor: _bleuSeda,
+        foregroundColor: Colors.white,
+      ),
       body: SafeArea(
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 90),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
               child: groupes.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (_, __) => const Center(child: Text('Impossible de charger les groupes.')),
@@ -111,23 +137,36 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
                           textAlign: TextAlign.center,
                         ),
                       )
-                    : ListView.separated(
-                        itemCount: liste.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final groupe = liste[index];
-                          return Card(
-                            child: ListTile(
-                              leading: const Icon(Icons.groups_outlined),
-                              title: Text(groupe.nom),
-                              subtitle: groupe.repondantNom == null
-                                  ? null
-                                  : Text('Répondant : ${groupe.repondantNom}'),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => context.push(AppRoutes.detailGroupeUniforme(groupe.id)),
+                    : SingleChildScrollView(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: _bleuSeda, width: 2),
+                              boxShadow: const [
+                                BoxShadow(color: Color(0x1F000000), blurRadius: 10),
+                              ],
                             ),
-                          );
-                        },
+                            child: Table(
+                              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                              columnWidths: const {2: FixedColumnWidth(84)},
+                              children: [
+                                TableRow(
+                                  decoration: const BoxDecoration(color: _bleuSeda),
+                                  children: const [
+                                    _Cellule('Groupe', entete: true),
+                                    _Cellule('Répondant', entete: true),
+                                    SizedBox.shrink(),
+                                  ],
+                                ),
+                                for (final entree in liste.asMap().entries)
+                                  _ligne(entree.value, entree.key),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
               ),
             ),
@@ -138,7 +177,7 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
               child: FilledButton.icon(
                 onPressed: _creerGroupe,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF141B3E),
+                  backgroundColor: _bleuSeda,
                   minimumSize: const Size.fromHeight(52),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                 ),
@@ -147,6 +186,111 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  TableRow _ligne(GroupeUniforme groupe, int index) {
+    final telephone = groupe.repondantTelephone;
+    final fondLigne = index.isEven ? Colors.white : const Color(0xFFF6F3EE);
+
+    return TableRow(
+      decoration: BoxDecoration(color: fondLigne),
+      children: [
+        GestureDetector(
+          onTap: () => context.push(AppRoutes.detailGroupeUniforme(groupe.id)),
+          child: _Cellule(groupe.nom, tronquer: false),
+        ),
+        GestureDetector(
+          onTap: () => context.push(AppRoutes.detailGroupeUniforme(groupe.id)),
+          child: _Cellule(groupe.repondantNom ?? '—', tronquer: false),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: telephone == null || telephone.isEmpty
+              ? const SizedBox.shrink()
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _BoutonContact(
+                      icone: Icons.call,
+                      couleur: _bleuSeda,
+                      tooltip: 'Appeler',
+                      onTap: () => _appeler(telephone),
+                    ),
+                    const SizedBox(width: 6),
+                    _BoutonContact(
+                      icone: Icons.chat,
+                      couleur: _vertWhatsapp,
+                      tooltip: 'WhatsApp',
+                      onTap: () => _whatsapp(telephone),
+                    ),
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Petit bouton rond coloré pour contacter le répondant d'un groupe — même
+/// langage visuel que les autres boutons d'action ronds de l'application
+/// (orange "+" du stock, etc.), ici avec la couleur propre à chaque moyen
+/// de contact (bleu SEDA pour l'appel, vert WhatsApp pour WhatsApp).
+class _BoutonContact extends StatelessWidget {
+  const _BoutonContact({
+    required this.icone,
+    required this.couleur,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icone;
+  final Color couleur;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onTap,
+      tooltip: tooltip,
+      style: IconButton.styleFrom(
+        backgroundColor: couleur,
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+        minimumSize: const Size(32, 32),
+        padding: EdgeInsets.zero,
+      ),
+      icon: Icon(icone, size: 16),
+    );
+  }
+}
+
+class _Cellule extends StatelessWidget {
+  const _Cellule(
+    this.texte, {
+    this.entete = false,
+    this.tronquer = true,
+  });
+
+  final String texte;
+  final bool entete;
+  final bool tronquer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      child: Text(
+        texte,
+        maxLines: tronquer ? 1 : 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontWeight: entete ? FontWeight.bold : FontWeight.w600,
+          color: entete ? Colors.white : const Color(0xFF231A14),
+          fontSize: entete ? 13 : 14,
         ),
       ),
     );
