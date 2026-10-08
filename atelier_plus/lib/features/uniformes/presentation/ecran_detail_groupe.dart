@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/router/app_router.dart';
@@ -11,6 +12,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../providers/uniformes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
+const _orangeSeda = Color(0xFFF5821F);
 const _vertWhatsapp = Color(0xFF25D366);
 
 /// Détail d'un groupe d'uniformes : informations du répondant (en tableau,
@@ -36,67 +38,20 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
   }
 
   Future<void> _ajouterMembre() async {
-    final nomCtrl = TextEditingController();
-    final prenomCtrl = TextEditingController();
-    String? sexe;
-
-    final resultat = await showDialog<bool>(
+    final resultat = await showDialog<_ResultatNouveauMembre>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Nouveau membre'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nomCtrl,
-                  autofocus: true,
-                  decoration: const InputDecoration(labelText: 'Nom'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: prenomCtrl,
-                  decoration: const InputDecoration(labelText: 'Prénom (optionnel)'),
-                ),
-                const SizedBox(height: 12),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'Homme', label: Text('Homme')),
-                    ButtonSegment(value: 'Femme', label: Text('Femme')),
-                  ],
-                  selected: sexe == null ? {} : {sexe!},
-                  emptySelectionAllowed: true,
-                  onSelectionChanged: (selection) =>
-                      setDialogState(() => sexe = selection.isEmpty ? null : selection.first),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Annuler'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Ajouter'),
-            ),
-          ],
-        ),
-      ),
+      builder: (dialogContext) => const _DialogueNouveauMembre(),
     );
-    if (resultat != true || !mounted) return;
-    if (nomCtrl.text.trim().isEmpty && prenomCtrl.text.trim().isEmpty) return;
+    if (resultat == null || !mounted) return;
 
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (utilisateur == null) return;
     await ref.read(membresGroupeUniformeRepositoryProvider).ajouterMembre(
           atelierId: utilisateur.atelierId,
           groupeId: widget.groupeId,
-          nom: nomCtrl.text.trim().isEmpty ? null : nomCtrl.text.trim(),
-          prenom: prenomCtrl.text.trim().isEmpty ? null : prenomCtrl.text.trim(),
-          sexe: sexe,
+          nom: resultat.nom,
+          prenom: null,
+          sexe: resultat.sexe,
         );
   }
 
@@ -393,6 +348,131 @@ class _BoutonContact extends StatelessWidget {
         padding: EdgeInsets.zero,
       ),
       icon: Icon(icone, size: 14),
+    );
+  }
+}
+
+class _ResultatNouveauMembre {
+  const _ResultatNouveauMembre({required this.nom, required this.sexe});
+
+  final String nom;
+  final String? sexe;
+}
+
+/// Formulaire "Nouveau membre" : un seul champ nom + prénom (au lieu de
+/// deux cases séparées), avec dictée vocale — pratique pour un tailleur
+/// peu à l'aise à l'écrit, comme pour le nom d'un client.
+class _DialogueNouveauMembre extends StatefulWidget {
+  const _DialogueNouveauMembre();
+
+  @override
+  State<_DialogueNouveauMembre> createState() => _DialogueNouveauMembreState();
+}
+
+class _DialogueNouveauMembreState extends State<_DialogueNouveauMembre> {
+  final _nomCtrl = TextEditingController();
+  String? _sexe;
+  final _dicteeVocale = stt.SpeechToText();
+  bool _dicteeDisponible = false;
+  bool _enEcoute = false;
+
+  @override
+  void dispose() {
+    _dicteeVocale.stop();
+    _nomCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _basculerDictee() async {
+    if (_enEcoute) {
+      await _dicteeVocale.stop();
+      if (mounted) setState(() => _enEcoute = false);
+      return;
+    }
+
+    if (!_dicteeDisponible) {
+      _dicteeDisponible = await _dicteeVocale.initialize(
+        onStatus: (statut) {
+          if ((statut == 'done' || statut == 'notListening') && mounted) {
+            setState(() => _enEcoute = false);
+          }
+        },
+        onError: (_) {
+          if (mounted) setState(() => _enEcoute = false);
+        },
+      );
+      if (!_dicteeDisponible) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
+          );
+        }
+        return;
+      }
+    }
+
+    setState(() => _enEcoute = true);
+    await _dicteeVocale.listen(
+      localeId: 'fr_FR',
+      onResult: (resultat) {
+        _nomCtrl.text = resultat.recognizedWords;
+        _nomCtrl.selection = TextSelection.collapsed(offset: _nomCtrl.text.length);
+        if (mounted) setState(() {});
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      scrollable: true,
+      title: const Text('Nouveau membre', style: TextStyle(color: _bleuSeda)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nomCtrl,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: 'Nom et prénom',
+              prefixIcon: IconButton(
+                icon: Icon(_enEcoute ? Icons.mic : Icons.mic_none),
+                color: _enEcoute ? Colors.red : _bleuSeda,
+                tooltip: 'Dicter le nom',
+                onPressed: _basculerDictee,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(value: 'Homme', label: Text('Homme')),
+              ButtonSegment(value: 'Femme', label: Text('Femme')),
+            ],
+            selected: _sexe == null ? {} : {_sexe!},
+            emptySelectionAllowed: true,
+            onSelectionChanged: (selection) =>
+                setState(() => _sexe = selection.isEmpty ? null : selection.first),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final nom = _nomCtrl.text.trim();
+            if (nom.isEmpty) return;
+            Navigator.of(context).pop(_ResultatNouveauMembre(nom: nom, sexe: _sexe));
+          },
+          style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
+          child: const Text('Ajouter'),
+        ),
+      ],
     );
   }
 }
