@@ -331,8 +331,8 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
                                               onPressed: () => _basculerTenueTerminee(membre),
                                             ),
                                             onTap: () => context.push(
-                                              AppRoutes.selectionTypeTenueMembre(membre.id),
-                                              extra: membre.nomComplet,
+                                              AppRoutes.ficheMembre(membre.id),
+                                              extra: membre,
                                             ),
                                           ),
                                         );

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/models/client.dart';
+import '../../data/models/membre_groupe_uniforme.dart';
 import '../../data/models/type_tenue.dart';
 import '../../data/remote/supabase_client_provider.dart';
 import '../../features/abonnement/presentation/ecran_abonnement.dart';
@@ -35,6 +36,7 @@ import '../../features/permissions/presentation/ecran_panneau_permissions.dart';
 import '../../features/rendezvous/presentation/ecran_formulaire_rendez_vous.dart';
 import '../../features/rendezvous/presentation/ecran_liste_rendez_vous.dart';
 import '../../features/uniformes/presentation/ecran_detail_groupe.dart';
+import '../../features/uniformes/presentation/ecran_fiche_membre.dart';
 import '../../features/uniformes/presentation/ecran_groupes_uniformes.dart';
 import '../../features/uniformes/presentation/ecran_nouveau_groupe.dart';
 import '../../features/uniformes/presentation/ecran_nouveau_membre.dart';
@@ -103,12 +105,14 @@ class AppRoutes {
   static const String creationGroupeUniforme = '/uniformes/nouveau';
   static const String _detailGroupeUniformeTemplate = '/uniformes/:id';
   static const String _creationMembreGroupeTemplate = '/uniformes/:id/membres/nouveau';
+  static const String _ficheMembreTemplate = '/uniformes/membres/:membreId';
   static const String _selectionTypeTenueMembreTemplate = '/uniformes/membres/:membreId/mesures';
   static const String _priseMesureMembreTemplate =
       '/uniformes/membres/:membreId/mesures/:typeTenueId';
 
   static String detailGroupeUniforme(String id) => '/uniformes/$id';
   static String creationMembreGroupe(String groupeId) => '/uniformes/$groupeId/membres/nouveau';
+  static String ficheMembre(String membreId) => '/uniformes/membres/$membreId';
   static String selectionTypeTenueMembre(String membreId) => '/uniformes/membres/$membreId/mesures';
   static String priseMesureMembre(String membreId, String typeTenueId) =>
       '/uniformes/membres/$membreId/mesures/$typeTenueId';
@@ -279,6 +283,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes._detailGroupeUniformeTemplate,
         builder: (context, state) => EcranDetailGroupe(groupeId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes._ficheMembreTemplate,
+        builder: (context, state) => EcranFicheMembre(
+          membre: state.extra as MembreGroupeUniforme,
+        ),
       ),
       GoRoute(
         path: AppRoutes._selectionTypeTenueMembreTemplate,

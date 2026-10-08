@@ -1298,6 +1298,13 @@ class AppDatabase extends _$AppDatabase {
         .getSingleOrNull();
   }
 
+  /// Toutes les mesures d'un membre, tous types de tenue confondus — utilisé
+  /// par la fiche récapitulative du membre, comme `toutesMesuresDuClient`
+  /// pour un client.
+  Future<List<MesureUniformeEntry>> toutesMesuresDuMembre(String membreId) {
+    return (select(mesureUniformeEntries)..where((t) => t.membreId.equals(membreId))).get();
+  }
+
   // --- File d'attente de synchronisation ---
 
   Future<void> enfilerSync({
