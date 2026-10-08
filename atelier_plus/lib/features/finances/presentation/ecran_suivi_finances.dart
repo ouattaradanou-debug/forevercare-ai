@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/formatters.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../data/recapitulatif_finances.dart';
 import '../providers/finances_providers.dart';
 
@@ -40,6 +41,25 @@ class EcranSuiviFinances extends ConsumerStatefulWidget {
 
 class _EcranSuiviFinancesState extends ConsumerState<EcranSuiviFinances> {
   late int _annee = DateTime.now().year;
+
+  @override
+  void initState() {
+    super.initState();
+    // Rapatriement serveur déclenché une seule fois ici (plutôt que dans
+    // recapitulatifGlobalProvider) : les deux tableaux lisent ensuite tous
+    // les deux le cache local, puis sont invalidés ensemble une fois la
+    // synchronisation terminée — ils s'affichent donc en même temps au lieu
+    // que le tableau Jour/Semaine/Mois/Année attende le réseau pendant que
+    // le tableau mensuel (déjà purement local) s'affiche immédiatement.
+    Future.microtask(() async {
+      final atelier = await ref.read(atelierCourantProvider.future);
+      if (atelier == null || !mounted) return;
+      await ref.read(financesRepositoryProvider).chargerRecapitulatifDepuisServeur(atelier.id);
+      if (!mounted) return;
+      ref.invalidate(recapitulatifGlobalProvider);
+      ref.invalidate(recapitulatifMensuelProvider(_annee));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

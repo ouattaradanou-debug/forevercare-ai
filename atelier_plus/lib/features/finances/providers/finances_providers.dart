@@ -23,6 +23,13 @@ final financesRepositoryProvider = Provider<FinancesRepository>((ref) {
 /// Récapitulatif global (jour/semaine/mois/année en cours), recalculé à
 /// chaque consultation de l'écran "Suivi des finances" — `autoDispose` par
 /// précaution supplémentaire, comme le reste des données financières.
+///
+/// Lecture purement locale (comme `recapitulatifMensuelProvider`) : le
+/// rapatriement serveur est déclenché une seule fois par l'écran lui-même
+/// (voir EcranSuiviFinances.initState), pas ici — sinon ce tableau-ci
+/// attendait le réseau avant de s'afficher pendant que le tableau mensuel,
+/// purement local, s'affichait déjà, donnant l'impression que les deux
+/// tableaux ne se chargent pas en même temps.
 final recapitulatifGlobalProvider = FutureProvider.autoDispose<RecapitulatifGlobal>((ref) async {
   final atelier = await ref.watch(atelierCourantProvider.future);
   if (atelier == null) {
@@ -30,7 +37,6 @@ final recapitulatifGlobalProvider = FutureProvider.autoDispose<RecapitulatifGlob
   }
 
   final repo = ref.watch(financesRepositoryProvider);
-  await repo.chargerRecapitulatifDepuisServeur(atelier.id);
   final brut = await repo.recapitulatifBrut(atelier.id);
   return calculerRecapitulatifGlobal(
     paiements: brut.paiements,
