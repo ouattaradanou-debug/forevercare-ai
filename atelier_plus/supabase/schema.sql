@@ -323,6 +323,24 @@ create table if not exists public.paiements_groupe (
 create index if not exists idx_paiements_groupe_commande on public.paiements_groupe (commande_id);
 create index if not exists idx_paiements_groupe_atelier on public.paiements_groupe (atelier_id);
 
+-- Rendez-vous rattachés à un groupe d'uniformes — table dédiée et séparée
+-- de `rendez_vous` (clients), même raison que `commandes_groupe` : jamais
+-- d'ALTER sur une table déjà en production.
+create table if not exists public.rendez_vous_groupe (
+  id          uuid primary key default gen_random_uuid(),
+  atelier_id  uuid not null references public.ateliers (id) on delete cascade,
+  groupe_id   uuid not null references public.groupes_uniformes (id) on delete cascade,
+  date_heure  timestamptz not null,
+  type        text not null check (type in ('essayage', 'livraison')),
+  statut      text not null default 'planifie' check (statut in ('planifie', 'confirme', 'termine', 'annule')),
+  urgent      boolean not null default false,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists idx_rdv_groupe_atelier_date on public.rendez_vous_groupe (atelier_id, date_heure);
+create index if not exists idx_rdv_groupe_groupe on public.rendez_vous_groupe (groupe_id);
+
 -- Dépenses de l'atelier (loyer, fournitures, etc.). Table financière — même
 -- règle que commandes/paiements : jamais accessible à un apprenti.
 create table if not exists public.depenses (
@@ -439,7 +457,7 @@ begin
       'ateliers', 'utilisateurs', 'permissions_apprenti', 'clients',
       'types_tenue', 'champs_mesure', 'mesures', 'rendez_vous',
       'commandes', 'abonnements', 'groupes_uniformes', 'membres_groupe_uniforme', 'articles',
-      'commandes_groupe'
+      'commandes_groupe', 'rendez_vous_groupe'
     ])
   loop
     execute format(
@@ -600,6 +618,7 @@ alter table public.commandes enable row level security;
 alter table public.paiements enable row level security;
 alter table public.commandes_groupe enable row level security;
 alter table public.paiements_groupe enable row level security;
+alter table public.rendez_vous_groupe enable row level security;
 alter table public.depenses enable row level security;
 alter table public.ventes enable row level security;
 alter table public.articles enable row level security;
@@ -910,6 +929,31 @@ create policy rdv_update on public.rendez_vous
 
 drop policy if exists rdv_delete on public.rendez_vous;
 create policy rdv_delete on public.rendez_vous
+  for delete to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+-- -----------------------------------------------------------------------------
+-- 5.9bis RENDEZ_VOUS_GROUPE — même règle que RENDEZ_VOUS : accessible à tout
+--        membre de l'atelier, aucune permission dédiée.
+-- -----------------------------------------------------------------------------
+drop policy if exists rdv_groupe_select on public.rendez_vous_groupe;
+create policy rdv_groupe_select on public.rendez_vous_groupe
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+drop policy if exists rdv_groupe_insert on public.rendez_vous_groupe;
+create policy rdv_groupe_insert on public.rendez_vous_groupe
+  for insert to authenticated
+  with check (atelier_id = public.mon_atelier_id());
+
+drop policy if exists rdv_groupe_update on public.rendez_vous_groupe;
+create policy rdv_groupe_update on public.rendez_vous_groupe
+  for update to authenticated
+  using (atelier_id = public.mon_atelier_id())
+  with check (atelier_id = public.mon_atelier_id());
+
+drop policy if exists rdv_groupe_delete on public.rendez_vous_groupe;
+create policy rdv_groupe_delete on public.rendez_vous_groupe
   for delete to authenticated
   using (atelier_id = public.mon_atelier_id());
 

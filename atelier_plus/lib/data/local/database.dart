@@ -245,6 +245,25 @@ class PaiementGroupeEntries extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Rendez-vous d'un groupe d'uniformes — table dédiée et séparée de
+/// RendezVousEntries (clients), même raison que CommandeGroupeEntries :
+/// jamais d'ALTER sur une table existante contenant déjà des données
+/// réelles, uniquement une création de table toute neuve.
+@DataClassName('RendezVousGroupeEntry')
+class RendezVousGroupeEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get atelierId => text()();
+  TextColumn get groupeId => text()();
+  DateTimeColumn get dateHeure => dateTime()();
+  TextColumn get type => text()();
+  TextColumn get statut => text()();
+  BoolColumn get urgent => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Cache local des dépenses — même remarque que CommandeEntries/PaiementEntries
 /// : donnée financière, jamais alimentée ni lue pour un apprenti.
 @DataClassName('DepenseEntry')
@@ -411,12 +430,13 @@ class AbonnementEntries extends Table {
   ArticleEntries,
   CommandeGroupeEntries,
   PaiementGroupeEntries,
+  RendezVousGroupeEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -561,6 +581,12 @@ class AppDatabase extends _$AppDatabase {
             // aucun risque pour les données déjà présentes.
             await m.createTable(commandeGroupeEntries);
             await m.createTable(paiementGroupeEntries);
+          }
+          if (from < 20) {
+            // Table toute neuve (rendez-vous d'un groupe d'uniformes) :
+            // même principe que le bloc `from < 19` ci-dessus, simple
+            // création sans aucun ALTER.
+            await m.createTable(rendezVousGroupeEntries);
           }
         },
       );
@@ -984,6 +1010,45 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  // --- Rendez-vous d'un groupe d'uniformes (table dédiée, voir
+  // RendezVousGroupeEntries) ---
+
+  Future<void> enregistrerRendezVousGroupe({
+    required String id,
+    required String atelierId,
+    required String groupeId,
+    required DateTime dateHeure,
+    required String type,
+    required String statut,
+    bool urgent = false,
+    required DateTime updatedAt,
+  }) async {
+    await into(rendezVousGroupeEntries).insertOnConflictUpdate(
+      RendezVousGroupeEntriesCompanion.insert(
+        id: id,
+        atelierId: atelierId,
+        groupeId: groupeId,
+        dateHeure: dateHeure,
+        type: type,
+        statut: statut,
+        urgent: Value(urgent),
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  Future<RendezVousGroupeEntry?> rendezVousGroupeParId(String id) {
+    return (select(rendezVousGroupeEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  /// Rendez-vous à venir du groupe, triés par date.
+  Stream<List<RendezVousGroupeEntry>> observerRendezVousDuGroupe(String groupeId) {
+    return (select(rendezVousGroupeEntries)
+          ..where((t) => t.groupeId.equals(groupeId))
+          ..orderBy([(t) => OrderingTerm.asc(t.dateHeure)]))
+        .watch();
+  }
+
   // --- Commandes (financier — jamais consulté pour un apprenti) ---
 
   Future<void> enregistrerCommande({
@@ -1353,10 +1418,17 @@ class AppDatabase extends _$AppDatabase {
               ..where((t) => t.commandeGroupeId.equals(commande.id)))
             .go();
       }
+      final rdvGroupe = await (select(rendezVousGroupeEntries)
+            ..where((t) => t.groupeId.equals(groupeId)))
+          .get();
+      for (final rdv in rdvGroupe) {
+        await retirerTachesPourEnregistrement('rendez_vous_groupe', rdv.id);
+      }
       await retirerTachesPourEnregistrement('groupes_uniformes', groupeId);
 
       await (delete(photoEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(commandeGroupeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
+      await (delete(rendezVousGroupeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(membreGroupeUniformeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(groupeUniformeEntries)..where((t) => t.id.equals(groupeId))).go();
     });
