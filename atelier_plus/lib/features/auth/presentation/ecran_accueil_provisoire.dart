@@ -86,17 +86,13 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
     // Tant que utilisateurCourantProvider n'a pas encore résolu une première
     // fois (bref instant à l'ouverture de l'application, avant la toute
     // première lecture du cache local), estProprietaireProvider vaut `false`
-    // par défaut — la grille affichait alors immédiatement "Nouveau client"/
-    // "Mes clients"/"Rendez-vous" (jamais masqués) puis, un instant plus
-    // tard, les tuiles réservées au propriétaire et la section "Aujourd'hui"
-    // apparaissaient d'un coup. On attend ici que la résolution soit
-    // terminée pour afficher la page entière en une seule fois.
-    if (utilisateur.isLoading && !utilisateur.hasValue) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFFAF6F1),
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    // par défaut. Plutôt que de bloquer tout l'écran derrière un indicateur
+    // de chargement (ce qui donne l'impression que l'application met plus
+    // de temps à s'ouvrir, pour un gain purement visuel) ou de laisser les
+    // tuiles réservées au propriétaire/"Aujourd'hui" apparaître d'un coup
+    // sans prévenir, on affiche l'écran tout de suite avec un petit
+    // indicateur discret à la place du contenu encore en résolution.
+    final enResolution = utilisateur.isLoading && !utilisateur.hasValue;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAF6F1),
@@ -156,7 +152,7 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                           couleurIcone: const Color(0xFFA47B1B),
                           onTap: () => context.push(AppRoutes.rendezVous),
                         ),
-                        if (estProprietaire)
+                        if (estProprietaire) ...[
                           _CarteAction(
                             icone: Icons.remove_circle_outline,
                             libelle: 'Enregistrer dépenses',
@@ -164,7 +160,6 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                             couleurIcone: const Color(0xFFB3261E),
                             onTap: () => context.push(AppRoutes.nouvelleDepense),
                           ),
-                        if (estProprietaire)
                           _CarteAction(
                             icone: Icons.storefront_outlined,
                             libelle: 'Ventes',
@@ -172,7 +167,6 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                             couleurIcone: const Color(0xFF2E7D32),
                             onTap: () => context.push(AppRoutes.ventes),
                           ),
-                        if (estProprietaire)
                           _CarteAction(
                             icone: Icons.inventory_2_outlined,
                             libelle: 'Stock',
@@ -180,6 +174,8 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                             couleurIcone: const Color(0xFF1B4FA0),
                             onTap: () => context.push(AppRoutes.gestionStock),
                           ),
+                        ] else if (enResolution)
+                          const _CarteActionChargement(),
                       ],
                     ),
                     if (estProprietaire) ...[
@@ -196,6 +192,18 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       ),
                       const SizedBox(height: 16),
                       const _SectionAujourdhui(),
+                    ] else if (enResolution) ...[
+                      const SizedBox(height: 24),
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -754,6 +762,30 @@ class _CarteAction extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Occupe la place des tuiles réservées au propriétaire pendant que
+/// `utilisateurCourantProvider` résout encore (voir la remarque dans
+/// EcranAccueilProvisoire.build) — même forme que _CarteAction, pour que la
+/// grille ne change pas brutalement de mise en page une fois le rôle connu.
+class _CarteActionChargement extends StatelessWidget {
+  const _CarteActionChargement();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 1,
+      child: const Center(
+        child: SizedBox(
+          height: 22,
+          width: 22,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
     );
