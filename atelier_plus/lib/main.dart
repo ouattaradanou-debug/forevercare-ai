@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,8 +20,6 @@ Future<void> main() async {
   // Format des dates en français (jours/mois écrits en toutes lettres, etc.)
   await initializeDateFormatting('fr_FR', null);
 
-  await NotificationsService.instance.initialiser();
-
   // Toujours initialisé, même sans configuration réelle (voir
   // SupabaseConfig.urlEffective) : Supabase.instance.client est sollicité
   // dès le premier écran (redirection du router), y compris en mode
@@ -38,6 +38,14 @@ Future<void> main() async {
   }
 
   runApp(const ProviderScope(child: AtelierPlusApp()));
+
+  // Volontairement non attendu avant runApp : initialise le plugin de
+  // notifications (fuseau horaire, permission système) une fois le premier
+  // écran déjà affiché plutôt que de bloquer l'ouverture de l'application
+  // dessus — NotificationsService.initialiser() est réappelée (sans effet,
+  // déjà protégée par _initialise) avant toute programmation de rappel, au
+  // cas improbable où un rendez-vous serait créé avant que ceci ait fini.
+  unawaited(NotificationsService.instance.initialiser());
 }
 
 class AtelierPlusApp extends ConsumerWidget {

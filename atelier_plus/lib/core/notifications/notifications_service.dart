@@ -65,6 +65,11 @@ class NotificationsService {
     final momentRappel = dateHeureRendezVous.subtract(delaiRappel);
     if (momentRappel.isBefore(DateTime.now())) return;
 
+    // Sans effet si déjà fait (voir main.dart, qui ne l'attend plus avant
+    // d'afficher le premier écran) : filet de sécurité au cas improbable où
+    // un rendez-vous serait créé avant la fin de cette initialisation.
+    await initialiser();
+
     await _plugin.zonedSchedule(
       _idNotification(rendezVousId),
       titre,
@@ -86,14 +91,16 @@ class NotificationsService {
     );
   }
 
-  Future<void> annulerRappel(String rendezVousId) {
-    return _plugin.cancel(_idNotification(rendezVousId));
+  Future<void> annulerRappel(String rendezVousId) async {
+    await initialiser();
+    await _plugin.cancel(_idNotification(rendezVousId));
   }
 
   /// Envoie immédiatement une notification de test, pour que le
   /// propriétaire vérifie que les rappels fonctionnent bien sur son
   /// appareil (bouton "Tester un rappel maintenant" de l'accueil).
   Future<void> envoyerNotificationTest() async {
+    await initialiser();
     await _plugin.show(
       -1,
       'Rappel de test',
