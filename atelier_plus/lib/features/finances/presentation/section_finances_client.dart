@@ -36,6 +36,8 @@ class SectionFinancesClient extends ConsumerStatefulWidget {
 }
 
 class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
+  bool _historiqueVisible = false;
+
   @override
   void initState() {
     super.initState();
@@ -324,6 +326,28 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
           sommePaiements: sommePaiements,
         );
 
+        // Historique complet : tous les paiements de toutes les commandes du
+        // client (actuelle et précédentes), numérotées par ordre
+        // chronologique (la toute première commande du client est le n°1,
+        // peu importe l'ordre d'affichage ci-dessus qui va du plus récent
+        // au plus ancien) — voir EcranNouveauClient pour la même logique de
+        // tri inversé.
+        final commandesParAnciennete = [...commandes]
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        final numeroCommande = {
+          for (final entree in commandesParAnciennete.asMap().entries)
+            entree.value.id: entree.key + 1,
+        };
+        final historiqueComplet = <(int numero, Paiement paiement)>[];
+        for (final c in commandes) {
+          final paiementsCommande =
+              c.id == courante.id ? paiements.valueOrNull : ref.watch(paiementsDeLaCommandeProvider(c.id)).valueOrNull;
+          for (final p in paiementsCommande ?? const <Paiement>[]) {
+            historiqueComplet.add((numeroCommande[c.id]!, p));
+          }
+        }
+        historiqueComplet.sort((a, b) => b.$2.datePaiement.compareTo(a.$2.datePaiement));
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -415,40 +439,22 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
               icon: const Icon(Icons.picture_as_pdf_outlined),
               label: const Text('Imprimer la facture'),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Historique des paiements',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _bleuSeda),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => setState(() => _historiqueVisible = !_historiqueVisible),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _bleuSeda,
+                side: const BorderSide(color: _bleuSeda),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              icon: Icon(_historiqueVisible ? Icons.expand_less : Icons.expand_more),
+              label: const Text('Historique des paiements'),
             ),
-            paiements.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (erreur, _) => Text('Erreur : $erreur'),
-              data: (liste) {
-                if (liste.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('Aucun paiement enregistré.', style: TextStyle(fontSize: 14)),
-                  );
-                }
-                return Column(
-                  children: liste
-                      .map(
-                        (p) => ListTile(
-                          leading: const Icon(Icons.receipt_long_outlined, color: _bleuSeda),
-                          title: Text(
-                            Formatters.montant(p.montant),
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            Formatters.dateCourte(p.datePaiement),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                );
-              },
-            ),
+            if (_historiqueVisible) ...[
+              const SizedBox(height: 12),
+              _TableauHistoriquePaiements(lignes: historiqueComplet),
+            ],
             if (precedentes.isNotEmpty) ...[
               const SizedBox(height: 24),
               const Text(
@@ -485,6 +491,88 @@ class _LigneMontant extends StatelessWidget {
           Text(libelle, style: style),
           Text(Formatters.montant(montant), style: style),
         ],
+      ),
+    );
+  }
+}
+
+/// Tableau de l'historique des paiements, toutes commandes confondues (voir
+/// le bouton "Historique des paiements") — numéro de commande (1 = la toute
+/// première commande du client, par ordre chronologique), date et montant
+/// de chaque paiement, du plus récent au plus ancien.
+class _TableauHistoriquePaiements extends StatelessWidget {
+  const _TableauHistoriquePaiements({required this.lignes});
+
+  final List<(int numero, Paiement paiement)> lignes;
+
+  @override
+  Widget build(BuildContext context) {
+    if (lignes.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: Text('Aucun paiement enregistré.', style: TextStyle(fontSize: 14)),
+        ),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _bleuSeda, width: 2),
+          boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 10)],
+        ),
+        child: Table(
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          children: [
+            TableRow(
+              decoration: const BoxDecoration(color: _bleuSeda),
+              children: const [
+                _CelluleTableau('N° commande', entete: true),
+                _CelluleTableau('Date', entete: true),
+                _CelluleTableau('Montant', entete: true),
+              ],
+            ),
+            for (final entree in lignes.asMap().entries)
+              TableRow(
+                decoration: BoxDecoration(
+                  color: entree.key.isEven ? Colors.white : const Color(0xFFF6F3EE),
+                ),
+                children: [
+                  _CelluleTableau('N°${entree.value.$1}'),
+                  _CelluleTableau(Formatters.dateCourte(entree.value.$2.datePaiement)),
+                  _CelluleTableau(Formatters.montant(entree.value.$2.montant)),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CelluleTableau extends StatelessWidget {
+  const _CelluleTableau(this.texte, {this.entete = false});
+
+  final String texte;
+  final bool entete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      child: Text(
+        texte,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontWeight: entete ? FontWeight.bold : FontWeight.w600,
+          color: entete ? Colors.white : const Color(0xFF231A14),
+          fontSize: entete ? 13 : 14,
+        ),
       ),
     );
   }
