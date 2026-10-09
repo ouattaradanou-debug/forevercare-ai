@@ -237,6 +237,12 @@ class _SectionFinancesGroupeState extends ConsumerState<SectionFinancesGroupe> {
             _LigneMontant('Montant total convenu', courante.montantTotal),
             _LigneMontant('Avance payée', courante.avance),
             _LigneMontant('Reste à payer', reste > 0 ? reste : 0, accent: true),
+            // Avance + tous les paiements ajoutés depuis — même principe que
+            // SectionFinancesClient ("Paiement reçu") : visible à part de
+            // "Avance payée" (qui reste le montant initial déclaré à la
+            // création) pour que le total réellement perçu augmente
+            // clairement à chaque nouveau paiement.
+            _LigneMontant('Paiement reçu', courante.avance + sommePaiements),
             const SizedBox(height: 12),
             Row(
               children: [
