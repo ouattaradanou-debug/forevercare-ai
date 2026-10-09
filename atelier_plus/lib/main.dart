@@ -18,18 +18,23 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Format des dates en français (jours/mois écrits en toutes lettres, etc.)
-  await initializeDateFormatting('fr_FR', null);
-
+  // et initialisation de Supabase en parallèle plutôt que l'un après
+  // l'autre : les deux sont indépendants, donc attendre leur somme au lieu
+  // du plus lent des deux ne faisait que rallonger l'ouverture pour rien.
+  //
   // Toujours initialisé, même sans configuration réelle (voir
   // SupabaseConfig.urlEffective) : Supabase.instance.client est sollicité
   // dès le premier écran (redirection du router), y compris en mode
   // hors-ligne pur. Sans configuration réelle, les appels réseau échouent
   // simplement et sont déjà traités comme "hors-ligne" partout ailleurs
   // dans l'application.
-  await Supabase.initialize(
-    url: SupabaseConfig.urlEffective,
-    anonKey: SupabaseConfig.anonKeyEffective,
-  );
+  await Future.wait([
+    initializeDateFormatting('fr_FR', null),
+    Supabase.initialize(
+      url: SupabaseConfig.urlEffective,
+      anonKey: SupabaseConfig.anonKeyEffective,
+    ),
+  ]);
   if (!SupabaseConfig.estConfigure) {
     debugPrint(
       'SUPABASE_URL / SUPABASE_ANON_KEY non configurés : '
