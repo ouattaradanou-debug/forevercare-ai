@@ -83,6 +83,21 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
     final estProprietaire = ref.watch(estProprietaireProvider);
     final tachesEnAttente = ref.watch(tachesSyncEnAttenteProvider).valueOrNull ?? 0;
 
+    // Tant que utilisateurCourantProvider n'a pas encore résolu une première
+    // fois (bref instant à l'ouverture de l'application, avant la toute
+    // première lecture du cache local), estProprietaireProvider vaut `false`
+    // par défaut — la grille affichait alors immédiatement "Nouveau client"/
+    // "Mes clients"/"Rendez-vous" (jamais masqués) puis, un instant plus
+    // tard, les tuiles réservées au propriétaire et la section "Aujourd'hui"
+    // apparaissaient d'un coup. On attend ici que la résolution soit
+    // terminée pour afficher la page entière en une seule fois.
+    if (utilisateur.isLoading && !utilisateur.hasValue) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFFAF6F1),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAF6F1),
       body: SafeArea(
