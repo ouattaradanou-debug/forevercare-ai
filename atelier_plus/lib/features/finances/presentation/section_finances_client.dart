@@ -334,13 +334,15 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _LigneMontant('Montant total', courante.montantTotal),
-                    _LigneMontant('Avance', courante.avance),
+                    // Avance + tous les paiements ajoutés depuis — augmente
+                    // donc visiblement à chaque nouveau paiement, plutôt que
+                    // de rester figée sur le montant initial.
+                    _LigneMontant('Avance', courante.avance + sommePaiements),
                     _LigneMontant(
                       'Reste à payer',
                       reste > 0 ? reste : 0,
                       accent: true,
                     ),
-                    _LigneMontant('Paiement reçu', courante.avance + sommePaiements),
                     const Divider(),
                     const SizedBox(height: 8),
                     OutlinedButton(
