@@ -38,12 +38,27 @@ class SectionFinancesClient extends ConsumerStatefulWidget {
 class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
   bool _historiqueVisible = false;
 
+  // Carrousel des commandes du client (voir build()) : le tailleur glisse
+  // de gauche (Commande N°1, la plus ancienne) à droite (la plus récente)
+  // et vice versa. _pageInitialisee déclenche un saut automatique vers la
+  // dernière page une fois les commandes chargées (ou une nouvelle créée),
+  // la liste n'étant connue qu'après le premier chargement asynchrone.
+  final PageController _pageController = PageController();
+  int _pageCourante = 0;
+  bool _pageInitialisee = false;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(
       () => ref.read(financesRepositoryProvider).chargerDepuisServeur(widget.clientId),
     );
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<({double montant, double avance})?> _demanderMontants({
@@ -120,6 +135,9 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
           ),
     );
     ref.invalidate(commandesDuClientProvider(widget.clientId));
+    // Refait sauter le carrousel vers la nouvelle dernière page une fois la
+    // commande fraîchement créée rechargée (voir build()).
+    if (mounted) setState(() => _pageInitialisee = false);
   }
 
   /// Corrige le montant total, l'avance et le paiement reçu de la commande
@@ -315,33 +333,40 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
           );
         }
 
-        final courante = commandes.first;
-        final precedentes = commandes.skip(1).toList();
-        final paiements = ref.watch(paiementsDeLaCommandeProvider(courante.id));
-        final sommePaiements =
-            paiements.valueOrNull?.fold<double>(0, (total, p) => total + p.montant) ?? 0;
-        final reste = resteAPayer(
-          montantTotal: courante.montantTotal,
-          avance: courante.avance,
-          sommePaiements: sommePaiements,
-        );
-
-        // Historique complet : tous les paiements de toutes les commandes du
-        // client (actuelle et précédentes), numérotées par ordre
-        // chronologique (la toute première commande du client est le n°1,
-        // peu importe l'ordre d'affichage ci-dessus qui va du plus récent
-        // au plus ancien) — voir EcranNouveauClient pour la même logique de
-        // tri inversé.
+        // Ordre chronologique croissant : Commande N°1 = la toute première
+        // commande du client, quel que soit l'ordre renvoyé par le serveur
+        // (commandesDuClientProvider donne la plus récente en premier).
         final commandesParAnciennete = [...commandes]
           ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
         final numeroCommande = {
           for (final entree in commandesParAnciennete.asMap().entries)
             entree.value.id: entree.key + 1,
         };
+
+        // Saute vers la dernière page (la commande la plus récente) une
+        // fois la liste chargée — à l'ouverture, et de nouveau après
+        // "Nouvelle commande" (voir _creerNouvelleCommande).
+        if (!_pageInitialisee) {
+          _pageInitialisee = true;
+          _pageCourante = commandesParAnciennete.length - 1;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_pageController.hasClients) {
+              _pageController.jumpToPage(commandesParAnciennete.length - 1);
+            }
+          });
+        }
+        final indexActif = _pageCourante.clamp(0, commandesParAnciennete.length - 1);
+        final active = commandesParAnciennete[indexActif];
+        final paiementsActive = ref.watch(paiementsDeLaCommandeProvider(active.id));
+
+        // Historique complet : tous les paiements de toutes les commandes du
+        // client (actuelle et précédentes), numérotées par ordre
+        // chronologique.
         final historiqueComplet = <(int numero, Paiement paiement)>[];
         for (final c in commandes) {
-          final paiementsCommande =
-              c.id == courante.id ? paiements.valueOrNull : ref.watch(paiementsDeLaCommandeProvider(c.id)).valueOrNull;
+          final paiementsCommande = c.id == active.id
+              ? paiementsActive.valueOrNull
+              : ref.watch(paiementsDeLaCommandeProvider(c.id)).valueOrNull;
           for (final p in paiementsCommande ?? const <Paiement>[]) {
             historiqueComplet.add((numeroCommande[c.id]!, p));
           }
@@ -351,55 +376,47 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _LigneMontant('Montant total', courante.montantTotal),
-                    // Avance + tous les paiements ajoutés depuis — augmente
-                    // donc visiblement à chaque nouveau paiement, plutôt que
-                    // de rester figée sur le montant initial.
-                    _LigneMontant('Avance', courante.avance + sommePaiements),
-                    _LigneMontant(
-                      'Reste à payer',
-                      reste > 0 ? reste : 0,
-                      accent: true,
-                    ),
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: () => _modifierCommandeCourante(courante, sommePaiements),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _bleuSeda,
-                        side: const BorderSide(color: _bleuSeda),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                      ),
-                      child: const Text('Modifier Montant/Avance/Paiement', textAlign: TextAlign.center),
-                    ),
-                    CheckboxListTile(
-                      value: courante.tenueRetiree,
-                      activeColor: _bleuSeda,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text(
-                        'Tenue retirée',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                      onChanged: (valeur) => _basculerTenueRetiree(courante, valeur),
-                    ),
-                  ],
+            SizedBox(
+              height: 300,
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: commandesParAnciennete.length,
+                onPageChanged: (index) => setState(() => _pageCourante = index),
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _CarteCommande(
+                    commande: commandesParAnciennete[index],
+                    numero: index + 1,
+                    onModifier: _modifierCommandeCourante,
+                    onTenueRetiree: _basculerTenueRetiree,
+                  ),
                 ),
               ),
             ),
+            if (commandesParAnciennete.length > 1) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < commandesParAnciennete.length; i++)
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: i == indexActif ? 10 : 7,
+                      height: i == indexActif ? 10 : 7,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: i == indexActif ? _bleuSeda : const Color(0xFFD9D2C8),
+                      ),
+                    ),
+                ],
+              ),
+            ],
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _ajouterPaiement(courante.id),
+                    onPressed: () => _ajouterPaiement(active.id),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _orangeSeda,
                       foregroundColor: Colors.white,
@@ -429,7 +446,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () =>
-                  _imprimerFacture(courante, paiements.valueOrNull ?? const []),
+                  _imprimerFacture(active, paiementsActive.valueOrNull ?? const []),
               style: OutlinedButton.styleFrom(
                 foregroundColor: _bleuSeda,
                 side: const BorderSide(color: _bleuSeda),
@@ -454,15 +471,6 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
             if (_historiqueVisible) ...[
               const SizedBox(height: 12),
               _TableauHistoriquePaiements(lignes: historiqueComplet),
-            ],
-            if (precedentes.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              const Text(
-                'Commandes précédentes',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _bleuSeda),
-              ),
-              const SizedBox(height: 8),
-              for (final commande in precedentes) _CarteCommandePrecedente(commande: commande),
             ],
           ],
         );
@@ -491,6 +499,83 @@ class _LigneMontant extends StatelessWidget {
           Text(libelle, style: style),
           Text(Formatters.montant(montant), style: style),
         ],
+      ),
+    );
+  }
+}
+
+/// Une page du carrousel de commandes (voir build()) : montant total,
+/// avance (+ paiements reçus depuis), reste à payer, bouton de correction
+/// et case "Tenue retirée" — tout est propre à [commande], jamais mélangé
+/// avec les autres commandes du client.
+class _CarteCommande extends ConsumerWidget {
+  const _CarteCommande({
+    required this.commande,
+    required this.numero,
+    required this.onModifier,
+    required this.onTenueRetiree,
+  });
+
+  final Commande commande;
+  final int numero;
+  final void Function(Commande commande, double sommePaiements) onModifier;
+  final void Function(Commande commande, bool? valeur) onTenueRetiree;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final paiements = ref.watch(paiementsDeLaCommandeProvider(commande.id));
+    final sommePaiements =
+        paiements.valueOrNull?.fold<double>(0, (total, p) => total + p.montant) ?? 0;
+    final reste = resteAPayer(
+      montantTotal: commande.montantTotal,
+      avance: commande.avance,
+      sommePaiements: sommePaiements,
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Commande N°$numero',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: _bleuSeda),
+            ),
+            const SizedBox(height: 6),
+            _LigneMontant('Montant total', commande.montantTotal),
+            // Avance + tous les paiements ajoutés depuis — augmente donc
+            // visiblement à chaque nouveau paiement, plutôt que de rester
+            // figée sur le montant initial.
+            _LigneMontant('Avance', commande.avance + sommePaiements),
+            _LigneMontant('Reste à payer', reste > 0 ? reste : 0, accent: true),
+            const Divider(),
+            const SizedBox(height: 4),
+            OutlinedButton(
+              onPressed: () => onModifier(commande, sommePaiements),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _bleuSeda,
+                side: const BorderSide(color: _bleuSeda),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              child: const Text('Modifier Montant/Avance/Paiement', textAlign: TextAlign.center),
+            ),
+            CheckboxListTile(
+              value: commande.tenueRetiree,
+              activeColor: _bleuSeda,
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: const Text(
+                'Tenue retirée',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              onChanged: (valeur) => onTenueRetiree(commande, valeur),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -572,71 +657,6 @@ class _CelluleTableau extends StatelessWidget {
           fontWeight: entete ? FontWeight.bold : FontWeight.w600,
           color: entete ? Colors.white : const Color(0xFF231A14),
           fontSize: entete ? 13 : 14,
-        ),
-      ),
-    );
-  }
-}
-
-/// Résumé en lecture seule d'une commande passée : date, montant, reste à
-/// payer (calculé à partir de ses propres paiements, jamais mélangés avec
-/// la commande en cours).
-class _CarteCommandePrecedente extends ConsumerWidget {
-  const _CarteCommandePrecedente({required this.commande});
-
-  final Commande commande;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: FutureBuilder<double>(
-          future: ref.read(financesRepositoryProvider).sommePaiements(commande.id),
-          builder: (context, snapshot) {
-            final somme = snapshot.data ?? 0;
-            final reste = resteAPayer(
-              montantTotal: commande.montantTotal,
-              avance: commande.avance,
-              sommePaiements: somme,
-            );
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      Formatters.dateCourte(commande.createdAt),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _bleuSeda),
-                    ),
-                    Text(
-                      Formatters.montant(commande.montantTotal),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  reste > 0 ? 'Reste à payer : ${Formatters.montant(reste)}' : 'Soldée',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: reste > 0 ? _orangeSeda : const Color(0xFF2E7D32),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (commande.tenueRetiree)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 4),
-                    child: Text(
-                      'Tenue retirée',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF6F6259)),
-                    ),
-                  ),
-              ],
-            );
-          },
         ),
       ),
     );
