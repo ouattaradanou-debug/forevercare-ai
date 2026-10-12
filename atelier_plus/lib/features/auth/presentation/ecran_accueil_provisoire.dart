@@ -619,7 +619,7 @@ class _CarteStat extends StatelessWidget {
               child: Icon(icone, size: 46, color: couleur.withOpacity(0.08)),
             ),
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -635,13 +635,20 @@ class _CarteStat extends StatelessWidget {
                         const Icon(Icons.chevron_right, color: Color(0xFF6F6259), size: 16),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     valeur,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: couleur),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: couleur),
                   ),
                   const SizedBox(height: 2),
-                  Text(libelle, style: const TextStyle(color: Color(0xFF6F6259), fontSize: 11)),
+                  Text(
+                    libelle,
+                    style: const TextStyle(
+                      color: Color(0xFF231A14),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -662,20 +669,20 @@ class _CarteCitation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
-          Icon(Icons.favorite, color: _CouleursAccueil.enteteBas, size: 20),
-          SizedBox(height: 6),
+          Icon(Icons.favorite, color: _CouleursAccueil.enteteBas, size: 18),
+          SizedBox(height: 4),
           Text(
-            'Chaque rendez-vous est une création unique !',
+            'Chaque rendez-vous\nest une création\nunique !',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontStyle: FontStyle.italic,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.bold,
               color: _CouleursAccueil.enteteHaut,
               fontSize: 11,
+              height: 1.2,
             ),
           ),
         ],
