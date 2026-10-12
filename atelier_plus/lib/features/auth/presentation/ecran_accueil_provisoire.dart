@@ -242,19 +242,52 @@ class _EnTete extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_CouleursAccueil.enteteHaut, _CouleursAccueil.enteteBas],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(32),
+        bottomRight: Radius.circular(32),
       ),
-      child: Padding(
+      child: Stack(
+        children: [
+          // Fond surtout bleu, avec l'orange qui n'apparaît qu'en touche
+          // décorative dans le coin bas-droit (pas un dégradé uniforme sur
+          // toute la largeur) — plus proche du modèle envoyé.
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _CouleursAccueil.enteteHaut,
+                    _CouleursAccueil.enteteHaut,
+                    _CouleursAccueil.enteteBas,
+                  ],
+                  stops: [0, 0.6, 1],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: -40,
+            bottom: -60,
+            child: Container(
+              width: 160,
+              height: 160,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _CouleursAccueil.enteteBas.withOpacity(0.55),
+              ),
+            ),
+          ),
+          _contenu(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _contenu(BuildContext context) {
+    return Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,7 +397,6 @@ class _EnTete extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }
