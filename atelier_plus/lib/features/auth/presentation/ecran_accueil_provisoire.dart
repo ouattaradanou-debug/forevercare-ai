@@ -268,15 +268,22 @@ class _EnTete extends StatelessWidget {
               ),
             ),
           ),
+          // Dégradé radial (plutôt qu'un cercle à bord net) pour un
+          // fondu doux vers l'orange, sans bord visible disgracieux.
           Positioned(
-            right: -40,
-            bottom: -60,
+            right: -60,
+            bottom: -90,
             child: Container(
-              width: 160,
-              height: 160,
+              width: 220,
+              height: 220,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _CouleursAccueil.enteteBas.withOpacity(0.55),
+                gradient: RadialGradient(
+                  colors: [
+                    _CouleursAccueil.enteteBas.withOpacity(0.85),
+                    _CouleursAccueil.enteteBas.withOpacity(0),
+                  ],
+                ),
               ),
             ),
           ),
@@ -299,18 +306,18 @@ class _EnTete extends StatelessWidget {
                   decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
                   child: atelier.when(
                     data: (a) => CircleAvatar(
-                      radius: 32,
+                      radius: 28,
                       backgroundColor: Colors.white24,
                       backgroundImage: a?.logoUrl == null ? null : NetworkImage(a!.logoUrl!),
                       child: a?.logoUrl == null
-                          ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 28)
+                          ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 24)
                           : null,
                     ),
-                    loading: () => const CircleAvatar(radius: 32, backgroundColor: Colors.white24),
-                    error: (_, __) => const CircleAvatar(radius: 32, backgroundColor: Colors.white24),
+                    loading: () => const CircleAvatar(radius: 28, backgroundColor: Colors.white24),
+                    error: (_, __) => const CircleAvatar(radius: 28, backgroundColor: Colors.white24),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,9 +327,10 @@ class _EnTete extends StatelessWidget {
                           a?.nom ?? 'Atelier+',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 22,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         loading: () => const SizedBox.shrink(),
@@ -330,7 +338,8 @@ class _EnTete extends StatelessWidget {
                       ),
                       const Text(
                         'Votre style, notre priorité',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -338,20 +347,25 @@ class _EnTete extends StatelessWidget {
                 ),
                 if (tachesEnAttente > 0)
                   Padding(
-                    padding: const EdgeInsets.only(right: 4),
+                    padding: const EdgeInsets.only(right: 2),
                     child: Tooltip(
                       message: '$tachesEnAttente modification(s) en attente de connexion',
-                      child: const Icon(Icons.cloud_off, color: Colors.white70, size: 20),
+                      child: const Icon(Icons.cloud_off, color: Colors.white70, size: 18),
                     ),
                   ),
                 IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
                   tooltip: 'Paramètres',
-                  icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                  icon: const Icon(Icons.settings_outlined, color: Colors.white, size: 22),
                   onPressed: () => context.push(AppRoutes.parametres),
                 ),
+                const SizedBox(width: 4),
                 IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
                   tooltip: 'Se déconnecter',
-                  icon: const Icon(Icons.logout, color: Colors.white),
+                  icon: const Icon(Icons.logout, color: Colors.white, size: 22),
                   onPressed: () async {
                     final conteneur = ProviderScope.containerOf(context, listen: false);
                     await conteneur.read(authRepositoryProvider).deconnecter();
