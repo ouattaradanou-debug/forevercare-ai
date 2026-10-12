@@ -1089,11 +1089,15 @@ class AppDatabase extends _$AppDatabase {
   /// Toutes les commandes du client, de la plus récente à la plus ancienne
   /// — un client peut revenir pour plusieurs coutures successives, chacune
   /// avec son propre montant/avance/paiements (voir FinancesRepository).
-  Future<List<CommandeEntry>> commandesDuClient(String clientId) {
+  ///
+  /// En flux : même raison que AppDatabase.observerCommandesDuGroupe (une
+  /// simple Future pouvait figer l'écran sur un cache encore vide si
+  /// ouvert avant la fin du rapatriement serveur).
+  Stream<List<CommandeEntry>> observerCommandesDuClient(String clientId) {
     return (select(commandeEntries)
           ..where((t) => t.clientId.equals(clientId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-        .get();
+        .watch();
   }
 
   /// Toutes les commandes de l'atelier (tous clients confondus) — utilisé
@@ -1170,11 +1174,18 @@ class AppDatabase extends _$AppDatabase {
   /// — un groupe a une seule commande globale (pas une par membre), mais la
   /// liste reste utile pour retrouver "la commande en cours" en premier,
   /// comme `commandesDuClient`.
-  Future<List<CommandeGroupeEntry>> commandesDuGroupe(String groupeId) {
+  ///
+  /// En flux (`.watch()`) plutôt qu'une lecture unique : l'écran s'ouvre
+  /// souvent avant la fin du rapatriement serveur (chargerDepuisServeur,
+  /// lancé en arrière-plan) — une simple Future figeait l'écran sur un
+  /// cache encore vide à ce moment-là, sans jamais se mettre à jour une
+  /// fois la commande arrivée, montrant "Créer une commande" alors qu'elle
+  /// existait déjà côté serveur.
+  Stream<List<CommandeGroupeEntry>> observerCommandesDuGroupe(String groupeId) {
     return (select(commandeGroupeEntries)
           ..where((t) => t.groupeId.equals(groupeId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-        .get();
+        .watch();
   }
 
   /// Équivalent de `toutesCommandesDeLAtelier` pour les commandes de groupe.

@@ -36,10 +36,12 @@ class FinancesGroupeRepository {
       );
 
   /// Toutes les commandes du groupe, de la plus récente à la plus ancienne
-  /// — la première est "la commande en cours".
-  Future<List<CommandeGroupe>> commandesDuGroupe(String groupeId) async {
-    final lignes = await _baseLocale.commandesDuGroupe(groupeId);
-    return lignes.map(_depuisLigne).toList();
+  /// — la première est "la commande en cours". En flux : voir
+  /// AppDatabase.observerCommandesDuGroupe.
+  Stream<List<CommandeGroupe>> observerCommandesDuGroupe(String groupeId) {
+    return _baseLocale
+        .observerCommandesDuGroupe(groupeId)
+        .map((lignes) => lignes.map(_depuisLigne).toList());
   }
 
   Future<CommandeGroupe> creerNouvelleCommande({

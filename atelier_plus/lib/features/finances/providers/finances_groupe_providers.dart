@@ -14,10 +14,12 @@ final financesGroupeRepositoryProvider = Provider<FinancesGroupeRepository>((ref
 });
 
 /// Équivalent de `commandesDuClientProvider` pour un groupe d'uniformes —
-/// un groupe a une seule commande globale (pas une par membre).
+/// un groupe a une seule commande globale (pas une par membre). En flux
+/// (StreamProvider) plutôt qu'une lecture unique : voir
+/// AppDatabase.observerCommandesDuGroupe pour la raison.
 final commandesDuGroupeProvider =
-    FutureProvider.family.autoDispose<List<CommandeGroupe>, String>((ref, groupeId) {
-  return ref.watch(financesGroupeRepositoryProvider).commandesDuGroupe(groupeId);
+    StreamProvider.family.autoDispose<List<CommandeGroupe>, String>((ref, groupeId) {
+  return ref.watch(financesGroupeRepositoryProvider).observerCommandesDuGroupe(groupeId);
 });
 
 final paiementsDeLaCommandeGroupeProvider =

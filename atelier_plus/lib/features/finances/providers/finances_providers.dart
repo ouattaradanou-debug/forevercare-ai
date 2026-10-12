@@ -71,10 +71,11 @@ final recapitulatifMensuelProvider =
 /// propriétaire), par précaution supplémentaire.
 ///
 /// Toutes les commandes du client (une par couture successive), de la plus
-/// récente à la plus ancienne — la première est "la commande en cours".
+/// récente à la plus ancienne — la première est "la commande en cours". En
+/// flux : voir AppDatabase.observerCommandesDuClient.
 final commandesDuClientProvider =
-    FutureProvider.family.autoDispose<List<Commande>, String>((ref, clientId) {
-  return ref.watch(financesRepositoryProvider).commandesDuClient(clientId);
+    StreamProvider.family.autoDispose<List<Commande>, String>((ref, clientId) {
+  return ref.watch(financesRepositoryProvider).observerCommandesDuClient(clientId);
 });
 
 final paiementsDeLaCommandeProvider =

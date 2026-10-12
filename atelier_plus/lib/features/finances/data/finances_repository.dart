@@ -58,10 +58,11 @@ class FinancesRepository {
       );
 
   /// Toutes les commandes du client, de la plus récente à la plus
-  /// ancienne.
-  Future<List<Commande>> commandesDuClient(String clientId) async {
-    final lignes = await _baseLocale.commandesDuClient(clientId);
-    return lignes.map(_depuisLigne).toList();
+  /// ancienne. En flux : voir AppDatabase.observerCommandesDuClient.
+  Stream<List<Commande>> observerCommandesDuClient(String clientId) {
+    return _baseLocale
+        .observerCommandesDuClient(clientId)
+        .map((lignes) => lignes.map(_depuisLigne).toList());
   }
 
   /// Crée une toute nouvelle commande pour ce client (nouvelle couture),
