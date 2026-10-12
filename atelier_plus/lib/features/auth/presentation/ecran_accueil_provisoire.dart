@@ -117,33 +117,34 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                 tachesEnAttente: tachesEnAttente,
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const _CarteEssai(),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Row(
-                      children: [
-                        const Icon(Icons.bolt, color: _CouleursAccueil.carteEssaiIcone, size: 22),
-                        const SizedBox(width: 6),
+                      children: const [
+                        Icon(Icons.bolt, color: _CouleursAccueil.carteEssaiIcone, size: 18),
+                        SizedBox(width: 6),
                         Text(
                           'Actions rapides',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: _CouleursAccueil.enteteHaut,
-                              ),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: _CouleursAccueil.enteteHaut,
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisCount: 3,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 0.8,
+                      mainAxisSpacing: 6,
+                      crossAxisSpacing: 6,
+                      childAspectRatio: 0.92,
                       children: [
                         _CarteAction(
                           icone: Icons.person_add_alt_1_outlined,
@@ -187,23 +188,24 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       ],
                     ),
                     if (estProprietaire) ...[
-                      const SizedBox(height: 14),
-                      const Divider(color: Color(0xFFDDD3C8)),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
+                      const Divider(color: Color(0xFFDDD3C8), height: 1),
+                      const SizedBox(height: 8),
                       Row(
-                        children: [
-                          const Icon(Icons.calendar_month, color: _CouleursAccueil.enteteHaut, size: 22),
-                          const SizedBox(width: 6),
+                        children: const [
+                          Icon(Icons.calendar_month, color: _CouleursAccueil.enteteHaut, size: 18),
+                          SizedBox(width: 6),
                           Text(
                             'Aujourd\'hui',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: _CouleursAccueil.enteteHaut,
-                                ),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: _CouleursAccueil.enteteHaut,
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       const _SectionAujourdhui(),
                     ] else if (enResolution) ...[
                       const SizedBox(height: 14),
@@ -514,7 +516,7 @@ class _SectionAujourdhui extends ConsumerWidget {
             color: const Color(0xFFE3EAF7),
             borderRadius: BorderRadius.circular(20),
           ),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(10),
           child: IntrinsicHeight(
             // Nécessaire pour que les 3 cartes ci-dessous (tailles de
             // contenu différentes) s'étirent correctement à la même
