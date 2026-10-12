@@ -469,18 +469,6 @@ class _SectionAujourdhui extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         _CarteRappel(clients: clients, rendezVous: rendezVous),
-        const SizedBox(height: 16),
-        _LienNavigation(
-          icone: Icons.bar_chart_outlined,
-          libelle: 'Suivi des finances',
-          onTap: () => context.push(AppRoutes.suiviFinances),
-        ),
-        const SizedBox(height: 12),
-        _LienNavigation(
-          icone: Icons.diversity_3_outlined,
-          libelle: 'Mesures des uniformes',
-          onTap: () => context.push(AppRoutes.groupesUniformes),
-        ),
       ],
     );
   }
@@ -683,39 +671,6 @@ class _CarteRappel extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _LienNavigation extends StatelessWidget {
-  const _LienNavigation({required this.icone, required this.libelle, required this.onTap});
-
-  final IconData icone;
-  final String libelle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Icon(icone, color: const Color(0xFF1B4FA0)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(libelle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              ),
-              const Icon(Icons.chevron_right, color: Color(0xFF6F6259)),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -33,7 +33,9 @@ import '../../features/finances/presentation/ecran_historique_depenses.dart';
 import '../../features/finances/presentation/ecran_finances_client.dart';
 import '../../features/finances/presentation/ecran_suivi_finances.dart';
 import '../../features/permissions/presentation/ecran_panneau_permissions.dart';
+import '../../features/plus/presentation/ecran_plus.dart';
 import '../../features/rendezvous/presentation/ecran_formulaire_rendez_vous.dart';
+import 'coquille_navigation.dart';
 import '../../features/rendezvous/presentation/ecran_liste_rendez_vous.dart';
 import '../../features/uniformes/presentation/ecran_detail_groupe.dart';
 import '../../features/uniformes/presentation/ecran_fiche_membre.dart';
@@ -135,6 +137,8 @@ class AppRoutes {
       '/ventes/stock/categorie/${categorie.valeurJson}';
   static String historiqueVentesCategorie(CategorieVente categorie) =>
       '/ventes/historique/${categorie.valeurJson}';
+
+  static const String plus = '/plus';
 }
 
 /// Router déclaratif de l'application (go_router), avec redirection
@@ -163,9 +167,43 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.creationCompte,
         builder: (context, state) => const EcranCreationCompteAtelier(),
       ),
-      GoRoute(
-        path: AppRoutes.accueil,
-        builder: (context, state) => const EcranAccueilProvisoire(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            EcranCoquilleNavigation(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.accueil,
+                builder: (context, state) => const EcranAccueilProvisoire(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.groupesUniformes,
+                builder: (context, state) => const EcranGroupesUniformes(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.suiviFinances,
+                builder: (context, state) => const EcranSuiviFinances(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.plus,
+                builder: (context, state) => const EcranPlus(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.parametres,
@@ -263,14 +301,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.historiqueDepenses,
         builder: (context, state) => const EcranHistoriqueDepenses(),
-      ),
-      GoRoute(
-        path: AppRoutes.suiviFinances,
-        builder: (context, state) => const EcranSuiviFinances(),
-      ),
-      GoRoute(
-        path: AppRoutes.groupesUniformes,
-        builder: (context, state) => const EcranGroupesUniformes(),
       ),
       GoRoute(
         path: AppRoutes.creationGroupeUniforme,
