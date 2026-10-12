@@ -51,7 +51,7 @@ class _BarreNavigationBasse extends StatelessWidget {
       top: false,
       child: Container(
         decoration: const BoxDecoration(color: _bleuSedaFonce),
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
             for (var i = 0; i < _elements.length; i++)
@@ -64,13 +64,14 @@ class _BarreNavigationBasse extends StatelessWidget {
                       Icon(
                         i == indexActuel ? _elements[i].iconeActif : _elements[i].icone,
                         color: i == indexActuel ? _orangeSeda : Colors.white70,
+                        size: 20,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         _elements[i].libelle,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 9,
                           fontWeight: i == indexActuel ? FontWeight.bold : FontWeight.normal,
                           color: i == indexActuel ? _orangeSeda : Colors.white70,
                         ),
