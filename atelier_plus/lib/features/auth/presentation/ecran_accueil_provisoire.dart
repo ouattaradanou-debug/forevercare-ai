@@ -143,7 +143,7 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       crossAxisCount: 3,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
-                      childAspectRatio: 0.68,
+                      childAspectRatio: 0.8,
                       children: [
                         _CarteAction(
                           icone: Icons.person_add_alt_1_outlined,
@@ -774,7 +774,7 @@ class _CarteAction extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
