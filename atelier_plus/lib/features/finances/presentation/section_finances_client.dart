@@ -377,7 +377,11 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(
-              height: 300,
+              // Un peu plus haut que le contenu le plus large attendu (voir
+              // _CarteCommande, qui scrolle elle-même par sécurité si jamais
+              // une commande dépasse quand même, ex. réglage d'accessibilité
+              // "texte plus grand" sur le téléphone).
+              height: 340,
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: commandesParAnciennete.length,
@@ -535,7 +539,13 @@ class _CarteCommande extends ConsumerWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
+        // Scrollable par sécurité : si jamais le contenu dépasse la hauteur
+        // allouée au carrousel (ex. réglage "texte plus grand" du
+        // téléphone), le tailleur peut faire défiler cette carte plutôt que
+        // de voir du contenu tronqué ou le bandeau noir/jaune de
+        // débordement de Flutter.
+        child: SingleChildScrollView(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
@@ -575,6 +585,7 @@ class _CarteCommande extends ConsumerWidget {
               onChanged: (valeur) => onTenueRetiree(commande, valeur),
             ),
           ],
+          ),
         ),
       ),
     );
