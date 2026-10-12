@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
@@ -278,8 +282,11 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
   }
 
   /// Génère la facture puis ouvre le menu de partage natif du téléphone
-  /// avec le PDF déjà joint : le tailleur choisit WhatsApp dans ce menu, le
-  /// fichier est déjà attaché, il n'a plus qu'à choisir le client. On
+  /// avec l'image déjà jointe : le tailleur choisit WhatsApp dans ce menu,
+  /// le fichier est déjà attaché, il n'a plus qu'à choisir le client. La
+  /// facture est convertie en image (plutôt que partagée en PDF) car
+  /// WhatsApp l'affiche alors directement comme une photo, sans que le
+  /// client ait besoin d'une application de lecture PDF pour l'ouvrir. On
   /// n'utilise plus l'aperçu d'impression (Printing.layoutPdf) : sur cet
   /// appareil, son attente ne se terminait pas de façon fiable à la
   /// fermeture de l'écran, ce qui empêchait toute action ensuite. Un envoi
@@ -300,10 +307,13 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
         );
     if (!mounted) return;
 
-    await executerAvecErreurAffichee(
-      context,
-      () => Printing.sharePdf(bytes: pdf, filename: 'facture.pdf'),
-    );
+    await executerAvecErreurAffichee(context, () async {
+      final page = await Printing.raster(pdf, dpi: 150).first;
+      final png = await page.toPng();
+      final dossier = await getTemporaryDirectory();
+      final fichier = await File('${dossier.path}/facture.png').writeAsBytes(png);
+      await SharePlus.instance.share(ShareParams(files: [XFile(fichier.path)]));
+    });
   }
 
   Future<void> _basculerTenueRetiree(Commande courante, bool? valeur) async {

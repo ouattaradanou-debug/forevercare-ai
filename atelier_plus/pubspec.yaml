@@ -81,6 +81,10 @@ dependencies:
   # à côté du numéro, comme dans l'ancienne application) ---
   url_launcher: ^6.3.1
 
+  # --- Partage de la facture (image) via le menu de partage natif,
+  # notamment vers WhatsApp ---
+  share_plus: ^10.1.4
+
   # --- Signature manuscrite du tailleur (dessinée une fois dans Paramètres,
   # réutilisée sur chaque facture PDF) ---
   signature: ^5.5.0
