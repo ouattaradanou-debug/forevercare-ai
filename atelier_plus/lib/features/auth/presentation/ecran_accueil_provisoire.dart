@@ -143,7 +143,7 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       crossAxisCount: 3,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
-                      childAspectRatio: 0.85,
+                      childAspectRatio: 0.72,
                       children: [
                         _CarteAction(
                           icone: Icons.person_add_alt_1_outlined,
