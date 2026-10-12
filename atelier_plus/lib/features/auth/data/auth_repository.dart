@@ -144,6 +144,33 @@ class AuthRepository {
     return signatureUrl;
   }
 
+  /// Remplace le logo de l'atelier (touché depuis l'écran d'accueil).
+  /// Nécessite une connexion, comme `enregistrerSignatureAtelier` : action
+  /// rare, écrite directement sur Supabase plutôt que via la file de
+  /// synchronisation hors-ligne.
+  Future<String> modifierLogoAtelier({
+    required Atelier atelierActuel,
+    required XFile logo,
+  }) async {
+    final logoUrl = await _stockage.televerserImageCompressee(
+      fichier: logo,
+      bucket: bucketLogosAteliers,
+      dossier: atelierActuel.id,
+    );
+
+    await _client.from('ateliers').update({'logo_url': logoUrl}).eq('id', atelierActuel.id);
+
+    await _baseLocale.enregistrerAtelier(
+      id: atelierActuel.id,
+      nom: atelierActuel.nom,
+      logoUrl: logoUrl,
+      signatureUrl: atelierActuel.signatureUrl,
+      updatedAt: DateTime.now(),
+    );
+
+    return logoUrl;
+  }
+
   /// Connexion par téléphone + PIN, sur cet appareil ou un nouvel appareil.
   /// Sur un nouvel appareil, [recupererDonneesApresConnexion] reconstitue
   /// intégralement le profil, l'atelier et les permissions en cache local

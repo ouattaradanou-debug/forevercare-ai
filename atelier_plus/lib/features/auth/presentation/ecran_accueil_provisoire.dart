@@ -7,6 +7,7 @@ import '../../../core/notifications/notifications_service.dart';
 import '../../../core/notifications/preference_rappel.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/gestion_erreurs.dart';
 import '../../../data/models/atelier.dart';
 import '../../../data/models/client.dart';
 import '../../../data/models/groupe_uniforme.dart';
@@ -14,6 +15,7 @@ import '../../../data/models/rendez_vous.dart';
 import '../../../data/models/rendez_vous_groupe.dart';
 import '../../../data/models/utilisateur.dart';
 import '../../../data/sync/sync_providers.dart';
+import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../abonnement/data/etat_abonnement.dart';
 import '../../abonnement/providers/abonnement_providers.dart';
 import '../../clients/providers/clients_providers.dart';
@@ -303,21 +305,9 @@ class _EnTete extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
-                  child: atelier.when(
-                    data: (a) => CircleAvatar(
-                      radius: 24,
-                      backgroundColor: Colors.white24,
-                      backgroundImage: a?.logoUrl == null ? null : NetworkImage(a!.logoUrl!),
-                      child: a?.logoUrl == null
-                          ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 20)
-                          : null,
-                    ),
-                    loading: () => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
-                    error: (_, __) => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
-                  ),
+                _LogoAtelier(
+                  atelier: atelier,
+                  modifiable: utilisateur.valueOrNull?.estProprietaire ?? false,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -401,6 +391,99 @@ class _EnTete extends StatelessWidget {
             ),
           ],
         ),
+    );
+  }
+}
+
+/// Logo de l'atelier, touché par le propriétaire pour le remplacer (photo
+/// ou galerie) — jamais par un apprenti, pour qui le logo n'est qu'un
+/// affichage. Un badge appareil photo discret indique que c'est possible.
+class _LogoAtelier extends ConsumerStatefulWidget {
+  const _LogoAtelier({required this.atelier, required this.modifiable});
+
+  final AsyncValue<Atelier?> atelier;
+  final bool modifiable;
+
+  @override
+  ConsumerState<_LogoAtelier> createState() => _LogoAtelierState();
+}
+
+class _LogoAtelierState extends ConsumerState<_LogoAtelier> {
+  bool _enEnvoi = false;
+
+  Future<void> _modifierLogo() async {
+    final atelierActuel = widget.atelier.valueOrNull;
+    if (atelierActuel == null) return;
+
+    final choix = await choisirSourceEtImage(context);
+    if (choix == null || !mounted) return;
+    final (fichier, _) = choix;
+
+    setState(() => _enEnvoi = true);
+    await executerAvecErreurAffichee(
+      context,
+      () async {
+        await ref.read(authRepositoryProvider).modifierLogoAtelier(
+              atelierActuel: atelierActuel,
+              logo: fichier,
+            );
+        ref.invalidate(atelierCourantProvider);
+      },
+    );
+    if (mounted) setState(() => _enEnvoi = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.modifiable ? _modifierLogo : null,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+            child: widget.atelier.when(
+              data: (a) => CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.white24,
+                backgroundImage: a?.logoUrl == null ? null : NetworkImage(a!.logoUrl!),
+                child: a?.logoUrl == null
+                    ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 20)
+                    : null,
+              ),
+              loading: () => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
+              error: (_, __) => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
+            ),
+          ),
+          if (_enEnvoi)
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black38),
+                child: const Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  ),
+                ),
+              ),
+            )
+          else if (widget.modifiable)
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _CouleursAccueil.carteEssaiIcone,
+                ),
+                child: const Icon(Icons.photo_camera, color: Colors.white, size: 12),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
