@@ -348,8 +348,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                       final dossier = await getTemporaryDirectory();
                       final fichier =
                           await File('${dossier.path}/facture.png').writeAsBytes(png);
-                      await SharePlus.instance
-                          .share(ShareParams(files: [XFile(fichier.path)]));
+                      await Share.shareXFiles([XFile(fichier.path)]);
                     });
                   },
                   style: ElevatedButton.styleFrom(
