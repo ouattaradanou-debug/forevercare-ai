@@ -85,6 +85,11 @@ dependencies:
   # notamment vers WhatsApp ---
   share_plus: ^10.1.4
 
+  # --- Enregistrement du client dans les Contacts du téléphone, pour que
+  # WhatsApp puisse présélectionner sa conversation lors de l'envoi d'une
+  # facture (voir envoi_whatsapp_natif.dart) ---
+  flutter_contacts: ^1.1.9+2
+
   # --- Signature manuscrite du tailleur (dessinée une fois dans Paramètres,
   # réutilisée sur chaque facture PDF) ---
   signature: ^5.5.0

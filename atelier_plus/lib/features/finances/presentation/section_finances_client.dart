@@ -16,6 +16,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../branding/providers/branding_providers.dart';
 import '../../clients/providers/clients_providers.dart';
 import '../data/calcul_solde.dart';
+import '../data/contact_client.dart';
 import '../data/envoi_whatsapp_natif.dart';
 import '../providers/finances_providers.dart';
 
@@ -349,6 +350,7 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                   onPressed: () async {
                     Navigator.pop(context);
                     await executerAvecErreurAffichee(this.context, () async {
+                      await assurerContactTelephone(client);
                       final dossier = await getTemporaryDirectory();
                       final fichier =
                           await File('${dossier.path}/facture.png').writeAsBytes(png);
