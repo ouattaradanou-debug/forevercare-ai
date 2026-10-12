@@ -373,6 +373,13 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
       if (mounted) setState(() => _enregistrementFinalEnCours = false);
     }
     if (!mounted) return;
+    // Filet de sécurité : si le tailleur a saisi Montant/Avance puis
+    // appuyé directement sur le bouton final sans valider le clavier
+    // (onEditingComplete n'a alors jamais déclenché
+    // _enregistrerFinancesGroupe), on s'assure ici que ces valeurs sont
+    // bien enregistrées avant de quitter l'écran.
+    await _enregistrerFinancesGroupe();
+    if (!mounted) return;
     context.pushReplacement(AppRoutes.detailGroupeUniforme(groupe.id));
   }
 

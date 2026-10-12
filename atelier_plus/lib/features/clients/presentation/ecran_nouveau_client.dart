@@ -484,6 +484,13 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     if (client == null || !mounted) return;
     await _enregistrerMesures(client);
     if (!mounted) return;
+    // Filet de sécurité : si le tailleur a saisi Montant/Avance puis
+    // appuyé directement sur "Enregistrer le client" sans valider le
+    // clavier (onEditingComplete n'a alors jamais déclenché
+    // _enregistrerFinances), on s'assure ici que ces valeurs sont bien
+    // enregistrées avant de quitter l'écran.
+    await _enregistrerFinances();
+    if (!mounted) return;
     context.pushReplacement(AppRoutes.ficheClient(client.id));
   }
 
