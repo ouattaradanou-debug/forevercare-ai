@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dossier cache (facture.png) exposé temporairement à WhatsApp via le
+     FileProvider déclaré dans AndroidManifest.xml. -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path name="factures" path="." />
+</paths>

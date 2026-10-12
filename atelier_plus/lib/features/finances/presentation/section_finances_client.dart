@@ -9,12 +9,14 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
+import '../../../core/utils/telephone.dart';
 import '../../../data/models/commande.dart';
 import '../../../data/models/paiement.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../branding/providers/branding_providers.dart';
 import '../../clients/providers/clients_providers.dart';
 import '../data/calcul_solde.dart';
+import '../data/envoi_whatsapp_natif.dart';
 import '../providers/finances_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -285,13 +287,15 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
   /// Génère la facture (convertie en image) et affiche un écran de
   /// vérification avant l'envoi : le tailleur voit la facture telle qu'elle
   /// sera reçue, puis appuie sur l'unique bouton "Envoyer via WhatsApp", qui
-  /// ouvre le menu de partage du téléphone avec le fichier déjà joint — le
-  /// tailleur n'a plus qu'à toucher l'icône WhatsApp dans ce menu. La
-  /// facture est en image (pas en PDF) : WhatsApp l'affiche alors comme une
-  /// photo, sans que le client ait besoin d'une application de lecture PDF.
-  /// Un envoi automatique sans passer par ce menu n'est pas possible :
-  /// WhatsApp bloque toute transmission de fichier à un numéro précis sans
-  /// confirmation de l'utilisateur dans son interface.
+  /// ouvre directement WhatsApp sur la conversation du client avec la
+  /// facture déjà jointe (voir MainActivity.kt) — le tailleur n'a plus qu'à
+  /// confirmer l'envoi dans WhatsApp. Si cela échoue (WhatsApp non installé,
+  /// ou sur iOS où ce mécanisme natif n'existe pas), on se rabat sur le menu
+  /// de partage du téléphone. La facture est en image (pas en PDF) :
+  /// WhatsApp l'affiche alors comme une photo, sans que le client ait
+  /// besoin d'une application de lecture PDF. Même avec ce mécanisme direct,
+  /// WhatsApp affiche toujours sa propre confirmation d'envoi : aucune
+  /// application tierce ne peut l'envoyer sans cette confirmation.
   Future<void> _imprimerFacture(Commande courante, List<Paiement> paiements) async {
     final atelier = await ref.read(atelierCourantProvider.future);
     final client = await ref.read(clientParIdProvider(widget.clientId).future);
@@ -348,7 +352,13 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                       final dossier = await getTemporaryDirectory();
                       final fichier =
                           await File('${dossier.path}/facture.png').writeAsBytes(png);
-                      await Share.shareXFiles([XFile(fichier.path)]);
+                      final envoiDirectReussi = await envoyerFichierVersWhatsApp(
+                        cheminFichier: fichier.path,
+                        telephoneNormalise: Telephone.normaliser(client.telephone),
+                      );
+                      if (!envoiDirectReussi) {
+                        await Share.shareXFiles([XFile(fichier.path)]);
+                      }
                     });
                   },
                   style: ElevatedButton.styleFrom(
