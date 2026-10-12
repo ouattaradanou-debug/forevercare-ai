@@ -190,7 +190,7 @@ class PdfExportService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          'Fiche client — ${client.nomComplet}',
+          'Fiche client : ${client.nomComplet}',
           style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
         ),
         if (client.telephone != null) pw.Text('Téléphone : ${client.telephone}'),
@@ -308,7 +308,7 @@ class PdfExportService {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            '${groupe.nomTypeTenue} — ${Formatters.dateCourte(groupe.datePrise)}',
+            '${groupe.nomTypeTenue} (${Formatters.dateCourte(groupe.datePrise)})',
             style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 4),
