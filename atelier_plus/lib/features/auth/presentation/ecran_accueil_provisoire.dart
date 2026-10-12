@@ -143,7 +143,7 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       crossAxisCount: 3,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
-                      childAspectRatio: 0.88,
+                      childAspectRatio: 0.68,
                       children: [
                         _CarteAction(
                           icone: Icons.person_add_alt_1_outlined,
@@ -790,17 +790,15 @@ class _CarteAction extends StatelessWidget {
                   Icon(Icons.chevron_right, color: couleur, size: 18),
                 ],
               ),
-              // FittedBox plutôt qu'une taille de police fixe : les libellés
-              // courts ("Stock", "Ventes") s'affichent grands, tandis que le
-              // plus long ("Enregistrer dépenses") se réduit automatiquement
-              // pour tenir sur une seule ligne sans jamais déborder.
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  libelle,
-                  maxLines: 1,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: couleur),
+              Text(
+                libelle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  height: 1.15,
+                  color: couleur,
                 ),
               ),
             ],
