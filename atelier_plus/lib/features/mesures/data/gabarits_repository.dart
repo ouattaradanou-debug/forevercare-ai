@@ -214,6 +214,38 @@ class GabaritsRepository {
     return mesures.any((m) => m.valeursJson.contains('"${champ.id}"'));
   }
 
+  /// Met à jour l'ordre d'affichage des champs selon leur position dans
+  /// [champsOrdonnes] (l'index dans la liste devient le nouvel `ordre`) —
+  /// utilisé par le glisser-déposer de l'écran de gestion des champs, pour
+  /// que le tailleur organise les champs selon ses préférences. Cet ordre
+  /// est partagé par la prise de mesure (client et membre de groupe
+  /// d'uniformes), qui lit la même colonne `ordre`.
+  Future<void> reordonnerChamps(List<ChampMesure> champsOrdonnes, {String? atelierId}) async {
+    if (atelierId != null) {
+      await verifierEcritureAutorisee(_baseLocale, atelierId);
+    }
+    for (var i = 0; i < champsOrdonnes.length; i++) {
+      final champ = champsOrdonnes[i];
+      if (champ.ordre == i) continue;
+      final ligne = await _client
+          .from('champs_mesure')
+          .update({'ordre': i})
+          .eq('id', champ.id)
+          .select()
+          .single();
+      final miseAJour = ChampMesure.depuisJson(ligne);
+      await _baseLocale.enregistrerChampMesure(
+        id: miseAJour.id,
+        typeTenueId: miseAJour.typeTenueId,
+        nom: miseAJour.nom,
+        unite: miseAJour.unite,
+        statut: miseAJour.statut.name,
+        ordre: miseAJour.ordre,
+        updatedAt: miseAJour.updatedAt,
+      );
+    }
+  }
+
   Future<void> masquerChamp(ChampMesure champ, {String? atelierId}) =>
       _changerStatutChamp(champ.id, StatutChamp.masque, atelierId);
 

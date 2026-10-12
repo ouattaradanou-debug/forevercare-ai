@@ -80,6 +80,25 @@ class EcranGestionChamps extends ConsumerWidget {
     }
   }
 
+  Future<void> _reordonner(
+    BuildContext context,
+    WidgetRef ref,
+    List<ChampMesure> liste,
+    int ancienIndex,
+    int nouvelIndex,
+  ) async {
+    final reordonnee = List<ChampMesure>.of(liste);
+    if (nouvelIndex > ancienIndex) nouvelIndex -= 1;
+    final champ = reordonnee.removeAt(ancienIndex);
+    reordonnee.insert(nouvelIndex, champ);
+    await executerAvecErreurAffichee(
+      context,
+      () => ref
+          .read(gabaritsRepositoryProvider)
+          .reordonnerChamps(reordonnee, atelierId: type.atelierId),
+    );
+  }
+
   Future<void> _dupliquer(BuildContext context, WidgetRef ref) async {
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (utilisateur == null) return;
@@ -131,32 +150,61 @@ class EcranGestionChamps extends ConsumerWidget {
                 if (liste.isEmpty) {
                   return const Center(child: Text('Aucun champ de mesure.'));
                 }
-                return ListView.builder(
+                Widget construireLigne(int index) {
+                  final champ = liste[index];
+                  final actif = champ.statut == StatutChamp.actif;
+                  return ListTile(
+                    key: ValueKey(champ.id),
+                    title: Text(champ.nom),
+                    subtitle: Text('Unité : ${champ.unite}${actif ? '' : ' — masqué'}'),
+                    trailing: peutModifier
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Switch(
+                                value: actif,
+                                onChanged: (valeur) async {
+                                  final repo = ref.read(gabaritsRepositoryProvider);
+                                  if (valeur) {
+                                    await executerAvecErreurAffichee(
+                                      context,
+                                      () => repo.reactiverChamp(champ, atelierId: type.atelierId),
+                                    );
+                                  } else {
+                                    await _demanderMasquage(context, ref, champ);
+                                  }
+                                },
+                              ),
+                              ReorderableDragStartListener(
+                                index: index,
+                                child: const Padding(
+                                  padding: EdgeInsets.only(left: 4),
+                                  child: Icon(Icons.drag_handle, color: Color(0xFF6F6259)),
+                                ),
+                              ),
+                            ],
+                          )
+                        : null,
+                  );
+                }
+
+                if (!peutModifier) {
+                  return ListView.builder(
+                    itemCount: liste.length,
+                    itemBuilder: (context, index) => construireLigne(index),
+                  );
+                }
+
+                // Glisser-déposer (poignée dédiée) pour que le tailleur
+                // organise les champs selon ses préférences — l'ordre
+                // choisi ici est le même utilisé par la prise de mesure,
+                // pour un client comme pour un membre de groupe d'uniformes.
+                return ReorderableListView.builder(
+                  buildDefaultDragHandles: false,
                   itemCount: liste.length,
-                  itemBuilder: (context, index) {
-                    final champ = liste[index];
-                    final actif = champ.statut == StatutChamp.actif;
-                    return ListTile(
-                      title: Text(champ.nom),
-                      subtitle: Text('Unité : ${champ.unite}${actif ? '' : ' — masqué'}'),
-                      trailing: peutModifier
-                          ? Switch(
-                              value: actif,
-                              onChanged: (valeur) async {
-                                final repo = ref.read(gabaritsRepositoryProvider);
-                                if (valeur) {
-                                  await executerAvecErreurAffichee(
-                                    context,
-                                    () => repo.reactiverChamp(champ, atelierId: type.atelierId),
-                                  );
-                                } else {
-                                  await _demanderMasquage(context, ref, champ);
-                                }
-                              },
-                            )
-                          : null,
-                    );
-                  },
+                  itemBuilder: (context, index) => construireLigne(index),
+                  onReorder: (ancienIndex, nouvelIndex) =>
+                      _reordonner(context, ref, liste, ancienIndex, nouvelIndex),
                 );
               },
             ),
