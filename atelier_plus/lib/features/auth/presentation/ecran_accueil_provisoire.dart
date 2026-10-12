@@ -40,17 +40,26 @@ class _RdvAujourdhui {
   final bool estGroupe;
 }
 
-/// Couleurs propres à l'en-tête de l'accueil — bleu SEDA Tech en dégradé,
-/// et orange SEDA Tech pour le rappel d'essai gratuit (voir AppColors pour
-/// la palette globale, qui reprend les mêmes couleurs de marque).
+/// Couleurs propres à l'en-tête de l'accueil — dégradé bleu vers orange
+/// SEDA Tech (voir AppColors pour la palette globale, qui reprend les
+/// mêmes couleurs de marque).
 class _CouleursAccueil {
   const _CouleursAccueil._();
 
   static const Color enteteHaut = Color(0xFF1B4FA0);
-  static const Color enteteBas = Color(0xFF0F3570);
+  static const Color enteteBas = Color(0xFFE8701A);
   static const Color carteEssaiFond = Color(0xFFFCE4CC);
   static const Color carteEssaiIcone = Color(0xFFF5821F);
 }
+
+/// Couleurs cycliques des puces devant chaque client concerné par le
+/// rappel (_CarteRappel) — simple repère visuel, sans signification propre.
+const List<Color> _couleursPuces = [
+  Color(0xFFF5821F),
+  Color(0xFF1B4FA0),
+  Color(0xFF2E7D32),
+  Color(0xFF8456D9),
+];
 
 /// Écran d'accueil : en-tête bleu marine (logo/nom d'atelier, bouton de
 /// déconnexion, salutation et date), rappel d'essai gratuit en cours, puis
@@ -114,64 +123,63 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                   children: [
                     const _CarteEssai(),
                     const SizedBox(height: 8),
-                    Text(
-                      'Actions rapides',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontFamily: 'serif',
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF231A14),
-                          ),
+                    Row(
+                      children: [
+                        const Icon(Icons.bolt, color: _CouleursAccueil.carteEssaiIcone, size: 22),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Actions rapides',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: _CouleursAccueil.enteteHaut,
+                              ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 1.15,
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 0.85,
                       children: [
                         _CarteAction(
                           icone: Icons.person_add_alt_1_outlined,
                           libelle: 'Nouveau client',
-                          fondIcone: const Color(0xFFE3E1F5),
-                          couleurIcone: const Color(0xFF3B3470),
+                          couleurs: const [Color(0xFF3B5BDB), Color(0xFF1B4FA0)],
                           onTap: () => context.push(AppRoutes.creationClient),
                         ),
                         _CarteAction(
                           icone: Icons.groups_outlined,
                           libelle: 'Mes clients',
-                          fondIcone: const Color(0xFFF5DCD3),
-                          couleurIcone: const Color(0xFF8A4B24),
+                          couleurs: const [Color(0xFFFFA94D), Color(0xFFF5821F)],
                           onTap: () => context.push(AppRoutes.clients),
                         ),
                         _CarteAction(
                           icone: Icons.event_outlined,
                           libelle: 'Rendez-vous',
-                          fondIcone: const Color(0xFFF5E8C8),
-                          couleurIcone: const Color(0xFFA47B1B),
+                          couleurs: const [Color(0xFF9775FA), Color(0xFF6741D9)],
                           onTap: () => context.push(AppRoutes.rendezVous),
                         ),
                         if (estProprietaire) ...[
                           _CarteAction(
                             icone: Icons.remove_circle_outline,
                             libelle: 'Enregistrer dépenses',
-                            fondIcone: const Color(0xFFF5D9D9),
-                            couleurIcone: const Color(0xFFB3261E),
+                            couleurs: const [Color(0xFF4CAF77), Color(0xFF2E7D32)],
                             onTap: () => context.push(AppRoutes.nouvelleDepense),
                           ),
                           _CarteAction(
                             icone: Icons.storefront_outlined,
                             libelle: 'Ventes',
-                            fondIcone: const Color(0xFFDCEADF),
-                            couleurIcone: const Color(0xFF2E7D32),
+                            couleurs: const [Color(0xFFB088F5), Color(0xFF8456D9)],
                             onTap: () => context.push(AppRoutes.ventes),
                           ),
                           _CarteAction(
                             icone: Icons.inventory_2_outlined,
                             libelle: 'Stock',
-                            fondIcone: const Color(0xFFE3EAF7),
-                            couleurIcone: const Color(0xFF1B4FA0),
+                            couleurs: const [Color(0xFFEF6E6E), Color(0xFFB3261E)],
                             onTap: () => context.push(AppRoutes.gestionStock),
                           ),
                         ] else if (enResolution)
@@ -182,13 +190,18 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       const SizedBox(height: 24),
                       const Divider(color: Color(0xFFDDD3C8)),
                       const SizedBox(height: 16),
-                      Text(
-                        'Aujourd\'hui',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontFamily: 'serif',
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF231A14),
-                            ),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_month, color: _CouleursAccueil.enteteHaut, size: 22),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Aujourd\'hui',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: _CouleursAccueil.enteteHaut,
+                                ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                       const _SectionAujourdhui(),
@@ -232,8 +245,8 @@ class _EnTete extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [_CouleursAccueil.enteteHaut, _CouleursAccueil.enteteBas],
         ),
         borderRadius: BorderRadius.only(
@@ -248,17 +261,21 @@ class _EnTete extends StatelessWidget {
           children: [
             Row(
               children: [
-                atelier.when(
-                  data: (a) => CircleAvatar(
-                    radius: 26,
-                    backgroundColor: Colors.white24,
-                    backgroundImage: a?.logoUrl == null ? null : NetworkImage(a!.logoUrl!),
-                    child: a?.logoUrl == null
-                        ? const Icon(Icons.storefront, color: Colors.white, size: 24)
-                        : null,
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+                  child: atelier.when(
+                    data: (a) => CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.white24,
+                      backgroundImage: a?.logoUrl == null ? null : NetworkImage(a!.logoUrl!),
+                      child: a?.logoUrl == null
+                          ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 22)
+                          : null,
+                    ),
+                    loading: () => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
+                    error: (_, __) => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
                   ),
-                  loading: () => const CircleAvatar(radius: 26, backgroundColor: Colors.white24),
-                  error: (_, __) => const CircleAvatar(radius: 26, backgroundColor: Colors.white24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -314,23 +331,36 @@ class _EnTete extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            utilisateur.when(
-              data: (u) => Text(
-                u == null ? '' : 'Bonjour, ${u.nom}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'serif',
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 6, right: 8),
+                  child: Icon(Icons.calendar_today, color: Colors.white, size: 20),
                 ),
-              ),
-              loading: () => const SizedBox(height: 36),
-              error: (_, __) => const SizedBox.shrink(),
+                Expanded(
+                  child: utilisateur.when(
+                    data: (u) => Text(
+                      u == null ? '' : 'Bonjour, ${u.nom}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    loading: () => const SizedBox(height: 34),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 6),
-            Text(
-              Formatters.dateLongue(DateTime.now()),
-              style: const TextStyle(color: Colors.white70, fontSize: 15),
+            Padding(
+              padding: const EdgeInsets.only(left: 28),
+              child: Text(
+                Formatters.dateLongue(DateTime.now()),
+                style: const TextStyle(color: Colors.white70, fontSize: 15),
+              ),
             ),
           ],
         ),
@@ -445,27 +475,57 @@ class _SectionAujourdhui extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _CarteStat(
-                icone: Icons.groups_outlined,
-                valeur: '${clients.length}',
-                libelle: 'Clients',
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFE3EAF7),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _CarteStat(
+                      icone: Icons.groups_outlined,
+                      valeur: '${clients.length}',
+                      libelle: 'Clients',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _CarteStat(
+                      icone: Icons.event_outlined,
+                      valeur: '${rdvAujourdhui.length}',
+                      libelle: 'Rendez-vous\naujourd\'hui',
+                      onTap: rdvAujourdhui.isEmpty
+                          ? null
+                          : () => _afficherRdvAujourdhui(context, rdvAujourdhui),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _CarteStat(
-                icone: Icons.event_outlined,
-                valeur: '${rdvAujourdhui.length}',
-                libelle: 'Rendez-vous\naujourd\'hui',
-                onTap: rdvAujourdhui.isEmpty
-                    ? null
-                    : () => _afficherRdvAujourdhui(context, rdvAujourdhui),
+              const SizedBox(height: 10),
+              Row(
+                children: const [
+                  Icon(Icons.favorite, color: _CouleursAccueil.enteteBas, size: 16),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Chaque rendez-vous est une création unique !',
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w600,
+                        color: _CouleursAccueil.enteteHaut,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 16),
         _CarteRappel(clients: clients, rendezVous: rendezVous),
@@ -647,10 +707,24 @@ class _CarteRappel extends ConsumerWidget {
               style: TextStyle(color: Color(0xFF6F6259)),
             )
           else
-            ...concernes.map((nom) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Text('• $nom'),
-                )),
+            for (var i = 0; i < concernes.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _couleursPuces[i % _couleursPuces.length],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(concernes[i]),
+                  ],
+                ),
+              ),
           const SizedBox(height: 12),
           InkWell(
             onTap: () => NotificationsService.instance.envoyerNotificationTest(),
@@ -680,42 +754,52 @@ class _CarteAction extends StatelessWidget {
   const _CarteAction({
     required this.icone,
     required this.libelle,
-    required this.fondIcone,
-    required this.couleurIcone,
+    required this.couleurs,
     required this.onTap,
   });
 
   final IconData icone;
   final String libelle;
-  final Color fondIcone;
-  final Color couleurIcone;
+  final List<Color> couleurs;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(18),
       elevation: 1,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: fondIcone,
-                child: Icon(icone, color: couleurIcone, size: 22),
-              ),
-              Text(
-                libelle,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF231A14)),
-              ),
-            ],
+      child: Ink(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: couleurs,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Icon(icone, color: Colors.white, size: 22),
+                    const Icon(Icons.chevron_right, color: Colors.white70, size: 18),
+                  ],
+                ),
+                Text(
+                  libelle,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                ),
+              ],
+            ),
           ),
         ),
       ),
