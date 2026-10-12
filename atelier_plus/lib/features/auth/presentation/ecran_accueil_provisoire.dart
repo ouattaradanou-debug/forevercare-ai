@@ -295,22 +295,22 @@ class _EnTete extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(3),
                   decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
                   child: atelier.when(
                     data: (a) => CircleAvatar(
-                      radius: 24,
+                      radius: 32,
                       backgroundColor: Colors.white24,
                       backgroundImage: a?.logoUrl == null ? null : NetworkImage(a!.logoUrl!),
                       child: a?.logoUrl == null
-                          ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 22)
+                          ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 28)
                           : null,
                     ),
-                    loading: () => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
-                    error: (_, __) => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
+                    loading: () => const CircleAvatar(radius: 32, backgroundColor: Colors.white24),
+                    error: (_, __) => const CircleAvatar(radius: 32, backgroundColor: Colors.white24),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +320,7 @@ class _EnTete extends StatelessWidget {
                           a?.nom ?? 'Atelier+',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -328,13 +328,10 @@ class _EnTete extends StatelessWidget {
                         loading: () => const SizedBox.shrink(),
                         error: (_, __) => const SizedBox.shrink(),
                       ),
-                      utilisateur.when(
-                        data: (u) => Text(
-                          u == null ? '' : (u.estProprietaire ? 'Propriétaire' : 'Apprenti'),
-                          style: const TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                        loading: () => const SizedBox.shrink(),
-                        error: (_, __) => const SizedBox.shrink(),
+                      const Text(
+                        'Votre style, notre priorité',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
