@@ -295,7 +295,7 @@ class _EnTete extends StatelessWidget {
 
   Widget _contenu(BuildContext context) {
     return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -344,16 +344,25 @@ class _EnTete extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       utilisateur.when(
-                        data: (u) => Text(
-                          u == null ? '' : 'Bonjour, ${u.nom}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        data: (u) => u == null
+                            ? const SizedBox.shrink()
+                            : RichText(
+                                maxLines: 1,
+                                overflow: TextOverflow.visible,
+                                text: TextSpan(
+                                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                                  children: [
+                                    const TextSpan(
+                                      text: 'Bonjour, ',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    TextSpan(
+                                      text: u.nom,
+                                      style: const TextStyle(color: _CouleursAccueil.carteEssaiIcone),
+                                    ),
+                                  ],
+                                ),
+                              ),
                         loading: () => const SizedBox(height: 20),
                         error: (_, __) => const SizedBox.shrink(),
                       ),
@@ -367,14 +376,6 @@ class _EnTete extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (tachesEnAttente > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 2),
-                    child: Tooltip(
-                      message: '$tachesEnAttente modification(s) en attente de connexion',
-                      child: const Icon(Icons.cloud_off, color: Colors.white70, size: 18),
-                    ),
-                  ),
                 IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
