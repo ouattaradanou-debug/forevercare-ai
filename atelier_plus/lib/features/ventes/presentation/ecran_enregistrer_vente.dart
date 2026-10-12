@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/article.dart';
@@ -300,7 +301,10 @@ class _DialogueChoixArticle extends StatefulWidget {
 
 class _DialogueChoixArticleState extends State<_DialogueChoixArticle> {
   final _rechercheCtrl = TextEditingController();
+  final _dicteeVocale = stt.SpeechToText();
   String _recherche = '';
+  bool _dicteeDisponible = false;
+  bool _enEcoute = false;
 
   @override
   void initState() {
@@ -312,8 +316,50 @@ class _DialogueChoixArticleState extends State<_DialogueChoixArticle> {
 
   @override
   void dispose() {
+    _dicteeVocale.stop();
     _rechercheCtrl.dispose();
     super.dispose();
+  }
+
+  /// Dicter la recherche d'article à la voix — même mécanisme que la
+  /// recherche de clients (voir EcranListeClients._basculerDicteeRecherche).
+  Future<void> _basculerDicteeRecherche() async {
+    if (_enEcoute) {
+      await _dicteeVocale.stop();
+      if (mounted) setState(() => _enEcoute = false);
+      return;
+    }
+
+    if (!_dicteeDisponible) {
+      _dicteeDisponible = await _dicteeVocale.initialize(
+        onStatus: (statut) {
+          if ((statut == 'done' || statut == 'notListening') && mounted) {
+            setState(() => _enEcoute = false);
+          }
+        },
+        onError: (_) {
+          if (mounted) setState(() => _enEcoute = false);
+        },
+      );
+      if (!_dicteeDisponible) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
+          );
+        }
+        return;
+      }
+    }
+
+    setState(() => _enEcoute = true);
+    await _dicteeVocale.listen(
+      localeId: 'fr_FR',
+      onResult: (resultat) {
+        _rechercheCtrl.text = resultat.recognizedWords;
+        _rechercheCtrl.selection = TextSelection.collapsed(offset: _rechercheCtrl.text.length);
+        setState(() => _recherche = resultat.recognizedWords.trim().toLowerCase());
+      },
+    );
   }
 
   @override
@@ -344,9 +390,17 @@ class _DialogueChoixArticleState extends State<_DialogueChoixArticle> {
             TextField(
               controller: _rechercheCtrl,
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Rechercher un article',
-                prefixIcon: Icon(Icons.search, color: _bleuSeda),
+                prefixIcon: const Icon(Icons.search, color: _bleuSeda),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _enEcoute ? Icons.mic : Icons.mic_none,
+                    color: _enEcoute ? Colors.red : _bleuSeda,
+                  ),
+                  tooltip: 'Rechercher à la voix',
+                  onPressed: _basculerDicteeRecherche,
+                ),
               ),
             ),
             const SizedBox(height: 12),
