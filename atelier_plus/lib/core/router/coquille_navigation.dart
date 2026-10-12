@@ -72,7 +72,7 @@ class _BarreNavigationBasse extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 9,
-                          fontWeight: i == indexActuel ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: FontWeight.bold,
                           color: i == indexActuel ? _orangeSeda : Colors.white70,
                         ),
                       ),
