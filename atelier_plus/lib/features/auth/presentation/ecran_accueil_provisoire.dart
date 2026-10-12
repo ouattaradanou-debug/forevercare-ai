@@ -481,52 +481,40 @@ class _SectionAujourdhui extends ConsumerWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _CarteStat(
-                      icone: Icons.groups_outlined,
-                      valeur: '${clients.length}',
-                      libelle: 'Clients',
-                      couleur: _CouleursAccueil.carteEssaiIcone,
-                    ),
+          child: IntrinsicHeight(
+            // Nécessaire pour que les 3 cartes ci-dessous (tailles de
+            // contenu différentes) s'étirent correctement à la même
+            // hauteur : sans IntrinsicHeight, Stack (utilisé par
+            // _CarteStat pour sa grande icône décorative) ne donne pas à
+            // Row une hauteur fiable à calculer en amont, ce qui cassait
+            // l'affichage de toute la page.
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _CarteStat(
+                    icone: Icons.groups_outlined,
+                    valeur: '${clients.length}',
+                    libelle: 'Clients',
+                    couleur: _CouleursAccueil.carteEssaiIcone,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _CarteStat(
-                      icone: Icons.event_outlined,
-                      valeur: '${rdvAujourdhui.length}',
-                      libelle: 'Rendez-vous\naujourd\'hui',
-                      couleur: _CouleursAccueil.enteteHaut,
-                      onTap: rdvAujourdhui.isEmpty
-                          ? null
-                          : () => _afficherRdvAujourdhui(context, rdvAujourdhui),
-                    ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _CarteStat(
+                    icone: Icons.event_outlined,
+                    valeur: '${rdvAujourdhui.length}',
+                    libelle: 'Rendez-vous\naujourd\'hui',
+                    couleur: _CouleursAccueil.enteteHaut,
+                    onTap: rdvAujourdhui.isEmpty
+                        ? null
+                        : () => _afficherRdvAujourdhui(context, rdvAujourdhui),
                   ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: const [
-                  Icon(Icons.favorite, color: _CouleursAccueil.enteteBas, size: 16),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Chaque rendez-vous est une création unique !',
-                      style: TextStyle(
-                        fontStyle: FontStyle.italic,
-                        fontWeight: FontWeight.w600,
-                        color: _CouleursAccueil.enteteHaut,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(width: 10),
+                const Expanded(child: _CarteCitation()),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -626,12 +614,12 @@ class _CarteStat extends StatelessWidget {
           children: [
             // Grande icône fantôme en fond, simple touche décorative.
             Positioned(
-              right: -10,
-              bottom: -10,
-              child: Icon(icone, size: 64, color: couleur.withOpacity(0.08)),
+              right: -8,
+              bottom: -8,
+              child: Icon(icone, size: 46, color: couleur.withOpacity(0.08)),
             ),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -639,26 +627,58 @@ class _CarteStat extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       CircleAvatar(
-                        radius: 16,
+                        radius: 13,
                         backgroundColor: couleur,
-                        child: Icon(icone, color: Colors.white, size: 16),
+                        child: Icon(icone, color: Colors.white, size: 13),
                       ),
                       if (onTap != null)
-                        const Icon(Icons.chevron_right, color: Color(0xFF6F6259), size: 20),
+                        const Icon(Icons.chevron_right, color: Color(0xFF6F6259), size: 16),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Text(
                     valeur,
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: couleur),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: couleur),
                   ),
                   const SizedBox(height: 2),
-                  Text(libelle, style: const TextStyle(color: Color(0xFF6F6259))),
+                  Text(libelle, style: const TextStyle(color: Color(0xFF6F6259), fontSize: 11)),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Troisième carte de la section "Aujourd'hui", purement décorative :
+/// même format que les deux cartes statistiques à côté, pour que les trois
+/// soient alignées harmonieusement en une seule rangée.
+class _CarteCitation extends StatelessWidget {
+  const _CarteCitation();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.favorite, color: _CouleursAccueil.enteteBas, size: 20),
+          SizedBox(height: 6),
+          Text(
+            'Chaque rendez-vous est une création unique !',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w600,
+              color: _CouleursAccueil.enteteHaut,
+              fontSize: 11,
+            ),
+          ),
+        ],
       ),
     );
   }
