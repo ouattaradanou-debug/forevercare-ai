@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -281,39 +282,97 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
     );
   }
 
-  /// Génère la facture puis ouvre le menu de partage natif du téléphone
-  /// avec l'image déjà jointe : le tailleur choisit WhatsApp dans ce menu,
-  /// le fichier est déjà attaché, il n'a plus qu'à choisir le client. La
-  /// facture est convertie en image (plutôt que partagée en PDF) car
-  /// WhatsApp l'affiche alors directement comme une photo, sans que le
-  /// client ait besoin d'une application de lecture PDF pour l'ouvrir. On
-  /// n'utilise plus l'aperçu d'impression (Printing.layoutPdf) : sur cet
-  /// appareil, son attente ne se terminait pas de façon fiable à la
-  /// fermeture de l'écran, ce qui empêchait toute action ensuite. Un envoi
-  /// automatique directement dans la conversation du client, sans ce choix
-  /// dans le menu de partage, n'est pas possible : WhatsApp bloque toute
-  /// transmission de fichier à un numéro précis sans confirmation de
-  /// l'utilisateur.
+  /// Génère la facture (convertie en image) et affiche un écran de
+  /// vérification avant l'envoi : le tailleur voit la facture telle qu'elle
+  /// sera reçue, puis appuie sur l'unique bouton "Envoyer via WhatsApp", qui
+  /// ouvre le menu de partage du téléphone avec le fichier déjà joint — le
+  /// tailleur n'a plus qu'à toucher l'icône WhatsApp dans ce menu. La
+  /// facture est en image (pas en PDF) : WhatsApp l'affiche alors comme une
+  /// photo, sans que le client ait besoin d'une application de lecture PDF.
+  /// Un envoi automatique sans passer par ce menu n'est pas possible :
+  /// WhatsApp bloque toute transmission de fichier à un numéro précis sans
+  /// confirmation de l'utilisateur dans son interface.
   Future<void> _imprimerFacture(Commande courante, List<Paiement> paiements) async {
     final atelier = await ref.read(atelierCourantProvider.future);
     final client = await ref.read(clientParIdProvider(widget.clientId).future);
     if (!mounted || atelier == null || client == null) return;
 
-    final pdf = await ref.read(pdfExportServiceProvider).genererFacturePdf(
-          atelier: atelier,
-          client: client,
-          commande: courante,
-          paiements: paiements,
-        );
+    Uint8List png;
+    try {
+      final pdf = await ref.read(pdfExportServiceProvider).genererFacturePdf(
+            atelier: atelier,
+            client: client,
+            commande: courante,
+            paiements: paiements,
+          );
+      final page = await Printing.raster(pdf, dpi: 150).first;
+      png = await page.toPng();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Erreur : $e')));
+      }
+      return;
+    }
     if (!mounted) return;
 
-    await executerAvecErreurAffichee(context, () async {
-      final page = await Printing.raster(pdf, dpi: 150).first;
-      final png = await page.toPng();
-      final dossier = await getTemporaryDirectory();
-      final fichier = await File('${dossier.path}/facture.png').writeAsBytes(png);
-      await SharePlus.instance.share(ShareParams(files: [XFile(fichier.path)]));
-    });
+    await showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Vérifiez la facture',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _bleuSeda),
+              ),
+              const SizedBox(height: 10),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Image.memory(png, fit: BoxFit.contain),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await executerAvecErreurAffichee(this.context, () async {
+                      final dossier = await getTemporaryDirectory();
+                      final fichier =
+                          await File('${dossier.path}/facture.png').writeAsBytes(png);
+                      await SharePlus.instance
+                          .share(ShareParams(files: [XFile(fichier.path)]));
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF25D366),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  icon: const Icon(Icons.send),
+                  label: const Text('Envoyer via WhatsApp'),
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+                child: const Text('Fermer'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _basculerTenueRetiree(Commande courante, bool? valeur) async {
