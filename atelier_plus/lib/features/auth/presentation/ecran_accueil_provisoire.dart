@@ -342,6 +342,28 @@ class _EnTete extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 10),
+                      utilisateur.when(
+                        data: (u) => Text(
+                          u == null ? '' : 'Bonjour, ${u.nom}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        loading: () => const SizedBox(height: 20),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        Formatters.dateLongue(DateTime.now()),
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
@@ -373,38 +395,6 @@ class _EnTete extends StatelessWidget {
                   },
                 ),
               ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 6, right: 8),
-                  child: Icon(Icons.calendar_today, color: Colors.white, size: 20),
-                ),
-                Expanded(
-                  child: utilisateur.when(
-                    data: (u) => Text(
-                      u == null ? '' : 'Bonjour, ${u.nom}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    loading: () => const SizedBox(height: 34),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Padding(
-              padding: const EdgeInsets.only(left: 28),
-              child: Text(
-                Formatters.dateLongue(DateTime.now()),
-                style: const TextStyle(color: Colors.white70, fontSize: 15),
-              ),
             ),
           ],
         ),
