@@ -491,6 +491,7 @@ class _SectionAujourdhui extends ConsumerWidget {
                       icone: Icons.groups_outlined,
                       valeur: '${clients.length}',
                       libelle: 'Clients',
+                      couleur: _CouleursAccueil.carteEssaiIcone,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -499,6 +500,7 @@ class _SectionAujourdhui extends ConsumerWidget {
                       icone: Icons.event_outlined,
                       valeur: '${rdvAujourdhui.length}',
                       libelle: 'Rendez-vous\naujourd\'hui',
+                      couleur: _CouleursAccueil.enteteHaut,
                       onTap: rdvAujourdhui.isEmpty
                           ? null
                           : () => _afficherRdvAujourdhui(context, rdvAujourdhui),
@@ -601,12 +603,14 @@ class _CarteStat extends StatelessWidget {
     required this.icone,
     required this.valeur,
     required this.libelle,
+    required this.couleur,
     this.onTap,
   });
 
   final IconData icone;
   final String valeur;
   final String libelle;
+  final Color couleur;
   final VoidCallback? onTap;
 
   @override
@@ -614,28 +618,46 @@ class _CarteStat extends StatelessWidget {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Stack(
+          children: [
+            // Grande icône fantôme en fond, simple touche décorative.
+            Positioned(
+              right: -10,
+              bottom: -10,
+              child: Icon(icone, size: 64, color: couleur.withOpacity(0.08)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(icone, color: const Color(0xFF1B4FA0)),
-                  if (onTap != null)
-                    const Icon(Icons.chevron_right, color: Color(0xFF6F6259), size: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: couleur,
+                        child: Icon(icone, color: Colors.white, size: 16),
+                      ),
+                      if (onTap != null)
+                        const Icon(Icons.chevron_right, color: Color(0xFF6F6259), size: 20),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    valeur,
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: couleur),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(libelle, style: const TextStyle(color: Color(0xFF6F6259))),
                 ],
               ),
-              const SizedBox(height: 10),
-              Text(valeur, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 2),
-              Text(libelle, style: const TextStyle(color: Color(0xFF6F6259))),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
