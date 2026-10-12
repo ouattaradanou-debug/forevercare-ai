@@ -117,12 +117,12 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                 tachesEnAttente: tachesEnAttente,
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const _CarteEssai(),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         const Icon(Icons.bolt, color: _CouleursAccueil.carteEssaiIcone, size: 22),
@@ -136,13 +136,13 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisCount: 3,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
                       childAspectRatio: 0.8,
                       children: [
                         _CarteAction(
@@ -187,9 +187,9 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       ],
                     ),
                     if (estProprietaire) ...[
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 14),
                       const Divider(color: Color(0xFFDDD3C8)),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       Row(
                         children: [
                           const Icon(Icons.calendar_month, color: _CouleursAccueil.enteteHaut, size: 22),
@@ -203,10 +203,10 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       const _SectionAujourdhui(),
                     ] else if (enResolution) ...[
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 14),
                       const Center(
                         child: Padding(
                           padding: EdgeInsets.all(12),
@@ -295,26 +295,26 @@ class _EnTete extends StatelessWidget {
 
   Widget _contenu(BuildContext context) {
     return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(3),
+                  padding: const EdgeInsets.all(2),
                   decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
                   child: atelier.when(
                     data: (a) => CircleAvatar(
-                      radius: 28,
+                      radius: 24,
                       backgroundColor: Colors.white24,
                       backgroundImage: a?.logoUrl == null ? null : NetworkImage(a!.logoUrl!),
                       child: a?.logoUrl == null
-                          ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 24)
+                          ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 20)
                           : null,
                     ),
-                    loading: () => const CircleAvatar(radius: 28, backgroundColor: Colors.white24),
-                    error: (_, __) => const CircleAvatar(radius: 28, backgroundColor: Colors.white24),
+                    loading: () => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
+                    error: (_, __) => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -342,7 +342,7 @@ class _EnTete extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       utilisateur.when(
                         data: (u) => u == null
                             ? const SizedBox.shrink()
