@@ -148,38 +148,38 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                         _CarteAction(
                           icone: Icons.person_add_alt_1_outlined,
                           libelle: 'Nouveau client',
-                          couleurs: const [Color(0xFF3B5BDB), Color(0xFF1B4FA0)],
+                          couleur: const Color(0xFF1B4FA0),
                           onTap: () => context.push(AppRoutes.creationClient),
                         ),
                         _CarteAction(
                           icone: Icons.groups_outlined,
                           libelle: 'Mes clients',
-                          couleurs: const [Color(0xFFFFA94D), Color(0xFFF5821F)],
+                          couleur: const Color(0xFFF5821F),
                           onTap: () => context.push(AppRoutes.clients),
                         ),
                         _CarteAction(
                           icone: Icons.event_outlined,
                           libelle: 'Rendez-vous',
-                          couleurs: const [Color(0xFF9775FA), Color(0xFF6741D9)],
+                          couleur: const Color(0xFF6741D9),
                           onTap: () => context.push(AppRoutes.rendezVous),
                         ),
                         if (estProprietaire) ...[
                           _CarteAction(
                             icone: Icons.remove_circle_outline,
                             libelle: 'Enregistrer dépenses',
-                            couleurs: const [Color(0xFF4CAF77), Color(0xFF2E7D32)],
+                            couleur: const Color(0xFF2E7D32),
                             onTap: () => context.push(AppRoutes.nouvelleDepense),
                           ),
                           _CarteAction(
                             icone: Icons.storefront_outlined,
                             libelle: 'Ventes',
-                            couleurs: const [Color(0xFFB088F5), Color(0xFF8456D9)],
+                            couleur: const Color(0xFF8456D9),
                             onTap: () => context.push(AppRoutes.ventes),
                           ),
                           _CarteAction(
                             icone: Icons.inventory_2_outlined,
                             libelle: 'Stock',
-                            couleurs: const [Color(0xFFEF6E6E), Color(0xFFB3261E)],
+                            couleur: const Color(0xFFB3261E),
                             onTap: () => context.push(AppRoutes.gestionStock),
                           ),
                         ] else if (enResolution)
@@ -754,52 +754,47 @@ class _CarteAction extends StatelessWidget {
   const _CarteAction({
     required this.icone,
     required this.libelle,
-    required this.couleurs,
+    required this.couleur,
     required this.onTap,
   });
 
   final IconData icone;
   final String libelle;
-  final List<Color> couleurs;
+  final Color couleur;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final fond = Color.alphaBlend(couleur.withOpacity(0.1), Colors.white);
     return Material(
-      color: Colors.transparent,
+      color: fond,
       borderRadius: BorderRadius.circular(18),
       elevation: 1,
-      child: Ink(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: couleurs,
-          ),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Icon(icone, color: Colors.white, size: 22),
-                    const Icon(Icons.chevron_right, color: Colors.white70, size: 18),
-                  ],
-                ),
-                Text(
-                  libelle,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
-                ),
-              ],
-            ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: couleur,
+                    child: Icon(icone, color: Colors.white, size: 18),
+                  ),
+                  Icon(Icons.chevron_right, color: couleur, size: 18),
+                ],
+              ),
+              Text(
+                libelle,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: couleur),
+              ),
+            ],
           ),
         ),
       ),
