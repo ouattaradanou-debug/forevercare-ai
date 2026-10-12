@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
-import '../../../core/utils/telephone.dart';
 import '../../../data/models/commande.dart';
 import '../../../data/models/paiement.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -279,44 +277,32 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
     );
   }
 
-  /// Ouvre l'aperçu d'impression/partage du système avec la facture de la
-  /// commande en cours (montants, QR code de vérification, signature du
-  /// tailleur), puis ouvre directement la conversation WhatsApp du client
-  /// (numéro déjà sélectionné) pour que le tailleur n'ait plus qu'à joindre
-  /// le PDF généré via le trombone de WhatsApp — l'envoi automatique du
-  /// fichier n'est pas possible : WhatsApp bloque toute transmission de
-  /// fichier à un numéro précis sans confirmation de l'utilisateur.
+  /// Génère la facture puis ouvre le menu de partage natif du téléphone
+  /// avec le PDF déjà joint : le tailleur choisit WhatsApp dans ce menu, le
+  /// fichier est déjà attaché, il n'a plus qu'à choisir le client. On
+  /// n'utilise plus l'aperçu d'impression (Printing.layoutPdf) : sur cet
+  /// appareil, son attente ne se terminait pas de façon fiable à la
+  /// fermeture de l'écran, ce qui empêchait toute action ensuite. Un envoi
+  /// automatique directement dans la conversation du client, sans ce choix
+  /// dans le menu de partage, n'est pas possible : WhatsApp bloque toute
+  /// transmission de fichier à un numéro précis sans confirmation de
+  /// l'utilisateur.
   Future<void> _imprimerFacture(Commande courante, List<Paiement> paiements) async {
     final atelier = await ref.read(atelierCourantProvider.future);
     final client = await ref.read(clientParIdProvider(widget.clientId).future);
     if (!mounted || atelier == null || client == null) return;
 
-    await Printing.layoutPdf(
-      onLayout: (_) => ref.read(pdfExportServiceProvider).genererFacturePdf(
-            atelier: atelier,
-            client: client,
-            commande: courante,
-            paiements: paiements,
-          ),
-    );
+    final pdf = await ref.read(pdfExportServiceProvider).genererFacturePdf(
+          atelier: atelier,
+          client: client,
+          commande: courante,
+          paiements: paiements,
+        );
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Ouverture de WhatsApp : appuyez sur le trombone puis choisissez "
-          'le PDF de la facture pour l\'envoyer au client.',
-        ),
-        duration: Duration(seconds: 5),
-      ),
-    );
-    // Même appel (sans mode explicite) que _whatsapp dans
-    // EcranDetailGroupe, déjà vérifié fonctionnel sur cet appareil.
     await executerAvecErreurAffichee(
       context,
-      () => launchUrl(
-        Uri.parse('https://wa.me/${Telephone.normaliser(client.telephone)}'),
-      ),
+      () => Printing.sharePdf(bytes: pdf, filename: 'facture.pdf'),
     );
   }
 
