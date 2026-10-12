@@ -33,12 +33,17 @@ class SectionFinancesGroupe extends ConsumerStatefulWidget {
 }
 
 class _SectionFinancesGroupeState extends ConsumerState<SectionFinancesGroupe> {
+  // Même garde que SectionFinancesClient : un cache local encore vide ne
+  // veut rien dire tant que le rapatriement serveur n'est pas terminé.
+  bool _chargementInitial = true;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(financesGroupeRepositoryProvider).chargerDepuisServeur(widget.groupeId),
-    );
+    Future.microtask(() async {
+      await ref.read(financesGroupeRepositoryProvider).chargerDepuisServeur(widget.groupeId);
+      if (mounted) setState(() => _chargementInitial = false);
+    });
   }
 
   Future<void> _creerNouvelleCommande() async {
@@ -206,6 +211,9 @@ class _SectionFinancesGroupeState extends ConsumerState<SectionFinancesGroupe> {
       error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
       data: (commandes) {
         if (commandes.isEmpty) {
+          if (_chargementInitial) {
+            return const Center(child: CircularProgressIndicator());
+          }
           return Center(
             child: OutlinedButton.icon(
               onPressed: _creerNouvelleCommande,

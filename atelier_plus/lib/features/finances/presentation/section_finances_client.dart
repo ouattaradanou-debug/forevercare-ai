@@ -55,12 +55,21 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
   int _pageCourante = 0;
   bool _pageInitialisee = false;
 
+  // Tant que le rapatriement serveur n'est pas terminé, une liste de
+  // commandes vide ne veut rien dire (le cache local peut tout simplement
+  // ne pas encore avoir reçu la commande existante) : on ne doit jamais
+  // proposer "Créer une commande" sur la seule foi d'un cache encore vide
+  // à cet instant précis, sous peine de créer un doublon si le tailleur
+  // appuie avant la fin de ce chargement.
+  bool _chargementInitial = true;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(financesRepositoryProvider).chargerDepuisServeur(widget.clientId),
-    );
+    Future.microtask(() async {
+      await ref.read(financesRepositoryProvider).chargerDepuisServeur(widget.clientId);
+      if (mounted) setState(() => _chargementInitial = false);
+    });
   }
 
   @override
@@ -409,6 +418,9 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
       error: (erreur, _) => Center(child: Text('Erreur : $erreur')),
       data: (commandes) {
         if (commandes.isEmpty) {
+          if (_chargementInitial) {
+            return const Center(child: CircularProgressIndicator());
+          }
           return Center(
             child: ElevatedButton.icon(
               onPressed: _creerNouvelleCommande,
