@@ -395,28 +395,28 @@ class _CarteEssai extends ConsumerWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: () => context.push(AppRoutes.abonnement),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
               CircleAvatar(
-                radius: 22,
+                radius: 16,
                 backgroundColor: _CouleursAccueil.carteEssaiIcone,
-                child: const Icon(Icons.hourglass_top, color: Colors.white, size: 22),
+                child: const Icon(Icons.hourglass_top, color: Colors.white, size: 16),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'Essai gratuit en cours',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF231A14)),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF231A14)),
                     ),
-                    Text(sousTitre, style: const TextStyle(color: Color(0xFF6F6259))),
+                    Text(sousTitre, style: const TextStyle(color: Color(0xFF6F6259), fontSize: 12)),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF6F6259)),
+              const Icon(Icons.chevron_right, color: Color(0xFF6F6259), size: 18),
             ],
           ),
         ),
