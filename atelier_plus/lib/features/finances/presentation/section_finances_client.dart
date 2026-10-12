@@ -310,9 +310,13 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
         duration: Duration(seconds: 5),
       ),
     );
-    await launchUrl(
-      Uri.parse('https://wa.me/${Telephone.normaliser(client.telephone)}'),
-      mode: LaunchMode.externalApplication,
+    // Même appel (sans mode explicite) que _whatsapp dans
+    // EcranDetailGroupe, déjà vérifié fonctionnel sur cet appareil.
+    await executerAvecErreurAffichee(
+      context,
+      () => launchUrl(
+        Uri.parse('https://wa.me/${Telephone.normaliser(client.telephone)}'),
+      ),
     );
   }
 
