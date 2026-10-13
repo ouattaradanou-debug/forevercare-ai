@@ -265,6 +265,21 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
+                      onPressed: () => Navigator.pop(context, 'confirmer'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _bleuSeda,
+                        side: const BorderSide(color: _bleuSeda),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('Confirmer'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
                       onPressed: () => Navigator.pop(context, 'terminer'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: _bleuSeda,
@@ -304,9 +319,12 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     );
     if (resultat == null || !mounted) return;
 
-    if (resultat == 'annuler_rdv' || resultat == 'terminer') {
-      final nouveauStatut =
-          resultat == 'annuler_rdv' ? AppConstants.rdvAnnule : AppConstants.rdvTermine;
+    if (resultat == 'annuler_rdv' || resultat == 'terminer' || resultat == 'confirmer') {
+      final nouveauStatut = switch (resultat) {
+        'annuler_rdv' => AppConstants.rdvAnnule,
+        'terminer' => AppConstants.rdvTermine,
+        _ => AppConstants.rdvConfirme,
+      };
       await executerAvecErreurAffichee(
         context,
         () => item.estGroupe
@@ -395,8 +413,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                   const Padding(
                     padding: EdgeInsets.only(bottom: 10),
                     child: Text(
-                      'Touchez le nom (ou "+") pour modifier le rendez-vous. '
-                      'Touchez la date et l\'heure pour changer rapidement le statut.',
+                      'Touchez une ligne (ou "+") pour modifier le rendez-vous.',
                       style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
                     ),
                   ),
@@ -477,8 +494,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
           child: _Cellule(nom, tronquer: false),
         ),
         GestureDetector(
-          onTap: () => _afficherActions(context, ref, item),
-          onLongPress: () => _modifier(item, nom),
+          onTap: () => _modifier(item, nom),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: Column(
@@ -528,51 +544,6 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     );
   }
 
-  Future<void> _afficherActions(
-    BuildContext context,
-    WidgetRef ref,
-    _RdvUnifie item,
-  ) async {
-    final nouveauStatut = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.check_circle_outline, color: _bleuSeda),
-              title: const Text('Confirmer'),
-              onTap: () => Navigator.pop(context, AppConstants.rdvConfirme),
-            ),
-            ListTile(
-              leading: const Icon(Icons.done_all, color: _bleuSeda),
-              title: const Text('Marquer comme terminé'),
-              onTap: () => Navigator.pop(context, AppConstants.rdvTermine),
-            ),
-            ListTile(
-              leading: const Icon(Icons.cancel_outlined, color: _rougeAlerte),
-              title: const Text('Annuler ce rendez-vous'),
-              onTap: () => Navigator.pop(context, AppConstants.rdvAnnule),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (nouveauStatut != null && nouveauStatut != item.statut) {
-      await executerAvecErreurAffichee(
-        context,
-        () => item.estGroupe
-            ? ref.read(rendezVousGroupeRepositoryProvider).changerStatutParId(
-                  item.id,
-                  nouveauStatut,
-                )
-            : ref.read(rendezVousRepositoryProvider).changerStatutParId(
-                  item.id,
-                  nouveauStatut,
-                ),
-      );
-    }
-  }
 }
 
 /// N'affiche une pastille que pour les statuts "confirme" et "termine" —
