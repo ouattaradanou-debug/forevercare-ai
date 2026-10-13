@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/validators.dart';
+import '../../../data/sync/synchronisation_initiale.dart';
 import '../providers/auth_providers.dart';
 
 class EcranConnexion extends ConsumerStatefulWidget {
@@ -40,7 +43,7 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
     final conteneur = ProviderScope.containerOf(context, listen: false);
 
     try {
-      await ref.read(authRepositoryProvider).connecter(
+      final utilisateur = await ref.read(authRepositoryProvider).connecter(
             telephone: _telephoneCtrl.text,
             pin: _pinCtrl.text,
           );
@@ -49,6 +52,13 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
       // cache local par recupererDonneesApresConnexion().
       conteneur.invalidate(utilisateurCourantProvider);
       if (mounted) context.go(AppRoutes.accueil);
+      // Volontairement non attendu avant la redirection : la connexion sur
+      // un nouvel appareil (perte de téléphone, changement d'appareil) doit
+      // rouvrir l'application tout de suite, pas rester bloquée le temps de
+      // tout retélécharger. Les écrans concernés lisent déjà le cache local
+      // en flux (`watch`) et affichent donc les données au fur et à mesure
+      // qu'elles arrivent, sans action supplémentaire de l'utilisateur.
+      unawaited(synchroniserIntegralementApresConnexion(conteneur, utilisateur.atelierId));
     } catch (e) {
       if (mounted) setState(() => _erreur = e.toString());
     } finally {

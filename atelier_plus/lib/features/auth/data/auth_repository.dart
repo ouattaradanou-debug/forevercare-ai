@@ -252,7 +252,12 @@ class AuthRepository {
   }
 
   Future<void> deconnecter() async {
-    await _client.auth.signOut();
+    // `scope: local` (explicite plutôt que de dépendre du défaut de la
+    // librairie) : un même compte peut être connecté sur plusieurs
+    // appareils à la fois (téléphone personnel + tablette de l'atelier,
+    // par exemple) — se déconnecter sur l'un ne doit jamais déconnecter
+    // les autres.
+    await _client.auth.signOut(scope: SignOutScope.local);
     // Un appareil peut être repris par un autre utilisateur de l'atelier
     // (propriétaire <-> apprenti) : le cache financier ne doit jamais
     // survivre à la déconnexion (voir AppDatabase.effacerCacheFinancierSiSynchronise).
