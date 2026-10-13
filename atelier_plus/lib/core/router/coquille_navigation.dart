@@ -30,10 +30,12 @@ class EcranCoquilleNavigation extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: _BarreNavigationBasse(
         indexActuel: navigationShell.currentIndex,
+        estProprietaire: estProprietaire,
         onTap: (index) async {
           // `StatefulShellRoute.indexedStack` garde chaque onglet monté en
           // arrière-plan plutôt que de le recréer (c'est tout l'intérêt :
@@ -81,10 +83,15 @@ class EcranCoquilleNavigation extends ConsumerWidget {
 }
 
 class _BarreNavigationBasse extends StatelessWidget {
-  const _BarreNavigationBasse({required this.indexActuel, required this.onTap});
+  const _BarreNavigationBasse({
+    required this.indexActuel,
+    required this.onTap,
+    required this.estProprietaire,
+  });
 
   final int indexActuel;
   final ValueChanged<int> onTap;
+  final bool estProprietaire;
 
   static const _elements = [
     (icone: Icons.home_outlined, iconeActif: Icons.home, libelle: 'Accueil'),
@@ -95,6 +102,17 @@ class _BarreNavigationBasse extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // "Suivi des finances" (index _indexSuiviFinances) est retiré de la
+    // barre pour un apprenti : le bouton disparaît plutôt que de mener à un
+    // écran qui refuserait l'accès — l'écran lui-même reste protégé en plus
+    // (voir EcranSuiviFinances), au cas où cet onglet serait atteint
+    // autrement. Les indices passés à `onTap` restent ceux d'origine (0 à
+    // 3) pour continuer à correspondre aux `StatefulShellBranch`, même si
+    // un bouton manque dans la rangée affichée.
+    final indicesVisibles = [
+      for (var i = 0; i < _elements.length; i++)
+        if (i != _indexSuiviFinances || estProprietaire) i,
+    ];
     return SafeArea(
       top: false,
       child: Container(
@@ -102,7 +120,7 @@ class _BarreNavigationBasse extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            for (var i = 0; i < _elements.length; i++)
+            for (final i in indicesVisibles)
               Expanded(
                 child: InkWell(
                   onTap: () => onTap(i),

@@ -32,6 +32,12 @@ const List<String> _nomsMois = [
 /// (prêt-à-porter/tissu/article de couture) : toute entrée d'argent
 /// enregistrée dans l'application, quel que soit l'écran, est comptabilisée
 /// ici (voir FinancesRepository.recapitulatifBrut).
+///
+/// Réservé au propriétaire. Le rôle est vérifié ICI, avant même de
+/// solliciter la moindre donnée — même principe que EcranFinancesClient.
+/// L'onglet correspondant disparaît déjà de la barre de navigation pour un
+/// apprenti (voir EcranCoquilleNavigation), ce garde-fou n'intervient donc
+/// qu'en défense en profondeur.
 class EcranSuiviFinances extends ConsumerStatefulWidget {
   const EcranSuiviFinances({super.key});
 
@@ -63,6 +69,7 @@ class _EcranSuiviFinancesState extends ConsumerState<EcranSuiviFinances> {
 
   @override
   Widget build(BuildContext context) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
     final recapGlobal = ref.watch(recapitulatifGlobalProvider);
     final recapMensuel = ref.watch(recapitulatifMensuelProvider(_annee));
     final maintenant = DateTime.now();
@@ -73,7 +80,17 @@ class _EcranSuiviFinancesState extends ConsumerState<EcranSuiviFinances> {
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
       ),
-      body: SafeArea(
+      body: !estProprietaire
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Seul le propriétaire de l\'atelier peut consulter le suivi des finances.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          : SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [

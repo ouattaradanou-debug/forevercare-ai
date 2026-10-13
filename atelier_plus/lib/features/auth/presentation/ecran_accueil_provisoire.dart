@@ -219,7 +219,12 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                           const _CarteActionChargement(),
                       ],
                     ),
-                    if (estProprietaire) ...[
+                    // "Aujourd'hui" (clients/rendez-vous du jour, rappel de
+                    // rendez-vous) ne contient rien de financier : visible à
+                    // tout utilisateur connecté, propriétaire ou apprenti —
+                    // contrairement aux tuiles ci-dessus (ventes/stock/
+                    // dépenses), qui restent soumises à permission.
+                    if (!enResolution) ...[
                       const SizedBox(height: 8),
                       const Divider(color: Color(0xFFDDD3C8), height: 1),
                       const SizedBox(height: 8),
@@ -239,7 +244,7 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       ),
                       const SizedBox(height: 6),
                       const _SectionAujourdhui(),
-                    ] else if (enResolution) ...[
+                    ] else ...[
                       const SizedBox(height: 14),
                       const Center(
                         child: Padding(
