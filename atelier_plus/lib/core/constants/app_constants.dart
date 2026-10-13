@@ -32,5 +32,13 @@ class AppConstants {
   /// compté nulle part (probable erreur de saisie) et tout est supprimé
   /// normalement. Voir ClientsRepository.supprimerClient et
   /// GroupesUniformesRepository.supprimerGroupe.
-  static const Duration dureeConservationFinances = Duration(days: 14);
+  ///
+  /// Réglable pour un test ponctuel via
+  /// `--dart-define=DUREE_CONSERVATION_FINANCES_SECONDES=10` (vérifier le
+  /// comportement "ancien" sans attendre deux semaines) — ne jamais garder
+  /// cette option au-delà d'un test, elle n'a aucun effet si elle est omise.
+  static const int _secondesSurchargees =
+      int.fromEnvironment('DUREE_CONSERVATION_FINANCES_SECONDES', defaultValue: -1);
+  static const Duration dureeConservationFinances =
+      _secondesSurchargees >= 0 ? Duration(seconds: _secondesSurchargees) : Duration(days: 14);
 }
