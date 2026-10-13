@@ -118,79 +118,187 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     final resultat = await showDialog<String>(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) => AlertDialog(
-          scrollable: true,
-          title: Text('Modifier : $nom', style: const TextStyle(color: _bleuSeda)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.calendar_today_outlined, color: _bleuSeda),
-                title: Text(Formatters.dateLongue(date)),
-                onTap: () async {
-                  final choisie = await showDatePicker(
-                    context: context,
-                    initialDate: date,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                  );
-                  if (choisie != null) setStateDialog(() => date = choisie);
-                },
+        builder: (context, setStateDialog) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 420,
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _bleuSeda.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.edit_calendar_outlined, color: _bleuSeda),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'MODIFIER LE RENDEZ-VOUS',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                                color: Color(0xFF6F6259),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              nom,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: _bleuSeda,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: ColoredBox(
+                      color: const Color(0xFFF6F3EE),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.calendar_today_outlined, color: _bleuSeda),
+                            title: Text(
+                              Formatters.dateLongue(date),
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            trailing: const Icon(Icons.chevron_right, color: Color(0xFF6F6259)),
+                            onTap: () async {
+                              final choisie = await showDatePicker(
+                                context: context,
+                                initialDate: date,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                              );
+                              if (choisie != null) setStateDialog(() => date = choisie);
+                            },
+                          ),
+                          const Divider(height: 1, indent: 16, endIndent: 16),
+                          ListTile(
+                            leading: const Icon(Icons.access_time, color: _bleuSeda),
+                            title: Text(
+                              heure.format(context),
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            trailing: const Icon(Icons.chevron_right, color: Color(0xFF6F6259)),
+                            onTap: () async {
+                              final choisie =
+                                  await showTimePicker(context: context, initialTime: heure);
+                              if (choisie != null) setStateDialog(() => heure = choisie);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: ColoredBox(
+                      color: urgent ? _rougeAlerte.withOpacity(0.08) : const Color(0xFFF6F3EE),
+                      child: SwitchListTile(
+                        activeColor: _rougeAlerte,
+                        value: urgent,
+                        onChanged: (valeur) => setStateDialog(() => urgent = valeur),
+                        secondary: const Icon(Icons.priority_high, color: _rougeAlerte),
+                        title: const Text('Urgent', style: TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: ColoredBox(
+                      color: tenueRetiree ? _bleuSeda.withOpacity(0.08) : const Color(0xFFF6F3EE),
+                      child: SwitchListTile(
+                        activeColor: _bleuSeda,
+                        value: tenueRetiree,
+                        onChanged: (valeur) => setStateDialog(() => tenueRetiree = valeur),
+                        secondary: const Icon(Icons.checkroom_outlined, color: _bleuSeda),
+                        title: const Text(
+                          'Tenue retirée',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: const Text(
+                          'Disparaît automatiquement de la liste 10 minutes après',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => Navigator.pop(context, 'enregistrer'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _orangeSeda,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const Icon(Icons.check),
+                      label: const Text('Enregistrer', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.pop(context, 'terminer'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _bleuSeda,
+                        side: const BorderSide(color: _bleuSeda),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const Icon(Icons.done_all),
+                      label: const Text('Marquer comme terminé'),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context, 'annuler_rdv'),
+                          style: TextButton.styleFrom(foregroundColor: _rougeAlerte),
+                          child: const Text('Annuler le rendez-vous'),
+                        ),
+                      ),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(foregroundColor: const Color(0xFF6F6259)),
+                          child: const Text('Fermer'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.access_time, color: _bleuSeda),
-                title: Text(heure.format(context)),
-                onTap: () async {
-                  final choisie = await showTimePicker(context: context, initialTime: heure);
-                  if (choisie != null) setStateDialog(() => heure = choisie);
-                },
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                activeColor: _rougeAlerte,
-                value: urgent,
-                onChanged: (valeur) => setStateDialog(() => urgent = valeur),
-                title: const Text('Urgent'),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                activeColor: _bleuSeda,
-                value: tenueRetiree,
-                onChanged: (valeur) => setStateDialog(() => tenueRetiree = valeur),
-                title: const Text('Tenue retirée'),
-                subtitle: const Text(
-                  'Disparaît automatiquement de la liste 10 minutes après',
-                  style: TextStyle(fontSize: 12),
-                ),
-              ),
-            ],
+            ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, 'annuler_rdv'),
-              style: TextButton.styleFrom(foregroundColor: _rougeAlerte),
-              child: const Text('Annuler le rendez-vous'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, 'terminer'),
-              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-              child: const Text('Marquer comme terminé'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
-              child: const Text('Fermer'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, 'enregistrer'),
-              style: FilledButton.styleFrom(backgroundColor: _orangeSeda),
-              child: const Text('Enregistrer'),
-            ),
-          ],
         ),
       ),
     );
@@ -287,8 +395,8 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                   const Padding(
                     padding: EdgeInsets.only(bottom: 10),
                     child: Text(
-                      'Touchez une ligne pour changer le statut. '
-                      'Touchez "+" ou faites un appui long pour corriger ou marquer urgent.',
+                      'Touchez le nom (ou "+") pour modifier le rendez-vous. '
+                      'Touchez la date et l\'heure pour changer rapidement le statut.',
                       style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
                     ),
                   ),
@@ -365,8 +473,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
       decoration: BoxDecoration(color: fondLigne),
       children: [
         GestureDetector(
-          onTap: () => _afficherActions(context, ref, item),
-          onLongPress: () => _modifier(item, nom),
+          onTap: () => _modifier(item, nom),
           child: _Cellule(nom, tronquer: false),
         ),
         GestureDetector(
