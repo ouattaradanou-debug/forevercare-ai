@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../data/models/categorie_vente.dart';
+import '../../auth/providers/auth_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
 
@@ -10,31 +12,47 @@ const _bleuSeda = Color(0xFF1B4FA0);
 /// catégorie, même organisation que les écrans "Ventes" et "Gestion du
 /// stock" — pour que le tailleur voie toujours une seule catégorie à la
 /// fois plutôt que les trois mélangées sur un même écran.
-class EcranHistoriqueVentesMenu extends StatelessWidget {
+///
+/// Réservé au propriétaire : un apprenti autorisé à enregistrer des ventes
+/// (permission `ventes`) n'a pas pour autant accès à l'historique complet
+/// — voir la remarque sur EcranVentes.
+class EcranHistoriqueVentesMenu extends ConsumerWidget {
   const EcranHistoriqueVentesMenu({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historique des ventes'),
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            for (final categorie in CategorieVente.values) ...[
-              _CarteHistorique(
-                categorie: categorie,
-                onTap: () => context.push(AppRoutes.historiqueVentesCategorie(categorie)),
+      body: !estProprietaire
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Seul le propriétaire de l\'atelier peut consulter l\'historique des ventes.',
+                  textAlign: TextAlign.center,
+                ),
               ),
-              const SizedBox(height: 12),
-            ],
-          ],
-        ),
-      ),
+            )
+          : SafeArea(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  for (final categorie in CategorieVente.values) ...[
+                    _CarteHistorique(
+                      categorie: categorie,
+                      onTap: () => context.push(AppRoutes.historiqueVentesCategorie(categorie)),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ],
+              ),
+            ),
     );
   }
 }

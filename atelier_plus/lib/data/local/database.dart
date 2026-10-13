@@ -53,6 +53,11 @@ class PermissionEntries extends Table {
   BoolColumn get prendreMesures => boolean().withDefault(const Constant(false))();
   BoolColumn get ajouterPhotos => boolean().withDefault(const Constant(false))();
   BoolColumn get modifierGabarits => boolean().withDefault(const Constant(false))();
+  // Ventes/dépenses/stock de l'atelier (pas le suivi financier d'un client
+  // en particulier) — voir la remarque sur PermissionsApprenti.
+  BoolColumn get ventes => boolean().withDefault(const Constant(false))();
+  BoolColumn get stock => boolean().withDefault(const Constant(false))();
+  BoolColumn get enregistrerDepenses => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {utilisateurId};
@@ -465,7 +470,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -646,6 +651,17 @@ class AppDatabase extends _$AppDatabase {
               await m.addColumn(rendezVousGroupeEntries, rendezVousGroupeEntries.tenueRetireeLe);
             }
           }
+          if (from < 24) {
+            // permissionEntries existe depuis la toute première version du
+            // schéma (jamais créée conditionnellement dans un bloc
+            // précédent) : les colonnes manquent donc toujours sur un
+            // appareil déjà installé, sans précaution `from >=` à vérifier
+            // ici (même remarque que atelierEntries.signatureUrl dans le
+            // bloc `from < 12`).
+            await m.addColumn(permissionEntries, permissionEntries.ventes);
+            await m.addColumn(permissionEntries, permissionEntries.stock);
+            await m.addColumn(permissionEntries, permissionEntries.enregistrerDepenses);
+          }
         },
       );
 
@@ -725,6 +741,9 @@ class AppDatabase extends _$AppDatabase {
     required bool prendreMesures,
     required bool ajouterPhotos,
     required bool modifierGabarits,
+    required bool ventes,
+    required bool stock,
+    required bool enregistrerDepenses,
   }) async {
     await into(permissionEntries).insertOnConflictUpdate(
       PermissionEntriesCompanion.insert(
@@ -734,6 +753,9 @@ class AppDatabase extends _$AppDatabase {
         prendreMesures: Value(prendreMesures),
         ajouterPhotos: Value(ajouterPhotos),
         modifierGabarits: Value(modifierGabarits),
+        ventes: Value(ventes),
+        stock: Value(stock),
+        enregistrerDepenses: Value(enregistrerDepenses),
       ),
     );
   }

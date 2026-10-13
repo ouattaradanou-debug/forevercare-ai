@@ -47,6 +47,9 @@ class PermissionsRepository {
       prendreMesures: ligne.prendreMesures,
       ajouterPhotos: ligne.ajouterPhotos,
       modifierGabarits: ligne.modifierGabarits,
+      ventes: ligne.ventes,
+      stock: ligne.stock,
+      enregistrerDepenses: ligne.enregistrerDepenses,
     );
   }
 
@@ -66,6 +69,9 @@ class PermissionsRepository {
       prendreMesures: permissions.prendreMesures,
       ajouterPhotos: permissions.ajouterPhotos,
       modifierGabarits: permissions.modifierGabarits,
+      ventes: permissions.ventes,
+      stock: permissions.stock,
+      enregistrerDepenses: permissions.enregistrerDepenses,
     );
   }
 }

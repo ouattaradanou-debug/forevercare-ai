@@ -124,6 +124,29 @@ class _EcranPanneauPermissionsState extends ConsumerState<EcranPanneauPermission
                   onChanged: (valeur) =>
                       _mettreAJour(_permissions!.copierAvec(modifierGabarits: valeur)),
                 ),
+                const Divider(height: 24),
+                SwitchListTile(
+                  title: const Text('Enregistrer des dépenses'),
+                  value: _permissions!.enregistrerDepenses,
+                  onChanged: (valeur) =>
+                      _mettreAJour(_permissions!.copierAvec(enregistrerDepenses: valeur)),
+                ),
+                SwitchListTile(
+                  title: const Text('Ventes'),
+                  subtitle: const Text(
+                    'Inclut le total des ventes du jour, visible sur cet écran.',
+                  ),
+                  value: _permissions!.ventes,
+                  onChanged: (valeur) => _mettreAJour(_permissions!.copierAvec(ventes: valeur)),
+                ),
+                SwitchListTile(
+                  title: const Text('Stock'),
+                  subtitle: const Text(
+                    'Inclut les prix unitaires des articles, visibles sur cet écran.',
+                  ),
+                  value: _permissions!.stock,
+                  onChanged: (valeur) => _mettreAJour(_permissions!.copierAvec(stock: valeur)),
+                ),
               ],
             ),
     );

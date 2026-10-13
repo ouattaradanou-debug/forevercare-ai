@@ -162,6 +162,7 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
 
   @override
   Widget build(BuildContext context) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
     final ventes = ref.watch(ventesDeLAtelierProvider);
     final (debut, finExclusive) = _bornesPeriode(_periode);
 
@@ -171,7 +172,17 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
       ),
-      body: SafeArea(
+      body: !estProprietaire
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Seul le propriétaire de l\'atelier peut consulter l\'historique des ventes.',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          : SafeArea(
         child: Column(
           children: [
             Padding(

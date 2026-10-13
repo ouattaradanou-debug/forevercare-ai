@@ -19,6 +19,7 @@ import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../abonnement/data/etat_abonnement.dart';
 import '../../abonnement/providers/abonnement_providers.dart';
 import '../../clients/providers/clients_providers.dart';
+import '../../permissions/providers/permissions_providers.dart';
 import '../../rendezvous/providers/rendez_vous_groupe_providers.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../../uniformes/providers/uniformes_providers.dart';
@@ -93,6 +94,10 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
     final utilisateur = ref.watch(utilisateurCourantProvider);
     final estProprietaire = ref.watch(estProprietaireProvider);
     final tachesEnAttente = ref.watch(tachesSyncEnAttenteProvider).valueOrNull ?? 0;
+    final permissions = ref.watch(mesPermissionsProvider).valueOrNull;
+    final peutDepenses = estProprietaire || (permissions?.enregistrerDepenses ?? false);
+    final peutVentes = estProprietaire || (permissions?.ventes ?? false);
+    final peutStock = estProprietaire || (permissions?.stock ?? false);
 
     // Tant que utilisateurCourantProvider n'a pas encore résolu une première
     // fois (bref instant à l'ouverture de l'application, avant la toute
@@ -166,26 +171,28 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                           couleur: const Color(0xFF6741D9),
                           onTap: () => context.push(AppRoutes.rendezVous),
                         ),
-                        if (estProprietaire) ...[
+                        if (peutDepenses)
                           _CarteAction(
                             icone: Icons.remove_circle_outline,
                             libelle: 'Enregistrer dépenses',
                             couleur: const Color(0xFF2E7D32),
                             onTap: () => context.push(AppRoutes.nouvelleDepense),
                           ),
+                        if (peutVentes)
                           _CarteAction(
                             icone: Icons.storefront_outlined,
                             libelle: 'Ventes',
                             couleur: const Color(0xFF8456D9),
                             onTap: () => context.push(AppRoutes.ventes),
                           ),
+                        if (peutStock)
                           _CarteAction(
                             icone: Icons.inventory_2_outlined,
                             libelle: 'Stock',
                             couleur: const Color(0xFFB3261E),
                             onTap: () => context.push(AppRoutes.gestionStock),
                           ),
-                        ] else if (enResolution)
+                        if (!peutDepenses && !peutVentes && !peutStock && enResolution)
                           const _CarteActionChargement(),
                       ],
                     ),

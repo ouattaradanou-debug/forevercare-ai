@@ -144,22 +144,37 @@ begin
 end;
 $$;
 
--- Permissions accordées à un compte apprenti. Volontairement AUCUNE colonne
--- financière : un apprenti ne peut jamais se voir accorder un accès à
--- commandes/paiements, même par erreur d'un propriétaire.
+-- Permissions accordées à un compte apprenti. Un apprenti ne peut JAMAIS se
+-- voir accorder un accès à commandes/paiements (le suivi financier par
+-- client) : ce droit n'existe toujours dans aucune colonne ci-dessous, même
+-- par erreur d'un propriétaire. ventes/stock/depenses sont un choix distinct
+-- et explicite du propriétaire (voir a_permission_ventes/a_permission_stock/
+-- a_permission_enregistrer_depenses) : ce sont les ventes/dépenses globales
+-- de l'atelier, pas le suivi financier d'un client en particulier.
 create table if not exists public.permissions_apprenti (
-  id                 uuid primary key default gen_random_uuid(),
-  utilisateur_id     uuid not null unique references public.utilisateurs (id) on delete cascade,
-  creer_client       boolean not null default false,
-  modifier_client    boolean not null default false,
-  prendre_mesures    boolean not null default false,
-  ajouter_photos     boolean not null default false,
-  modifier_gabarits  boolean not null default false,
-  updated_at         timestamptz not null default now()
+  id                   uuid primary key default gen_random_uuid(),
+  utilisateur_id       uuid not null unique references public.utilisateurs (id) on delete cascade,
+  creer_client         boolean not null default false,
+  modifier_client      boolean not null default false,
+  prendre_mesures      boolean not null default false,
+  ajouter_photos       boolean not null default false,
+  modifier_gabarits    boolean not null default false,
+  ventes               boolean not null default false,
+  stock                boolean not null default false,
+  enregistrer_depenses boolean not null default false,
+  updated_at           timestamptz not null default now()
 );
 
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante) — même précaution que les
+-- autres `alter table ... add column if not exists` de ce fichier.
+alter table public.permissions_apprenti add column if not exists ventes boolean not null default false;
+alter table public.permissions_apprenti add column if not exists stock boolean not null default false;
+alter table public.permissions_apprenti add column if not exists enregistrer_depenses boolean not null default false;
+
 comment on table public.permissions_apprenti is
-  'Permissions fines d''un apprenti. Aucune colonne financière par conception.';
+  'Permissions fines d''un apprenti. Jamais de colonne donnant accès à '
+  'commandes/paiements (suivi financier par client), par conception.';
 
 -- Clients de l'atelier (les personnes habillées par le tailleur).
 create table if not exists public.clients (
@@ -713,6 +728,47 @@ as $$
   );
 $$;
 
+-- Ventes/stock/dépenses de l'atelier (pas le suivi financier d'un client,
+-- voir la remarque sur la table permissions_apprenti plus haut).
+create or replace function public.a_permission_ventes()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select ventes from public.permissions_apprenti where utilisateur_id = auth.uid()),
+    false
+  );
+$$;
+
+create or replace function public.a_permission_stock()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select stock from public.permissions_apprenti where utilisateur_id = auth.uid()),
+    false
+  );
+$$;
+
+create or replace function public.a_permission_enregistrer_depenses()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select enregistrer_depenses from public.permissions_apprenti where utilisateur_id = auth.uid()),
+    false
+  );
+$$;
+
 -- -----------------------------------------------------------------------------
 -- 5. ACTIVATION DE LA ROW LEVEL SECURITY
 -- -----------------------------------------------------------------------------
@@ -1121,31 +1177,54 @@ create policy paiements_groupe_all on public.paiements_groupe
   with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
 
 -- -----------------------------------------------------------------------------
--- 5.11bis DÉPENSES — même garantie que commandes/paiements.
+-- 5.11bis DÉPENSES — propriétaire, ou apprenti avec la permission
+--         `enregistrer_depenses` explicitement activée (voir
+--         a_permission_enregistrer_depenses ci-dessus). Distinct de la
+--         garantie "jamais commandes/paiements" : les dépenses de l'atelier
+--         ne sont pas le suivi financier d'un client en particulier.
 -- -----------------------------------------------------------------------------
 drop policy if exists depenses_all on public.depenses;
 create policy depenses_all on public.depenses
   for all to authenticated
-  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
-  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+  using (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_enregistrer_depenses())
+  )
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_enregistrer_depenses())
+  );
 
 -- -----------------------------------------------------------------------------
--- 5.11quater VENTES — même garantie que commandes/paiements/depenses.
+-- 5.11quater VENTES — propriétaire, ou apprenti avec la permission `ventes`.
 -- -----------------------------------------------------------------------------
 drop policy if exists ventes_all on public.ventes;
 create policy ventes_all on public.ventes
   for all to authenticated
-  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
-  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+  using (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_ventes())
+  )
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_ventes())
+  );
 
 -- -----------------------------------------------------------------------------
--- 5.11quinquies ARTICLES (catalogue/stock) — même garantie que ventes.
+-- 5.11quinquies ARTICLES (catalogue/stock) — propriétaire, ou apprenti avec
+--         la permission `stock`.
 -- -----------------------------------------------------------------------------
 drop policy if exists articles_all on public.articles;
 create policy articles_all on public.articles
   for all to authenticated
-  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
-  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+  using (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_stock())
+  )
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_stock())
+  );
 
 -- -----------------------------------------------------------------------------
 -- 5.11ter GROUPES_UNIFORMES — lecture par tout l'atelier, écriture réservée
