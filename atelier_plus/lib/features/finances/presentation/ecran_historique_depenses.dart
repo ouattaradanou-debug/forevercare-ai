@@ -15,6 +15,9 @@ enum _Periode { jour, semaine, mois, annee }
 
 /// Tableau de toutes les dépenses enregistrées (Date, Motif, Montant), la
 /// plus récente en premier, filtrable par Jour/Semaine/Mois/Année en cours.
+///
+/// Pour un apprenti, filtré au jour uniquement, sans sélecteur de période —
+/// même principe que EcranHistoriqueVentes.
 class EcranHistoriqueDepenses extends ConsumerStatefulWidget {
   const EcranHistoriqueDepenses({super.key});
 
@@ -55,8 +58,13 @@ class _EcranHistoriqueDepensesState extends ConsumerState<EcranHistoriqueDepense
 
   @override
   Widget build(BuildContext context) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
     final depenses = ref.watch(depensesDeLAtelierProvider);
-    final (debut, finExclusive) = _bornesPeriode(_periode);
+    // Un apprenti ne voit que l'historique du jour, jamais semaine/mois/
+    // année — le sélecteur de période lui-même est caché dans ce cas (un
+    // seul choix possible ne justifie pas un sélecteur).
+    final periodeEffective = estProprietaire ? _periode : _Periode.jour;
+    final (debut, finExclusive) = _bornesPeriode(periodeEffective);
 
     return Scaffold(
       appBar: AppBar(
@@ -67,24 +75,25 @@ class _EcranHistoriqueDepensesState extends ConsumerState<EcranHistoriqueDepense
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: SegmentedButton<_Periode>(
-                style: SegmentedButton.styleFrom(
-                  selectedBackgroundColor: _orangeSeda,
-                  selectedForegroundColor: Colors.white,
-                  foregroundColor: _bleuSeda,
+            if (estProprietaire)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: SegmentedButton<_Periode>(
+                  style: SegmentedButton.styleFrom(
+                    selectedBackgroundColor: _orangeSeda,
+                    selectedForegroundColor: Colors.white,
+                    foregroundColor: _bleuSeda,
+                  ),
+                  segments: const [
+                    ButtonSegment(value: _Periode.jour, label: Text('Jour')),
+                    ButtonSegment(value: _Periode.semaine, label: Text('Semaine')),
+                    ButtonSegment(value: _Periode.mois, label: Text('Mois')),
+                    ButtonSegment(value: _Periode.annee, label: Text('Année')),
+                  ],
+                  selected: {_periode},
+                  onSelectionChanged: (selection) => setState(() => _periode = selection.first),
                 ),
-                segments: const [
-                  ButtonSegment(value: _Periode.jour, label: Text('Jour')),
-                  ButtonSegment(value: _Periode.semaine, label: Text('Semaine')),
-                  ButtonSegment(value: _Periode.mois, label: Text('Mois')),
-                  ButtonSegment(value: _Periode.annee, label: Text('Année')),
-                ],
-                selected: {_periode},
-                onSelectionChanged: (selection) => setState(() => _periode = selection.first),
               ),
-            ),
             Expanded(
               child: depenses.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
