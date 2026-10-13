@@ -82,8 +82,20 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
     super.initState();
     Future.microtask(() async {
       final utilisateur = await ref.read(utilisateurCourantProvider.future);
-      if (utilisateur != null) {
-        await ref.read(abonnementRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
+      if (utilisateur == null) return;
+      await ref.read(abonnementRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
+      if (!utilisateur.estProprietaire) {
+        // Les permissions d'un apprenti ne sont sinon rapatriées qu'à la
+        // connexion (voir AuthRepository.recupererDonneesApresConnexion) :
+        // sans cet appel, un apprenti qui reste connecté plusieurs jours ne
+        // verrait jamais un changement de permission fait entre-temps par
+        // le propriétaire sans se déconnecter/reconnecter. Hors-ligne, le
+        // cache déjà présent reste utilisable (best-effort, comme le reste
+        // de l'application).
+        try {
+          await ref.read(permissionsRepositoryProvider).lire(utilisateur.id);
+          if (mounted) ref.invalidate(mesPermissionsProvider);
+        } catch (_) {}
       }
     });
   }
