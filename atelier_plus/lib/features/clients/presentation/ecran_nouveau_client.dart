@@ -270,11 +270,6 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
             type: AppConstants.rdvEssayage,
             nomClientPourRappel: client.nomComplet,
           );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rendez-vous enregistré.')),
-        );
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -404,9 +399,6 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
           _commandeCreee = commande;
           _financesEnregistrees = true;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Finances enregistrées.')),
-        );
       }
     } catch (e) {
       if (mounted) setState(() => _erreur = e.toString());
