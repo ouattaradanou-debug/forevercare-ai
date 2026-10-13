@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/validators.dart';
+import '../data/identifiants_connexion_memorises.dart';
 import '../providers/auth_providers.dart';
 
 /// Récupération du compte propriétaire en cas de code PIN oublié, via la
@@ -71,6 +74,15 @@ class _EcranPinOublieState extends ConsumerState<EcranPinOublie> {
             reponse: _reponseCtrl.text,
             nouveauPin: _nouveauPinCtrl.text,
           );
+      // Met à jour le préremplissage de l'écran de connexion avec le
+      // nouveau PIN — sinon il resterait pré-rempli avec l'ancien, désormais
+      // invalide, mémorisé lors d'une connexion précédente sur cet appareil.
+      unawaited(
+        IdentifiantsConnexionMemorises.enregistrer(
+          telephone: _telephoneCtrl.text,
+          pin: _nouveauPinCtrl.text,
+        ),
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

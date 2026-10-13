@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/sync/synchronisation_initiale.dart';
+import '../data/identifiants_connexion_memorises.dart';
 import '../providers/auth_providers.dart';
 
 class EcranConnexion extends ConsumerStatefulWidget {
@@ -22,6 +23,23 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
   final _pinCtrl = TextEditingController();
   bool _chargement = false;
   String? _erreur;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pré-remplit avec le numéro/PIN de la dernière connexion réussie sur
+    // cet appareil (voir IdentifiantsConnexionMemorises) : le tailleur n'a
+    // ainsi plus besoin de les retaper après une déconnexion explicite.
+    Future.microtask(() async {
+      final identifiants = await IdentifiantsConnexionMemorises.charger();
+      if (identifiants != null && mounted) {
+        setState(() {
+          _telephoneCtrl.text = identifiants.$1;
+          _pinCtrl.text = identifiants.$2;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -47,6 +65,12 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
             telephone: _telephoneCtrl.text,
             pin: _pinCtrl.text,
           );
+      unawaited(
+        IdentifiantsConnexionMemorises.enregistrer(
+          telephone: _telephoneCtrl.text,
+          pin: _pinCtrl.text,
+        ),
+      );
       // Même risque de course que sur l'écran de création de compte : la
       // redirection automatique du routeur peut précéder l'écriture du
       // cache local par recupererDonneesApresConnexion().

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import '../../../core/constants/questions_secretes.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
+import '../data/identifiants_connexion_memorises.dart';
 import '../providers/auth_providers.dart';
 
 class EcranCreationCompteAtelier extends ConsumerStatefulWidget {
@@ -80,6 +82,12 @@ class _EcranCreationCompteAtelierState
             reponseSecrete: _reponseSecreteCtrl.text.trim(),
             logo: _logo,
           );
+      unawaited(
+        IdentifiantsConnexionMemorises.enregistrer(
+          telephone: _telephoneCtrl.text,
+          pin: _pinCtrl.text,
+        ),
+      );
       // Le routeur peut avoir redirigé vers l'accueil avant que le cache
       // local (atelier/utilisateur/rôle) ne soit écrit. Sans cette
       // invalidation, l'écran d'accueil resterait figé sur son premier
