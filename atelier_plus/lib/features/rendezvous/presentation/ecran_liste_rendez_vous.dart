@@ -44,7 +44,15 @@ class _RdvUnifie {
   String get statut => _rdv?.statut ?? _rdvGroupe!.statut;
   bool get urgent => _rdv?.urgent ?? _rdvGroupe!.urgent;
   bool get tenueRetiree => _rdv?.tenueRetiree ?? _rdvGroupe!.tenueRetiree;
-  DateTime? get tenueRetireeLe => _rdv?.tenueRetireeLe ?? _rdvGroupe!.tenueRetireeLe;
+  // `tenueRetireeLe` est nullable (contrairement aux autres champs
+  // ci-dessus) : utiliser `??` comme pour eux ferait croire, pour un
+  // rendez-vous client sans "tenue retirée" (donc `tenueRetireeLe` null),
+  // qu'aucun `_rdv` n'existe et irait lire `_rdvGroupe!` — qui est null
+  // dans ce cas précis et provoque un plantage ("Null check operator used
+  // on a null value"), ce qui arrivait dès l'ouverture de l'écran pour
+  // n'importe quel rendez-vous client. D'où ce test explicite sur
+  // `estGroupe` plutôt que sur la nullité de la valeur elle-même.
+  DateTime? get tenueRetireeLe => estGroupe ? _rdvGroupe!.tenueRetireeLe : _rdv!.tenueRetireeLe;
 }
 
 /// Délai après lequel un rendez-vous marqué "tenue retirée" disparaît de la
