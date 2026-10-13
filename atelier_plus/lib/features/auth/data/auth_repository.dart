@@ -374,6 +374,9 @@ class AuthRepository {
         prendreMesures: permissions.prendreMesures,
         ajouterPhotos: permissions.ajouterPhotos,
         modifierGabarits: permissions.modifierGabarits,
+        ventes: permissions.ventes,
+        stock: permissions.stock,
+        enregistrerDepenses: permissions.enregistrerDepenses,
       );
     }
     await _baseLocale.definirUtilisateurConnecte(utilisateur.id);

@@ -70,6 +70,9 @@ class ApprentiRepository {
       prendreMesures: permissionsParDefaut.prendreMesures,
       ajouterPhotos: permissionsParDefaut.ajouterPhotos,
       modifierGabarits: permissionsParDefaut.modifierGabarits,
+      ventes: permissionsParDefaut.ventes,
+      stock: permissionsParDefaut.stock,
+      enregistrerDepenses: permissionsParDefaut.enregistrerDepenses,
     );
 
     return apprenti;
