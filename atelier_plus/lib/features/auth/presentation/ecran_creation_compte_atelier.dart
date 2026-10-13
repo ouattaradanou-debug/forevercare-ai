@@ -37,6 +37,7 @@ class _EcranCreationCompteAtelierState
   XFile? _logo;
   bool _chargement = false;
   String? _erreur;
+  bool _pinVisible = false;
 
   @override
   void dispose() {
@@ -152,15 +153,21 @@ class _EcranCreationCompteAtelierState
                 TextFormField(
                   controller: _pinCtrl,
                   keyboardType: TextInputType.number,
-                  obscureText: true,
+                  obscureText: !_pinVisible,
                   maxLength: 6,
-                  decoration: const InputDecoration(labelText: 'Code PIN (6 chiffres)'),
+                  decoration: InputDecoration(
+                    labelText: 'Code PIN (6 chiffres)',
+                    suffixIcon: IconButton(
+                      icon: Icon(_pinVisible ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setState(() => _pinVisible = !_pinVisible),
+                    ),
+                  ),
                   validator: Validators.pin,
                 ),
                 TextFormField(
                   controller: _confirmationPinCtrl,
                   keyboardType: TextInputType.number,
-                  obscureText: true,
+                  obscureText: !_pinVisible,
                   maxLength: 6,
                   decoration: const InputDecoration(labelText: 'Confirmer le code PIN'),
                   validator: (valeur) =>

@@ -23,6 +23,7 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
   final _pinCtrl = TextEditingController();
   bool _chargement = false;
   String? _erreur;
+  bool _pinVisible = false;
 
   @override
   void initState() {
@@ -126,11 +127,15 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
                   TextFormField(
                     controller: _pinCtrl,
                     keyboardType: TextInputType.number,
-                    obscureText: true,
+                    obscureText: !_pinVisible,
                     maxLength: 6,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Code PIN (6 chiffres)',
-                      prefixIcon: Icon(Icons.lock_outline),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(_pinVisible ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setState(() => _pinVisible = !_pinVisible),
+                      ),
                     ),
                     validator: Validators.pin,
                   ),

@@ -31,6 +31,7 @@ class _EcranPinOublieState extends ConsumerState<EcranPinOublie> {
 
   bool _chargement = false;
   String? _erreur;
+  bool _pinVisible = false;
 
   // Une fois la question récupérée, l'étape 2 (réponse + nouveau PIN)
   // s'affiche à la place de la demande de numéro de téléphone.
@@ -172,15 +173,21 @@ class _EcranPinOublieState extends ConsumerState<EcranPinOublie> {
           TextFormField(
             controller: _nouveauPinCtrl,
             keyboardType: TextInputType.number,
-            obscureText: true,
+            obscureText: !_pinVisible,
             maxLength: 6,
-            decoration: const InputDecoration(labelText: 'Nouveau code PIN (6 chiffres)'),
+            decoration: InputDecoration(
+              labelText: 'Nouveau code PIN (6 chiffres)',
+              suffixIcon: IconButton(
+                icon: Icon(_pinVisible ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setState(() => _pinVisible = !_pinVisible),
+              ),
+            ),
             validator: Validators.pin,
           ),
           TextFormField(
             controller: _confirmationPinCtrl,
             keyboardType: TextInputType.number,
-            obscureText: true,
+            obscureText: !_pinVisible,
             maxLength: 6,
             decoration: const InputDecoration(labelText: 'Confirmer le nouveau code PIN'),
             validator: (valeur) => Validators.confirmationPin(_nouveauPinCtrl.text, valeur),
