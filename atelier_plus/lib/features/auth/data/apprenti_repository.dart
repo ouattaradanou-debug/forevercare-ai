@@ -62,7 +62,17 @@ class ApprentiRepository {
       role: apprenti.role.name,
       updatedAt: apprenti.updatedAt,
     );
-    final permissionsParDefaut = PermissionsApprenti.aucunePermission(apprenti.id);
+    // `PermissionsApprenti.aucunePermission` met tout à `false`, mais le
+    // serveur (déclencheur `creer_permissions_apprenti_par_defaut`) crée en
+    // réalité la ligne avec ventes/stock/enregistrer_depenses à `true` par
+    // défaut (voir supabase/schema.sql) — ce cache local, écrit
+    // immédiatement après création pour un affichage sans attendre, doit
+    // refléter ces mêmes valeurs par défaut pour ne pas diverger du serveur.
+    final permissionsParDefaut = PermissionsApprenti.aucunePermission(apprenti.id).copierAvec(
+      ventes: true,
+      stock: true,
+      enregistrerDepenses: true,
+    );
     await _baseLocale.enregistrerPermissions(
       utilisateurId: permissionsParDefaut.utilisateurId,
       creerClient: permissionsParDefaut.creerClient,
