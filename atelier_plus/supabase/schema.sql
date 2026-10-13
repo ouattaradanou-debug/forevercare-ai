@@ -150,7 +150,10 @@ $$;
 -- par erreur d'un propriétaire. ventes/stock/depenses sont un choix distinct
 -- et explicite du propriétaire (voir a_permission_ventes/a_permission_stock/
 -- a_permission_enregistrer_depenses) : ce sont les ventes/dépenses globales
--- de l'atelier, pas le suivi financier d'un client en particulier.
+-- de l'atelier, pas le suivi financier d'un client en particulier. Elles
+-- sont activées PAR DÉFAUT (contrairement aux autres permissions de cette
+-- table) : un propriétaire qui ne veut pas les accorder à un apprenti donné
+-- doit les désactiver lui-même depuis le panneau de permissions.
 create table if not exists public.permissions_apprenti (
   id                   uuid primary key default gen_random_uuid(),
   utilisateur_id       uuid not null unique references public.utilisateurs (id) on delete cascade,
@@ -159,18 +162,27 @@ create table if not exists public.permissions_apprenti (
   prendre_mesures      boolean not null default false,
   ajouter_photos       boolean not null default false,
   modifier_gabarits    boolean not null default false,
-  ventes               boolean not null default false,
-  stock                boolean not null default false,
-  enregistrer_depenses boolean not null default false,
+  ventes               boolean not null default true,
+  stock                boolean not null default true,
+  enregistrer_depenses boolean not null default true,
   updated_at           timestamptz not null default now()
 );
 
 -- Ajout a posteriori sur une base déjà créée (create table if not exists
 -- ci-dessus ne modifie jamais une table existante) — même précaution que les
 -- autres `alter table ... add column if not exists` de ce fichier.
-alter table public.permissions_apprenti add column if not exists ventes boolean not null default false;
-alter table public.permissions_apprenti add column if not exists stock boolean not null default false;
-alter table public.permissions_apprenti add column if not exists enregistrer_depenses boolean not null default false;
+alter table public.permissions_apprenti add column if not exists ventes boolean not null default true;
+alter table public.permissions_apprenti add column if not exists stock boolean not null default true;
+alter table public.permissions_apprenti add column if not exists enregistrer_depenses boolean not null default true;
+
+-- Si les colonnes existaient déjà (base migrée avant ce changement de
+-- défaut), `add column if not exists` ci-dessus ne les touche pas : ces
+-- lignes mettent à jour le défaut pour les PROCHAINS apprentis créés, sans
+-- toucher aux réglages déjà faits par le propriétaire pour des apprentis
+-- existants.
+alter table public.permissions_apprenti alter column ventes set default true;
+alter table public.permissions_apprenti alter column stock set default true;
+alter table public.permissions_apprenti alter column enregistrer_depenses set default true;
 
 comment on table public.permissions_apprenti is
   'Permissions fines d''un apprenti. Jamais de colonne donnant accès à '
