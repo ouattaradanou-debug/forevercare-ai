@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../features/finances/providers/finances_providers.dart';
 
 const _bleuSedaFonce = Color(0xFF0F3570);
 const _orangeSeda = Color(0xFFF5821F);
+
+/// Index de l'onglet "Suivi des finances" dans [_BarreNavigationBasse] —
+/// doit rester synchronisé avec l'ordre des `StatefulShellBranch` dans
+/// app_router.dart.
+const _indexSuiviFinances = 2;
 
 /// Coquille de navigation commune aux 4 destinations principales (Accueil,
 /// Mesures des uniformes, Suivi des finances, Plus) : une barre de
@@ -12,21 +20,37 @@ const _orangeSeda = Color(0xFFF5821F);
 /// au-dessus — la barre du bas disparaît alors le temps de la consultation,
 /// comme dans la plupart des applications à onglets, et réapparaît au
 /// retour sur l'une des 4 destinations.
-class EcranCoquilleNavigation extends StatelessWidget {
+class EcranCoquilleNavigation extends ConsumerWidget {
   const EcranCoquilleNavigation({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: _BarreNavigationBasse(
         indexActuel: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        ),
+        onTap: (index) {
+          // `StatefulShellRoute.indexedStack` garde chaque onglet monté en
+          // arrière-plan plutôt que de le recréer (c'est tout l'intérêt :
+          // conserver le défilement, les champs en cours...). Mais
+          // `recapitulatifGlobalProvider`/`recapitulatifMensuelProvider`
+          // (FutureProvider, calculés une seule fois) ne se recalculent
+          // alors jamais tout seuls après une écriture financière faite
+          // depuis un autre onglet (vente, nouveau paiement, suppression
+          // d'un client/groupe ancien...) : on force leur recalcul à chaque
+          // fois que l'onglet "Suivi des finances" est sélectionné, pour ne
+          // jamais y afficher un total périmé.
+          if (index == _indexSuiviFinances) {
+            ref.invalidate(recapitulatifGlobalProvider);
+            ref.invalidate(recapitulatifMensuelProvider);
+          }
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
       ),
     );
   }
