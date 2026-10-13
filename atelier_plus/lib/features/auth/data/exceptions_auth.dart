@@ -28,3 +28,24 @@ class IdentifiantsInvalidesException implements Exception {
   @override
   String toString() => 'Numéro de téléphone ou code PIN incorrect.';
 }
+
+/// Aucune question secrète n'est définie pour ce numéro (compte inexistant,
+/// ou créé avant l'ajout de cette fonctionnalité) — voir
+/// AuthRepository.questionSecretePour.
+class QuestionSecreteIntrouvableException implements Exception {
+  const QuestionSecreteIntrouvableException();
+
+  @override
+  String toString() =>
+      'Aucune question secrète trouvée pour ce numéro. Contactez le support '
+      'pour récupérer votre compte.';
+}
+
+/// La réponse fournie à la question secrète ne correspond pas — voir
+/// AuthRepository.reinitialiserPinAvecReponseSecrete.
+class ReponseSecreteIncorrecteException implements Exception {
+  const ReponseSecreteIncorrecteException();
+
+  @override
+  String toString() => 'Réponse incorrecte.';
+}

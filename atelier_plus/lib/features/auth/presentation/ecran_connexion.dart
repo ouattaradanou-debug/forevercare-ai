@@ -125,7 +125,13 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
                           )
                         : const Text('Se connecter'),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed:
+                        _chargement ? null : () => context.push(AppRoutes.pinOublie),
+                    child: const Text('Code PIN oublié ?'),
+                  ),
+                  const SizedBox(height: 8),
                   TextButton(
                     onPressed: _chargement
                         ? null

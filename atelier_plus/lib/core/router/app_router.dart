@@ -15,6 +15,7 @@ import '../../features/auth/presentation/ecran_creation_apprenti.dart';
 import '../../features/auth/presentation/ecran_creation_compte_atelier.dart';
 import '../../features/auth/presentation/ecran_gestion_apprentis.dart';
 import '../../features/auth/presentation/ecran_parametres.dart';
+import '../../features/auth/presentation/ecran_pin_oublie.dart';
 import '../../features/auth/presentation/ecran_signature_atelier.dart';
 import '../../features/auth/providers/auth_providers.dart';
 import '../../features/clients/presentation/ecran_fiche_client.dart';
@@ -59,6 +60,7 @@ class AppRoutes {
 
   static const String connexion = '/connexion';
   static const String creationCompte = '/creation-compte';
+  static const String pinOublie = '/pin-oublie';
   static const String accueil = '/';
   static const String parametres = '/parametres';
   static const String apprentis = '/apprentis';
@@ -152,7 +154,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final connecte = ref.read(supabaseClientProvider).auth.currentSession != null;
       final versEcranAuth = state.matchedLocation == AppRoutes.connexion ||
-          state.matchedLocation == AppRoutes.creationCompte;
+          state.matchedLocation == AppRoutes.creationCompte ||
+          state.matchedLocation == AppRoutes.pinOublie;
 
       if (!connecte && !versEcranAuth) return AppRoutes.connexion;
       if (connecte && versEcranAuth) return AppRoutes.accueil;
@@ -166,6 +169,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.creationCompte,
         builder: (context, state) => const EcranCreationCompteAtelier(),
+      ),
+      GoRoute(
+        path: AppRoutes.pinOublie,
+        builder: (context, state) => const EcranPinOublie(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

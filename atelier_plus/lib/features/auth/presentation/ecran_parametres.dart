@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/questions_secretes.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/preference_theme.dart';
+import '../../../core/utils/validators.dart';
 import '../providers/auth_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -70,6 +72,17 @@ class EcranParametres extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(AppRoutes.signatureAtelier),
               ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.help_outline, color: _bleuSeda),
+                title: const Text(
+                  'Question de récupération',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text('Utilisée en cas de code PIN oublié'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _modifierQuestionSecrete(context, ref),
+              ),
             ],
             const Divider(height: 1),
           ],
@@ -110,6 +123,115 @@ class EcranParametres extends ConsumerWidget {
     );
     if (choisi != null) {
       await ref.read(themeModeProvider.notifier).definir(choisi);
+    }
+  }
+
+  /// Définit (ou remplace) la question secrète du propriétaire — voir
+  /// AuthRepository.definirQuestionSecrete / EcranCreationCompteAtelier
+  /// pour le même formulaire à la création du compte.
+  Future<void> _modifierQuestionSecrete(BuildContext context, WidgetRef ref) async {
+    final formKey = GlobalKey<FormState>();
+    final reponseCtrl = TextEditingController();
+    final questionPersonnaliseeCtrl = TextEditingController();
+    var questionChoisie = questionsSecretesPredefinies.first;
+    var enregistrement = false;
+
+    final enregistre = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: const Text('Question de récupération', style: TextStyle(color: _bleuSeda)),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Utilisée pour récupérer votre compte en cas de code PIN oublié. '
+                    'Remplace toute question déjà définie.',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: questionChoisie,
+                    decoration: const InputDecoration(labelText: 'Question secrète'),
+                    items: [
+                      for (final question in questionsSecretesPredefinies)
+                        DropdownMenuItem(value: question, child: Text(question)),
+                    ],
+                    onChanged: (valeur) {
+                      if (valeur != null) setState(() => questionChoisie = valeur);
+                    },
+                  ),
+                  if (questionChoisie == questionsSecretesPredefinies.last) ...[
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: questionPersonnaliseeCtrl,
+                      decoration: const InputDecoration(labelText: 'Votre question'),
+                      validator: Validators.nomRequis,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: reponseCtrl,
+                    decoration: const InputDecoration(labelText: 'Votre réponse'),
+                    validator: Validators.nomRequis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: enregistrement ? null : () => Navigator.pop(dialogContext, false),
+              style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: enregistrement
+                  ? null
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+                      setState(() => enregistrement = true);
+                      final estPersonnalisee =
+                          questionChoisie == questionsSecretesPredefinies.last;
+                      try {
+                        await ref.read(authRepositoryProvider).definirQuestionSecrete(
+                              question: estPersonnalisee
+                                  ? questionPersonnaliseeCtrl.text.trim()
+                                  : questionChoisie,
+                              reponse: reponseCtrl.text.trim(),
+                            );
+                        if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+                      } catch (e) {
+                        setState(() => enregistrement = false);
+                        if (dialogContext.mounted) {
+                          ScaffoldMessenger.of(dialogContext).showSnackBar(
+                            SnackBar(content: Text('Échec de l\'enregistrement : $e')),
+                          );
+                        }
+                      }
+                    },
+              style: FilledButton.styleFrom(backgroundColor: _bleuSeda),
+              child: enregistrement
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Enregistrer'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (enregistre == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Question de récupération enregistrée.')),
+      );
     }
   }
 }

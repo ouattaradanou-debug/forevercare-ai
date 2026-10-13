@@ -61,6 +61,67 @@ comment on table public.utilisateurs is 'Utilisateurs applicatifs : le propriét
 
 create index if not exists idx_utilisateurs_atelier on public.utilisateurs (atelier_id);
 
+-- Ajout a posteriori : question secrète permettant au propriétaire de
+-- récupérer l'accès à son compte s'il a oublié son code PIN (voir la
+-- fonction Edge `recuperer-compte`) — la réponse n'est jamais stockée en
+-- clair, seulement son empreinte (`crypt`, voir definir_question_secrete
+-- ci-dessous), comme un mot de passe.
+alter table public.utilisateurs add column if not exists question_secrete text;
+alter table public.utilisateurs add column if not exists reponse_secrete_hash text;
+
+-- Définit (ou remplace) la question secrète de l'utilisateur connecté —
+-- jamais pour un autre utilisateur (toujours `auth.uid()`, jamais un
+-- paramètre d'identifiant). Normalise la réponse (minuscules, espaces
+-- superflus retirés) avant hachage, pour rester tolérant à la saisie lors
+-- de la vérification ultérieure.
+create or replace function public.definir_question_secrete(question text, reponse text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Authentification requise.';
+  end if;
+  update public.utilisateurs
+  set question_secrete = question,
+      reponse_secrete_hash = crypt(lower(trim(reponse)), gen_salt('bf'))
+  where id = auth.uid();
+end;
+$$;
+
+grant execute on function public.definir_question_secrete(text, text) to authenticated;
+
+-- Vérifie la réponse à la question secrète d'un propriétaire identifié par
+-- son numéro de téléphone — utilisée uniquement par la fonction Edge
+-- `recuperer-compte` via la clé `service_role` (AUCUN grant à anon/
+-- authenticated ci-dessous : PostgREST ne doit jamais exposer cette
+-- fonction directement, sous peine d'offrir un oracle de vérification
+-- exploitable par force brute en dehors de la fonction Edge).
+create or replace function public.verifier_reponse_secrete(p_telephone text, p_reponse text)
+returns table(utilisateur_id uuid, valide boolean)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_id uuid;
+  v_hash text;
+begin
+  select id, reponse_secrete_hash into v_id, v_hash
+  from public.utilisateurs
+  where telephone = p_telephone and role = 'proprietaire';
+
+  if v_id is null or v_hash is null then
+    return query select null::uuid, false;
+    return;
+  end if;
+
+  return query select v_id, (crypt(lower(trim(p_reponse)), v_hash) = v_hash);
+end;
+$$;
+
 -- Permissions accordées à un compte apprenti. Volontairement AUCUNE colonne
 -- financière : un apprenti ne peut jamais se voir accorder un accès à
 -- commandes/paiements, même par erreur d'un propriétaire.

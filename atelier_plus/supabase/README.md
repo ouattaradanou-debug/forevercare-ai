@@ -54,6 +54,20 @@ Aucune variable d'environnement à configurer manuellement : `SUPABASE_URL`,
 `SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY` sont injectées
 automatiquement par la plateforme Supabase à l'exécution des fonctions Edge.
 
+## Fonction Edge `recuperer-compte`
+
+Permet au propriétaire de récupérer l'accès à son compte s'il a oublié son
+code PIN (téléphone perdu, changement d'appareil...), via la question
+secrète définie à la création du compte (ou plus tard dans Paramètres) —
+voir `supabase/functions/recuperer-compte/`. **Volontairement publique**
+(fonctionne sans session, condition même du scénario "PIN oublié") : doit
+être déployée avec `--no-verify-jwt`, sinon Supabase refuse tout appel non
+authentifié.
+
+```bash
+supabase functions deploy recuperer-compte --no-verify-jwt
+```
+
 ## Storage : bucket des logos d'atelier
 
 Voir `supabase/storage.sql` pour la création du bucket `logos-ateliers` et

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/constants/questions_secretes.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
@@ -26,6 +27,10 @@ class _EcranCreationCompteAtelierState
   final _telephoneCtrl = TextEditingController();
   final _pinCtrl = TextEditingController();
   final _confirmationPinCtrl = TextEditingController();
+  final _questionPersonnaliseeCtrl = TextEditingController();
+  final _reponseSecreteCtrl = TextEditingController();
+
+  String _questionChoisie = questionsSecretesPredefinies.first;
 
   XFile? _logo;
   bool _chargement = false;
@@ -38,6 +43,8 @@ class _EcranCreationCompteAtelierState
     _telephoneCtrl.dispose();
     _pinCtrl.dispose();
     _confirmationPinCtrl.dispose();
+    _questionPersonnaliseeCtrl.dispose();
+    _reponseSecreteCtrl.dispose();
     super.dispose();
   }
 
@@ -59,12 +66,18 @@ class _EcranCreationCompteAtelierState
     // conteneur, lui, survit à la disparition du widget.
     final conteneur = ProviderScope.containerOf(context, listen: false);
 
+    final estQuestionPersonnalisee = _questionChoisie == questionsSecretesPredefinies.last;
+    final question =
+        estQuestionPersonnalisee ? _questionPersonnaliseeCtrl.text.trim() : _questionChoisie;
+
     try {
       await ref.read(authRepositoryProvider).creerCompteAtelier(
             nomAtelier: _nomAtelierCtrl.text.trim(),
             nomProprietaire: _nomProprietaireCtrl.text.trim(),
             telephone: _telephoneCtrl.text,
             pin: _pinCtrl.text,
+            questionSecrete: question,
+            reponseSecrete: _reponseSecreteCtrl.text.trim(),
             logo: _logo,
           );
       // Le routeur peut avoir redirigé vers l'accueil avant que le cache
@@ -144,6 +157,38 @@ class _EcranCreationCompteAtelierState
                   decoration: const InputDecoration(labelText: 'Confirmer le code PIN'),
                   validator: (valeur) =>
                       Validators.confirmationPin(_pinCtrl.text, valeur),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'En cas de code PIN oublié ou de perte de téléphone, cette question '
+                  'permettra de récupérer votre compte.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: _questionChoisie,
+                  decoration: const InputDecoration(labelText: 'Question secrète'),
+                  items: [
+                    for (final question in questionsSecretesPredefinies)
+                      DropdownMenuItem(value: question, child: Text(question)),
+                  ],
+                  onChanged: (valeur) {
+                    if (valeur != null) setState(() => _questionChoisie = valeur);
+                  },
+                ),
+                if (_questionChoisie == questionsSecretesPredefinies.last) ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _questionPersonnaliseeCtrl,
+                    decoration: const InputDecoration(labelText: 'Votre question'),
+                    validator: Validators.nomRequis,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _reponseSecreteCtrl,
+                  decoration: const InputDecoration(labelText: 'Votre réponse'),
+                  validator: Validators.nomRequis,
                 ),
                 if (_erreur != null) ...[
                   const SizedBox(height: 8),

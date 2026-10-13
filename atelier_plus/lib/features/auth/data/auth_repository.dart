@@ -36,11 +36,21 @@ class AuthRepository {
   final StockageRepository _stockage;
 
   /// Crée un nouvel atelier et son compte propriétaire.
+  ///
+  /// [questionSecrete]/[reponseSecrete] permettent au propriétaire de
+  /// récupérer l'accès à son compte s'il oublie son code PIN (téléphone
+  /// perdu, changement d'appareil...) — voir [definirQuestionSecrete] et
+  /// [reinitialiserPinAvecReponseSecrete]. Demandées à la création plutôt
+  /// que laissées optionnelles : sans elles, un PIN oublié serait
+  /// définitivement irrécupérable (pas de vraie adresse email ni de SMS
+  /// dans cette application).
   Future<Utilisateur> creerCompteAtelier({
     required String nomAtelier,
     required String nomProprietaire,
     required String telephone,
     required String pin,
+    required String questionSecrete,
+    required String reponseSecrete,
     XFile? logo,
   }) async {
     final email = Telephone.emailSynthetique(telephone);
@@ -108,7 +118,78 @@ class AuthRepository {
 
     final utilisateur = Utilisateur.depuisJson(ligneUtilisateur);
     await _mettreEnCache(atelier: atelier, utilisateur: utilisateur, permissions: null);
+
+    // Best-effort : le compte lui-même est déjà créé et utilisable à ce
+    // stade (session active, profil en cache) même si cette étape échoue
+    // (coupure réseau juste à ce moment précis) — on ne bloque jamais la
+    // création du compte pour autant, la question pourra être définie plus
+    // tard depuis Paramètres.
+    try {
+      await definirQuestionSecrete(question: questionSecrete, reponse: reponseSecrete);
+    } catch (_) {}
+
     return utilisateur;
+  }
+
+  /// Définit (ou remplace) la question secrète du propriétaire connecté,
+  /// utilisée pour récupérer l'accès à son compte en cas de PIN oublié —
+  /// voir [reinitialiserPinAvecReponseSecrete]. La réponse n'est jamais
+  /// stockée en clair (hachée côté serveur par la fonction SQL
+  /// `definir_question_secrete`, voir supabase/schema.sql).
+  Future<void> definirQuestionSecrete({
+    required String question,
+    required String reponse,
+  }) async {
+    await _client.rpc('definir_question_secrete', params: {
+      'question': question,
+      'reponse': reponse,
+    });
+  }
+
+  /// Récupère la question secrète associée à [telephone], affichée sur
+  /// l'écran "Code PIN oublié" avant de demander la réponse — fonctionne
+  /// sans session (voir fonction Edge `recuperer-compte`), condition même
+  /// du scénario "téléphone perdu".
+  Future<String> questionSecretePour(String telephone) async {
+    final FunctionResponse reponse;
+    try {
+      reponse = await _client.functions.invoke(
+        'recuperer-compte',
+        body: {'action': 'question', 'telephone': Telephone.normaliser(telephone)},
+      );
+    } on FunctionException catch (e) {
+      if (e.status == 404) throw const QuestionSecreteIntrouvableException();
+      rethrow;
+    }
+    final donnees = reponse.data as Map<String, dynamic>;
+    return donnees['question'] as String;
+  }
+
+  /// Vérifie [reponse] à la question secrète de [telephone] et, si elle
+  /// correspond, remplace le code PIN par [nouveauPin] — fonctionne sans
+  /// session, via la fonction Edge `recuperer-compte` (clé `service_role`
+  /// côté serveur, jamais exposée au client). Une fois réinitialisé, le
+  /// tailleur se connecte normalement avec [nouveauPin] (voir [connecter]),
+  /// qui reconstitue alors tout le reste de son compte.
+  Future<void> reinitialiserPinAvecReponseSecrete({
+    required String telephone,
+    required String reponse,
+    required String nouveauPin,
+  }) async {
+    try {
+      await _client.functions.invoke(
+        'recuperer-compte',
+        body: {
+          'action': 'reinitialiser',
+          'telephone': Telephone.normaliser(telephone),
+          'reponse': reponse,
+          'nouveauPin': nouveauPin,
+        },
+      );
+    } on FunctionException catch (e) {
+      if (e.status == 403) throw const ReponseSecreteIncorrecteException();
+      rethrow;
+    }
   }
 
   /// Enregistre (ou remplace) la signature manuscrite du tailleur, dessinée
