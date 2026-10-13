@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -89,15 +91,36 @@ class ClientsRepository {
   /// Supprime définitivement un client et tout ce qui lui est associé
   /// (mesures, photos, rendez-vous, commande, paiements) — réservé au
   /// propriétaire, la RLS `clients_delete` l'impose de toute façon côté
-  /// serveur. Contrairement aux autres écritures de ce repository,
-  /// nécessite une connexion : il n'existe pas d'opération "delete" dans
-  /// la file d'attente de synchronisation (voir data/sync/), une
-  /// suppression ne peut donc jamais être mise en attente hors-ligne —
-  /// même principe que la modification des gabarits.
+  /// serveur.
+  ///
+  /// Suppression locale d'abord, comme le reste de ce repository : la fiche
+  /// disparaît immédiatement de l'écran, sans attendre une réponse serveur
+  /// ni même une connexion. L'envoi au serveur est tenté juste après, sans
+  /// bloquer l'appelant ; s'il échoue (hors-ligne), il est mis en file
+  /// d'attente et rejoué automatiquement au retour de la connexion (voir
+  /// data/sync/). Le `on delete cascade` du schéma Postgres supprime alors
+  /// lui-même mesures/photos/rendez-vous/commande/paiements en une seule
+  /// suppression côté serveur, sans qu'il soit nécessaire de les mettre en
+  /// file d'attente séparément.
   Future<void> supprimerClient(Client client) async {
     await verifierEcritureAutorisee(_baseLocale, client.atelierId);
-    await _client.from('clients').delete().eq('id', client.id);
+
+    // Purge aussi toute tâche encore en attente pour ce client ou l'une de
+    // ses dépendances (ajout fait hors-ligne, jamais encore envoyé) : sans
+    // ça, elle serait "ressuscitée" dès que la file serait rejouée après
+    // cette suppression.
     await _baseLocale.supprimerClientEtDependances(client.id);
+
+    unawaited(
+      ecrireEtSynchroniser(
+        client: _client,
+        baseLocale: _baseLocale,
+        table: 'clients',
+        recordId: client.id,
+        operation: 'delete',
+        payload: const {},
+      ),
+    );
   }
 
   /// Récupère tous les clients de l'atelier depuis Supabase et alimente le
@@ -108,8 +131,15 @@ class ClientsRepository {
   Future<void> chargerDepuisServeur(String atelierId) async {
     try {
       final lignes = await _client.from('clients').select().eq('atelier_id', atelierId);
+      // Un client supprimé localement hors-ligne reste sur le serveur
+      // jusqu'à ce que la suppression en file d'attente soit rejouée : ne
+      // pas le remettre en cache ici, sous peine de le faire réapparaître
+      // (voir AppDatabase.idsEnAttenteDeSuppression).
+      final idsSupprimes = await _baseLocale.idsEnAttenteDeSuppression('clients');
       for (final ligne in lignes) {
-        await _mettreEnCache(Client.depuisJson(ligne));
+        final client = Client.depuisJson(ligne);
+        if (idsSupprimes.contains(client.id)) continue;
+        await _mettreEnCache(client);
       }
     } catch (_) {
       // Hors-ligne : l'écran continue de fonctionner avec le cache local

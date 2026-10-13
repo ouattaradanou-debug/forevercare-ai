@@ -52,6 +52,16 @@ class SyncEngine {
 
   Future<void> _traiterUneTache(TacheSyncEntry tache) async {
     try {
+      if (tache.operation == 'delete') {
+        // Toujours prioritaire sur tout conflit éventuel : si la ligne a
+        // aussi été modifiée côté serveur depuis, la suppression demandée
+        // localement l'emporte quand même (pas de "conflit_resolu" à
+        // journaliser ici, contrairement à une mise à jour ci-dessous).
+        await _client.from(tache.nomTable).delete().eq('id', tache.recordId);
+        await _baseLocale.retirerTacheSync(tache.id);
+        return;
+      }
+
       final payload = jsonDecode(tache.payloadJson) as Map<String, dynamic>;
 
       if (tache.operation == 'update' && _tablesAvecConflitPossible.contains(tache.nomTable)) {

@@ -25,6 +25,13 @@ Future<void> ecrireEtSynchroniser({
   try {
     if (operation == 'insert') {
       await client.from(table).insert(payload);
+    } else if (operation == 'delete') {
+      // Un delete-by-id sur une ligne déjà absente côté serveur (déjà
+      // supprimée précédemment, ou jamais synchronisée) ne modifie
+      // simplement aucune ligne, sans lever d'erreur : aucune vérification
+      // de type `.select()` n'est donc nécessaire ici, contrairement à
+      // l'update ci-dessous.
+      await client.from(table).delete().eq('id', recordId);
     } else {
       // `.select()` force Supabase à renvoyer les lignes réellement
       // modifiées : un update filtré par une politique RLS (aucune ligne

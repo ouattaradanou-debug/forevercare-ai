@@ -255,8 +255,9 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
   }
 
   /// Supprime définitivement ce client (fiches de test, doublons...) après
-  /// confirmation — réservé au propriétaire. Nécessite une connexion : pas
-  /// de mise en file d'attente possible pour une suppression.
+  /// confirmation — réservé au propriétaire. Suppression locale immédiate,
+  /// même hors-ligne (voir ClientsRepository.supprimerClient) : l'écran se
+  /// ferme dès que le cache local est à jour, sans attendre le serveur.
   Future<void> _supprimerClient(BuildContext context, Client client) async {
     final confirme = await showDialog<bool>(
       context: context,

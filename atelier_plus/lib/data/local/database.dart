@@ -390,7 +390,7 @@ class SyncQueueEntries extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get nomTable => text()();
   TextColumn get recordId => text()();
-  TextColumn get operation => text()(); // 'insert' | 'update'
+  TextColumn get operation => text()(); // 'insert' | 'update' | 'delete'
   TextColumn get payloadJson => text()();
   DateTimeColumn get creeLe => dateTime()();
   IntColumn get tentatives => integer().withDefault(const Constant(0))();
@@ -778,6 +778,15 @@ class AppDatabase extends _$AppDatabase {
       final photos = await (select(photoEntries)..where((t) => t.clientId.equals(clientId))).get();
       for (final photo in photos) {
         await retirerTachesPourEnregistrement('photos', photo.id);
+        // Photo ajoutée hors-ligne jamais encore envoyée (voir
+        // PhotosRepository.ajouterPhoto) : son fichier local ne serait
+        // sinon jamais nettoyé, la ligne qui le référence disparaissant
+        // ci-dessous sans que personne n'y touche plus.
+        final cheminLocal = photo.cheminLocalEnAttente;
+        if (cheminLocal != null) {
+          final fichierLocal = File(cheminLocal);
+          if (await fichierLocal.exists()) await fichierLocal.delete();
+        }
       }
       final rendezVous =
           await (select(rendezVousEntries)..where((t) => t.clientId.equals(clientId))).get();
@@ -1473,6 +1482,13 @@ class AppDatabase extends _$AppDatabase {
       final photos = await (select(photoEntries)..where((t) => t.groupeId.equals(groupeId))).get();
       for (final photo in photos) {
         await retirerTachesPourEnregistrement('photos', photo.id);
+        // Même précaution que supprimerClientEtDependances : fichier local
+        // d'une photo ajoutée hors-ligne, jamais encore envoyée.
+        final cheminLocal = photo.cheminLocalEnAttente;
+        if (cheminLocal != null) {
+          final fichierLocal = File(cheminLocal);
+          if (await fichierLocal.exists()) await fichierLocal.delete();
+        }
       }
       final commandesGroupe = await (select(commandeGroupeEntries)
             ..where((t) => t.groupeId.equals(groupeId)))
@@ -1632,6 +1648,20 @@ class AppDatabase extends _$AppDatabase {
     return (delete(syncQueueEntries)
           ..where((t) => t.nomTable.equals(nomTable) & t.recordId.equals(recordId)))
         .go();
+  }
+
+  /// Identifiants d'une table ayant une suppression encore en attente
+  /// d'envoi au serveur (voir ClientsRepository.supprimerClient) —
+  /// indispensable avant tout rapatriement depuis le serveur
+  /// (`chargerDepuisServeur`) : sans cette vérification, un enregistrement
+  /// supprimé localement mais pas encore côté serveur (hors-ligne)
+  /// réapparaîtrait dans le cache local au prochain rapatriement, tant que
+  /// la suppression en attente n'a pas fini d'être rejouée.
+  Future<Set<String>> idsEnAttenteDeSuppression(String nomTable) async {
+    final taches = await (select(syncQueueEntries)
+          ..where((t) => t.nomTable.equals(nomTable) & t.operation.equals('delete')))
+        .get();
+    return taches.map((t) => t.recordId).toSet();
   }
 
   Future<void> enregistrerEchecSync(int id, String erreur) async {
