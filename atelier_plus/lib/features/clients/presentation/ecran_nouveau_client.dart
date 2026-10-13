@@ -23,6 +23,7 @@ import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
 import '../../mesures/providers/mesures_providers.dart';
 import '../../mesures/utils/choix_gabarit.dart';
+import '../../permissions/providers/permissions_providers.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/clients_providers.dart';
 import '../providers/photos_providers.dart';
@@ -488,6 +489,32 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
 
   @override
   Widget build(BuildContext context) {
+    // Vérifié ICI, avant même d'afficher le formulaire — pas seulement caché
+    // par la tuile "Nouveau client" de l'accueil — pour qu'un apprenti sans
+    // la permission `creerClient` ne puisse jamais remplir tout le
+    // formulaire avant d'essuyer un refus de la RLS au moment d'enregistrer.
+    final estProprietaire = ref.watch(estProprietaireProvider);
+    final permissions = ref.watch(mesPermissionsProvider).valueOrNull;
+    final peutCreerClient = estProprietaire || (permissions?.creerClient ?? false);
+    if (!peutCreerClient) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Nouveau client'),
+          backgroundColor: _bleuSeda,
+          foregroundColor: Colors.white,
+        ),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Vous n\'avez pas l\'autorisation de créer une nouvelle fiche client.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAF6F1),
       appBar: AppBar(

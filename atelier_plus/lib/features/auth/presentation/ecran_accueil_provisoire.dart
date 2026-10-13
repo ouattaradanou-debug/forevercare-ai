@@ -95,6 +95,7 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
     final estProprietaire = ref.watch(estProprietaireProvider);
     final tachesEnAttente = ref.watch(tachesSyncEnAttenteProvider).valueOrNull ?? 0;
     final permissions = ref.watch(mesPermissionsProvider).valueOrNull;
+    final peutCreerClient = estProprietaire || (permissions?.creerClient ?? false);
     final peutDepenses = estProprietaire || (permissions?.enregistrerDepenses ?? false);
     final peutVentes = estProprietaire || (permissions?.ventes ?? false);
     final peutStock = estProprietaire || (permissions?.stock ?? false);
@@ -153,12 +154,13 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       crossAxisSpacing: 6,
                       childAspectRatio: 0.92,
                       children: [
-                        _CarteAction(
-                          icone: Icons.person_add_alt_1_outlined,
-                          libelle: 'Nouveau client',
-                          couleur: const Color(0xFF1B4FA0),
-                          onTap: () => context.push(AppRoutes.creationClient),
-                        ),
+                        if (peutCreerClient)
+                          _CarteAction(
+                            icone: Icons.person_add_alt_1_outlined,
+                            libelle: 'Nouveau client',
+                            couleur: const Color(0xFF1B4FA0),
+                            onTap: () => context.push(AppRoutes.creationClient),
+                          ),
                         _CarteAction(
                           icone: Icons.groups_outlined,
                           libelle: 'Mes clients',
@@ -192,7 +194,11 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                             couleur: const Color(0xFFB3261E),
                             onTap: () => context.push(AppRoutes.gestionStock),
                           ),
-                        if (!peutDepenses && !peutVentes && !peutStock && enResolution)
+                        if (!peutCreerClient &&
+                            !peutDepenses &&
+                            !peutVentes &&
+                            !peutStock &&
+                            enResolution)
                           const _CarteActionChargement(),
                       ],
                     ),

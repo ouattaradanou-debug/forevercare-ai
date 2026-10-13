@@ -101,7 +101,7 @@ class EcranVentes extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
             ],
-            if (estProprietaire) ...[
+            if (peutVentes) ...[
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: () => context.push(AppRoutes.historiqueVentes),
