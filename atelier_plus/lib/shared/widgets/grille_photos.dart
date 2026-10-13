@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -281,7 +283,11 @@ class _TuilePhotoState extends ConsumerState<TuilePhoto> {
     }
   }
 
-  void _ouvrirPleinEcran() => ouvrirPhotoPleinEcran(context, widget.photo.url);
+  void _ouvrirPleinEcran() => ouvrirPhotoPleinEcran(
+        context,
+        widget.photo.url,
+        cheminLocal: widget.photo.cheminLocalEnAttente,
+      );
 
   /// Supprime définitivement la photo (pas seulement sa note vocale) —
   /// demande confirmation, comme pour un groupe ou un client.
@@ -328,6 +334,7 @@ class _TuilePhotoState extends ConsumerState<TuilePhoto> {
   @override
   Widget build(BuildContext context) {
     final aUnAudio = widget.photo.audioUrl != null;
+    final enAttenteEnvoi = widget.photo.enAttenteEnvoi;
 
     return SizedBox(
       width: 90,
@@ -341,33 +348,74 @@ class _TuilePhotoState extends ConsumerState<TuilePhoto> {
                 onTap: _ouvrirPleinEcran,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: CachedNetworkImage(
-                    imageUrl: widget.photo.url,
-                    width: 90,
-                    height: 90,
-                    fit: BoxFit.cover,
-                    fadeInDuration: Duration.zero,
-                    placeholder: (context, url) => Container(
-                      width: 90,
-                      height: 90,
-                      color: const Color(0xFFEDEAE4),
-                      child: const Center(
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                  child: enAttenteEnvoi
+                      ? Image.file(
+                          File(widget.photo.cheminLocalEnAttente!),
+                          width: 90,
+                          height: 90,
+                          fit: BoxFit.cover,
+                        )
+                      : CachedNetworkImage(
+                          imageUrl: widget.photo.url,
+                          width: 90,
+                          height: 90,
+                          fit: BoxFit.cover,
+                          fadeInDuration: Duration.zero,
+                          placeholder: (context, url) => Container(
+                            width: 90,
+                            height: 90,
+                            color: const Color(0xFFEDEAE4),
+                            child: const Center(
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: 90,
+                            height: 90,
+                            color: const Color(0xFFEDEAE4),
+                            child: const Icon(
+                              Icons.broken_image_outlined,
+                              color: Color(0xFF6F6259),
+                            ),
+                          ),
                         ),
-                      ),
+                ),
+              ),
+              // Photo ajoutée hors-ligne, pas encore envoyée : le tailleur
+              // doit comprendre qu'elle n'est pour l'instant que sur son
+              // téléphone (voir PhotoUploadQueue, qui l'enverra
+              // automatiquement dès le retour de la connexion).
+              if (enAttenteEnvoi && !_suppressionEnCours)
+                Positioned(
+                  bottom: 4,
+                  left: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(6),
                     ),
-                    errorWidget: (context, url, error) => Container(
-                      width: 90,
-                      height: 90,
-                      color: const Color(0xFFEDEAE4),
-                      child: const Icon(Icons.broken_image_outlined, color: Color(0xFF6F6259)),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.cloud_off, size: 11, color: Colors.white),
+                        SizedBox(width: 3),
+                        Flexible(
+                          child: Text(
+                            'En attente',
+                            style: TextStyle(fontSize: 9, color: Colors.white),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ),
               if (_suppressionEnCours)
                 Positioned.fill(
                   child: ClipRRect(
@@ -397,7 +445,11 @@ class _TuilePhotoState extends ConsumerState<TuilePhoto> {
             ],
           ),
           const SizedBox(height: 6),
-          if (_enCoursEnvoi)
+          if (enAttenteEnvoi)
+            // Pas de note vocale possible avant l'envoi de la photo
+            // elle-même (voir PhotosRepository.ajouterAudioAPhoto).
+            const SizedBox(height: 28)
+          else if (_enCoursEnvoi)
             const SizedBox(
               width: 14,
               height: 14,

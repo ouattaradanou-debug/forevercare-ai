@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -191,21 +193,66 @@ class _GrillePhotos extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final photo = liste[index];
                   return GestureDetector(
-                    onTap: () => ouvrirPhotoPleinEcran(context, photo.url),
+                    onTap: () => ouvrirPhotoPleinEcran(
+                      context,
+                      photo.url,
+                      cheminLocal: photo.cheminLocalEnAttente,
+                    ),
                     onLongPress: peutSupprimer
                         ? () => _confirmerSuppression(context, ref, photo)
                         : null,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: photo.url,
-                        fit: BoxFit.cover,
-                        fadeInDuration: Duration.zero,
-                        placeholder: (context, url) => Container(color: const Color(0xFFEDEAE4)),
-                        errorWidget: (context, url, error) => Container(
-                          color: const Color(0xFFEDEAE4),
-                          child: const Icon(Icons.broken_image_outlined, color: Color(0xFF6F6259)),
-                        ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (photo.enAttenteEnvoi)
+                            Image.file(File(photo.cheminLocalEnAttente!), fit: BoxFit.cover)
+                          else
+                            CachedNetworkImage(
+                              imageUrl: photo.url,
+                              fit: BoxFit.cover,
+                              fadeInDuration: Duration.zero,
+                              placeholder: (context, url) =>
+                                  Container(color: const Color(0xFFEDEAE4)),
+                              errorWidget: (context, url, error) => Container(
+                                color: const Color(0xFFEDEAE4),
+                                child: const Icon(
+                                  Icons.broken_image_outlined,
+                                  color: Color(0xFF6F6259),
+                                ),
+                              ),
+                            ),
+                          // Photo ajoutée hors-ligne, pas encore envoyée —
+                          // voir GrillePhotosSection pour le même indicateur.
+                          if (photo.enAttenteEnvoi)
+                            Positioned(
+                              bottom: 4,
+                              left: 4,
+                              right: 4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.cloud_off, size: 11, color: Colors.white),
+                                    SizedBox(width: 3),
+                                    Flexible(
+                                      child: Text(
+                                        'En attente',
+                                        style: TextStyle(fontSize: 9, color: Colors.white),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   );

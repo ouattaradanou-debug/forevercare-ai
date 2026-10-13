@@ -157,6 +157,12 @@ class PhotoEntries extends Table {
   TextColumn get source => text()();
   TextColumn get audioUrl => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
+  // Chemin du fichier image conservé sur l'appareil tant que l'envoi vers
+  // Supabase Storage n'a pas encore réussi (photo ajoutée hors-ligne) :
+  // `url` est alors une chaîne vide, affichée depuis ce fichier local au
+  // lieu du réseau (voir PhotosRepository.ajouterPhoto et
+  // PhotoUploadQueue). Remis à `null` une fois l'envoi réussi.
+  TextColumn get cheminLocalEnAttente => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -436,7 +442,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -587,6 +593,12 @@ class AppDatabase extends _$AppDatabase {
             // même principe que le bloc `from < 19` ci-dessus, simple
             // création sans aucun ALTER.
             await m.createTable(rendezVousGroupeEntries);
+          }
+          if (from < 21) {
+            // photoEntries créée dans le bloc `from < 2` ci-dessus.
+            if (from >= 2) {
+              await m.addColumn(photoEntries, photoEntries.cheminLocalEnAttente);
+            }
           }
         },
       );
@@ -927,6 +939,7 @@ class AppDatabase extends _$AppDatabase {
     required String source,
     String? audioUrl,
     required DateTime createdAt,
+    String? cheminLocalEnAttente,
   }) async {
     await into(photoEntries).insertOnConflictUpdate(
       PhotoEntriesCompanion.insert(
@@ -940,6 +953,7 @@ class AppDatabase extends _$AppDatabase {
         source: source,
         audioUrl: Value(audioUrl),
         createdAt: createdAt,
+        cheminLocalEnAttente: Value(cheminLocalEnAttente),
       ),
     );
   }
@@ -949,6 +963,20 @@ class AppDatabase extends _$AppDatabase {
   Future<void> mettreAJourAudioPhoto(String id, String? audioUrl) async {
     await (update(photoEntries)..where((t) => t.id.equals(id)))
         .write(PhotoEntriesCompanion(audioUrl: Value(audioUrl)));
+  }
+
+  /// Photos ajoutées hors-ligne, pas encore envoyées à Supabase Storage —
+  /// relues par [PhotoUploadQueue] à chaque retour de connexion.
+  Future<List<PhotoEntry>> photosEnAttenteEnvoi() {
+    return (select(photoEntries)..where((t) => t.cheminLocalEnAttente.isNotNull())).get();
+  }
+
+  /// Marque une photo comme définitivement envoyée : fixe son URL publique
+  /// Supabase et efface la mention "en attente" (voir [photosEnAttenteEnvoi]).
+  Future<void> marquerPhotoEnvoyee({required String id, required String url}) async {
+    await (update(photoEntries)..where((t) => t.id.equals(id))).write(
+      PhotoEntriesCompanion(url: Value(url), cheminLocalEnAttente: const Value(null)),
+    );
   }
 
   Stream<List<PhotoEntry>> observerPhotosDuClient(String clientId) {

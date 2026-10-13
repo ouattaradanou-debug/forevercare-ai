@@ -32,6 +32,7 @@ class PhotoClient {
     required this.source,
     this.audioUrl,
     required this.createdAt,
+    this.cheminLocalEnAttente,
   });
 
   final String id;
@@ -44,6 +45,13 @@ class PhotoClient {
   final SourcePhoto source;
   final String? audioUrl;
   final DateTime createdAt;
+
+  /// Fichier local tant que cette photo (ajoutée hors-ligne) n'a pas encore
+  /// été envoyée à Supabase Storage — purement local, jamais envoyé au
+  /// serveur (absent de [versJson]/[depuisJson]). Voir PhotosRepository.
+  final String? cheminLocalEnAttente;
+
+  bool get enAttenteEnvoi => cheminLocalEnAttente != null;
 
   factory PhotoClient.depuisJson(Map<String, dynamic> json) {
     return PhotoClient(

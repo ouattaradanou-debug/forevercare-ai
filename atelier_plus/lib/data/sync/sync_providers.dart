@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../local/database_provider.dart';
 import '../remote/supabase_client_provider.dart';
+import 'photo_upload_queue.dart';
 import 'sync_engine.dart';
 import 'sync_trigger.dart';
 
@@ -12,11 +13,21 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   );
 });
 
+final photoUploadQueueProvider = Provider<PhotoUploadQueue>((ref) {
+  return PhotoUploadQueue(
+    client: ref.watch(supabaseClientProvider),
+    baseLocale: ref.watch(baseLocaleProvider),
+  );
+});
+
 /// Démarre l'écoute de connectivité au premier accès et la maintient tant
 /// que ce provider reste utilisé (voir `AtelierPlusApp`, qui le lit une
 /// seule fois pour toute la durée de vie de l'application).
 final syncTriggerProvider = Provider<SyncTrigger>((ref) {
-  final trigger = SyncTrigger(syncEngine: ref.watch(syncEngineProvider));
+  final trigger = SyncTrigger(
+    syncEngine: ref.watch(syncEngineProvider),
+    photoUploadQueue: ref.watch(photoUploadQueueProvider),
+  );
   trigger.demarrer();
   ref.onDispose(trigger.arreter);
   return trigger;

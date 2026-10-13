@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -15,7 +19,9 @@ const String bucketAudiosClients = 'audios-clients';
 /// Photos de tissus/modèles associées à un client. Contrairement aux
 /// gabarits, l'ajout d'une photo fait partie de l'usage courant (comme les
 /// clients et les mesures) : écriture locale d'abord, avec tentative
-/// d'upload immédiate en meilleur effort.
+/// d'upload immédiate en meilleur effort ; si elle échoue (hors-ligne), la
+/// photo reste utilisable depuis son fichier local et est renvoyée
+/// automatiquement par [PhotoUploadQueue] dès le retour de la connexion.
 class PhotosRepository {
   PhotosRepository({
     required SupabaseClient client,
@@ -32,10 +38,14 @@ class PhotosRepository {
   final StockageRepository _stockage;
   static const _uuid = Uuid();
 
-  /// Nécessite une connexion pour l'upload lui-même (une photo ne peut pas
-  /// être stockée durablement sans être envoyée à Supabase Storage — il n'y
-  /// a pas de cache local de fichiers binaires en Phase 2). Si hors-ligne,
-  /// l'erreur remonte à l'écran, qui invite à réessayer une fois reconnecté.
+  /// Fonctionne hors-ligne : la photo est d'abord copiée dans un dossier
+  /// permanent de l'application (le fichier d'origine, souvent dans un
+  /// cache temporaire du sélecteur d'image, pourrait disparaître avant
+  /// d'avoir pu être réessayé), puis son envoi vers Supabase Storage est
+  /// tenté immédiatement. En cas d'échec (pas de réseau à l'instant précis),
+  /// la photo reste affichable et supprimable depuis ce fichier local, et
+  /// [PhotoUploadQueue] l'enverra automatiquement dès le retour de la
+  /// connexion (voir data/sync/).
   ///
   /// Exactement l'un de [clientId] (photo d'un client) ou [groupeId] +
   /// [sexe] (photo d'un groupe d'uniformes, séparée hommes/femmes) doit être
@@ -54,38 +64,85 @@ class PhotosRepository {
       'ajouterPhoto : fournir clientId OU groupeId, jamais les deux ni aucun.',
     );
     await verifierEcritureAutorisee(_baseLocale, atelierId);
-    final url = await _stockage.televerserImageCompressee(
-      fichier: fichier,
-      bucket: bucketPhotosClients,
-      dossier: clientId ?? groupeId!,
-    );
+
+    final cheminLocal = await _copierVersStockagePermanent(fichier);
+    final id = _uuid.v4();
+    final maintenant = DateTime.now().toUtc();
+
+    String? url;
+    try {
+      // Le client (ou le groupe) vient peut-être d'être créé "en local
+      // d'abord" quelques instants plus tôt (voir ClientsRepository.
+      // creerClient / GroupesUniformesRepository.creerGroupe) : si sa
+      // propre écriture vers Supabase a échoué et a été mise en file
+      // d'attente (ex. réseau instable à ce moment précis), l'insertion
+      // directe ci-dessous échouerait avec "violates foreign key
+      // constraint" puisque la photo référence un client/groupe absent côté
+      // serveur. On force alors le rejeu de la file d'attente puis on
+      // retente une seule fois.
+      url = await avecRejeuSiClientPasEncoreSynchronise(
+        syncEngine: _syncEngine,
+        ecrire: () async {
+          final urlEnvoyee = await _stockage.televerserImageCompressee(
+            fichier: XFile(cheminLocal),
+            bucket: bucketPhotosClients,
+            dossier: clientId ?? groupeId!,
+          );
+          final photoAEnvoyer = PhotoClient(
+            id: id,
+            atelierId: atelierId,
+            clientId: clientId,
+            groupeId: groupeId,
+            sexe: sexe,
+            type: type,
+            url: urlEnvoyee,
+            source: source,
+            createdAt: maintenant,
+          );
+          await _client.from('photos').insert(photoAEnvoyer.versJson());
+          return urlEnvoyee;
+        },
+      );
+    } catch (_) {
+      // Hors-ligne (ou coupure réseau) : la photo reste utilisable
+      // immédiatement depuis le fichier local copié ci-dessus.
+      url = null;
+    }
+
+    if (url != null) {
+      // Envoyée avec succès : le fichier local n'est plus nécessaire.
+      final fichierLocal = File(cheminLocal);
+      if (await fichierLocal.exists()) await fichierLocal.delete();
+    }
 
     final photo = PhotoClient(
-      id: _uuid.v4(),
+      id: id,
       atelierId: atelierId,
       clientId: clientId,
       groupeId: groupeId,
       sexe: sexe,
       type: type,
-      url: url,
+      url: url ?? '',
+      cheminLocalEnAttente: url == null ? cheminLocal : null,
       source: source,
-      createdAt: DateTime.now().toUtc(),
-    );
-
-    // Le client (ou le groupe) vient peut-être d'être créé "en local
-    // d'abord" quelques instants plus tôt (voir ClientsRepository.
-    // creerClient / GroupesUniformesRepository.creerGroupe) : si sa propre
-    // écriture vers Supabase a échoué et a été mise en file d'attente (ex.
-    // réseau instable à ce moment précis), l'insertion directe ci-dessous
-    // échouerait avec "violates foreign key constraint" puisque la photo
-    // référence un client/groupe absent côté serveur. On force alors le
-    // rejeu de la file d'attente puis on retente une seule fois.
-    await avecRejeuSiClientPasEncoreSynchronise(
-      syncEngine: _syncEngine,
-      ecrire: () => _client.from('photos').insert(photo.versJson()),
+      createdAt: maintenant,
     );
     await _mettreEnCache(photo);
     return photo;
+  }
+
+  /// Copie [fichier] (souvent un chemin temporaire fourni par l'appareil
+  /// photo/la galerie) dans un dossier permanent de l'application, pour
+  /// qu'il survive le temps nécessaire à un envoi différé si l'appareil est
+  /// hors-ligne au moment de l'ajout.
+  Future<String> _copierVersStockagePermanent(XFile fichier) async {
+    final dossierDocuments = await getApplicationDocumentsDirectory();
+    final dossierEnAttente = Directory(p.join(dossierDocuments.path, 'photos_en_attente'));
+    await dossierEnAttente.create(recursive: true);
+    final extension = p.extension(fichier.path).isEmpty ? '.jpg' : p.extension(fichier.path);
+    final cheminDestination = p.join(dossierEnAttente.path, '${_uuid.v4()}$extension');
+    await File(fichier.path).copy(cheminDestination);
+    return cheminDestination;
   }
 
   /// Enregistre (ou remplace) la note vocale de description d'une photo déjà
@@ -96,6 +153,14 @@ class PhotosRepository {
     required String cheminFichierAudio,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, photo.atelierId);
+    if (photo.enAttenteEnvoi) {
+      // Cette photo n'a pas encore été envoyée elle-même (ajoutée
+      // hors-ligne) : aucune ligne côté serveur à laquelle rattacher un
+      // vocal pour l'instant.
+      throw Exception(
+        'Cette photo n\'a pas encore été envoyée : réessayez une fois en ligne.',
+      );
+    }
     final url = await _stockage.televerserAudio(
       cheminFichier: cheminFichierAudio,
       bucket: bucketAudiosClients,
@@ -123,6 +188,17 @@ class PhotosRepository {
   /// d'opération "delete" dans la file d'attente de synchronisation.
   Future<void> supprimerPhoto(PhotoClient photo) async {
     await verifierEcritureAutorisee(_baseLocale, photo.atelierId);
+
+    if (photo.enAttenteEnvoi) {
+      // Jamais envoyée à Supabase (ajoutée hors-ligne, toujours en
+      // attente) : rien côté serveur à supprimer, uniquement le fichier
+      // local et sa ligne en cache. Ne nécessite donc aucune connexion,
+      // contrairement à la suppression d'une photo déjà envoyée ci-dessous.
+      final fichierLocal = File(photo.cheminLocalEnAttente!);
+      if (await fichierLocal.exists()) await fichierLocal.delete();
+      await _baseLocale.supprimerPhoto(photo.id);
+      return;
+    }
 
     // Retire d'abord toute tâche encore en file d'attente (ajout fait
     // hors-ligne, jamais encore envoyé) : sans ça, la suppression serait
@@ -211,6 +287,7 @@ class PhotosRepository {
         source: SourcePhoto.depuisTexte(ligne.source),
         audioUrl: ligne.audioUrl,
         createdAt: ligne.createdAt,
+        cheminLocalEnAttente: ligne.cheminLocalEnAttente,
       );
 
   Future<void> _mettreEnCache(PhotoClient photo) {
@@ -225,6 +302,7 @@ class PhotosRepository {
       source: photo.source.name,
       audioUrl: photo.audioUrl,
       createdAt: photo.createdAt,
+      cheminLocalEnAttente: photo.cheminLocalEnAttente,
     );
   }
 }
