@@ -2,10 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../../../core/constants/app_constants.dart';
-import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
 import '../../../data/models/rendez_vous.dart';
@@ -83,6 +82,12 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
   // rafraîchissement périodique.
   Timer? _minuteur;
 
+  final _rechercheCtrl = TextEditingController();
+  final _dicteeVocale = stt.SpeechToText();
+  String _requete = '';
+  bool _dicteeDisponible = false;
+  bool _enEcoute = false;
+
   @override
   void initState() {
     super.initState();
@@ -103,7 +108,66 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
   @override
   void dispose() {
     _minuteur?.cancel();
+    _dicteeVocale.stop();
+    _rechercheCtrl.dispose();
     super.dispose();
+  }
+
+  /// Dicter la recherche (nom du client ou du groupe) — même mécanisme de
+  /// dictée vocale que l'écran "Mes clients".
+  Future<void> _basculerDicteeRecherche() async {
+    if (_enEcoute) {
+      await _dicteeVocale.stop();
+      if (mounted) setState(() => _enEcoute = false);
+      return;
+    }
+
+    if (!_dicteeDisponible) {
+      _dicteeDisponible = await _dicteeVocale.initialize(
+        onStatus: (statut) {
+          if ((statut == 'done' || statut == 'notListening') && mounted) {
+            setState(() => _enEcoute = false);
+          }
+        },
+        onError: (_) {
+          if (mounted) setState(() => _enEcoute = false);
+        },
+      );
+      if (!_dicteeDisponible) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Dictée vocale indisponible sur cet appareil.')),
+          );
+        }
+        return;
+      }
+    }
+
+    setState(() => _enEcoute = true);
+    await _dicteeVocale.listen(
+      localeId: 'fr_FR',
+      onResult: (resultat) {
+        _rechercheCtrl.text = resultat.recognizedWords;
+        _rechercheCtrl.selection = TextSelection.collapsed(offset: _rechercheCtrl.text.length);
+        setState(() => _requete = resultat.recognizedWords);
+      },
+    );
+  }
+
+  /// Nom affiché pour une ligne (client ou répondant du groupe), résolu via
+  /// les caches locaux déjà en mémoire — utilisé à la fois pour l'affichage
+  /// de chaque ligne et pour le filtrage par la recherche ci-dessus.
+  String _nomPour(_RdvUnifie item) {
+    if (item.estGroupe) {
+      final groupe = ref.watch(groupeUniformeParIdProvider(item.rdvGroupe.groupeId));
+      // Le nom du répondant (ex. "TINDANO Aboubacar") parle davantage au
+      // tailleur que le nom interne du groupe (ex. "DPAERAH") — la pastille
+      // "Uniforme" ci-dessous indique déjà qu'il s'agit d'un groupe.
+      final g = groupe.valueOrNull;
+      return g?.repondantNom ?? g?.nom ?? '…';
+    }
+    final client = ref.watch(clientParIdProvider(item.rdv.clientId));
+    return client.valueOrNull?.nomComplet ?? '…';
   }
 
   /// Corrige un rendez-vous déjà enregistré (date, heure, type), permet de
@@ -355,6 +419,36 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
         title: const Text('Rendez-vous'),
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(64),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: TextField(
+              controller: _rechercheCtrl,
+              onChanged: (valeur) => setState(() => _requete = valeur),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Rechercher par nom',
+                hintStyle: const TextStyle(color: Colors.white70),
+                prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _enEcoute ? Icons.mic : Icons.mic_none,
+                    color: _enEcoute ? Colors.red : Colors.white70,
+                  ),
+                  tooltip: 'Rechercher à la voix',
+                  onPressed: _basculerDicteeRecherche,
+                ),
+                filled: true,
+                fillColor: Colors.white24,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
       body: SafeArea(
         child: rdvsClients.when(
@@ -376,6 +470,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
             // disparaît de cette liste (jamais supprimé en base, voir
             // _delaiMasquageTenueRetiree) — recalculé à chaque minute grâce
             // à `_minuteur`, pas seulement quand les données changent.
+            final requete = _requete.trim().toLowerCase();
             final actifs = liste
                 .where((r) => r.statut != AppConstants.rdvAnnule)
                 .where((r) {
@@ -383,9 +478,12 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                   if (!r.tenueRetiree || depuis == null) return true;
                   return DateTime.now().toUtc().difference(depuis) < _delaiMasquageTenueRetiree;
                 })
+                .where((r) => requete.isEmpty || _nomPour(r).toLowerCase().contains(requete))
                 .toList();
             if (actifs.isEmpty) {
-              return const Center(child: Text('Aucun rendez-vous à venir.'));
+              return Center(
+                child: Text(requete.isEmpty ? 'Aucun rendez-vous à venir.' : 'Aucun résultat.'),
+              );
             }
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -436,29 +534,11 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: _bleuSeda,
-        foregroundColor: Colors.white,
-        onPressed: () => context.push(AppRoutes.creationRendezVous),
-        icon: const Icon(Icons.add),
-        label: const Text('Nouveau rendez-vous'),
-      ),
     );
   }
 
   TableRow _ligne(_RdvUnifie item, int index) {
-    final String nom;
-    if (item.estGroupe) {
-      final groupe = ref.watch(groupeUniformeParIdProvider(item.rdvGroupe.groupeId));
-      // Le nom du répondant (ex. "TINDANO Aboubacar") parle davantage au
-      // tailleur que le nom interne du groupe (ex. "DPAERAH") — la pastille
-      // "Uniforme" ci-dessous indique déjà qu'il s'agit d'un groupe.
-      final g = groupe.valueOrNull;
-      nom = g?.repondantNom ?? g?.nom ?? '…';
-    } else {
-      final client = ref.watch(clientParIdProvider(item.rdv.clientId));
-      nom = client.valueOrNull?.nomComplet ?? '…';
-    }
+    final nom = _nomPour(item);
     final fondLigne = item.urgent
         ? const Color(0xFFFBE4E1)
         : (index.isEven ? Colors.white : const Color(0xFFF6F3EE));
