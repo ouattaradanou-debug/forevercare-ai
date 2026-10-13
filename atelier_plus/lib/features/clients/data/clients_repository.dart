@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/client.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
@@ -88,37 +89,68 @@ class ClientsRepository {
     return miseAJour;
   }
 
-  /// Supprime définitivement un client et tout ce qui lui est associé
-  /// (mesures, photos, rendez-vous, commande, paiements) — réservé au
-  /// propriétaire, la RLS `clients_delete` l'impose de toute façon côté
-  /// serveur.
+  /// Vrai si ce client a été enregistré il y a moins de deux semaines (voir
+  /// AppConstants.dureeConservationFinances) : le supprimer purge alors
+  /// aussi ses commandes/paiements, probablement une erreur de saisie
+  /// récente plutôt que des finances déjà comptabilisées.
+  bool _recent(DateTime createdAt) =>
+      DateTime.now().toUtc().difference(createdAt) < AppConstants.dureeConservationFinances;
+
+  /// Supprime un client — réservé au propriétaire, la RLS `clients_delete`
+  /// (ou la politique restrictive sur `supprime_le`) l'impose de toute
+  /// façon côté serveur.
   ///
-  /// Suppression locale d'abord, comme le reste de ce repository : la fiche
-  /// disparaît immédiatement de l'écran, sans attendre une réponse serveur
-  /// ni même une connexion. L'envoi au serveur est tenté juste après, sans
-  /// bloquer l'appelant ; s'il échoue (hors-ligne), il est mis en file
-  /// d'attente et rejoué automatiquement au retour de la connexion (voir
-  /// data/sync/). Le `on delete cascade` du schéma Postgres supprime alors
-  /// lui-même mesures/photos/rendez-vous/commande/paiements en une seule
-  /// suppression côté serveur, sans qu'il soit nécessaire de les mettre en
-  /// file d'attente séparément.
+  /// Un client enregistré depuis moins de deux semaines est réellement
+  /// supprimé, avec tout ce qui lui est associé (mesures, photos,
+  /// rendez-vous, commande, paiements) : probable erreur de saisie récente,
+  /// aucune finance n'a encore pu être comptabilisée. Au-delà de ce délai,
+  /// le client est seulement masqué (il disparaît de l'application) mais sa
+  /// commande et ses paiements sont conservés intacts, pour que les
+  /// récapitulatifs financiers de l'atelier ne reculent jamais après coup
+  /// (voir AppConstants.dureeConservationFinances).
+  ///
+  /// Dans les deux cas, suppression locale d'abord, comme le reste de ce
+  /// repository : la fiche disparaît immédiatement de l'écran, sans
+  /// attendre une réponse serveur ni même une connexion. L'envoi au serveur
+  /// est tenté juste après, sans bloquer l'appelant ; s'il échoue
+  /// (hors-ligne), il est mis en file d'attente et rejoué automatiquement
+  /// au retour de la connexion (voir data/sync/).
   Future<void> supprimerClient(Client client) async {
     await verifierEcritureAutorisee(_baseLocale, client.atelierId);
 
-    // Purge aussi toute tâche encore en attente pour ce client ou l'une de
-    // ses dépendances (ajout fait hors-ligne, jamais encore envoyé) : sans
-    // ça, elle serait "ressuscitée" dès que la file serait rejouée après
-    // cette suppression.
-    await _baseLocale.supprimerClientEtDependances(client.id);
+    if (_recent(client.createdAt)) {
+      // Purge aussi toute tâche encore en attente pour ce client ou l'une
+      // de ses dépendances (ajout fait hors-ligne, jamais encore envoyé) :
+      // sans ça, elle serait "ressuscitée" dès que la file serait rejouée
+      // après cette suppression.
+      await _baseLocale.supprimerClientEtDependances(client.id);
+      unawaited(
+        ecrireEtSynchroniser(
+          client: _client,
+          baseLocale: _baseLocale,
+          table: 'clients',
+          recordId: client.id,
+          operation: 'delete',
+          payload: const {},
+        ),
+      );
+      return;
+    }
 
+    final quand = DateTime.now().toUtc();
+    await _baseLocale.masquerClientConserverFinances(client.id, quand);
     unawaited(
       ecrireEtSynchroniser(
         client: _client,
         baseLocale: _baseLocale,
         table: 'clients',
         recordId: client.id,
-        operation: 'delete',
-        payload: const {},
+        operation: 'update',
+        // `updated_at` inclus pour SyncEngine (voir _tablesAvecConflitPossible,
+        // qui compare ce champ si cette écriture doit être rejouée plus
+        // tard) — de toute façon réécrit par le déclencheur SQL
+        // `maj_updated_at` à chaque UPDATE côté serveur.
+        payload: {'supprime_le': quand.toIso8601String(), 'updated_at': quand.toIso8601String()},
       ),
     );
   }
@@ -158,6 +190,7 @@ class ClientsRepository {
       datePriseMesures: client.datePriseMesures,
       createdAt: client.createdAt,
       updatedAt: client.updatedAt,
+      supprimeLe: client.supprimeLe,
     );
   }
 }

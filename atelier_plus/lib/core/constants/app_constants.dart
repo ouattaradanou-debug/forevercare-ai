@@ -22,4 +22,15 @@ class AppConstants {
 
   // Devise affichée dans toute l'application.
   static const String codeDevise = 'FCFA';
+
+  /// Au-delà de cette ancienneté (date de création), supprimer un client ou
+  /// un groupe d'uniformes ne supprime plus ses données financières
+  /// (commandes/paiements) : elles sont conservées, détachées, pour ne
+  /// jamais faire reculer les totaux déjà comptabilisés dans les
+  /// récapitulatifs de "Suivi des finances". En-dessous de ce seuil,
+  /// l'enregistrement est considéré comme trop récent pour avoir déjà été
+  /// compté nulle part (probable erreur de saisie) et tout est supprimé
+  /// normalement. Voir ClientsRepository.supprimerClient et
+  /// GroupesUniformesRepository.supprimerGroupe.
+  static const Duration dureeConservationFinances = Duration(days: 14);
 }

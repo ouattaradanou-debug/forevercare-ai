@@ -13,6 +13,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
+import '../../../core/utils/texte_suppression_finances.dart';
 import '../../../core/widgets/ecran_photo_plein_ecran.dart';
 import '../../../core/widgets/en_tete_section.dart';
 import '../../../data/models/client.dart';
@@ -265,7 +266,8 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
         title: const Text('Supprimer ce client ?'),
         content: Text(
           'Cette action supprime définitivement "${client.nomComplet}", ainsi que '
-          'toutes ses mesures, photos, rendez-vous et données financières. '
+          'toutes ses mesures, photos et rendez-vous. '
+          '${phraseDevenirFinances(client.createdAt)} '
           'Impossible à annuler.',
         ),
         actions: [

@@ -10,6 +10,7 @@ class Client {
     required this.datePriseMesures,
     required this.createdAt,
     required this.updatedAt,
+    this.supprimeLe,
   });
 
   final String id;
@@ -21,6 +22,14 @@ class Client {
   final DateTime datePriseMesures;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Non-null : client masqué (suppression demandée alors qu'il existait
+  /// déjà depuis au moins deux semaines — voir
+  /// AppConstants.dureeConservationFinances), ses commandes/paiements étant
+  /// conservés pour les récapitulatifs financiers. Absent de [versJson] :
+  /// jamais modifié via l'écriture générale, seulement par
+  /// ClientsRepository.supprimerClient.
+  final DateTime? supprimeLe;
 
   /// `prenom` ne peut jamais être vide côté base (contrainte
   /// `clients_prenom_check`) : depuis la fusion des champs "Nom" et
@@ -40,6 +49,8 @@ class Client {
       datePriseMesures: DateTime.parse(json['date_prise_mesures'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      supprimeLe:
+          json['supprime_le'] != null ? DateTime.parse(json['supprime_le'] as String) : null,
     );
   }
 

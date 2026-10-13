@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/groupe_uniforme.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
@@ -24,13 +27,15 @@ class GroupesUniformesRepository {
     String? repondantTelephone,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, atelierId);
+    final maintenant = DateTime.now().toUtc();
     final groupe = GroupeUniforme(
       id: _uuid.v4(),
       atelierId: atelierId,
       nom: nom,
       repondantNom: repondantNom,
       repondantTelephone: repondantTelephone,
-      updatedAt: DateTime.now().toUtc(),
+      updatedAt: maintenant,
+      createdAt: maintenant,
     );
 
     await _mettreEnCache(groupe);
@@ -64,6 +69,8 @@ class GroupesUniformesRepository {
       repondantNom: repondantNom,
       repondantTelephone: repondantTelephone,
       updatedAt: DateTime.now().toUtc(),
+      createdAt: groupe.createdAt,
+      supprimeLe: groupe.supprimeLe,
     );
 
     await _mettreEnCache(miseAJour);
@@ -78,17 +85,62 @@ class GroupesUniformesRepository {
     return miseAJour;
   }
 
-  /// Supprime définitivement un groupe et tout ce qui lui est associé
-  /// (membres, mesures) — réservé au propriétaire, la RLS l'impose de toute
-  /// façon côté serveur. Contrairement aux autres écritures de ce
-  /// repository, nécessite une connexion : il n'existe pas d'opération
-  /// "delete" dans la file d'attente de synchronisation (même principe que
-  /// ClientsRepository.supprimerClient), une suppression ne peut donc
-  /// jamais être mise en attente hors-ligne.
+  /// Vrai si ce groupe a été créé il y a moins de deux semaines — voir
+  /// ClientsRepository._recent, même principe et même seuil
+  /// (AppConstants.dureeConservationFinances). Ancienneté inconnue (cache
+  /// local pas encore rafraîchi depuis la dernière mise à jour de
+  /// l'application) : jamais considérée comme récente, pour ne jamais
+  /// supprimer par erreur des finances déjà comptabilisées.
+  bool _recent(DateTime? createdAt) =>
+      createdAt != null &&
+      DateTime.now().toUtc().difference(createdAt) < AppConstants.dureeConservationFinances;
+
+  /// Supprime un groupe — réservé au propriétaire, la RLS l'impose de toute
+  /// façon côté serveur (`groupes_uniformes_update`/`_delete` exigent
+  /// `est_proprietaire()` pour tout le monde, apprenti compris).
+  ///
+  /// Un groupe créé depuis moins de deux semaines est réellement supprimé,
+  /// avec tout ce qui lui est associé (membres, mesures, photos,
+  /// rendez-vous, commande, paiements) : probable erreur de saisie récente.
+  /// Au-delà de ce délai, le groupe est seulement masqué (il disparaît de
+  /// l'application) mais sa commande et ses paiements sont conservés
+  /// intacts, pour que les récapitulatifs financiers de l'atelier ne
+  /// reculent jamais après coup (voir
+  /// AppConstants.dureeConservationFinances).
+  ///
+  /// Dans les deux cas, suppression locale d'abord — même principe que
+  /// ClientsRepository.supprimerClient : la fiche disparaît immédiatement
+  /// de l'écran, sans attendre une réponse serveur ni même une connexion.
   Future<void> supprimerGroupe(GroupeUniforme groupe) async {
     await verifierEcritureAutorisee(_baseLocale, groupe.atelierId);
-    await _client.from('groupes_uniformes').delete().eq('id', groupe.id);
-    await _baseLocale.supprimerGroupeUniformeEtDependances(groupe.id);
+
+    if (_recent(groupe.createdAt)) {
+      await _baseLocale.supprimerGroupeUniformeEtDependances(groupe.id);
+      unawaited(
+        ecrireEtSynchroniser(
+          client: _client,
+          baseLocale: _baseLocale,
+          table: 'groupes_uniformes',
+          recordId: groupe.id,
+          operation: 'delete',
+          payload: const {},
+        ),
+      );
+      return;
+    }
+
+    final quand = DateTime.now().toUtc();
+    await _baseLocale.masquerGroupeConserverFinances(groupe.id, quand);
+    unawaited(
+      ecrireEtSynchroniser(
+        client: _client,
+        baseLocale: _baseLocale,
+        table: 'groupes_uniformes',
+        recordId: groupe.id,
+        operation: 'update',
+        payload: {'supprime_le': quand.toIso8601String(), 'updated_at': quand.toIso8601String()},
+      ),
+    );
   }
 
   Stream<List<GroupeUniforme>> observerGroupes(String atelierId) {
@@ -106,8 +158,16 @@ class GroupesUniformesRepository {
     try {
       final lignes =
           await _client.from('groupes_uniformes').select().eq('atelier_id', atelierId);
+      // Un groupe supprimé localement hors-ligne (créé il y a moins de deux
+      // semaines, donc réellement retiré) reste sur le serveur jusqu'à ce
+      // que cette suppression en file d'attente soit rejouée : ne pas le
+      // remettre en cache ici, sous peine de le faire réapparaître — même
+      // principe que ClientsRepository.chargerDepuisServeur.
+      final idsSupprimes = await _baseLocale.idsEnAttenteDeSuppression('groupes_uniformes');
       for (final ligne in lignes) {
-        await _mettreEnCache(GroupeUniforme.depuisJson(ligne));
+        final groupe = GroupeUniforme.depuisJson(ligne);
+        if (idsSupprimes.contains(groupe.id)) continue;
+        await _mettreEnCache(groupe);
       }
     } catch (_) {
       // Hors-ligne : le cache local existant reste utilisable.
@@ -122,6 +182,8 @@ class GroupesUniformesRepository {
       repondantNom: l.repondantNom,
       repondantTelephone: l.repondantTelephone,
       updatedAt: l.updatedAt,
+      createdAt: l.createdAt,
+      supprimeLe: l.supprimeLe,
     );
   }
 
@@ -133,6 +195,8 @@ class GroupesUniformesRepository {
       repondantNom: groupe.repondantNom,
       repondantTelephone: groupe.repondantTelephone,
       updatedAt: groupe.updatedAt,
+      createdAt: groupe.createdAt,
+      supprimeLe: groupe.supprimeLe,
     );
   }
 }

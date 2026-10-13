@@ -93,6 +93,16 @@ create table if not exists public.clients (
 create index if not exists idx_clients_atelier on public.clients (atelier_id);
 create index if not exists idx_clients_recherche on public.clients (atelier_id, nom, prenom, telephone);
 
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante) : un client "supprimé"
+-- depuis plus de deux semaines (voir AppConstants.dureeConservationFinances
+-- côté application) n'est en réalité que masqué, jamais réellement effacé
+-- de la table — ses commandes/paiements restent alors valides en base
+-- (toujours rattachés à ce client) et continuent donc à compter dans les
+-- récapitulatifs financiers de l'atelier. Un client plus récent, lui, est
+-- toujours réellement supprimé (voir clients_delete ci-dessous).
+alter table public.clients add column if not exists supprime_le timestamptz;
+
 -- Types de tenue : gabarits par défaut (atelier_id NULL, partagés par tous)
 -- ou gabarits personnalisés d'un atelier (atelier_id renseigné).
 create table if not exists public.types_tenue (
@@ -123,6 +133,12 @@ create table if not exists public.groupes_uniformes (
 );
 
 create index if not exists idx_groupes_uniformes_atelier on public.groupes_uniformes (atelier_id);
+
+-- Même principe que `clients.supprime_le` ci-dessus — pas de politique
+-- RESTRICTIVE supplémentaire nécessaire ici : `groupes_uniformes_update`
+-- (voir plus bas) exige déjà `est_proprietaire()` pour toute modification,
+-- apprenti compris.
+alter table public.groupes_uniformes add column if not exists supprime_le timestamptz;
 
 -- Membres d'un groupe d'uniformes (une personne dont on prend les mesures
 -- dans le cadre d'une commande groupée, sans fiche client individuelle).
@@ -776,6 +792,21 @@ drop policy if exists clients_delete on public.clients;
 create policy clients_delete on public.clients
   for delete to authenticated
   using (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- Masquage (colonne `supprime_le`) également réservé au propriétaire :
+-- `clients_update` ci-dessus autorise par ailleurs un apprenti disposant de
+-- la permission "modifier_client" à modifier un client, ce qui inclurait
+-- sinon aussi cette colonne. Politique RESTRICTIVE (combinée en ET, jamais
+-- en OU, avec les politiques permissives ci-dessus) : toute mise à jour
+-- doit en plus laisser `supprime_le` tel quel, sauf à être le propriétaire.
+-- Verrouille donc aussi, de fait, tout client déjà masqué contre une
+-- nouvelle modification par un apprenti.
+drop policy if exists clients_update_masquage_proprietaire on public.clients;
+create policy clients_update_masquage_proprietaire on public.clients
+  as restrictive
+  for update to authenticated
+  using (true)
+  with check (supprime_le is null or public.est_proprietaire());
 
 -- -----------------------------------------------------------------------------
 -- 5.5 TYPES_TENUE — lecture des gabarits par défaut + gabarits de l'atelier ;

@@ -93,6 +93,12 @@ class ClientEntries extends Table {
   // (NULL est trié en dernier par ORDER BY ... DESC en SQLite).
   DateTimeColumn get createdAt => dateTime().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
+  // Non-null : client "supprimé" depuis au moins deux semaines (voir
+  // AppConstants.dureeConservationFinances), seulement masqué pour que ses
+  // commandes/paiements restent valides et comptés dans les récapitulatifs
+  // financiers (voir ClientsRepository.supprimerClient). Un client plus
+  // récent est, lui, réellement retiré de cette table.
+  DateTimeColumn get supprimeLe => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -347,6 +353,14 @@ class GroupeUniformeEntries extends Table {
   TextColumn get repondantNom => text().nullable()();
   TextColumn get repondantTelephone => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
+  // Nullable pour la même raison que Client.createdAt (déjà présent côté
+  // serveur de longue date, seulement pas encore mirroré localement avant
+  // cet ajout) — nécessaire pour décider, à la suppression du groupe, si
+  // ses commandes/paiements doivent être conservés (voir
+  // AppConstants.dureeConservationFinances).
+  DateTimeColumn get createdAt => dateTime().nullable()();
+  // Même principe que Client.supprimeLe.
+  DateTimeColumn get supprimeLe => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -442,7 +456,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -600,6 +614,17 @@ class AppDatabase extends _$AppDatabase {
               await m.addColumn(photoEntries, photoEntries.cheminLocalEnAttente);
             }
           }
+          if (from < 22) {
+            // clientEntries créée dans le bloc `from < 2` ci-dessus ;
+            // groupeUniformeEntries créée dans le bloc `from < 5` ci-dessus.
+            if (from >= 2) {
+              await m.addColumn(clientEntries, clientEntries.supprimeLe);
+            }
+            if (from >= 5) {
+              await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.createdAt);
+              await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.supprimeLe);
+            }
+          }
         },
       );
 
@@ -709,6 +734,7 @@ class AppDatabase extends _$AppDatabase {
     DateTime? datePriseMesures,
     DateTime? createdAt,
     required DateTime updatedAt,
+    DateTime? supprimeLe,
   }) async {
     await into(clientEntries).insertOnConflictUpdate(
       ClientEntriesCompanion.insert(
@@ -721,6 +747,7 @@ class AppDatabase extends _$AppDatabase {
         datePriseMesures: Value(datePriseMesures),
         createdAt: Value(createdAt),
         updatedAt: updatedAt,
+        supprimeLe: Value(supprimeLe),
       ),
     );
   }
@@ -729,16 +756,23 @@ class AppDatabase extends _$AppDatabase {
     return (select(clientEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
+  /// Marque un client comme masqué (voir ClientEntries.supprimeLe) sans
+  /// toucher à aucune autre colonne.
+  Future<void> marquerClientSupprime(String id, DateTime quand) async {
+    await (update(clientEntries)..where((t) => t.id.equals(id)))
+        .write(ClientEntriesCompanion(supprimeLe: Value(quand)));
+  }
+
   /// Recherche instantanée locale par nom, prénom ou téléphone — c'est le
   /// chemin de lecture normal de l'écran liste des clients (hors-ligne au
   /// quotidien). Du plus récent au plus ancien, comme dans l'ancienne
-  /// application.
+  /// application. Exclut tout client masqué (voir ClientEntries.supprimeLe).
   Stream<List<ClientEntry>> rechercherClients(String atelierId, String requete) {
     final termeRecherche = requete.trim();
     final motif = '%$termeRecherche%';
     return (select(clientEntries)
           ..where((t) {
-            final memeAtelier = t.atelierId.equals(atelierId);
+            final memeAtelier = t.atelierId.equals(atelierId) & t.supprimeLe.isNull();
             if (termeRecherche.isEmpty) return memeAtelier;
             final correspond = t.nom.like(motif) | t.prenom.like(motif) | t.telephone.like(motif);
             return memeAtelier & correspond;
@@ -800,6 +834,43 @@ class AppDatabase extends _$AppDatabase {
       await (delete(photoEntries)..where((t) => t.clientId.equals(clientId))).go();
       await (delete(rendezVousEntries)..where((t) => t.clientId.equals(clientId))).go();
       await (delete(clientEntries)..where((t) => t.id.equals(clientId))).go();
+    });
+  }
+
+  /// Variante de [supprimerClientEtDependances] pour un client enregistré
+  /// depuis au moins deux semaines (voir AppConstants.dureeConservationFinances) :
+  /// mesures/photos/rendez-vous sont bien supprimés, mais les commandes et
+  /// leurs paiements sont conservés intacts (jamais touchés ici), et le
+  /// client lui-même est seulement masqué (voir [marquerClientSupprime]),
+  /// pas retiré de la table — pour que ses commandes/paiements restent
+  /// valides en base et continuent de compter dans les récapitulatifs
+  /// financiers de l'atelier. Voir ClientsRepository.supprimerClient.
+  Future<void> masquerClientConserverFinances(String clientId, DateTime quand) async {
+    await transaction(() async {
+      final mesures = await (select(mesureEntries)..where((t) => t.clientId.equals(clientId))).get();
+      for (final mesure in mesures) {
+        await retirerTachesPourEnregistrement('mesures', mesure.id);
+      }
+      final photos = await (select(photoEntries)..where((t) => t.clientId.equals(clientId))).get();
+      for (final photo in photos) {
+        await retirerTachesPourEnregistrement('photos', photo.id);
+        final cheminLocal = photo.cheminLocalEnAttente;
+        if (cheminLocal != null) {
+          final fichierLocal = File(cheminLocal);
+          if (await fichierLocal.exists()) await fichierLocal.delete();
+        }
+      }
+      final rendezVous =
+          await (select(rendezVousEntries)..where((t) => t.clientId.equals(clientId))).get();
+      for (final rdv in rendezVous) {
+        await retirerTachesPourEnregistrement('rendez_vous', rdv.id);
+      }
+
+      await (delete(mesureEntries)..where((t) => t.clientId.equals(clientId))).go();
+      await (delete(photoEntries)..where((t) => t.clientId.equals(clientId))).go();
+      await (delete(rendezVousEntries)..where((t) => t.clientId.equals(clientId))).go();
+      await (update(clientEntries)..where((t) => t.id.equals(clientId)))
+          .write(ClientEntriesCompanion(supprimeLe: Value(quand)));
     });
   }
 
@@ -1432,6 +1503,8 @@ class AppDatabase extends _$AppDatabase {
     String? repondantNom,
     String? repondantTelephone,
     required DateTime updatedAt,
+    DateTime? createdAt,
+    DateTime? supprimeLe,
   }) async {
     await into(groupeUniformeEntries).insertOnConflictUpdate(
       GroupeUniformeEntriesCompanion.insert(
@@ -1441,19 +1514,30 @@ class AppDatabase extends _$AppDatabase {
         repondantNom: Value(repondantNom),
         repondantTelephone: Value(repondantTelephone),
         updatedAt: updatedAt,
+        createdAt: Value(createdAt),
+        supprimeLe: Value(supprimeLe),
       ),
     );
   }
 
+  /// Exclut tout groupe masqué (voir GroupeUniformeEntries.supprimeLe) —
+  /// même principe que ClientEntries.supprimeLe / rechercherClients.
   Stream<List<GroupeUniformeEntry>> observerGroupesUniformes(String atelierId) {
     return (select(groupeUniformeEntries)
-          ..where((t) => t.atelierId.equals(atelierId))
+          ..where((t) => t.atelierId.equals(atelierId) & t.supprimeLe.isNull())
           ..orderBy([(t) => OrderingTerm.asc(t.nom)]))
         .watch();
   }
 
   Future<GroupeUniformeEntry?> groupeUniformeParId(String id) {
     return (select(groupeUniformeEntries)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  /// Marque un groupe comme masqué (voir GroupeUniformeEntries.supprimeLe)
+  /// sans toucher à aucune autre colonne.
+  Future<void> marquerGroupeSupprime(String id, DateTime quand) async {
+    await (update(groupeUniformeEntries)..where((t) => t.id.equals(id)))
+        .write(GroupeUniformeEntriesCompanion(supprimeLe: Value(quand)));
   }
 
   /// Supprime un groupe d'uniformes du cache local, avec ses membres et
@@ -1518,6 +1602,54 @@ class AppDatabase extends _$AppDatabase {
       await (delete(rendezVousGroupeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(membreGroupeUniformeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
       await (delete(groupeUniformeEntries)..where((t) => t.id.equals(groupeId))).go();
+    });
+  }
+
+  /// Variante de [supprimerGroupeUniformeEtDependances] pour un groupe
+  /// enregistré depuis au moins deux semaines (voir
+  /// AppConstants.dureeConservationFinances) : membres, leurs mesures,
+  /// photos et rendez-vous sont bien supprimés, mais la commande du groupe
+  /// et ses paiements sont conservés intacts (jamais touchés ici), et le
+  /// groupe lui-même est seulement masqué (voir [marquerGroupeSupprime]),
+  /// pas retiré de la table — même principe que
+  /// [masquerClientConserverFinances]. Voir GroupesUniformesRepository.
+  /// supprimerGroupe.
+  Future<void> masquerGroupeConserverFinances(String groupeId, DateTime quand) async {
+    await transaction(() async {
+      final membres = await (select(membreGroupeUniformeEntries)
+            ..where((t) => t.groupeId.equals(groupeId)))
+          .get();
+      for (final membre in membres) {
+        final mesures = await (select(mesureUniformeEntries)
+              ..where((t) => t.membreId.equals(membre.id)))
+            .get();
+        for (final mesure in mesures) {
+          await retirerTachesPourEnregistrement('mesures_uniforme', mesure.id);
+        }
+        await retirerTachesPourEnregistrement('membres_groupe_uniforme', membre.id);
+        await (delete(mesureUniformeEntries)..where((t) => t.membreId.equals(membre.id))).go();
+      }
+      final photos = await (select(photoEntries)..where((t) => t.groupeId.equals(groupeId))).get();
+      for (final photo in photos) {
+        await retirerTachesPourEnregistrement('photos', photo.id);
+        final cheminLocal = photo.cheminLocalEnAttente;
+        if (cheminLocal != null) {
+          final fichierLocal = File(cheminLocal);
+          if (await fichierLocal.exists()) await fichierLocal.delete();
+        }
+      }
+      final rdvGroupe = await (select(rendezVousGroupeEntries)
+            ..where((t) => t.groupeId.equals(groupeId)))
+          .get();
+      for (final rdv in rdvGroupe) {
+        await retirerTachesPourEnregistrement('rendez_vous_groupe', rdv.id);
+      }
+
+      await (delete(photoEntries)..where((t) => t.groupeId.equals(groupeId))).go();
+      await (delete(rendezVousGroupeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
+      await (delete(membreGroupeUniformeEntries)..where((t) => t.groupeId.equals(groupeId))).go();
+      await (update(groupeUniformeEntries)..where((t) => t.id.equals(groupeId)))
+          .write(GroupeUniformeEntriesCompanion(supprimeLe: Value(quand)));
     });
   }
 

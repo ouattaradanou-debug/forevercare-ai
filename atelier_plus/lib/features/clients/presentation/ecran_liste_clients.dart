@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../../../core/router/app_router.dart';
+import '../../../core/utils/texte_suppression_finances.dart';
 import '../../../data/models/client.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../permissions/providers/permissions_providers.dart';
@@ -100,7 +101,8 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
         title: const Text('Supprimer ce client ?'),
         content: Text(
           'Cette action supprime définitivement "${client.nomComplet}", ainsi que '
-          'toutes ses mesures, photos, rendez-vous et données financières. '
+          'toutes ses mesures, photos et rendez-vous. '
+          '${phraseDevenirFinances(client.createdAt)} '
           'Impossible à annuler.',
         ),
         actions: [

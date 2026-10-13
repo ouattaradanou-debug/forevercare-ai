@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/gestion_erreurs.dart';
+import '../../../core/utils/texte_suppression_finances.dart';
 import '../../../data/models/groupe_uniforme.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../providers/uniformes_providers.dart';
@@ -254,7 +255,9 @@ class _EcranGroupesUniformesState extends ConsumerState<EcranGroupesUniformes> {
         title: const Text('Supprimer ce groupe ?'),
         content: Text(
           'Cette action supprime définitivement "${groupe.nom}", ainsi que tous '
-          'ses membres et leurs mesures. Impossible à annuler.',
+          'ses membres et leurs mesures. '
+          '${phraseDevenirFinances(groupe.createdAt)} '
+          'Impossible à annuler.',
         ),
         actions: [
           TextButton(
