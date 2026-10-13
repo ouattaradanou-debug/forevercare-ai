@@ -353,6 +353,14 @@ create table if not exists public.rendez_vous (
 
 alter table public.rendez_vous add column if not exists urgent boolean not null default false;
 
+-- Le client est-il venu récupérer sa tenue à ce rendez-vous (typiquement
+-- une livraison) ? `tenue_retiree_le` sert à faire disparaître
+-- automatiquement le rendez-vous de la liste 10 minutes après ce marquage
+-- (filtre applicatif, voir EcranListeRendezVous), sans jamais supprimer la
+-- ligne elle-même (conservée pour l'historique).
+alter table public.rendez_vous add column if not exists tenue_retiree boolean not null default false;
+alter table public.rendez_vous add column if not exists tenue_retiree_le timestamptz;
+
 create index if not exists idx_rdv_atelier_date on public.rendez_vous (atelier_id, date_heure);
 create index if not exists idx_rdv_client on public.rendez_vous (client_id);
 
@@ -438,6 +446,10 @@ create table if not exists public.rendez_vous_groupe (
 );
 
 create index if not exists idx_rdv_groupe_atelier_date on public.rendez_vous_groupe (atelier_id, date_heure);
+
+-- Même principe que rendez_vous.tenue_retiree ci-dessus.
+alter table public.rendez_vous_groupe add column if not exists tenue_retiree boolean not null default false;
+alter table public.rendez_vous_groupe add column if not exists tenue_retiree_le timestamptz;
 create index if not exists idx_rdv_groupe_groupe on public.rendez_vous_groupe (groupe_id);
 
 -- Dépenses de l'atelier (loyer, fournitures, etc.). Table financière — même

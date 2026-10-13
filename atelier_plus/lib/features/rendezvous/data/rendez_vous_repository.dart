@@ -31,6 +31,8 @@ class RendezVousRepository {
         statut: ligne.statut,
         urgent: ligne.urgent,
         updatedAt: ligne.updatedAt,
+        tenueRetiree: ligne.tenueRetiree,
+        tenueRetireeLe: ligne.tenueRetireeLe,
       );
 
   Future<RendezVous> creerRendezVous({
@@ -94,20 +96,40 @@ class RendezVousRepository {
   }
 
   /// Corrige un rendez-vous déjà enregistré (erreur de saisie sur la date,
-  /// l'heure ou le type) et permet de le marquer urgent. [nomClientPourRappel]
-  /// permet de reprogrammer le rappel si la date ou l'heure a changé.
+  /// l'heure ou le type), permet de le marquer urgent et/ou "tenue
+  /// retirée" (le client est venu récupérer sa tenue — fait alors
+  /// disparaître automatiquement ce rendez-vous de la liste 10 minutes
+  /// plus tard, voir EcranListeRendezVous). [nomClientPourRappel] permet
+  /// de reprogrammer le rappel si la date ou l'heure a changé.
   Future<RendezVous> modifierRendezVous({
     required RendezVous existant,
     required DateTime dateHeure,
     required String type,
     required bool urgent,
+    required bool tenueRetiree,
     required String nomClientPourRappel,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, existant.atelierId);
     // Même précaution que ArticlesRepository.modifierArticle : purge
     // d'abord toute tâche de synchronisation périmée pour ce rendez-vous.
     await _baseLocale.retirerTachesPourEnregistrement('rendez_vous', existant.id);
-    final miseAJour = existant.copierAvec(dateHeure: dateHeure, type: type, urgent: urgent);
+    // Horodatage fixé à la première bascule vers "retiré" (jamais
+    // réactualisé tant que la case reste cochée), effacé si décochée.
+    final tenueRetireeLe = tenueRetiree
+        ? (existant.tenueRetiree ? existant.tenueRetireeLe : DateTime.now().toUtc())
+        : null;
+    final miseAJour = RendezVous(
+      id: existant.id,
+      atelierId: existant.atelierId,
+      clientId: existant.clientId,
+      dateHeure: dateHeure,
+      type: type,
+      statut: existant.statut,
+      urgent: urgent,
+      updatedAt: DateTime.now().toUtc(),
+      tenueRetiree: tenueRetiree,
+      tenueRetireeLe: tenueRetireeLe,
+    );
     await _mettreEnCache(miseAJour);
     await ecrireEtSynchroniser(
       client: _client,
@@ -155,6 +177,8 @@ class RendezVousRepository {
       statut: rdv.statut,
       urgent: rdv.urgent,
       updatedAt: rdv.updatedAt,
+      tenueRetiree: rdv.tenueRetiree,
+      tenueRetireeLe: rdv.tenueRetireeLe,
     );
   }
 }

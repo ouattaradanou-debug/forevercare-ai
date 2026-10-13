@@ -13,6 +13,8 @@ class RendezVousGroupe {
     required this.statut,
     this.urgent = false,
     required this.updatedAt,
+    this.tenueRetiree = false,
+    this.tenueRetireeLe,
   });
 
   final String id;
@@ -24,6 +26,10 @@ class RendezVousGroupe {
   final bool urgent;
   final DateTime updatedAt;
 
+  /// Même principe que RendezVous.tenueRetiree/tenueRetireeLe.
+  final bool tenueRetiree;
+  final DateTime? tenueRetireeLe;
+
   factory RendezVousGroupe.depuisJson(Map<String, dynamic> json) {
     return RendezVousGroupe(
       id: json['id'] as String,
@@ -34,6 +40,10 @@ class RendezVousGroupe {
       statut: json['statut'] as String,
       urgent: json['urgent'] as bool? ?? false,
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      tenueRetiree: json['tenue_retiree'] as bool? ?? false,
+      tenueRetireeLe: json['tenue_retiree_le'] != null
+          ? DateTime.parse(json['tenue_retiree_le'] as String)
+          : null,
     );
   }
 
@@ -47,6 +57,8 @@ class RendezVousGroupe {
       'statut': statut,
       'urgent': urgent,
       'updated_at': updatedAt.toIso8601String(),
+      'tenue_retiree': tenueRetiree,
+      'tenue_retiree_le': tenueRetireeLe?.toIso8601String(),
     };
   }
 
@@ -55,6 +67,8 @@ class RendezVousGroupe {
     String? type,
     String? statut,
     bool? urgent,
+    bool? tenueRetiree,
+    DateTime? tenueRetireeLe,
   }) {
     return RendezVousGroupe(
       id: id,
@@ -65,6 +79,8 @@ class RendezVousGroupe {
       statut: statut ?? this.statut,
       urgent: urgent ?? this.urgent,
       updatedAt: DateTime.now().toUtc(),
+      tenueRetiree: tenueRetiree ?? this.tenueRetiree,
+      tenueRetireeLe: tenueRetireeLe ?? this.tenueRetireeLe,
     );
   }
 }

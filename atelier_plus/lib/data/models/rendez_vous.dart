@@ -9,6 +9,8 @@ class RendezVous {
     required this.statut,
     this.urgent = false,
     required this.updatedAt,
+    this.tenueRetiree = false,
+    this.tenueRetireeLe,
   });
 
   final String id;
@@ -20,6 +22,13 @@ class RendezVous {
   final bool urgent;
   final DateTime updatedAt;
 
+  /// Le client est-il venu récupérer sa tenue à ce rendez-vous ?
+  /// [tenueRetireeLe] sert à faire disparaître automatiquement ce
+  /// rendez-vous de la liste 10 minutes après ce marquage (voir
+  /// EcranListeRendezVous), sans jamais supprimer la ligne elle-même.
+  final bool tenueRetiree;
+  final DateTime? tenueRetireeLe;
+
   factory RendezVous.depuisJson(Map<String, dynamic> json) {
     return RendezVous(
       id: json['id'] as String,
@@ -30,6 +39,10 @@ class RendezVous {
       statut: json['statut'] as String,
       urgent: json['urgent'] as bool? ?? false,
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      tenueRetiree: json['tenue_retiree'] as bool? ?? false,
+      tenueRetireeLe: json['tenue_retiree_le'] != null
+          ? DateTime.parse(json['tenue_retiree_le'] as String)
+          : null,
     );
   }
 
@@ -45,6 +58,8 @@ class RendezVous {
       'statut': statut,
       'urgent': urgent,
       'updated_at': updatedAt.toIso8601String(),
+      'tenue_retiree': tenueRetiree,
+      'tenue_retiree_le': tenueRetireeLe?.toIso8601String(),
     };
   }
 
@@ -53,6 +68,8 @@ class RendezVous {
     String? type,
     String? statut,
     bool? urgent,
+    bool? tenueRetiree,
+    DateTime? tenueRetireeLe,
   }) {
     return RendezVous(
       id: id,
@@ -63,6 +80,8 @@ class RendezVous {
       statut: statut ?? this.statut,
       urgent: urgent ?? this.urgent,
       updatedAt: DateTime.now().toUtc(),
+      tenueRetiree: tenueRetiree ?? this.tenueRetiree,
+      tenueRetireeLe: tenueRetireeLe ?? this.tenueRetireeLe,
     );
   }
 }

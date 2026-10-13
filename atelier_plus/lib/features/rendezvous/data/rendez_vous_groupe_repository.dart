@@ -31,6 +31,8 @@ class RendezVousGroupeRepository {
         statut: ligne.statut,
         urgent: ligne.urgent,
         updatedAt: ligne.updatedAt,
+        tenueRetiree: ligne.tenueRetiree,
+        tenueRetireeLe: ligne.tenueRetireeLe,
       );
 
   Future<RendezVousGroupe> creerRendezVous({
@@ -95,19 +97,34 @@ class RendezVousGroupeRepository {
     return miseAJour;
   }
 
-  /// Corrige un rendez-vous de groupe déjà enregistré (date, heure, type)
-  /// et permet de le marquer urgent — même principe que
+  /// Corrige un rendez-vous de groupe déjà enregistré (date, heure, type),
+  /// permet de le marquer urgent et/ou "tenue retirée" — même principe que
   /// RendezVousRepository.modifierRendezVous.
   Future<RendezVousGroupe> modifierRendezVous({
     required RendezVousGroupe existant,
     required DateTime dateHeure,
     required String type,
     required bool urgent,
+    required bool tenueRetiree,
     required String nomGroupePourRappel,
   }) async {
     await verifierEcritureAutorisee(_baseLocale, existant.atelierId);
     await _baseLocale.retirerTachesPourEnregistrement('rendez_vous_groupe', existant.id);
-    final miseAJour = existant.copierAvec(dateHeure: dateHeure, type: type, urgent: urgent);
+    final tenueRetireeLe = tenueRetiree
+        ? (existant.tenueRetiree ? existant.tenueRetireeLe : DateTime.now().toUtc())
+        : null;
+    final miseAJour = RendezVousGroupe(
+      id: existant.id,
+      atelierId: existant.atelierId,
+      groupeId: existant.groupeId,
+      dateHeure: dateHeure,
+      type: type,
+      statut: existant.statut,
+      urgent: urgent,
+      updatedAt: DateTime.now().toUtc(),
+      tenueRetiree: tenueRetiree,
+      tenueRetireeLe: tenueRetireeLe,
+    );
     await _mettreEnCache(miseAJour);
     await ecrireEtSynchroniser(
       client: _client,
@@ -171,6 +188,8 @@ class RendezVousGroupeRepository {
       statut: rdv.statut,
       urgent: rdv.urgent,
       updatedAt: rdv.updatedAt,
+      tenueRetiree: rdv.tenueRetiree,
+      tenueRetireeLe: rdv.tenueRetireeLe,
     );
   }
 }

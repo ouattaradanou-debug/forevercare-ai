@@ -141,6 +141,8 @@ class SyncEngine {
           statut: r.statut,
           urgent: r.urgent,
           updatedAt: r.updatedAt,
+          tenueRetiree: r.tenueRetiree,
+          tenueRetireeLe: r.tenueRetireeLe,
         );
         break;
       case 'commandes':

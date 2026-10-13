@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,7 +43,14 @@ class _RdvUnifie {
   DateTime get dateHeure => _rdv?.dateHeure ?? _rdvGroupe!.dateHeure;
   String get statut => _rdv?.statut ?? _rdvGroupe!.statut;
   bool get urgent => _rdv?.urgent ?? _rdvGroupe!.urgent;
+  bool get tenueRetiree => _rdv?.tenueRetiree ?? _rdvGroupe!.tenueRetiree;
+  DateTime? get tenueRetireeLe => _rdv?.tenueRetireeLe ?? _rdvGroupe!.tenueRetireeLe;
 }
+
+/// Délai après lequel un rendez-vous marqué "tenue retirée" disparaît de la
+/// liste (jamais supprimé en base, seulement masqué ici) — voir le filtre
+/// `actifs` dans _EcranListeRendezVousState.build.
+const _delaiMasquageTenueRetiree = Duration(minutes: 10);
 
 const _bleuSeda = Color(0xFF1B4FA0);
 const _orangeSeda = Color(0xFFF5821F);
@@ -59,9 +68,19 @@ class EcranListeRendezVous extends ConsumerStatefulWidget {
 }
 
 class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
+  // Un rendez-vous marqué "tenue retirée" doit disparaître de la liste tout
+  // seul 10 minutes plus tard, sans action de l'utilisateur ni nouvelle
+  // écriture en base qui déclencherait un nouveau calcul du flux local —
+  // seul le temps qui passe change le résultat du filtre, d'où ce
+  // rafraîchissement périodique.
+  Timer? _minuteur;
+
   @override
   void initState() {
     super.initState();
+    _minuteur = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
     Future.microtask(() async {
       final utilisateur = await ref.read(utilisateurCourantProvider.future);
       if (utilisateur == null || !mounted) return;
@@ -73,12 +92,20 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     });
   }
 
-  /// Corrige un rendez-vous déjà enregistré (date, heure, type) et permet
-  /// de le marquer urgent — client ou groupe selon `item.estGroupe`.
+  @override
+  void dispose() {
+    _minuteur?.cancel();
+    super.dispose();
+  }
+
+  /// Corrige un rendez-vous déjà enregistré (date, heure, type), permet de
+  /// le marquer urgent et/ou "tenue retirée" — client ou groupe selon
+  /// `item.estGroupe`.
   Future<void> _modifier(_RdvUnifie item, String nom) async {
     var date = item.dateHeure;
     var heure = TimeOfDay.fromDateTime(item.dateHeure);
     var urgent = item.urgent;
+    var tenueRetiree = item.tenueRetiree;
 
     final resultat = await showDialog<String>(
       context: context,
@@ -120,6 +147,17 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                 value: urgent,
                 onChanged: (valeur) => setStateDialog(() => urgent = valeur),
                 title: const Text('Urgent'),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                activeColor: _bleuSeda,
+                value: tenueRetiree,
+                onChanged: (valeur) => setStateDialog(() => tenueRetiree = valeur),
+                title: const Text('Tenue retirée'),
+                subtitle: const Text(
+                  'Disparaît automatiquement de la liste 10 minutes après',
+                  style: TextStyle(fontSize: 12),
+                ),
               ),
             ],
           ),
@@ -177,6 +215,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                 dateHeure: dateHeure,
                 type: item.rdvGroupe.type,
                 urgent: urgent,
+                tenueRetiree: tenueRetiree,
                 nomGroupePourRappel: nom,
               )
           : ref.read(rendezVousRepositoryProvider).modifierRendezVous(
@@ -184,6 +223,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                 dateHeure: dateHeure,
                 type: item.rdv.type,
                 urgent: urgent,
+                tenueRetiree: tenueRetiree,
                 nomClientPourRappel: nom,
               ),
     );
@@ -216,7 +256,18 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
               ...listeClients.map(_RdvUnifie.client),
               ...listeGroupes.map(_RdvUnifie.groupe),
             ]..sort((a, b) => a.dateHeure.compareTo(b.dateHeure));
-            final actifs = liste.where((r) => r.statut != AppConstants.rdvAnnule).toList();
+            // Un rendez-vous "tenue retirée" depuis plus de 10 minutes
+            // disparaît de cette liste (jamais supprimé en base, voir
+            // _delaiMasquageTenueRetiree) — recalculé à chaque minute grâce
+            // à `_minuteur`, pas seulement quand les données changent.
+            final actifs = liste
+                .where((r) => r.statut != AppConstants.rdvAnnule)
+                .where((r) {
+                  final depuis = r.tenueRetireeLe;
+                  if (!r.tenueRetiree || depuis == null) return true;
+                  return DateTime.now().toUtc().difference(depuis) < _delaiMasquageTenueRetiree;
+                })
+                .toList();
             if (actifs.isEmpty) {
               return const Center(child: Text('Aucun rendez-vous à venir.'));
             }
@@ -307,7 +358,10 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
         GestureDetector(
           onTap: () => _afficherActions(context, ref, item),
           onLongPress: () => _modifier(item, nom),
-          child: _Cellule(nom, tronquer: false),
+          child: _Cellule(
+            item.tenueRetiree ? '$nom (Retiré)' : nom,
+            tronquer: false,
+          ),
         ),
         GestureDetector(
           onTap: () => _afficherActions(context, ref, item),

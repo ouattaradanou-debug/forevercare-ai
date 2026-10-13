@@ -185,6 +185,12 @@ class RendezVousEntries extends Table {
   TextColumn get statut => text()();
   BoolColumn get urgent => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime()();
+  // Le client est-il venu récupérer sa tenue à ce rendez-vous ?
+  // `tenueRetireeLe` sert à faire disparaître automatiquement ce
+  // rendez-vous de la liste 10 minutes après ce marquage (voir
+  // EcranListeRendezVous), sans jamais supprimer la ligne elle-même.
+  BoolColumn get tenueRetiree => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get tenueRetireeLe => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -271,6 +277,9 @@ class RendezVousGroupeEntries extends Table {
   TextColumn get statut => text()();
   BoolColumn get urgent => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime()();
+  // Même principe que RendezVousEntries.tenueRetiree.
+  BoolColumn get tenueRetiree => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get tenueRetireeLe => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -456,7 +465,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_ouvrirConnexion());
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -623,6 +632,18 @@ class AppDatabase extends _$AppDatabase {
             if (from >= 5) {
               await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.createdAt);
               await m.addColumn(groupeUniformeEntries, groupeUniformeEntries.supprimeLe);
+            }
+          }
+          if (from < 23) {
+            // rendezVousEntries créée dans le bloc `from < 3` ci-dessus ;
+            // rendezVousGroupeEntries créée dans le bloc `from < 20` ci-dessus.
+            if (from >= 3) {
+              await m.addColumn(rendezVousEntries, rendezVousEntries.tenueRetiree);
+              await m.addColumn(rendezVousEntries, rendezVousEntries.tenueRetireeLe);
+            }
+            if (from >= 20) {
+              await m.addColumn(rendezVousGroupeEntries, rendezVousGroupeEntries.tenueRetiree);
+              await m.addColumn(rendezVousGroupeEntries, rendezVousGroupeEntries.tenueRetireeLe);
             }
           }
         },
@@ -1091,6 +1112,8 @@ class AppDatabase extends _$AppDatabase {
     required String statut,
     bool urgent = false,
     required DateTime updatedAt,
+    bool tenueRetiree = false,
+    DateTime? tenueRetireeLe,
   }) async {
     await into(rendezVousEntries).insertOnConflictUpdate(
       RendezVousEntriesCompanion.insert(
@@ -1102,6 +1125,8 @@ class AppDatabase extends _$AppDatabase {
         statut: statut,
         urgent: Value(urgent),
         updatedAt: updatedAt,
+        tenueRetiree: Value(tenueRetiree),
+        tenueRetireeLe: Value(tenueRetireeLe),
       ),
     );
   }
@@ -1130,6 +1155,8 @@ class AppDatabase extends _$AppDatabase {
     required String statut,
     bool urgent = false,
     required DateTime updatedAt,
+    bool tenueRetiree = false,
+    DateTime? tenueRetireeLe,
   }) async {
     await into(rendezVousGroupeEntries).insertOnConflictUpdate(
       RendezVousGroupeEntriesCompanion.insert(
@@ -1141,6 +1168,8 @@ class AppDatabase extends _$AppDatabase {
         statut: statut,
         urgent: Value(urgent),
         updatedAt: updatedAt,
+        tenueRetiree: Value(tenueRetiree),
+        tenueRetireeLe: Value(tenueRetireeLe),
       ),
     );
   }

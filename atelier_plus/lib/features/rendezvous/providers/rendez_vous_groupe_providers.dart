@@ -36,6 +36,8 @@ final rendezVousGroupeTriesProvider = StreamProvider<List<RendezVousGroupe>>((re
                 statut: ligne.statut,
                 urgent: ligne.urgent,
                 updatedAt: ligne.updatedAt,
+                tenueRetiree: ligne.tenueRetiree,
+                tenueRetireeLe: ligne.tenueRetireeLe,
               ),
             )
             .toList(),
@@ -59,6 +61,8 @@ final rendezVousDuGroupeProvider =
                 statut: ligne.statut,
                 urgent: ligne.urgent,
                 updatedAt: ligne.updatedAt,
+                tenueRetiree: ligne.tenueRetiree,
+                tenueRetireeLe: ligne.tenueRetireeLe,
               ),
             )
             .toList(),
