@@ -61,8 +61,11 @@ class EcranCoquilleNavigation extends ConsumerWidget {
             if (utilisateur != null && !utilisateur.estProprietaire) {
               try {
                 await ref.read(permissionsRepositoryProvider).lire(utilisateur.id);
-              } catch (_) {
-                // Hors-ligne : le cache déjà présent reste utilisable.
+              } catch (e) {
+                // Hors-ligne (ou autre échec best-effort) : le cache déjà
+                // présent reste utilisable. Affiché en console (jamais à
+                // l'écran) uniquement pour le diagnostic.
+                debugPrint('Échec rafraîchissement permissions (onglet Accueil) : $e');
               }
               ref.invalidate(mesPermissionsProvider);
             }

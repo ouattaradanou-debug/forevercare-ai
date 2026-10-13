@@ -95,7 +95,12 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
         try {
           await ref.read(permissionsRepositoryProvider).lire(utilisateur.id);
           if (mounted) ref.invalidate(mesPermissionsProvider);
-        } catch (_) {}
+        } catch (e) {
+          // Affiché en console (jamais à l'écran) uniquement pour le
+          // diagnostic — voir la remarque équivalente dans
+          // EcranCoquilleNavigation.
+          debugPrint('Échec rafraîchissement permissions (ouverture accueil) : $e');
+        }
       }
     });
   }
