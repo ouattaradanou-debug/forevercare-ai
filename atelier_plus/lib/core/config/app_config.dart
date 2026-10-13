@@ -2,7 +2,7 @@
 class AppConfig {
   const AppConfig._();
 
-  static const String nomApplication = 'Atelier+';
+  static const String nomApplication = 'Atelier +';
 
   /// Durée de l'essai gratuit à la création d'un compte atelier.
   /// Doit rester cohérente avec `date_fin_essai = now() + interval '30 days'`

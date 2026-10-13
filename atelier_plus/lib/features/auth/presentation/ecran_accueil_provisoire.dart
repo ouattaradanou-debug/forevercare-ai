@@ -333,7 +333,7 @@ class _EnTete extends StatelessWidget {
                     children: [
                       atelier.when(
                         data: (a) => Text(
-                          a?.nom ?? 'Atelier+',
+                          a?.nom ?? 'Atelier +',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,

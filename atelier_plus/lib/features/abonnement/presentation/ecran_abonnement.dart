@@ -33,7 +33,7 @@ class EcranAbonnement extends ConsumerWidget {
         title: const Text('Renouveler mon abonnement'),
         content: const Text(
           'Le paiement en ligne n\'est pas encore disponible dans '
-          'l\'application. Contactez le support Atelier+ pour renouveler '
+          'l\'application. Contactez le support Atelier + pour renouveler '
           'votre abonnement — vos données restent intactes et consultables '
           'en attendant.',
         ),

@@ -107,9 +107,11 @@ class _EcranConnexionState extends ConsumerState<EcranConnexion> {
                   Icon(Icons.content_cut, size: 64, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(height: 16),
                   Text(
-                    'Atelier+',
+                    'Atelier +',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 24),
                   Image.asset('assets/images/logo_seda_tech.png', height: 36),
