@@ -229,7 +229,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                     padding: EdgeInsets.only(bottom: 10),
                     child: Text(
                       'Touchez une ligne pour changer le statut. '
-                      'Touchez "+" pour corriger ou marquer urgent.',
+                      'Touchez "+" ou faites un appui long pour corriger ou marquer urgent.',
                       style: TextStyle(fontSize: 13, color: Color(0xFF6F6259)),
                     ),
                   ),
@@ -306,10 +306,12 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
       children: [
         GestureDetector(
           onTap: () => _afficherActions(context, ref, item),
+          onLongPress: () => _modifier(item, nom),
           child: _Cellule(nom, tronquer: false),
         ),
         GestureDetector(
           onTap: () => _afficherActions(context, ref, item),
+          onLongPress: () => _modifier(item, nom),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: Column(
