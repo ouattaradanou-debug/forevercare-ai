@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../../../core/router/app_router.dart';
+import '../../../data/models/client.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../permissions/providers/permissions_providers.dart';
 import '../providers/clients_providers.dart';
@@ -89,6 +90,44 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
     );
   }
 
+  /// Supprime [client] après confirmation — réservé au propriétaire, même
+  /// principe et même suppression immédiate (y compris hors-ligne) que
+  /// EcranFicheClient._supprimerClient.
+  Future<void> _confirmerSuppression(BuildContext context, Client client) async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Supprimer ce client ?'),
+        content: Text(
+          'Cette action supprime définitivement "${client.nomComplet}", ainsi que '
+          'toutes ses mesures, photos, rendez-vous et données financières. '
+          'Impossible à annuler.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: _bleuSeda),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFB3261E)),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme != true || !mounted) return;
+
+    try {
+      await ref.read(clientsRepositoryProvider).supprimerClient(client);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final resultats = ref.watch(rechercheClientsProvider(_requete));
@@ -158,6 +197,8 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
                 title: Text(client.nomComplet),
                 subtitle: client.telephone != null ? Text(client.telephone!) : null,
                 onTap: () => context.push(AppRoutes.ficheClient(client.id)),
+                onLongPress:
+                    estProprietaire ? () => _confirmerSuppression(context, client) : null,
               );
             },
           );
