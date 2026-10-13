@@ -648,72 +648,80 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
                     enCours: _photoModeleEnCours,
                     onAjouter: () => _ajouterPhoto(TypePhoto.modele),
                   ),
-                  const SizedBox(height: 28),
-                  EnTeteSection(
-                    icone: Icons.savings_outlined,
-                    couleurFond: const Color(0xFFDCEADF),
-                    couleurIcone: const Color(0xFF2E7D32),
-                    titre: 'Finances',
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _montantTotalCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Montant total convenu (FCFA)',
-                      prefixIcon: IconButton(
-                        icon: Icon(_champEnDictee == 'montant' ? Icons.mic : Icons.mic_none),
-                        color: _champEnDictee == 'montant' ? Colors.red : _bleuSeda,
-                        onPressed: () => _basculerDictee(
-                          'montant',
-                          _montantTotalCtrl,
-                          chiffresSeulement: true,
-                        ),
-                      ),
+                  // Section Finances réservée au propriétaire — un apprenti
+                  // ne doit jamais accéder au suivi financier d'un client,
+                  // même via ce formulaire "Nouveau client" (même règle que
+                  // EcranFinancesClient, défendue aussi côté RLS sur
+                  // commandes/paiements).
+                  if (estProprietaire) ...[
+                    const SizedBox(height: 28),
+                    EnTeteSection(
+                      icone: Icons.savings_outlined,
+                      couleurFond: const Color(0xFFDCEADF),
+                      couleurIcone: const Color(0xFF2E7D32),
+                      titre: 'Finances',
                     ),
-                    onChanged: (_) => setState(() {}),
-                    onEditingComplete: _enregistrerFinances,
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _avanceCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Avance déjà payée par le client',
-                      prefixIcon: IconButton(
-                        icon: Icon(_champEnDictee == 'avance' ? Icons.mic : Icons.mic_none),
-                        color: _champEnDictee == 'avance' ? Colors.red : _bleuSeda,
-                        onPressed: () => _basculerDictee(
-                          'avance',
-                          _avanceCtrl,
-                          chiffresSeulement: true,
-                        ),
-                      ),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                    onEditingComplete: _enregistrerFinances,
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEDEAE4),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Reste à payer'),
-                        Text(
-                          Formatters.montant(
-                            (double.tryParse(_montantTotalCtrl.text.replaceAll(',', '.')) ?? 0) -
-                                (double.tryParse(_avanceCtrl.text.replaceAll(',', '.')) ?? 0),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _montantTotalCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Montant total convenu (FCFA)',
+                        prefixIcon: IconButton(
+                          icon: Icon(_champEnDictee == 'montant' ? Icons.mic : Icons.mic_none),
+                          color: _champEnDictee == 'montant' ? Colors.red : _bleuSeda,
+                          onPressed: () => _basculerDictee(
+                            'montant',
+                            _montantTotalCtrl,
+                            chiffresSeulement: true,
                           ),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                      ],
+                      ),
+                      onChanged: (_) => setState(() {}),
+                      onEditingComplete: _enregistrerFinances,
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _avanceCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Avance déjà payée par le client',
+                        prefixIcon: IconButton(
+                          icon: Icon(_champEnDictee == 'avance' ? Icons.mic : Icons.mic_none),
+                          color: _champEnDictee == 'avance' ? Colors.red : _bleuSeda,
+                          onPressed: () => _basculerDictee(
+                            'avance',
+                            _avanceCtrl,
+                            chiffresSeulement: true,
+                          ),
+                        ),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                      onEditingComplete: _enregistrerFinances,
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEDEAE4),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Reste à payer'),
+                          Text(
+                            Formatters.montant(
+                              (double.tryParse(_montantTotalCtrl.text.replaceAll(',', '.')) ??
+                                      0) -
+                                  (double.tryParse(_avanceCtrl.text.replaceAll(',', '.')) ?? 0),
+                            ),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 28),
                   EnTeteSection(
                     icone: Icons.event_available_outlined,
