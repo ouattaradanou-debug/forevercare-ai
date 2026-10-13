@@ -24,6 +24,11 @@
 -- 1. EXTENSIONS
 -- -----------------------------------------------------------------------------
 create extension if not exists "pgcrypto";
+-- Permet d'ignorer les accents dans la réponse à la question secrète (voir
+-- normaliser_reponse_secrete plus bas) : "café", "Café" et "cafe" doivent
+-- être acceptés indifféremment, le tailleur n'étant pas censé se souvenir
+-- s'il avait mis des accents.
+create extension if not exists "unaccent";
 
 -- -----------------------------------------------------------------------------
 -- 2. TABLES
@@ -69,16 +74,32 @@ create index if not exists idx_utilisateurs_atelier on public.utilisateurs (atel
 alter table public.utilisateurs add column if not exists question_secrete text;
 alter table public.utilisateurs add column if not exists reponse_secrete_hash text;
 
+-- Normalise une réponse à la question secrète avant hachage/comparaison :
+-- espaces superflus retirés, minuscules, accents ignorés — le tailleur
+-- peut répondre "Marie", "MARIE", "marie" ou "marié" indifféremment.
+-- `set search_path` inclut `extensions` : sur un projet Supabase, pgcrypto
+-- et unaccent sont le plus souvent installées dans ce schéma dédié plutôt
+-- que `public`, même quand `create extension` ci-dessus semble avoir
+-- réussi (silencieusement sans effet si déjà présentes ailleurs) —
+-- `crypt`/`gen_salt`/`unaccent` restaient donc introuvables pour ces
+-- fonctions tant que `public` seul figurait dans leur search_path.
+create or replace function public.normaliser_reponse_secrete(reponse text)
+returns text
+language sql
+immutable
+set search_path = public, extensions
+as $$
+  select lower(trim(unaccent(reponse)));
+$$;
+
 -- Définit (ou remplace) la question secrète de l'utilisateur connecté —
 -- jamais pour un autre utilisateur (toujours `auth.uid()`, jamais un
--- paramètre d'identifiant). Normalise la réponse (minuscules, espaces
--- superflus retirés) avant hachage, pour rester tolérant à la saisie lors
--- de la vérification ultérieure.
+-- paramètre d'identifiant).
 create or replace function public.definir_question_secrete(question text, reponse text)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   if auth.uid() is null then
@@ -86,7 +107,7 @@ begin
   end if;
   update public.utilisateurs
   set question_secrete = question,
-      reponse_secrete_hash = crypt(lower(trim(reponse)), gen_salt('bf'))
+      reponse_secrete_hash = crypt(normaliser_reponse_secrete(reponse), gen_salt('bf'))
   where id = auth.uid();
 end;
 $$;
@@ -103,7 +124,7 @@ create or replace function public.verifier_reponse_secrete(p_telephone text, p_r
 returns table(utilisateur_id uuid, valide boolean)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_id uuid;
@@ -118,7 +139,8 @@ begin
     return;
   end if;
 
-  return query select v_id, (crypt(lower(trim(p_reponse)), v_hash) = v_hash);
+  return query
+    select v_id, (crypt(normaliser_reponse_secrete(p_reponse), v_hash) = v_hash);
 end;
 $$;
 
