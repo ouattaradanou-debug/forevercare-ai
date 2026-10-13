@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/providers/auth_providers.dart';
 import '../../features/finances/providers/finances_providers.dart';
+import '../../features/permissions/providers/permissions_providers.dart';
 
 const _bleuSedaFonce = Color(0xFF0F3570);
 const _orangeSeda = Color(0xFFF5821F);
 
-/// Index de l'onglet "Suivi des finances" dans [_BarreNavigationBasse] —
-/// doit rester synchronisé avec l'ordre des `StatefulShellBranch` dans
-/// app_router.dart.
+/// Index des onglets "Accueil" et "Suivi des finances" dans
+/// [_BarreNavigationBasse] — doivent rester synchronisés avec l'ordre des
+/// `StatefulShellBranch` dans app_router.dart.
+const _indexAccueil = 0;
 const _indexSuiviFinances = 2;
 
 /// Coquille de navigation commune aux 4 destinations principales (Accueil,
@@ -31,7 +34,7 @@ class EcranCoquilleNavigation extends ConsumerWidget {
       body: navigationShell,
       bottomNavigationBar: _BarreNavigationBasse(
         indexActuel: navigationShell.currentIndex,
-        onTap: (index) {
+        onTap: (index) async {
           // `StatefulShellRoute.indexedStack` garde chaque onglet monté en
           // arrière-plan plutôt que de le recréer (c'est tout l'intérêt :
           // conserver le défilement, les champs en cours...). Mais
@@ -45,6 +48,24 @@ class EcranCoquilleNavigation extends ConsumerWidget {
           if (index == _indexSuiviFinances) {
             ref.invalidate(recapitulatifGlobalProvider);
             ref.invalidate(recapitulatifMensuelProvider);
+          }
+          // Même principe pour les permissions d'un apprenti : l'écran
+          // d'accueil ne les rafraîchit qu'à son tout premier montage
+          // (`initState`, voir EcranAccueilProvisoire), jamais lors d'un
+          // simple retour sur l'onglet depuis un autre — sans quoi un
+          // changement de permission fait par le propriétaire pendant que
+          // l'apprenti navigue ailleurs dans l'app resterait invisible tant
+          // qu'il ne se déconnecte pas.
+          if (index == _indexAccueil) {
+            final utilisateur = ref.read(utilisateurCourantProvider).valueOrNull;
+            if (utilisateur != null && !utilisateur.estProprietaire) {
+              try {
+                await ref.read(permissionsRepositoryProvider).lire(utilisateur.id);
+              } catch (_) {
+                // Hors-ligne : le cache déjà présent reste utilisable.
+              }
+              ref.invalidate(mesPermissionsProvider);
+            }
           }
           navigationShell.goBranch(
             index,
