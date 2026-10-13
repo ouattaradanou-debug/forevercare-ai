@@ -27,6 +27,7 @@ class PdfExportService {
 
     document.addPage(
       pw.MultiPage(
+        pageTheme: _themeFondBlanc(),
         build: (context) => [
           _entete(atelier, logo),
           pw.SizedBox(height: 20),
@@ -77,6 +78,7 @@ class PdfExportService {
 
     document.addPage(
       pw.MultiPage(
+        pageTheme: _themeFondBlanc(),
         build: (context) => [
           _enteteFacture(atelier, logo, numero, commande),
           pw.SizedBox(height: 24),
@@ -102,6 +104,20 @@ class PdfExportService {
     );
 
     return document.save();
+  }
+
+  /// Fond blanc plein sur toute la page : sans ceci, une page PDF est
+  /// transparente par défaut. Un lecteur PDF affiche cette transparence en
+  /// blanc, mais une fois la page convertie en image (facture envoyée par
+  /// WhatsApp), les zones transparentes apparaissaient noires chez le
+  /// destinataire au lieu du fond blanc vu dans l'aperçu.
+  pw.PageTheme _themeFondBlanc() {
+    return pw.PageTheme(
+      buildBackground: (context) => pw.FullPage(
+        ignoreMargins: true,
+        child: pw.Container(color: PdfColors.white),
+      ),
+    );
   }
 
   pw.Widget _entete(Atelier atelier, pw.MemoryImage? logo) {
