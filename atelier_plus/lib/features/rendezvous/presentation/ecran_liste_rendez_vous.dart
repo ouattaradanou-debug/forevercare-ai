@@ -357,6 +357,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
         : (index.isEven ? Colors.white : const Color(0xFFF6F3EE));
     final afficherBadges = item.estGroupe ||
         item.urgent ||
+        item.tenueRetiree ||
         item.statut == AppConstants.rdvConfirme ||
         item.statut == AppConstants.rdvTermine;
 
@@ -366,10 +367,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
         GestureDetector(
           onTap: () => _afficherActions(context, ref, item),
           onLongPress: () => _modifier(item, nom),
-          child: _Cellule(
-            item.tenueRetiree ? '$nom (Retiré)' : nom,
-            tronquer: false,
-          ),
+          child: _Cellule(nom, tronquer: false),
         ),
         GestureDetector(
           onTap: () => _afficherActions(context, ref, item),
@@ -394,6 +392,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                       if (item.estGroupe) const _PuceUniforme(),
                       _PuceStatut(statut: item.statut),
                       if (item.urgent) const _PuceUrgent(),
+                      if (item.tenueRetiree) const _PuceRetiree(),
                     ],
                   ),
                 ],
@@ -539,6 +538,28 @@ class _PuceUrgent extends StatelessWidget {
       decoration: BoxDecoration(color: _rougeAlerte, borderRadius: BorderRadius.circular(20)),
       child: const Text(
         'Urgent',
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+    );
+  }
+}
+
+/// Pastille "Retiré" — même violet que la pastille "Uniforme", pour
+/// signaler que le client est venu récupérer sa tenue (voir
+/// RendezVous.tenueRetiree).
+class _PuceRetiree extends StatelessWidget {
+  const _PuceRetiree();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3B3470),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: const Text(
+        'Retiré',
         style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );
