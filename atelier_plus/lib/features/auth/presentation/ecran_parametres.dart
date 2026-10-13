@@ -156,10 +156,14 @@ class EcranParametres extends ConsumerWidget {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: questionChoisie,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Question secrète'),
                     items: [
                       for (final question in questionsSecretesPredefinies)
-                        DropdownMenuItem(value: question, child: Text(question)),
+                        DropdownMenuItem(
+                          value: question,
+                          child: Text(question, softWrap: true),
+                        ),
                     ],
                     onChanged: (valeur) {
                       if (valeur != null) setState(() => questionChoisie = valeur);

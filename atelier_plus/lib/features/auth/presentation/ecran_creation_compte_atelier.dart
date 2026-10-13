@@ -167,10 +167,14 @@ class _EcranCreationCompteAtelierState
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   value: _questionChoisie,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Question secrète'),
                   items: [
                     for (final question in questionsSecretesPredefinies)
-                      DropdownMenuItem(value: question, child: Text(question)),
+                      DropdownMenuItem(
+                        value: question,
+                        child: Text(question, softWrap: true),
+                      ),
                   ],
                   onChanged: (valeur) {
                     if (valeur != null) setState(() => _questionChoisie = valeur);
