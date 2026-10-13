@@ -90,6 +90,7 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
   Widget build(BuildContext context) {
     final atelier = ref.watch(atelierCourantProvider);
     final utilisateur = ref.watch(utilisateurCourantProvider);
+    final estProprietaire = ref.watch(estProprietaireProvider);
     final tachesEnAttente = ref.watch(tachesSyncEnAttenteProvider).valueOrNull ?? 0;
 
     // Tant que utilisateurCourantProvider n'a pas encore résolu une première
@@ -121,8 +122,14 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const _CarteEssai(),
-                    const SizedBox(height: 4),
+                    // L'abonnement est celui de l'atelier, géré uniquement
+                    // par le propriétaire — un apprenti n'a pas à s'en
+                    // soucier, sa couverture s'applique déjà automatiquement
+                    // (voir la remarque équivalente dans EcranParametres).
+                    if (estProprietaire) ...[
+                      const _CarteEssai(),
+                      const SizedBox(height: 4),
+                    ],
                     Row(
                       children: const [
                         Icon(Icons.bolt, color: _CouleursAccueil.carteEssaiIcone, size: 18),

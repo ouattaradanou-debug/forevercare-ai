@@ -30,16 +30,6 @@ class EcranParametres extends ConsumerWidget {
         child: ListView(
           children: [
             ListTile(
-              leading: const Icon(Icons.card_membership_outlined, color: _bleuSeda),
-              title: const Text(
-                'Renouveler mon abonnement',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppRoutes.abonnement),
-            ),
-            const Divider(height: 1),
-            ListTile(
               leading: const Icon(Icons.brightness_6_outlined, color: _bleuSeda),
               title: const Text('Thème', style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(_libelleTheme(themeMode)),
@@ -47,6 +37,21 @@ class EcranParametres extends ConsumerWidget {
               onTap: () => _choisirTheme(context, ref, themeMode),
             ),
             if (estProprietaire) ...[
+              // L'abonnement est celui de l'atelier, pas de l'apprenti : le
+              // propriétaire seul le gère, et sa couverture s'applique déjà
+              // automatiquement à tout l'atelier (voir
+              // verifierEcritureAutorisee, qui lit l'abonnement de
+              // l'atelier, pas celui de l'utilisateur connecté).
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.card_membership_outlined, color: _bleuSeda),
+                title: const Text(
+                  'Renouveler mon abonnement',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.abonnement),
+              ),
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.diversity_3_outlined, color: _bleuSeda),
