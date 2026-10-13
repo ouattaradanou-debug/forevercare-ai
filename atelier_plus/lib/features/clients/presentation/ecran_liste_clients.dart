@@ -7,7 +7,6 @@ import '../../../core/router/app_router.dart';
 import '../../../core/utils/texte_suppression_finances.dart';
 import '../../../data/models/client.dart';
 import '../../auth/providers/auth_providers.dart';
-import '../../permissions/providers/permissions_providers.dart';
 import '../providers/clients_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -133,9 +132,7 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
   @override
   Widget build(BuildContext context) {
     final resultats = ref.watch(rechercheClientsProvider(_requete));
-    final permissions = ref.watch(mesPermissionsProvider);
     final estProprietaire = ref.watch(estProprietaireProvider);
-    final peutCreer = estProprietaire || (permissions.valueOrNull?.creerClient ?? false);
 
     return Scaffold(
       appBar: AppBar(
@@ -206,14 +203,12 @@ class _EcranListeClientsState extends ConsumerState<EcranListeClients> {
           );
         },
       ),
-      floatingActionButton: peutCreer
-          ? FloatingActionButton.extended(
-              onPressed: () => context.push(AppRoutes.creationClient),
-              backgroundColor: _orangeSeda,
-              icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
-              label: const Text('Nouveau client', style: TextStyle(color: Colors.white)),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push(AppRoutes.creationClient),
+        backgroundColor: _orangeSeda,
+        icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
+        label: const Text('Nouveau client', style: TextStyle(color: Colors.white)),
+      ),
     );
   }
 }

@@ -19,7 +19,6 @@ import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../abonnement/data/etat_abonnement.dart';
 import '../../abonnement/providers/abonnement_providers.dart';
 import '../../clients/providers/clients_providers.dart';
-import '../../permissions/providers/permissions_providers.dart';
 import '../../rendezvous/providers/rendez_vous_groupe_providers.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../../uniformes/providers/uniformes_providers.dart';
@@ -84,24 +83,6 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
       final utilisateur = await ref.read(utilisateurCourantProvider.future);
       if (utilisateur == null) return;
       await ref.read(abonnementRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
-      if (!utilisateur.estProprietaire) {
-        // Les permissions d'un apprenti ne sont sinon rapatriées qu'à la
-        // connexion (voir AuthRepository.recupererDonneesApresConnexion) :
-        // sans cet appel, un apprenti qui reste connecté plusieurs jours ne
-        // verrait jamais un changement de permission fait entre-temps par
-        // le propriétaire sans se déconnecter/reconnecter. Hors-ligne, le
-        // cache déjà présent reste utilisable (best-effort, comme le reste
-        // de l'application).
-        try {
-          await ref.read(permissionsRepositoryProvider).lire(utilisateur.id);
-          if (mounted) ref.invalidate(mesPermissionsProvider);
-        } catch (e) {
-          // Affiché en console (jamais à l'écran) uniquement pour le
-          // diagnostic — voir la remarque équivalente dans
-          // EcranCoquilleNavigation.
-          debugPrint('Échec rafraîchissement permissions (ouverture accueil) : $e');
-        }
-      }
     });
   }
 
@@ -109,23 +90,17 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
   Widget build(BuildContext context) {
     final atelier = ref.watch(atelierCourantProvider);
     final utilisateur = ref.watch(utilisateurCourantProvider);
-    final estProprietaire = ref.watch(estProprietaireProvider);
     final tachesEnAttente = ref.watch(tachesSyncEnAttenteProvider).valueOrNull ?? 0;
-    final permissions = ref.watch(mesPermissionsProvider).valueOrNull;
-    final peutCreerClient = estProprietaire || (permissions?.creerClient ?? false);
-    final peutDepenses = estProprietaire || (permissions?.enregistrerDepenses ?? false);
-    final peutVentes = estProprietaire || (permissions?.ventes ?? false);
-    final peutStock = estProprietaire || (permissions?.stock ?? false);
 
     // Tant que utilisateurCourantProvider n'a pas encore résolu une première
     // fois (bref instant à l'ouverture de l'application, avant la toute
-    // première lecture du cache local), estProprietaireProvider vaut `false`
-    // par défaut. Plutôt que de bloquer tout l'écran derrière un indicateur
+    // première lecture du cache local), on ne sait pas encore qui est
+    // connecté. Plutôt que de bloquer tout l'écran derrière un indicateur
     // de chargement (ce qui donne l'impression que l'application met plus
     // de temps à s'ouvrir, pour un gain purement visuel) ou de laisser les
-    // tuiles réservées au propriétaire/"Aujourd'hui" apparaître d'un coup
-    // sans prévenir, on affiche l'écran tout de suite avec un petit
-    // indicateur discret à la place du contenu encore en résolution.
+    // actions rapides/"Aujourd'hui" apparaître d'un coup sans prévenir, on
+    // affiche l'écran tout de suite avec un petit indicateur discret à la
+    // place du contenu encore en résolution.
     final enResolution = utilisateur.isLoading && !utilisateur.hasValue;
 
     return Scaffold(
@@ -171,59 +146,59 @@ class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire>
                       crossAxisSpacing: 6,
                       childAspectRatio: 0.92,
                       children: [
-                        if (peutCreerClient)
+                        // Le compte d'un apprenti est identique à celui du
+                        // propriétaire pour tout le travail quotidien :
+                        // aucune de ces actions n'est plus soumise à une
+                        // permission réglable par apprenti. Seuls le suivi
+                        // des finances (par client ou global) et les
+                        // réglages administratifs (équipe, types de tenue,
+                        // champs de mesure, paramètres de l'atelier)
+                        // restent réservés au propriétaire.
+                        if (enResolution)
+                          const _CarteActionChargement()
+                        else ...[
                           _CarteAction(
                             icone: Icons.person_add_alt_1_outlined,
                             libelle: 'Nouveau client',
                             couleur: const Color(0xFF1B4FA0),
                             onTap: () => context.push(AppRoutes.creationClient),
                           ),
-                        _CarteAction(
-                          icone: Icons.groups_outlined,
-                          libelle: 'Mes clients',
-                          couleur: const Color(0xFFF5821F),
-                          onTap: () => context.push(AppRoutes.clients),
-                        ),
-                        _CarteAction(
-                          icone: Icons.event_outlined,
-                          libelle: 'Rendez-vous',
-                          couleur: const Color(0xFF6741D9),
-                          onTap: () => context.push(AppRoutes.rendezVous),
-                        ),
-                        if (peutDepenses)
+                          _CarteAction(
+                            icone: Icons.groups_outlined,
+                            libelle: 'Mes clients',
+                            couleur: const Color(0xFFF5821F),
+                            onTap: () => context.push(AppRoutes.clients),
+                          ),
+                          _CarteAction(
+                            icone: Icons.event_outlined,
+                            libelle: 'Rendez-vous',
+                            couleur: const Color(0xFF6741D9),
+                            onTap: () => context.push(AppRoutes.rendezVous),
+                          ),
                           _CarteAction(
                             icone: Icons.remove_circle_outline,
                             libelle: 'Enregistrer dépenses',
                             couleur: const Color(0xFF2E7D32),
                             onTap: () => context.push(AppRoutes.nouvelleDepense),
                           ),
-                        if (peutVentes)
                           _CarteAction(
                             icone: Icons.storefront_outlined,
                             libelle: 'Ventes',
                             couleur: const Color(0xFF8456D9),
                             onTap: () => context.push(AppRoutes.ventes),
                           ),
-                        if (peutStock)
                           _CarteAction(
                             icone: Icons.inventory_2_outlined,
                             libelle: 'Stock',
                             couleur: const Color(0xFFB3261E),
                             onTap: () => context.push(AppRoutes.gestionStock),
                           ),
-                        if (!peutCreerClient &&
-                            !peutDepenses &&
-                            !peutVentes &&
-                            !peutStock &&
-                            enResolution)
-                          const _CarteActionChargement(),
+                        ],
                       ],
                     ),
                     // "Aujourd'hui" (clients/rendez-vous du jour, rappel de
                     // rendez-vous) ne contient rien de financier : visible à
-                    // tout utilisateur connecté, propriétaire ou apprenti —
-                    // contrairement aux tuiles ci-dessus (ventes/stock/
-                    // dépenses), qui restent soumises à permission.
+                    // tout utilisateur connecté, propriétaire ou apprenti.
                     if (!enResolution) ...[
                       const SizedBox(height: 8),
                       const Divider(color: Color(0xFFDDD3C8), height: 1),

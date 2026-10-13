@@ -9,11 +9,14 @@ import '../providers/permissions_providers.dart';
 /// navigation ; la RLS `permissions_update` refuse de toute façon toute
 /// écriture par quelqu'un d'autre que le propriétaire de l'atelier).
 ///
-/// Note : `modifierGabarits` est bien présent ici comme interrupteur, mais
-/// ne donne actuellement aucun droit d'écriture réel sur les gabarits côté
-/// RLS (voir supabase/README.md) — cette permission est réservée à un usage
-/// UI futur, ce qui est signalé explicitement à l'écran pour ne pas induire
-/// le propriétaire en erreur.
+/// Le compte d'un apprenti est désormais identique à celui du propriétaire
+/// pour tout le travail quotidien (clients, mesures, photos, rendez-vous,
+/// ventes, stock, dépenses) — ces droits ne sont donc plus réglables ici
+/// individuellement. Seul "Modifier les gabarits" reste un interrupteur,
+/// réservé à un usage futur : il ne donne actuellement aucun droit
+/// d'écriture réel sur les gabarits côté RLS (voir supabase/README.md), ce
+/// qui est signalé explicitement à l'écran pour ne pas induire le
+/// propriétaire en erreur.
 class EcranPanneauPermissions extends ConsumerStatefulWidget {
   const EcranPanneauPermissions({
     super.key,
@@ -85,34 +88,12 @@ class _EcranPanneauPermissionsState extends ConsumerState<EcranPanneauPermission
                 const Padding(
                   padding: EdgeInsets.all(16),
                   child: Text(
-                    'Aucune permission n\'est activée par défaut. Cet apprenti '
-                    'n\'a jamais accès aux commandes ni aux paiements, quels que '
-                    'soient les réglages ci-dessous.',
+                    'Cet apprenti a accès à tout le travail quotidien (clients, '
+                    'mesures, photos, rendez-vous, ventes, stock, dépenses), comme '
+                    'vous. Il n\'a en revanche jamais accès au suivi des finances '
+                    '(ni les commandes/paiements d\'un client, ni le récapitulatif '
+                    'global de l\'atelier).',
                   ),
-                ),
-                SwitchListTile(
-                  title: const Text('Créer une fiche client'),
-                  value: _permissions!.creerClient,
-                  onChanged: (valeur) =>
-                      _mettreAJour(_permissions!.copierAvec(creerClient: valeur)),
-                ),
-                SwitchListTile(
-                  title: const Text('Modifier une fiche client'),
-                  value: _permissions!.modifierClient,
-                  onChanged: (valeur) =>
-                      _mettreAJour(_permissions!.copierAvec(modifierClient: valeur)),
-                ),
-                SwitchListTile(
-                  title: const Text('Prendre des mesures'),
-                  value: _permissions!.prendreMesures,
-                  onChanged: (valeur) =>
-                      _mettreAJour(_permissions!.copierAvec(prendreMesures: valeur)),
-                ),
-                SwitchListTile(
-                  title: const Text('Ajouter des photos'),
-                  value: _permissions!.ajouterPhotos,
-                  onChanged: (valeur) =>
-                      _mettreAJour(_permissions!.copierAvec(ajouterPhotos: valeur)),
                 ),
                 SwitchListTile(
                   title: const Text('Modifier les gabarits de mesure'),
@@ -123,29 +104,6 @@ class _EcranPanneauPermissionsState extends ConsumerState<EcranPanneauPermission
                   value: _permissions!.modifierGabarits,
                   onChanged: (valeur) =>
                       _mettreAJour(_permissions!.copierAvec(modifierGabarits: valeur)),
-                ),
-                const Divider(height: 24),
-                SwitchListTile(
-                  title: const Text('Enregistrer des dépenses'),
-                  value: _permissions!.enregistrerDepenses,
-                  onChanged: (valeur) =>
-                      _mettreAJour(_permissions!.copierAvec(enregistrerDepenses: valeur)),
-                ),
-                SwitchListTile(
-                  title: const Text('Ventes'),
-                  subtitle: const Text(
-                    'Inclut le total des ventes du jour, visible sur cet écran.',
-                  ),
-                  value: _permissions!.ventes,
-                  onChanged: (valeur) => _mettreAJour(_permissions!.copierAvec(ventes: valeur)),
-                ),
-                SwitchListTile(
-                  title: const Text('Stock'),
-                  subtitle: const Text(
-                    'Inclut les prix unitaires des articles, visibles sur cet écran.',
-                  ),
-                  value: _permissions!.stock,
-                  onChanged: (valeur) => _mettreAJour(_permissions!.copierAvec(stock: valeur)),
                 ),
               ],
             ),

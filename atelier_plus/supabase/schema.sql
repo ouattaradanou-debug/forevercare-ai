@@ -688,6 +688,17 @@ as $$
   select coalesce(public.mon_role() = 'proprietaire', false);
 $$;
 
+-- Depuis la demande "compte apprenti identique au propriétaire (sauf
+-- argent)", ces 7 fonctions renvoient désormais TOUJOURS vrai : le travail
+-- quotidien (clients, mesures, photos, ventes, stock, dépenses) n'est plus
+-- soumis à un réglage par apprenti. Elles restent nommées/appelées comme
+-- avant dans les politiques RLS plus bas (clients_insert, mesures_all,
+-- etc.) pour ne pas avoir à les réécrire : seul leur corps change. Les
+-- colonnes correspondantes de permissions_apprenti ne sont donc plus lues
+-- ici (elles restent en base, mais sans effet) — ce qui NE change PAS :
+-- commandes/paiements (suivi financier par client) et le récapitulatif
+-- global ("Suivi des finances") restent exclusivement réservés au
+-- propriétaire, et ne passent jamais par ces fonctions.
 create or replace function public.a_permission_creer_client()
 returns boolean
 language sql
@@ -695,10 +706,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(
-    (select creer_client from public.permissions_apprenti where utilisateur_id = auth.uid()),
-    false
-  );
+  select true;
 $$;
 
 create or replace function public.a_permission_modifier_client()
@@ -708,10 +716,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(
-    (select modifier_client from public.permissions_apprenti where utilisateur_id = auth.uid()),
-    false
-  );
+  select true;
 $$;
 
 create or replace function public.a_permission_prendre_mesures()
@@ -721,10 +726,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(
-    (select prendre_mesures from public.permissions_apprenti where utilisateur_id = auth.uid()),
-    false
-  );
+  select true;
 $$;
 
 create or replace function public.a_permission_ajouter_photos()
@@ -734,14 +736,9 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(
-    (select ajouter_photos from public.permissions_apprenti where utilisateur_id = auth.uid()),
-    false
-  );
+  select true;
 $$;
 
--- Ventes/stock/dépenses de l'atelier (pas le suivi financier d'un client,
--- voir la remarque sur la table permissions_apprenti plus haut).
 create or replace function public.a_permission_ventes()
 returns boolean
 language sql
@@ -749,10 +746,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(
-    (select ventes from public.permissions_apprenti where utilisateur_id = auth.uid()),
-    false
-  );
+  select true;
 $$;
 
 create or replace function public.a_permission_stock()
@@ -762,10 +756,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(
-    (select stock from public.permissions_apprenti where utilisateur_id = auth.uid()),
-    false
-  );
+  select true;
 $$;
 
 create or replace function public.a_permission_enregistrer_depenses()
@@ -775,10 +766,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select coalesce(
-    (select enregistrer_depenses from public.permissions_apprenti where utilisateur_id = auth.uid()),
-    false
-  );
+  select true;
 $$;
 
 -- -----------------------------------------------------------------------------

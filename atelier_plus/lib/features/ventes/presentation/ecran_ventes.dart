@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/categorie_vente.dart';
-import '../../auth/providers/auth_providers.dart';
-import '../../permissions/providers/permissions_providers.dart';
 import '../providers/ventes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -16,21 +14,15 @@ const _orangeSeda = Color(0xFFF5821F);
 /// un récapitulatif du jour par catégorie, et l'accès à l'historique
 /// complet (filtrable par période et par catégorie).
 ///
-/// Accessible au propriétaire, ou à un apprenti avec la permission `ventes`
-/// (voir EcranPanneauPermissions) — vérifié ICI, avant même d'afficher
-/// l'écran, pas seulement caché dans les actions rapides de l'accueil. La
-/// RLS Supabase (`ventes_all`) applique la même règle indépendamment, en
-/// défense en profondeur. L'historique complet reste réservé au
-/// propriétaire : un apprenti autorisé à enregistrer des ventes ne voit pas
-/// pour autant tout l'historique des ventes passées.
+/// Ouvert à tout utilisateur connecté (propriétaire ou apprenti) — le
+/// compte d'un apprenti est identique à celui du propriétaire pour le
+/// travail quotidien. L'historique (voir EcranHistoriqueVentes) reste
+/// filtré au jour uniquement pour un apprenti.
 class EcranVentes extends ConsumerWidget {
   const EcranVentes({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final estProprietaire = ref.watch(estProprietaireProvider);
-    final permissions = ref.watch(mesPermissionsProvider).valueOrNull;
-    final peutVentes = estProprietaire || (permissions?.ventes ?? false);
     final ventes = ref.watch(ventesDeLAtelierProvider);
     final articles = ref.watch(articlesDeLAtelierProvider).valueOrNull ?? const [];
     final articlesEnAlerte = articles.where((a) => a.stockBas).length;
@@ -43,17 +35,7 @@ class EcranVentes extends ConsumerWidget {
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
       ),
-      body: !peutVentes
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Vous n\'avez pas accès aux ventes.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
-          : SafeArea(
+      body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -101,20 +83,18 @@ class EcranVentes extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
             ],
-            if (peutVentes) ...[
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => context.push(AppRoutes.historiqueVentes),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _bleuSeda,
-                  side: const BorderSide(color: _bleuSeda),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                icon: const Icon(Icons.history),
-                label: const Text('Historique des ventes'),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => context.push(AppRoutes.historiqueVentes),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _bleuSeda,
+                side: const BorderSide(color: _bleuSeda),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
-            ],
+              icon: const Icon(Icons.history),
+              label: const Text('Historique des ventes'),
+            ),
             const SizedBox(height: 28),
             const Text(
               'Aujourd\'hui, par catégorie',

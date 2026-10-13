@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../data/models/categorie_vente.dart';
-import '../../auth/providers/auth_providers.dart';
-import '../../permissions/providers/permissions_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
 
@@ -14,48 +12,34 @@ const _bleuSeda = Color(0xFF1B4FA0);
 /// stock" — pour que le tailleur voie toujours une seule catégorie à la
 /// fois plutôt que les trois mélangées sur un même écran.
 ///
-/// Accessible au propriétaire, ou à un apprenti avec la permission `ventes`
-/// — mais ce dernier ne voit alors que l'historique du jour (voir
+/// Ouvert à tout utilisateur connecté — un apprenti ne voit cependant que
+/// l'historique du jour une fois une catégorie choisie (voir
 /// EcranHistoriqueVentes), jamais semaine/mois/année.
 class EcranHistoriqueVentesMenu extends ConsumerWidget {
   const EcranHistoriqueVentesMenu({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final estProprietaire = ref.watch(estProprietaireProvider);
-    final permissions = ref.watch(mesPermissionsProvider).valueOrNull;
-    final peutVentes = estProprietaire || (permissions?.ventes ?? false);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historique des ventes'),
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
       ),
-      body: !peutVentes
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Vous n\'avez pas accès à l\'historique des ventes.',
-                  textAlign: TextAlign.center,
-                ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            for (final categorie in CategorieVente.values) ...[
+              _CarteHistorique(
+                categorie: categorie,
+                onTap: () => context.push(AppRoutes.historiqueVentesCategorie(categorie)),
               ),
-            )
-          : SafeArea(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  for (final categorie in CategorieVente.values) ...[
-                    _CarteHistorique(
-                      categorie: categorie,
-                      onTap: () => context.push(AppRoutes.historiqueVentesCategorie(categorie)),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ],
-              ),
-            ),
+              const SizedBox(height: 12),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

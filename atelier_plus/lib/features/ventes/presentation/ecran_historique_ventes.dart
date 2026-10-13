@@ -6,7 +6,6 @@ import '../../../data/models/categorie_vente.dart';
 import '../../../data/models/vente.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../finances/data/recapitulatif_finances.dart';
-import '../../permissions/providers/permissions_providers.dart';
 import '../providers/ventes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -19,8 +18,8 @@ enum _Periode { jour, semaine, mois, annee }
 /// le cœur du "suivi efficace" demandé : voir en un coup d'œil ce qui s'est
 /// vendu, sans mélanger les trois catégories sur un même écran.
 ///
-/// Pour un apprenti (permission `ventes`), filtré au jour uniquement, sans
-/// sélecteur de période — voir EcranHistoriqueVentesMenu.
+/// Pour un apprenti, filtré au jour uniquement, sans sélecteur de période —
+/// voir EcranHistoriqueVentesMenu.
 class EcranHistoriqueVentes extends ConsumerStatefulWidget {
   const EcranHistoriqueVentes({super.key, required this.categorie});
 
@@ -167,13 +166,11 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
   @override
   Widget build(BuildContext context) {
     final estProprietaire = ref.watch(estProprietaireProvider);
-    final permissions = ref.watch(mesPermissionsProvider).valueOrNull;
-    final peutVentes = estProprietaire || (permissions?.ventes ?? false);
     final ventes = ref.watch(ventesDeLAtelierProvider);
-    // Un apprenti autorisé (permission `ventes`) ne voit que l'historique du
-    // jour, jamais semaine/mois/année — voir la remarque sur
-    // EcranHistoriqueVentesMenu. Le sélecteur de période lui-même est caché
-    // dans ce cas (un seul choix possible ne justifie pas un sélecteur).
+    // Un apprenti ne voit que l'historique du jour, jamais semaine/mois/
+    // année — voir la remarque sur EcranHistoriqueVentesMenu. Le sélecteur
+    // de période lui-même est caché dans ce cas (un seul choix possible ne
+    // justifie pas un sélecteur).
     final periodeEffective = estProprietaire ? _periode : _Periode.jour;
     final (debut, finExclusive) = _bornesPeriode(periodeEffective);
 
@@ -183,17 +180,7 @@ class _EcranHistoriqueVentesState extends ConsumerState<EcranHistoriqueVentes> {
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
       ),
-      body: !peutVentes
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Vous n\'avez pas accès à l\'historique des ventes.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
-          : SafeArea(
+      body: SafeArea(
         child: Column(
           children: [
             if (estProprietaire)

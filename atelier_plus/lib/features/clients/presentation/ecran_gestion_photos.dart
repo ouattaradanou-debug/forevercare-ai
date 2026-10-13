@@ -9,7 +9,6 @@ import '../../../core/widgets/ecran_photo_plein_ecran.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../shared/widgets/selecteur_source_image.dart';
 import '../../auth/providers/auth_providers.dart';
-import '../../permissions/providers/permissions_providers.dart';
 import '../providers/photos_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -75,10 +74,6 @@ class _EcranGestionPhotosState extends ConsumerState<EcranGestionPhotos>
 
   @override
   Widget build(BuildContext context) {
-    final permissions = ref.watch(mesPermissionsProvider);
-    final estProprietaire = ref.watch(estProprietaireProvider);
-    final peutAjouter = estProprietaire || (permissions.valueOrNull?.ajouterPhotos ?? false);
-
     final typeOngletCourant = _ongletsCtrl.index == 0 ? TypePhoto.tissu : TypePhoto.modele;
 
     return Scaffold(
@@ -100,23 +95,21 @@ class _EcranGestionPhotosState extends ConsumerState<EcranGestionPhotos>
       body: TabBarView(
         controller: _ongletsCtrl,
         children: [
-          _GrillePhotos(clientId: widget.clientId, type: TypePhoto.tissu, peutSupprimer: peutAjouter),
-          _GrillePhotos(clientId: widget.clientId, type: TypePhoto.modele, peutSupprimer: peutAjouter),
+          _GrillePhotos(clientId: widget.clientId, type: TypePhoto.tissu, peutSupprimer: true),
+          _GrillePhotos(clientId: widget.clientId, type: TypePhoto.modele, peutSupprimer: true),
         ],
       ),
-      floatingActionButton: peutAjouter
-          ? FloatingActionButton(
-              backgroundColor: _orangeSeda,
-              onPressed: _envoiEnCours ? null : () => _ajouter(typeOngletCourant),
-              child: _envoiEnCours
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.add_a_photo, color: Colors.white),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: _orangeSeda,
+        onPressed: _envoiEnCours ? null : () => _ajouter(typeOngletCourant),
+        child: _envoiEnCours
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.add_a_photo, color: Colors.white),
+      ),
     );
   }
 }

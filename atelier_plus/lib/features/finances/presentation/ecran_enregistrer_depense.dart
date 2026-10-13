@@ -6,7 +6,6 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../core/router/app_router.dart';
 import '../../../core/utils/formatters.dart';
 import '../../auth/providers/auth_providers.dart';
-import '../../permissions/providers/permissions_providers.dart';
 import '../providers/finances_providers.dart';
 
 /// Bleu/orange du logo SEDA Tech, repris pour les écrans de dépenses.
@@ -16,10 +15,9 @@ const Color _orangeSeda = Color(0xFFF5821F);
 /// Enregistre une dépense de l'atelier (loyer, fournitures, etc.), prise en
 /// compte dans l'écran "Suivi des finances".
 ///
-/// Accessible au propriétaire, ou à un apprenti avec la permission
-/// `enregistrerDepenses` (voir EcranPanneauPermissions) — vérifié ICI, même
-/// principe que EcranVentes/EcranGestionStock. L'historique des dépenses
-/// reste réservé au propriétaire.
+/// Ouvert à tout utilisateur connecté (propriétaire ou apprenti) — le
+/// compte d'un apprenti est identique à celui du propriétaire pour le
+/// travail quotidien.
 class EcranEnregistrerDepense extends ConsumerStatefulWidget {
   const EcranEnregistrerDepense({super.key});
 
@@ -136,27 +134,13 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
 
   @override
   Widget build(BuildContext context) {
-    final estProprietaire = ref.watch(estProprietaireProvider);
-    final permissions = ref.watch(mesPermissionsProvider).valueOrNull;
-    final peutDepenses = estProprietaire || (permissions?.enregistrerDepenses ?? false);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Enregistrer une dépense'),
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
       ),
-      body: !peutDepenses
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Vous n\'avez pas accès à l\'enregistrement des dépenses.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
-          : SafeArea(
+      body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -215,17 +199,15 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
                       )
                     : const Text('Enregistrer'),
               ),
-              if (estProprietaire) ...[
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: () => context.push(AppRoutes.historiqueDepenses),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _bleuSeda,
-                    side: const BorderSide(color: _bleuSeda),
-                  ),
-                  child: const Text('Historique des dépenses'),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => context.push(AppRoutes.historiqueDepenses),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _bleuSeda,
+                  side: const BorderSide(color: _bleuSeda),
                 ),
-              ],
+                child: const Text('Historique des dépenses'),
+              ),
             ],
           ),
         ),

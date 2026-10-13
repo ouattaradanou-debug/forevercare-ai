@@ -26,7 +26,6 @@ import '../../finances/presentation/section_finances_client.dart';
 import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
 import '../../mesures/utils/choix_gabarit.dart';
-import '../../permissions/providers/permissions_providers.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/clients_providers.dart';
 import '../providers/photos_providers.dart';
@@ -135,10 +134,7 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
 
   @override
   Widget build(BuildContext context) {
-    final permissions = ref.watch(mesPermissionsProvider);
     final estProprietaire = ref.watch(estProprietaireProvider);
-    final peutModifier = estProprietaire || (permissions.valueOrNull?.modifierClient ?? false);
-    final peutPrendreMesure = estProprietaire || (permissions.valueOrNull?.prendreMesures ?? false);
 
     return FutureBuilder<_DonneesFiche?>(
       future: _chargement,
@@ -166,12 +162,11 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                 tooltip: 'Exporter la fiche en PDF',
                 onPressed: () => _exporterPdf(context, ref, client),
               ),
-              if (peutModifier)
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () =>
-                      context.push(AppRoutes.modificationClient(client.id), extra: client),
-                ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () =>
+                    context.push(AppRoutes.modificationClient(client.id), extra: client),
+              ),
               if (estProprietaire)
                 IconButton(
                   icon: const Icon(Icons.delete_outline),
@@ -190,7 +185,7 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                 couleurFond: const Color(0xFFF5DCD3),
                 couleurIcone: const Color(0xFF8A4B24),
                 titre: 'Mesures',
-                onTap: peutPrendreMesure ? () => _ouvrirPriseMesure(context, client) : null,
+                onTap: () => _ouvrirPriseMesure(context, client),
               ),
               const SizedBox(height: 12),
               _carteMesures(donnees.mesures),

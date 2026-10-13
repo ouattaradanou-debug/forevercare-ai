@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../data/models/categorie_vente.dart';
-import '../../auth/providers/auth_providers.dart';
-import '../../permissions/providers/permissions_providers.dart';
 import '../providers/ventes_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -15,17 +13,14 @@ const _rougeAlerte = Color(0xFFB3261E);
 /// même organisation que l'écran "Ventes" pour rester familière — un
 /// tailleur qui sait déjà utiliser l'un sait utiliser l'autre.
 ///
-/// Accessible au propriétaire, ou à un apprenti avec la permission `stock`
-/// (voir EcranPanneauPermissions) — vérifié ICI, même principe que
-/// EcranVentes.
+/// Ouvert à tout utilisateur connecté (propriétaire ou apprenti) — le
+/// compte d'un apprenti est identique à celui du propriétaire pour le
+/// travail quotidien.
 class EcranGestionStock extends ConsumerWidget {
   const EcranGestionStock({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final estProprietaire = ref.watch(estProprietaireProvider);
-    final permissions = ref.watch(mesPermissionsProvider).valueOrNull;
-    final peutStock = estProprietaire || (permissions?.stock ?? false);
     final articles = ref.watch(articlesDeLAtelierProvider).valueOrNull ?? const [];
     final articlesEnAlerte = articles.where((a) => a.stockBas).length;
 
@@ -35,17 +30,7 @@ class EcranGestionStock extends ConsumerWidget {
         backgroundColor: _bleuSeda,
         foregroundColor: Colors.white,
       ),
-      body: !peutStock
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Vous n\'avez pas accès au stock.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
-          : SafeArea(
+      body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
