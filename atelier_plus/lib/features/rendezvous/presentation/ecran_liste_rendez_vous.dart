@@ -250,35 +250,6 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () => Navigator.pop(context, 'enregistrer'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _orangeSeda,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      icon: const Icon(Icons.check),
-                      label: const Text('Enregistrer', style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => Navigator.pop(context, 'confirmer'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _bleuSeda,
-                        side: const BorderSide(color: _bleuSeda),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Confirmer'),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () => Navigator.pop(context, 'terminer'),
                       style: OutlinedButton.styleFrom(
@@ -291,7 +262,7 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                       label: const Text('Marquer comme terminé'),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -310,6 +281,20 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => Navigator.pop(context, 'enregistrer'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _orangeSeda,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const Icon(Icons.check),
+                      label: const Text('Enregistrer', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -319,12 +304,9 @@ class _EcranListeRendezVousState extends ConsumerState<EcranListeRendezVous> {
     );
     if (resultat == null || !mounted) return;
 
-    if (resultat == 'annuler_rdv' || resultat == 'terminer' || resultat == 'confirmer') {
-      final nouveauStatut = switch (resultat) {
-        'annuler_rdv' => AppConstants.rdvAnnule,
-        'terminer' => AppConstants.rdvTermine,
-        _ => AppConstants.rdvConfirme,
-      };
+    if (resultat == 'annuler_rdv' || resultat == 'terminer') {
+      final nouveauStatut =
+          resultat == 'annuler_rdv' ? AppConstants.rdvAnnule : AppConstants.rdvTermine;
       await executerAvecErreurAffichee(
         context,
         () => item.estGroupe
@@ -564,7 +546,7 @@ class _PuceStatut extends StatelessWidget {
         libelle = 'Confirmé';
         break;
       case AppConstants.rdvTermine:
-        couleur = const Color(0xFF546E7A);
+        couleur = const Color(0xFF66BB6A);
         libelle = 'Terminé';
         break;
       default:
