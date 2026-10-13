@@ -9,15 +9,12 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/gestion_erreurs.dart';
-import '../../../core/utils/telephone.dart';
 import '../../../data/models/commande.dart';
 import '../../../data/models/paiement.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../branding/providers/branding_providers.dart';
 import '../../clients/providers/clients_providers.dart';
 import '../data/calcul_solde.dart';
-import '../data/contact_client.dart';
-import '../data/envoi_whatsapp_natif.dart';
 import '../providers/finances_providers.dart';
 
 const _bleuSeda = Color(0xFF1B4FA0);
@@ -297,15 +294,21 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
   /// Génère la facture (convertie en image) et affiche un écran de
   /// vérification avant l'envoi : le tailleur voit la facture telle qu'elle
   /// sera reçue, puis appuie sur l'unique bouton "Envoyer via WhatsApp", qui
-  /// ouvre directement WhatsApp sur la conversation du client avec la
-  /// facture déjà jointe (voir MainActivity.kt) — le tailleur n'a plus qu'à
-  /// confirmer l'envoi dans WhatsApp. Si cela échoue (WhatsApp non installé,
-  /// ou sur iOS où ce mécanisme natif n'existe pas), on se rabat sur le menu
-  /// de partage du téléphone. La facture est en image (pas en PDF) :
-  /// WhatsApp l'affiche alors comme une photo, sans que le client ait
-  /// besoin d'une application de lecture PDF. Même avec ce mécanisme direct,
-  /// WhatsApp affiche toujours sa propre confirmation d'envoi : aucune
-  /// application tierce ne peut l'envoyer sans cette confirmation.
+  /// ouvre le menu de partage standard du téléphone — le tailleur y
+  /// choisit WhatsApp puis le contact. La facture est en image (pas en
+  /// PDF) : WhatsApp l'affiche alors comme une photo, sans que le client
+  /// ait besoin d'une application de lecture PDF.
+  ///
+  /// Un mécanisme antérieur tentait d'ouvrir directement la conversation
+  /// WhatsApp du client (sans ce choix manuel), via un canal natif Android
+  /// non documenté officiellement (un "jid" caché dans l'intent de
+  /// partage). Retiré : WhatsApp ne confirme jamais réellement avoir reçu
+  /// le fichier à ce niveau (l'appel Android réussit même si WhatsApp ne
+  /// peut pas résoudre la conversation, par exemple si le numéro n'est pas
+  /// enregistré dans les Contacts du téléphone) — ce qui produisait des
+  /// envois silencieusement sans effet, sans jamais se rabattre sur le
+  /// menu de partage. Le menu de partage standard est fiable, au prix d'un
+  /// choix manuel du contact à chaque envoi.
   Future<void> _imprimerFacture(Commande courante, List<Paiement> paiements) async {
     final atelier = await ref.read(atelierCourantProvider.future);
     final client = await ref.read(clientParIdProvider(widget.clientId).future);
@@ -359,17 +362,10 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
                   onPressed: () async {
                     Navigator.pop(context);
                     await executerAvecErreurAffichee(this.context, () async {
-                      await assurerContactTelephone(client);
                       final dossier = await getTemporaryDirectory();
                       final fichier =
                           await File('${dossier.path}/facture.png').writeAsBytes(png);
-                      final envoiDirectReussi = await envoyerFichierVersWhatsApp(
-                        cheminFichier: fichier.path,
-                        telephoneNormalise: Telephone.normaliser(client.telephone),
-                      );
-                      if (!envoiDirectReussi) {
-                        await Share.shareXFiles([XFile(fichier.path)]);
-                      }
+                      await Share.shareXFiles([XFile(fichier.path)]);
                     });
                   },
                   style: ElevatedButton.styleFrom(
