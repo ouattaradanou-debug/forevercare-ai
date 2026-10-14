@@ -116,10 +116,10 @@ class _EcranEnregistrerDepenseState extends ConsumerState<EcranEnregistrerDepens
     });
 
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       final description = _descriptionCtrl.text.trim();
       await ref.read(financesRepositoryProvider).ajouterDepense(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             montant: montant,
             description: description.isEmpty ? null : description,
             date: _date,

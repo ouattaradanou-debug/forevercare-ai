@@ -75,9 +75,9 @@ class _EcranFormulaireRendezVousState extends ConsumerState<EcranFormulaireRende
     try {
       final dateHeure =
           DateTime(_date.year, _date.month, _date.day, _heure.hour, _heure.minute);
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       await ref.read(rendezVousRepositoryProvider).creerRendezVous(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             clientId: _client!.id,
             dateHeure: dateHeure,
             type: _type,

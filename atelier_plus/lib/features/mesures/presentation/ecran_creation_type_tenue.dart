@@ -35,9 +35,9 @@ class _EcranCreationTypeTenueState extends ConsumerState<EcranCreationTypeTenue>
     });
 
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       final type = await ref.read(gabaritsRepositoryProvider).creerTypePersonnalise(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             nom: _nomCtrl.text.trim(),
             sexe: _sexe,
           );
@@ -51,6 +51,23 @@ class _EcranCreationTypeTenueState extends ConsumerState<EcranCreationTypeTenue>
 
   @override
   Widget build(BuildContext context) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
+
+    if (!estProprietaire) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Nouveau type de tenue')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Seul le propriétaire de l\'atelier peut créer un type de tenue.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Nouveau type de tenue')),
       body: SafeArea(

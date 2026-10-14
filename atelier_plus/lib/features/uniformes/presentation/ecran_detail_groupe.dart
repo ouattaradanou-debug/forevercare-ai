@@ -103,18 +103,17 @@ class _EcranDetailGroupeState extends ConsumerState<EcranDetailGroupe> {
     if (heure == null || !mounted) return;
 
     final dateHeure = DateTime(date.year, date.month, date.day, heure.hour, heure.minute);
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
-    await executerAvecErreurAffichee(
-      context,
-      () => ref.read(rendezVousGroupeRepositoryProvider).creerRendezVous(
-            atelierId: utilisateur!.atelierId,
+    await executerAvecErreurAffichee(context, () async {
+      final utilisateur = await utilisateurCourantRequis(ref);
+      await ref.read(rendezVousGroupeRepositoryProvider).creerRendezVous(
+            atelierId: utilisateur.atelierId,
             groupeId: groupe.id,
             dateHeure: dateHeure,
             type: AppConstants.rdvEssayage,
             nomGroupePourRappel: groupe.nom,
-          ),
-    );
+          );
+    });
   }
 
   Future<void> _appeler(String telephone) => executerAvecErreurAffichee(

@@ -100,6 +100,23 @@ class _EcranChampsDeMesureState extends ConsumerState<EcranChampsDeMesure> {
 
   @override
   Widget build(BuildContext context) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
+
+    if (!estProprietaire) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Champs de mesure')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Seul le propriétaire de l\'atelier peut modifier les champs de mesure.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     final utilisateur = ref.watch(utilisateurCourantProvider).valueOrNull;
 
     return Scaffold(

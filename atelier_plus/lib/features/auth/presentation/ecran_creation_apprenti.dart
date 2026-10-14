@@ -100,6 +100,23 @@ class _EcranCreationApprentiState extends ConsumerState<EcranCreationApprenti> {
 
   @override
   Widget build(BuildContext context) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
+
+    if (!estProprietaire) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Nouvel apprenti')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Seul le propriétaire de l\'atelier peut créer un compte apprenti.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Nouvel apprenti')),
       body: SafeArea(

@@ -36,6 +36,19 @@ final estProprietaireProvider = Provider<bool>((ref) {
   return utilisateur?.estProprietaire ?? false;
 });
 
+/// Lit l'utilisateur courant en levant une exception claire s'il est
+/// introuvable (cas rare mais réel : tout premier lancement hors-ligne,
+/// avant la toute première mise en cache), plutôt que de laisser un appel
+/// `utilisateur!.xxx` lever un "Null check operator used on a null value"
+/// que le tailleur (non technique) ne saurait pas interpréter.
+Future<Utilisateur> utilisateurCourantRequis(WidgetRef ref) async {
+  final utilisateur = await ref.read(utilisateurCourantProvider.future);
+  if (utilisateur == null) {
+    throw Exception('Compte introuvable. Vérifiez votre connexion et réessayez.');
+  }
+  return utilisateur;
+}
+
 /// Atelier de l'utilisateur connecté, lu depuis le cache local.
 final atelierCourantProvider = FutureProvider<Atelier?>((ref) async {
   final utilisateur = await ref.watch(utilisateurCourantProvider.future);

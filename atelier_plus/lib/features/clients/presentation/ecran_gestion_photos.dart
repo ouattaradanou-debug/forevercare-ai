@@ -53,9 +53,9 @@ class _EcranGestionPhotosState extends ConsumerState<EcranGestionPhotos>
 
     setState(() => _envoiEnCours = true);
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       await ref.read(photosRepositoryProvider).ajouterPhoto(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             clientId: widget.clientId,
             type: type,
             source: sourceImage == ImageSource.camera ? SourcePhoto.camera : SourcePhoto.galerie,

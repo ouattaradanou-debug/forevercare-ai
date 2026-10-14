@@ -1,4 +1,4 @@
-# Atelier+
+# Atelier +
 
 Application mobile de gestion de clientèle pour tailleurs et couturiers
 d'Afrique de l'Ouest — fonctionnement intégralement hors-ligne au quotidien,

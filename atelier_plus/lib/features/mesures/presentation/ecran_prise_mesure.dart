@@ -83,9 +83,9 @@ class _EcranPriseMesureState extends ConsumerState<EcranPriseMesure> {
         if (texte.isNotEmpty) valeurs[entree.key] = texte;
       }
 
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       await ref.read(mesuresRepositoryProvider).enregistrerNouvellePrise(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             clientId: widget.clientId,
             typeTenueId: widget.typeTenueId,
             valeurs: valeurs,

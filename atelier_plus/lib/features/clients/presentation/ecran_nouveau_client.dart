@@ -262,9 +262,9 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     if (client == null || !mounted) return;
 
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       await ref.read(rendezVousRepositoryProvider).creerRendezVous(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             clientId: client.id,
             dateHeure: dateHeure,
             type: AppConstants.rdvEssayage,
@@ -299,9 +299,9 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
       _erreur = null;
     });
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       final client = await ref.read(clientsRepositoryProvider).creerClient(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             nom: nom,
             // La base exige prenom non vide (clients_prenom_check) ; le
             // champ "Nom et prénom" étant fusionné à l'écran, on y répète
@@ -352,9 +352,9 @@ class _EcranNouveauClientState extends ConsumerState<EcranNouveauClient> {
     if (typeTenueId == null) return;
 
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       await ref.read(mesuresRepositoryProvider).enregistrerNouvellePrise(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             clientId: client.id,
             typeTenueId: typeTenueId,
             valeurs: valeurs,

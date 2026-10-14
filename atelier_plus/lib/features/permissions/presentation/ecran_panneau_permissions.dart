@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/permissions_apprenti.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../providers/permissions_providers.dart';
 
-/// Panneau de permissions d'un apprenti — accessible uniquement depuis
-/// l'écran "Gérer mes apprentis" (donc déjà réservé au propriétaire par la
-/// navigation ; la RLS `permissions_update` refuse de toute façon toute
-/// écriture par quelqu'un d'autre que le propriétaire de l'atelier).
+/// Panneau de permissions d'un apprenti — accessible depuis l'écran "Gérer
+/// mes apprentis", déjà réservé au propriétaire (la RLS `permissions_update`
+/// refuse de toute façon toute écriture par quelqu'un d'autre que le
+/// propriétaire de l'atelier). Vérifié ICI aussi en défense en profondeur,
+/// comme les autres écrans réservés au propriétaire : cette route reste
+/// atteignable directement (lien profond), pas seulement via la navigation.
 ///
 /// Le compte d'un apprenti est désormais identique à celui du propriétaire
 /// pour tout le travail quotidien (clients, mesures, photos, rendez-vous,
@@ -66,6 +69,23 @@ class _EcranPanneauPermissionsState extends ConsumerState<EcranPanneauPermission
 
   @override
   Widget build(BuildContext context) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
+
+    if (!estProprietaire) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Permissions — ${widget.nomApprenti}')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Seul le propriétaire de l\'atelier peut gérer les permissions.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Permissions — ${widget.nomApprenti}'),

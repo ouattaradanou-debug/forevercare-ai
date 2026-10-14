@@ -109,11 +109,11 @@ class _EcranStockCategorieState extends ConsumerState<EcranStockCategorie> {
     final prix = double.tryParse(prixCtrl.text.replaceAll(',', '.')) ?? 0;
     final quantite = double.tryParse(quantiteCtrl.text.replaceAll(',', '.')) ?? 0;
 
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
     try {
+      final utilisateur = await utilisateurCourantRequis(ref);
       await ref.read(articlesRepositoryProvider).ajouterArticle(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             categorie: widget.categorie,
             nom: nom,
             prixUnitaireDefaut: prix,

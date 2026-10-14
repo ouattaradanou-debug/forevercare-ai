@@ -113,15 +113,31 @@ class EcranGestionChamps extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final champs = ref.watch(tousLesChampsProvider(type.id));
     final estProprietaire = ref.watch(estProprietaireProvider);
-    final peutModifier = estProprietaire && !type.estGabaritParDefaut;
+
+    if (!estProprietaire) {
+      return Scaffold(
+        appBar: AppBar(title: Text(type.nom)),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Seul le propriétaire de l\'atelier peut gérer les gabarits de mesure.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final champs = ref.watch(tousLesChampsProvider(type.id));
+    final peutModifier = !type.estGabaritParDefaut;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(type.nom),
         actions: [
-          if (estProprietaire && type.estGabaritParDefaut)
+          if (type.estGabaritParDefaut)
             TextButton.icon(
               onPressed: () => _dupliquer(context, ref),
               icon: const Icon(Icons.copy_all, color: Colors.white),

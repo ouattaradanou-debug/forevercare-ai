@@ -1,4 +1,4 @@
-# Schéma Supabase — Atelier+
+# Schéma Supabase — Atelier +
 
 ## Application du schéma
 

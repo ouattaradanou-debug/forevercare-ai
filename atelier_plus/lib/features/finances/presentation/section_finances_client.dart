@@ -137,16 +137,18 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
     final valeurs = await _demanderMontants(titre: 'Nouvelle commande');
     if (valeurs == null) return;
 
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
     await executerAvecErreurAffichee(
       context,
-      () => ref.read(financesRepositoryProvider).creerNouvelleCommande(
-            atelierId: utilisateur!.atelierId,
-            clientId: widget.clientId,
-            montantTotal: valeurs.montant,
-            avance: valeurs.avance,
-          ),
+      () async {
+        final utilisateur = await utilisateurCourantRequis(ref);
+        await ref.read(financesRepositoryProvider).creerNouvelleCommande(
+              atelierId: utilisateur.atelierId,
+              clientId: widget.clientId,
+              montantTotal: valeurs.montant,
+              avance: valeurs.avance,
+            );
+      },
     );
     ref.invalidate(commandesDuClientProvider(widget.clientId));
     // Refait sauter le carrousel vers la nouvelle dernière page une fois la
@@ -223,12 +225,12 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
     final avance = double.tryParse(avanceCtrl.text.replaceAll(',', '.')) ?? 0;
     final paiement = double.tryParse(paiementCtrl.text.replaceAll(',', '.')) ?? 0;
 
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
     await executerAvecErreurAffichee(context, () async {
+      final utilisateur = await utilisateurCourantRequis(ref);
       final repo = ref.read(financesRepositoryProvider);
       await repo.modifierCommande(
-        atelierId: utilisateur!.atelierId,
+        atelierId: utilisateur.atelierId,
         commande: courante,
         montantTotal: montant,
         avance: avance,
@@ -279,16 +281,15 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
     final montant = double.tryParse(montantCtrl.text.replaceAll(',', '.')) ?? 0;
     if (montant <= 0) return;
 
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
-    await executerAvecErreurAffichee(
-      context,
-      () => ref.read(financesRepositoryProvider).ajouterPaiement(
-            atelierId: utilisateur!.atelierId,
+    await executerAvecErreurAffichee(context, () async {
+      final utilisateur = await utilisateurCourantRequis(ref);
+      await ref.read(financesRepositoryProvider).ajouterPaiement(
+            atelierId: utilisateur.atelierId,
             commandeId: commandeId,
             montant: montant,
-          ),
-    );
+          );
+    });
   }
 
   /// Génère la facture (convertie en image) et affiche un écran de
@@ -392,16 +393,15 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
   }
 
   Future<void> _basculerTenueRetiree(Commande courante, bool? valeur) async {
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
-    await executerAvecErreurAffichee(
-      context,
-      () => ref.read(financesRepositoryProvider).definirTenueRetiree(
-            atelierId: utilisateur!.atelierId,
+    await executerAvecErreurAffichee(context, () async {
+      final utilisateur = await utilisateurCourantRequis(ref);
+      await ref.read(financesRepositoryProvider).definirTenueRetiree(
+            atelierId: utilisateur.atelierId,
             commande: courante,
             tenueRetiree: valeur ?? false,
-          ),
-    );
+          );
+    });
     ref.invalidate(commandesDuClientProvider(widget.clientId));
   }
 

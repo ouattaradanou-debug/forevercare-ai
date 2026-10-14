@@ -209,10 +209,16 @@ class AuthRepository {
       contentType: 'image/png',
     );
 
+    // .select().single() : sans ceci, une mise à jour bloquée par la RLS
+    // (0 ligne affectée, ex. appelant non propriétaire) ne lève aucune
+    // exception côté PostgREST — l'échec serait resté silencieux alors que
+    // l'appelant affiche ensuite "Signature enregistrée.".
     await _client
         .from('ateliers')
         .update({'signature_url': signatureUrl})
-        .eq('id', atelierActuel.id);
+        .eq('id', atelierActuel.id)
+        .select()
+        .single();
 
     await _baseLocale.enregistrerAtelier(
       id: atelierActuel.id,
@@ -239,7 +245,14 @@ class AuthRepository {
       dossier: atelierActuel.id,
     );
 
-    await _client.from('ateliers').update({'logo_url': logoUrl}).eq('id', atelierActuel.id);
+    // Même raison que enregistrerSignatureAtelier ci-dessus : forcer une
+    // exception si la RLS bloque silencieusement la mise à jour.
+    await _client
+        .from('ateliers')
+        .update({'logo_url': logoUrl})
+        .eq('id', atelierActuel.id)
+        .select()
+        .single();
 
     await _baseLocale.enregistrerAtelier(
       id: atelierActuel.id,

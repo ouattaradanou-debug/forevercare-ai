@@ -1,5 +1,5 @@
 name: atelier_plus
-description: "Atelier+ — application de gestion de clientèle pour tailleurs et couturiers, fonctionnant intégralement hors-ligne avec synchronisation Supabase."
+description: "Atelier + — application de gestion de clientèle pour tailleurs et couturiers, fonctionnant intégralement hors-ligne avec synchronisation Supabase."
 publish_to: 'none'
 version: 0.1.0+1
 

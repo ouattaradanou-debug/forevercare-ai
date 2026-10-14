@@ -9,8 +9,10 @@ const _bleuSeda = Color(0xFF1B4FA0);
 const _orangeSeda = Color(0xFFF5821F);
 
 /// Capture de la signature manuscrite du tailleur (une fois), réutilisée
-/// ensuite sur chaque facture PDF. Réservé au propriétaire (voir
-/// `EcranParametres`, seul écran qui pointe vers cette route).
+/// ensuite sur chaque facture PDF. Réservé au propriétaire : `EcranParametres`
+/// cache déjà ce point d'entrée à un apprenti, mais la route reste
+/// atteignable directement (lien profond) — vérifié ICI aussi en défense en
+/// profondeur, comme les autres écrans réservés au propriétaire.
 class EcranSignatureAtelier extends ConsumerStatefulWidget {
   const EcranSignatureAtelier({super.key});
 
@@ -77,6 +79,23 @@ class _EcranSignatureAtelierState extends ConsumerState<EcranSignatureAtelier> {
 
   @override
   Widget build(BuildContext context) {
+    final estProprietaire = ref.watch(estProprietaireProvider);
+
+    if (!estProprietaire) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Ma signature')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Seul le propriétaire de l\'atelier peut modifier la signature.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     final atelierAsync = ref.watch(atelierCourantProvider);
 
     return Scaffold(

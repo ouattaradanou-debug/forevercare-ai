@@ -86,7 +86,7 @@ class NotificationsService {
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       // Requis par la version installée (18.0.1) du plugin, même si elle
-      // ne s'applique qu'à un iOS < 10 qu'Atelier+ ne cible pas.
+      // ne s'applique qu'à un iOS < 10 qu'Atelier + ne cible pas.
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }

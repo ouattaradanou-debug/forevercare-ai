@@ -1,4 +1,4 @@
-# Préparer Atelier+ pour Android et iOS
+# Préparer Atelier + pour Android et iOS
 
 Ce document liste les réglages natifs connus comme nécessaires, compte tenu
 des packages déjà choisis dans `pubspec.yaml`, à appliquer **après** que
@@ -53,11 +53,11 @@ requises par `image_picker` (caméra ET galerie) :
 
 ```xml
 <key>NSCameraUsageDescription</key>
-<string>Atelier+ a besoin de l'appareil photo pour prendre des photos de tissus et de modèles.</string>
+<string>Atelier + a besoin de l'appareil photo pour prendre des photos de tissus et de modèles.</string>
 <key>NSPhotoLibraryUsageDescription</key>
-<string>Atelier+ a besoin d'accéder à vos photos pour choisir des images de tissus et de modèles.</string>
+<string>Atelier + a besoin d'accéder à vos photos pour choisir des images de tissus et de modèles.</string>
 <key>NSPhotoLibraryAddUsageDescription</key>
-<string>Atelier+ a besoin d'enregistrer des photos dans votre galerie.</string>
+<string>Atelier + a besoin d'enregistrer des photos dans votre galerie.</string>
 ```
 
 ### Version minimale iOS

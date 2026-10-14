@@ -50,17 +50,16 @@ class _SectionFinancesGroupeState extends ConsumerState<SectionFinancesGroupe> {
     final valeurs = await demanderMontantsCommande(context: context, titre: 'Commande du groupe');
     if (valeurs == null) return;
 
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
-    await executerAvecErreurAffichee(
-      context,
-      () => ref.read(financesGroupeRepositoryProvider).creerNouvelleCommande(
-            atelierId: utilisateur!.atelierId,
+    await executerAvecErreurAffichee(context, () async {
+      final utilisateur = await utilisateurCourantRequis(ref);
+      await ref.read(financesGroupeRepositoryProvider).creerNouvelleCommande(
+            atelierId: utilisateur.atelierId,
             groupeId: widget.groupeId,
             montantTotal: valeurs.montant,
             avance: valeurs.avance,
-          ),
-    );
+          );
+    });
     ref.invalidate(commandesDuGroupeProvider(widget.groupeId));
   }
 
@@ -134,12 +133,12 @@ class _SectionFinancesGroupeState extends ConsumerState<SectionFinancesGroupe> {
     final avance = double.tryParse(avanceCtrl.text.replaceAll(',', '.')) ?? 0;
     final paiement = double.tryParse(paiementCtrl.text.replaceAll(',', '.')) ?? 0;
 
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
     await executerAvecErreurAffichee(context, () async {
+      final utilisateur = await utilisateurCourantRequis(ref);
       final repo = ref.read(financesGroupeRepositoryProvider);
       await repo.modifierCommande(
-        atelierId: utilisateur!.atelierId,
+        atelierId: utilisateur.atelierId,
         commande: courante,
         montantTotal: montant,
         avance: avance,
@@ -190,16 +189,15 @@ class _SectionFinancesGroupeState extends ConsumerState<SectionFinancesGroupe> {
     final montant = double.tryParse(montantCtrl.text.replaceAll(',', '.')) ?? 0;
     if (montant <= 0) return;
 
-    final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (!mounted) return;
-    await executerAvecErreurAffichee(
-      context,
-      () => ref.read(financesGroupeRepositoryProvider).ajouterPaiement(
-            atelierId: utilisateur!.atelierId,
+    await executerAvecErreurAffichee(context, () async {
+      final utilisateur = await utilisateurCourantRequis(ref);
+      await ref.read(financesGroupeRepositoryProvider).ajouterPaiement(
+            atelierId: utilisateur.atelierId,
             commandeId: commandeId,
             montant: montant,
-          ),
-    );
+          );
+    });
   }
 
   @override

@@ -133,9 +133,9 @@ class _EcranEnregistrerVenteState extends ConsumerState<EcranEnregistrerVente> {
     });
 
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       await ref.read(ventesRepositoryProvider).enregistrerVente(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             categorie: widget.categorie,
             designation: designation,
             quantite: _quantite,

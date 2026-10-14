@@ -114,9 +114,9 @@ class _EcranNouveauMembreState extends ConsumerState<EcranNouveauMembre> {
       _erreur = null;
     });
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       final membre = await ref.read(membresGroupeUniformeRepositoryProvider).ajouterMembre(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             groupeId: widget.groupeId,
             nom: nom,
             prenom: null,

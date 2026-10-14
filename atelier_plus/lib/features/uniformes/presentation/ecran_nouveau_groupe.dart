@@ -250,9 +250,9 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
     if (groupe == null || !mounted) return;
 
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       await ref.read(rendezVousGroupeRepositoryProvider).creerRendezVous(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             groupeId: groupe.id,
             dateHeure: dateHeure,
             type: AppConstants.rdvEssayage,
@@ -289,11 +289,11 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
       _erreur = null;
     });
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       final repondantNom = _repondantNomCtrl.text.trim();
       final repondantTel = _repondantTelCtrl.text.trim();
       final groupe = await ref.read(groupesUniformesRepositoryProvider).creerGroupe(
-            atelierId: utilisateur!.atelierId,
+            atelierId: utilisateur.atelierId,
             nom: nom,
             repondantNom: repondantNom.isEmpty ? null : repondantNom,
             repondantTelephone: repondantTel.isEmpty ? null : repondantTel,
@@ -398,17 +398,17 @@ class _EcranNouveauGroupeState extends ConsumerState<EcranNouveauGroupe> {
     if (montantTotal <= 0 && avance <= 0) return;
 
     try {
-      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      final utilisateur = await utilisateurCourantRequis(ref);
       final repo = ref.read(financesGroupeRepositoryProvider);
       final commande = _commandeCreee == null
           ? await repo.creerNouvelleCommande(
-              atelierId: utilisateur!.atelierId,
+              atelierId: utilisateur.atelierId,
               groupeId: groupe.id,
               montantTotal: montantTotal,
               avance: avance,
             )
           : await repo.modifierCommande(
-              atelierId: utilisateur!.atelierId,
+              atelierId: utilisateur.atelierId,
               commande: _commandeCreee!,
               montantTotal: montantTotal,
               avance: avance,
