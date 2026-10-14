@@ -27,15 +27,24 @@ class Mesure {
 
   factory Mesure.depuisJson(Map<String, dynamic> json) {
     final valeursBrutes = json['valeurs'] as Map<String, dynamic>? ?? {};
+    final datePrise = DateTime.parse(json['date_prise'] as String);
     return Mesure(
       id: json['id'] as String,
       atelierId: json['atelier_id'] as String,
       clientId: json['client_id'] as String,
       typeTenueId: json['type_tenue_id'] as String,
-      datePrise: DateTime.parse(json['date_prise'] as String),
+      datePrise: datePrise,
       valeurs: valeursBrutes.map((cle, valeur) => MapEntry(cle, valeur.toString())),
       prisePar: json['prise_par'] as String?,
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Repli sur date_prise si absent : certaines mesures plus anciennes
+      // n'ont pas de valeur pour cette colonne côté serveur — sans ce
+      // repli, une seule ligne de ce type faisait échouer tout le
+      // rapatriement (y compris les mesures des AUTRES clients dans le
+      // même lot), les faisant paraître perdues alors qu'elles existaient
+      // bien côté serveur.
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : datePrise,
     );
   }
 

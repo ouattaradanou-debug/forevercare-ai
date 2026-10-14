@@ -23,6 +23,7 @@ class CommandeGroupe {
   final DateTime updatedAt;
 
   factory CommandeGroupe.depuisJson(Map<String, dynamic> json) {
+    final createdAt = DateTime.parse(json['created_at'] as String);
     return CommandeGroupe(
       id: json['id'] as String,
       atelierId: json['atelier_id'] as String,
@@ -31,8 +32,11 @@ class CommandeGroupe {
       // `numeric` PostgREST renvoyé en nombre ou en texte.
       montantTotal: double.parse(json['montant_total'].toString()),
       avance: double.parse(json['avance'].toString()),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      // Repli sur created_at si absent (voir Mesure.depuisJson).
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : createdAt,
     );
   }
 

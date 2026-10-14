@@ -21,6 +21,7 @@ class Commande {
   final DateTime updatedAt;
 
   factory Commande.depuisJson(Map<String, dynamic> json) {
+    final createdAt = DateTime.parse(json['created_at'] as String);
     return Commande(
       id: json['id'] as String,
       atelierId: json['atelier_id'] as String,
@@ -31,8 +32,15 @@ class Commande {
       montantTotal: double.parse(json['montant_total'].toString()),
       avance: double.parse(json['avance'].toString()),
       tenueRetiree: json['tenue_retiree'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      // Repli sur created_at si absent (voir Mesure.depuisJson) : sans
+      // cela, une seule commande ancienne sans cette colonne faisait
+      // échouer tout le rapatriement des finances de CE client — les
+      // finances paraissaient alors manquantes alors qu'elles existaient
+      // bien côté serveur.
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : createdAt,
     );
   }
 

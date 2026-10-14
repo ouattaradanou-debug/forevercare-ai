@@ -31,7 +31,10 @@ class MembreGroupeUniforme {
       prenom: json['prenom'] as String?,
       sexe: json['sexe'] as String?,
       tenueTerminee: json['tenue_terminee'] as bool,
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Repli sur l'heure actuelle si absent (voir Mesure.depuisJson).
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now().toUtc(),
     );
   }
 

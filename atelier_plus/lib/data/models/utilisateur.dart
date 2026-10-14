@@ -28,7 +28,11 @@ class Utilisateur {
       nom: json['nom'] as String,
       telephone: json['telephone'] as String,
       role: RoleUtilisateur.depuisTexte(json['role'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Repli sur l'heure actuelle si absent (voir Mesure.depuisJson) :
+      // aucune autre colonne de date fiable à utiliser ici.
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now().toUtc(),
     );
   }
 }

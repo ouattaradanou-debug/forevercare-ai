@@ -31,15 +31,19 @@ class RendezVousGroupe {
   final DateTime? tenueRetireeLe;
 
   factory RendezVousGroupe.depuisJson(Map<String, dynamic> json) {
+    final dateHeure = DateTime.parse(json['date_heure'] as String);
     return RendezVousGroupe(
       id: json['id'] as String,
       atelierId: json['atelier_id'] as String,
       groupeId: json['groupe_id'] as String,
-      dateHeure: DateTime.parse(json['date_heure'] as String),
+      dateHeure: dateHeure,
       type: json['type'] as String,
       statut: json['statut'] as String,
       urgent: json['urgent'] as bool? ?? false,
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Repli sur date_heure si absent (voir Mesure.depuisJson).
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : dateHeure,
       tenueRetiree: json['tenue_retiree'] as bool? ?? false,
       tenueRetireeLe: json['tenue_retiree_le'] != null
           ? DateTime.parse(json['tenue_retiree_le'] as String)

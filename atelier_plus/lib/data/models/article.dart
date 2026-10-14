@@ -42,6 +42,7 @@ class Article {
   String get uniteAffichee => unite ?? categorie.uniteLabel;
 
   factory Article.depuisJson(Map<String, dynamic> json) {
+    final createdAt = DateTime.parse(json['created_at'] as String);
     return Article(
       id: json['id'] as String,
       atelierId: json['atelier_id'] as String,
@@ -52,8 +53,11 @@ class Article {
       prixUnitaireDefaut: double.parse(json['prix_unitaire_defaut'].toString()),
       quantiteStock: double.parse(json['quantite_stock'].toString()),
       seuilAlerte: double.parse(json['seuil_alerte'].toString()),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      // Repli sur created_at si absent (voir Mesure.depuisJson).
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : createdAt,
       unite: json['unite'] as String?,
     );
   }

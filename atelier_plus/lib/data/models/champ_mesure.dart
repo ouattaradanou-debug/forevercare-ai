@@ -41,7 +41,10 @@ class ChampMesure {
       unite: json['unite'] as String,
       statut: StatutChamp.depuisTexte(json['statut'] as String),
       ordre: json['ordre'] as int,
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Repli sur l'heure actuelle si absent (voir Mesure.depuisJson).
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now().toUtc(),
     );
   }
 }

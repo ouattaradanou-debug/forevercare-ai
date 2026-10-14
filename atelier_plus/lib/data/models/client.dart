@@ -39,6 +39,7 @@ class Client {
   String get nomComplet => (prenom.isEmpty || prenom == nom) ? nom : '$nom $prenom';
 
   factory Client.depuisJson(Map<String, dynamic> json) {
+    final createdAt = DateTime.parse(json['created_at'] as String);
     return Client(
       id: json['id'] as String,
       atelierId: json['atelier_id'] as String,
@@ -47,8 +48,14 @@ class Client {
       telephone: json['telephone'] as String,
       sexe: json['sexe'] as String,
       datePriseMesures: DateTime.parse(json['date_prise_mesures'] as String),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      // Repli sur created_at si absent : une ligne plus ancienne sans
+      // valeur pour cette colonne ne doit jamais faire échouer tout le
+      // rapatriement des clients de l'atelier (voir la même remarque sur
+      // Mesure.depuisJson).
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : createdAt,
       supprimeLe:
           json['supprime_le'] != null ? DateTime.parse(json['supprime_le'] as String) : null,
     );

@@ -25,7 +25,10 @@ class TypeTenue {
       atelierId: json['atelier_id'] as String?,
       nom: json['nom'] as String,
       sexe: json['sexe'] as String,
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Repli sur l'heure actuelle si absent (voir Mesure.depuisJson).
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : DateTime.now().toUtc(),
     );
   }
 }

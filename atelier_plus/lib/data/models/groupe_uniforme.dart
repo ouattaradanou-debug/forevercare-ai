@@ -38,7 +38,13 @@ class GroupeUniforme {
       nom: json['nom'] as String,
       repondantNom: json['repondant_nom'] as String?,
       repondantTelephone: json['repondant_telephone'] as String?,
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Repli sur created_at (ou l'heure actuelle à défaut) si absent —
+      // voir Mesure.depuisJson.
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : (json['created_at'] != null
+              ? DateTime.parse(json['created_at'] as String)
+              : DateTime.now().toUtc()),
       createdAt:
           json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
       supprimeLe:
