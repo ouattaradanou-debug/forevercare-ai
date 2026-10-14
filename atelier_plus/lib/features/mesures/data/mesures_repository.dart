@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -69,10 +70,14 @@ class MesuresRepository {
           .select()
           .eq('client_id', clientId)
           .timeout(const Duration(seconds: 6));
+      debugPrint('MesuresRepository.chargerDepuisServeur: '
+          '${lignes.length} ligne(s) reçue(s) pour client $clientId');
       for (final ligne in lignes) {
         await _mettreEnCache(Mesure.depuisJson(ligne));
       }
-    } catch (_) {
+    } catch (e, pile) {
+      debugPrint('MesuresRepository.chargerDepuisServeur: échec : $e');
+      debugPrint('$pile');
       // Hors-ligne (ou délai dépassé) : le cache existant reste utilisable.
     }
   }
@@ -90,10 +95,17 @@ class MesuresRepository {
           .select()
           .eq('atelier_id', atelierId)
           .timeout(const Duration(seconds: 20));
+      // Diagnostic temporaire (voir le terminal `flutter run`) : permet de
+      // distinguer "aucune mesure sur le serveur pour cet atelier" d'un
+      // échec de la requête, invisible autrement derrière le catch ci-dessous.
+      debugPrint('MesuresRepository.chargerToutesDepuisServeur: '
+          '${lignes.length} ligne(s) reçue(s) pour atelier $atelierId');
       for (final ligne in lignes) {
         await _mettreEnCache(Mesure.depuisJson(ligne));
       }
-    } catch (_) {
+    } catch (e, pile) {
+      debugPrint('MesuresRepository.chargerToutesDepuisServeur: échec : $e');
+      debugPrint('$pile');
       // Hors-ligne (ou délai dépassé) : le cache existant reste utilisable.
     }
   }
