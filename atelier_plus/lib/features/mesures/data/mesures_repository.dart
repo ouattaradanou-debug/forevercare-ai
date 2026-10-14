@@ -77,6 +77,27 @@ class MesuresRepository {
     }
   }
 
+  /// Rapatrie TOUTES les mesures de l'atelier en une seule requête
+  /// (contrairement à [chargerDepuisServeur], limité à un client) — appelé
+  /// une fois après chaque connexion (voir synchronisation_initiale.dart),
+  /// pour que les mesures déjà prises par le passé réapparaissent d'un
+  /// coup pour tous les clients, notamment après une réinstallation de
+  /// l'application (qui vide entièrement le cache local).
+  Future<void> chargerToutesDepuisServeur(String atelierId) async {
+    try {
+      final lignes = await _client
+          .from('mesures')
+          .select()
+          .eq('atelier_id', atelierId)
+          .timeout(const Duration(seconds: 20));
+      for (final ligne in lignes) {
+        await _mettreEnCache(Mesure.depuisJson(ligne));
+      }
+    } catch (_) {
+      // Hors-ligne (ou délai dépassé) : le cache existant reste utilisable.
+    }
+  }
+
   /// Dernières valeurs enregistrées pour ce client et ce type de tenue,
   /// utilisées pour pré-remplir le formulaire de prise de mesure.
   Future<Map<String, String>?> dernieresValeurs(String clientId, String typeTenueId) async {
