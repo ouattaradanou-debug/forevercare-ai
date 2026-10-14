@@ -53,12 +53,19 @@ class MesuresUniformeRepository {
   /// jamais visible sur un appareil qui ne l'a pas prise lui-même).
   Future<void> chargerDepuisServeur(String membreId) async {
     try {
-      final lignes = await _client.from('mesures_uniforme').select().eq('membre_id', membreId);
+      // Délai limite explicite — même raison que
+      // MesuresRepository.chargerDepuisServeur (ce rapatriement est
+      // attendu par l'écran, il ne doit jamais bloquer indéfiniment).
+      final lignes = await _client
+          .from('mesures_uniforme')
+          .select()
+          .eq('membre_id', membreId)
+          .timeout(const Duration(seconds: 6));
       for (final ligne in lignes) {
         await _mettreEnCache(MesureUniforme.depuisJson(ligne));
       }
     } catch (_) {
-      // Hors-ligne : le cache existant reste utilisable.
+      // Hors-ligne (ou délai dépassé) : le cache existant reste utilisable.
     }
   }
 

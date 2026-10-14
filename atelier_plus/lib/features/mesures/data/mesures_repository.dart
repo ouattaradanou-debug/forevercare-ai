@@ -59,12 +59,21 @@ class MesuresRepository {
   /// propriétaire), même si elle existe bien côté serveur.
   Future<void> chargerDepuisServeur(String clientId) async {
     try {
-      final lignes = await _client.from('mesures').select().eq('client_id', clientId);
+      // Délai limite explicite : la fiche client ATTEND ce rapatriement
+      // (contrairement aux autres `chargerDepuisServeur` de l'application,
+      // tous en arrière-plan) — sans cette limite, un réseau qui ne répond
+      // ni n'échoue (certains portails captifs, coupures silencieuses)
+      // bloquerait l'ouverture de la fiche indéfiniment.
+      final lignes = await _client
+          .from('mesures')
+          .select()
+          .eq('client_id', clientId)
+          .timeout(const Duration(seconds: 6));
       for (final ligne in lignes) {
         await _mettreEnCache(Mesure.depuisJson(ligne));
       }
     } catch (_) {
-      // Hors-ligne : le cache existant reste utilisable.
+      // Hors-ligne (ou délai dépassé) : le cache existant reste utilisable.
     }
   }
 

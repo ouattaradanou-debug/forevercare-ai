@@ -414,13 +414,23 @@ class FinancesRepository {
   /// double) alors qu'une commande existe déjà côté serveur mais n'a
   /// simplement pas pu être récupérée (coupure réseau, etc.).
   Future<void> chargerDepuisServeur(String clientId) async {
-    final lignesCommandes = await _client.from('commandes').select().eq('client_id', clientId);
+    // Délai limite explicite : un réseau qui ne répond ni n'échoue
+    // (portail captif, coupure silencieuse) ne doit jamais bloquer
+    // indéfiniment l'écran Finances, qui attend ce rapatriement.
+    final lignesCommandes = await _client
+        .from('commandes')
+        .select()
+        .eq('client_id', clientId)
+        .timeout(const Duration(seconds: 6));
     for (final ligneCommande in lignesCommandes) {
       final commande = Commande.depuisJson(ligneCommande);
       await _mettreEnCacheCommande(commande);
 
-      final lignesPaiements =
-          await _client.from('paiements').select().eq('commande_id', commande.id);
+      final lignesPaiements = await _client
+          .from('paiements')
+          .select()
+          .eq('commande_id', commande.id)
+          .timeout(const Duration(seconds: 6));
       for (final lignePaiement in lignesPaiements) {
         await _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement));
       }
