@@ -72,6 +72,14 @@ class EcranFicheClient extends ConsumerStatefulWidget {
 class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
   late Future<_DonneesFiche?> _chargement;
 
+  // Mesures recalculées une fois le rapatriement serveur terminé (voir
+  // _charger) : la fiche s'affiche d'abord avec le cache local existant,
+  // instantanément, puis ce champ remplace silencieusement les mesures
+  // affichées si le serveur en connaissait une plus récente. null tant que
+  // ce second passage n'a pas eu lieu — la fiche affiche alors simplement
+  // donnees.mesures (le résultat du premier chargement, local).
+  List<MapEntry<String, String>>? _mesuresRafraichies;
+
   @override
   void initState() {
     super.initState();
@@ -81,8 +89,10 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
   /// Rassemble en un seul chargement tout ce qu'affiche la fiche (infos,
   /// mesures, photos, rendez-vous), lu depuis le cache local (rapide, pas
   /// de réseau) : la page s'affiche donc d'un coup, une fois prête, plutôt
-  /// que section par section. Le rapatriement serveur reste en arrière-plan
-  /// (jamais attendu ici) pour ne jamais ralentir cet affichage.
+  /// que section par section. Le rapatriement serveur (mesures incluses)
+  /// reste en arrière-plan, jamais attendu ici, pour que la fiche s'ouvre
+  /// toujours instantanément — voir _rafraichirMesuresEnArrierePlan pour la
+  /// mise à jour silencieuse une fois ce rapatriement terminé.
   Future<_DonneesFiche?> _charger() async {
     final utilisateur = await ref.read(utilisateurCourantProvider.future);
     if (utilisateur == null) return null;
@@ -90,13 +100,7 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
     unawaited(ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId));
     unawaited(ref.read(rendezVousRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId));
     unawaited(ref.read(photosRepositoryProvider).chargerDepuisServeur(widget.clientId));
-    // Contrairement aux rapatriements ci-dessus (best-effort en arrière-plan,
-    // acceptable pour des données qui changent rarement), celui des mesures
-    // est attendu : sans lui, un appareil qui n'a pas pris la mesure
-    // lui-même (changement de téléphone, réinstallation, apprenti) afficherait
-    // une fiche vide alors que la mesure existe bien côté serveur — risque
-    // concret d'erreur de couture.
-    await ref.read(mesuresRepositoryProvider).chargerDepuisServeur(widget.clientId);
+    unawaited(_rafraichirMesuresEnArrierePlan());
 
     final client = await ref.read(clientParIdProvider(widget.clientId).future);
     if (client == null) return null;
@@ -105,31 +109,12 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
       unawaited(ref.read(commandesDuClientProvider(widget.clientId).future));
     }
 
-    // Dernière mesure du client, quel que soit le gabarit sous lequel elle a
-    // été enregistrée à l'époque (le gabarit "courant" pour ce sexe peut
-    // avoir changé depuis — copie propre créée via "Champs de mesure" — sans
-    // que l'historique existant soit perdu pour autant) : on prend le groupe
-    // le plus récent parmi tous ceux jamais utilisés par ce client, avec les
-    // noms de champs déjà résolus.
-    final groupesFuture =
-        ref.read(donneesExportClientProvider).dernieresMesuresParType(widget.clientId);
     final photosFuture = ref.read(photosDuClientProvider(widget.clientId).future);
     final rdvFuture = ref.read(rendezVousTriesProvider.future);
 
-    final groupes = await groupesFuture;
+    final mesures = await _calculerDernieresMesures();
     final photos = await photosFuture;
     final rdvTous = await rdvFuture;
-
-    GroupeMesureExport? dernierGroupe;
-    for (final groupe in groupes) {
-      if (dernierGroupe == null || groupe.datePrise.isAfter(dernierGroupe.datePrise)) {
-        dernierGroupe = groupe;
-      }
-    }
-    final mesures = <MapEntry<String, String>>[
-      for (final ligne in dernierGroupe?.lignes ?? const <LigneMesureExport>[])
-        MapEntry(ligne.nomChamp, ligne.valeur),
-    ];
 
     return _DonneesFiche(
       client: client,
@@ -138,6 +123,41 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
       modele: _premierDuType(photos, TypePhoto.modele),
       prochainRdv: _prochainRendezVous(rdvTous, widget.clientId),
     );
+  }
+
+  /// Dernière mesure du client déjà en cache local, quel que soit le
+  /// gabarit sous lequel elle a été enregistrée à l'époque (le gabarit
+  /// "courant" pour ce sexe peut avoir changé depuis — copie propre créée
+  /// via "Champs de mesure" — sans que l'historique existant soit perdu
+  /// pour autant) : on prend le groupe le plus récent parmi tous ceux
+  /// jamais utilisés par ce client, avec les noms de champs déjà résolus.
+  Future<List<MapEntry<String, String>>> _calculerDernieresMesures() async {
+    final groupes =
+        await ref.read(donneesExportClientProvider).dernieresMesuresParType(widget.clientId);
+
+    GroupeMesureExport? dernierGroupe;
+    for (final groupe in groupes) {
+      if (dernierGroupe == null || groupe.datePrise.isAfter(dernierGroupe.datePrise)) {
+        dernierGroupe = groupe;
+      }
+    }
+    return [
+      for (final ligne in dernierGroupe?.lignes ?? const <LigneMesureExport>[])
+        MapEntry(ligne.nomChamp, ligne.valeur),
+    ];
+  }
+
+  /// Rapatrie les mesures de ce client depuis le serveur, puis recalcule
+  /// silencieusement les mesures affichées si cela a changé quelque chose
+  /// — jamais attendu par _charger (la fiche doit s'ouvrir immédiatement),
+  /// mais sans quoi un appareil qui n'a pas pris la mesure lui-même
+  /// (changement de téléphone, réinstallation, apprenti) pourrait ne
+  /// jamais la voir apparaître (risque concret d'erreur de couture).
+  Future<void> _rafraichirMesuresEnArrierePlan() async {
+    await ref.read(mesuresRepositoryProvider).chargerDepuisServeur(widget.clientId);
+    if (!mounted) return;
+    final mesures = await _calculerDernieresMesures();
+    if (mounted) setState(() => _mesuresRafraichies = mesures);
   }
 
   @override
@@ -196,7 +216,7 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
                 onTap: () => _ouvrirPriseMesure(context, client),
               ),
               const SizedBox(height: 12),
-              _carteMesures(donnees.mesures),
+              _carteMesures(_mesuresRafraichies ?? donnees.mesures),
               const SizedBox(height: 28),
               EnTeteSection(
                 icone: Icons.photo_library_outlined,
@@ -333,7 +353,12 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
   /// immédiatement ici, sans attendre une nouvelle visite de la fiche.
   Future<void> _naviguerEtRafraichir(Future<dynamic> navigation) async {
     await navigation;
-    if (mounted) setState(() => _chargement = _charger());
+    if (mounted) {
+      setState(() {
+        _chargement = _charger();
+        _mesuresRafraichies = null;
+      });
+    }
   }
 }
 

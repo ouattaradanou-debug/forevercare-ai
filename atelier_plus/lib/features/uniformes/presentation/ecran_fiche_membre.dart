@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,11 +35,19 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
   late MembreGroupeUniforme _membre;
   late Future<List<GroupeMesureExport>> _chargement;
 
+  // Même principe que EcranFicheClient._mesuresRafraichies : la fiche
+  // s'affiche d'abord instantanément avec le cache local existant, puis ce
+  // champ remplace silencieusement les mesures affichées une fois le
+  // rapatriement serveur terminé, s'il a changé quelque chose. null tant
+  // que ce second passage n'a pas eu lieu.
+  List<GroupeMesureExport>? _groupesRafraichis;
+
   @override
   void initState() {
     super.initState();
     _membre = widget.membre;
-    _chargement = _charger();
+    _chargement = ref.read(donneesExportMembreProvider).dernieresMesuresParType(_membre.id);
+    unawaited(_rafraichirMesuresEnArrierePlan());
     Future.microtask(() async {
       final utilisateur = await ref.read(utilisateurCourantProvider.future);
       if (utilisateur != null) {
@@ -46,12 +56,25 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
     });
   }
 
-  Future<List<GroupeMesureExport>> _charger() async {
-    // Attendu (pas en arrière-plan) : même raison que
-    // EcranFicheClient._charger, sinon un appareil qui n'a pas pris la
-    // mesure lui-même afficherait une fiche vide.
-    await ref.read(mesuresUniformeRepositoryProvider).chargerDepuisServeur(_membre.id);
+  /// Relit les mesures déjà en cache local, sans rapatriement serveur —
+  /// utilisé après une prise de mesure sur CET appareil (voir
+  /// _ouvrirPriseMesure) : la nouvelle mesure est déjà en cache local dès
+  /// son enregistrement, inutile d'attendre le serveur pour la revoir.
+  Future<List<GroupeMesureExport>> _charger() {
     return ref.read(donneesExportMembreProvider).dernieresMesuresParType(_membre.id);
+  }
+
+  /// Rapatrie les mesures de ce membre depuis le serveur, puis recalcule
+  /// silencieusement les mesures affichées si cela a changé quelque chose
+  /// — jamais attendu à l'ouverture (la fiche doit s'afficher
+  /// immédiatement), mais sans quoi un appareil qui n'a pas pris la mesure
+  /// lui-même pourrait ne jamais la voir apparaître.
+  Future<void> _rafraichirMesuresEnArrierePlan() async {
+    await ref.read(mesuresUniformeRepositoryProvider).chargerDepuisServeur(_membre.id);
+    if (!mounted) return;
+    final groupes =
+        await ref.read(donneesExportMembreProvider).dernieresMesuresParType(_membre.id);
+    if (mounted) setState(() => _groupesRafraichis = groupes);
   }
 
   Future<void> _basculerTenueTerminee() async {
@@ -202,7 +225,12 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
           AppRoutes.priseMesureMembre(_membre.id, gabarit.id),
           extra: _membre.nomComplet,
         );
-        if (mounted) setState(() => _chargement = _charger());
+        if (mounted) {
+          setState(() {
+            _chargement = _charger();
+            _groupesRafraichis = null;
+          });
+        }
         return;
       }
     }
@@ -211,7 +239,12 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
       AppRoutes.selectionTypeTenueMembre(_membre.id),
       extra: _membre.nomComplet,
     );
-    if (mounted) setState(() => _chargement = _charger());
+    if (mounted) {
+      setState(() {
+        _chargement = _charger();
+        _groupesRafraichis = null;
+      });
+    }
   }
 
   @override
@@ -238,7 +271,7 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
           if (snapshot.hasError) {
             return Center(child: Text('Erreur : ${snapshot.error}'));
           }
-          final groupes = snapshot.data ?? const [];
+          final groupes = _groupesRafraichis ?? snapshot.data ?? const [];
 
           return ListView(
             padding: const EdgeInsets.all(16),
