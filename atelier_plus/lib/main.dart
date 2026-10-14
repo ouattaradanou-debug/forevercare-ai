@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -10,12 +11,24 @@ import 'core/config/app_config.dart';
 import 'core/config/supabase_config.dart';
 import 'core/notifications/notifications_service.dart';
 import 'core/router/app_router.dart';
+import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/preference_theme.dart';
 import 'data/sync/sync_providers.dart';
 
+/// Bande du haut (heure, réseau, batterie) toujours bleue avec des icônes
+/// blanches, quel que soit l'écran affiché en dessous — y compris un écran
+/// sans bandeau de couleur (ex. écran de chargement, fond blanc), où ces
+/// informations étaient auparavant difficiles à distinguer.
+const _styleBarreSysteme = SystemUiOverlayStyle(
+  statusBarColor: AppColors.primaire,
+  statusBarIconBrightness: Brightness.light,
+  statusBarBrightness: Brightness.dark,
+);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(_styleBarreSysteme);
 
   // Format des dates en français (jours/mois écrits en toutes lettres, etc.)
   // et initialisation de Supabase en parallèle plutôt que l'un après
@@ -64,20 +77,28 @@ class AtelierPlusApp extends ConsumerWidget {
     // l'écoute connectivity_plus qui déclenche la synchronisation (Phase 3).
     ref.watch(syncTriggerProvider);
 
-    return MaterialApp.router(
-      title: AppConfig.nomApplication,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.clair,
-      darkTheme: AppTheme.sombre,
-      themeMode: themeMode,
-      locale: const Locale('fr', 'FR'),
-      supportedLocales: const [Locale('fr', 'FR')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      routerConfig: router,
+    // AnnotatedRegion plutôt que le seul appel dans main() : certains
+    // widgets (ex. AppBar) recalculent leur propre style de barre système à
+    // chaque écran, ce qui écraserait un réglage fait une seule fois au
+    // démarrage. L'envelopper ainsi autour de toute l'application le
+    // réapplique systématiquement, écran après écran.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _styleBarreSysteme,
+      child: MaterialApp.router(
+        title: AppConfig.nomApplication,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.clair,
+        darkTheme: AppTheme.sombre,
+        themeMode: themeMode,
+        locale: const Locale('fr', 'FR'),
+        supportedLocales: const [Locale('fr', 'FR')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        routerConfig: router,
+      ),
     );
   }
 }
