@@ -402,26 +402,28 @@ class FinancesRepository {
     }
   }
 
-  /// Rapatriement initial best-effort — appelé uniquement par l'écran
-  /// finances, déjà réservé au propriétaire. Toutes les commandes du
-  /// client (pas seulement la plus récente), pour que l'historique des
-  /// commandes précédentes reste consultable hors-ligne.
+  /// Rapatriement initial — appelé uniquement par l'écran finances, déjà
+  /// réservé au propriétaire. Toutes les commandes du client (pas
+  /// seulement la plus récente), pour que l'historique des commandes
+  /// précédentes reste consultable hors-ligne.
+  ///
+  /// Contrairement aux autres `chargerDepuisServeur` de l'application,
+  /// laisse volontairement l'exception remonter plutôt que de l'avaler
+  /// silencieusement : l'appelant doit savoir si ce rapatriement a échoué,
+  /// pour ne pas afficher "Créer une commande" (et risquer une commande en
+  /// double) alors qu'une commande existe déjà côté serveur mais n'a
+  /// simplement pas pu être récupérée (coupure réseau, etc.).
   Future<void> chargerDepuisServeur(String clientId) async {
-    try {
-      final lignesCommandes =
-          await _client.from('commandes').select().eq('client_id', clientId);
-      for (final ligneCommande in lignesCommandes) {
-        final commande = Commande.depuisJson(ligneCommande);
-        await _mettreEnCacheCommande(commande);
+    final lignesCommandes = await _client.from('commandes').select().eq('client_id', clientId);
+    for (final ligneCommande in lignesCommandes) {
+      final commande = Commande.depuisJson(ligneCommande);
+      await _mettreEnCacheCommande(commande);
 
-        final lignesPaiements =
-            await _client.from('paiements').select().eq('commande_id', commande.id);
-        for (final lignePaiement in lignesPaiements) {
-          await _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement));
-        }
+      final lignesPaiements =
+          await _client.from('paiements').select().eq('commande_id', commande.id);
+      for (final lignePaiement in lignesPaiements) {
+        await _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement));
       }
-    } catch (_) {
-      // Hors-ligne : le cache existant reste utilisable.
     }
   }
 

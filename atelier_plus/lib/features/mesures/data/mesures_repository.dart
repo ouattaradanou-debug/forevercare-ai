@@ -51,6 +51,23 @@ class MesuresRepository {
     return mesure;
   }
 
+  /// Rapatrie depuis Supabase toutes les mesures déjà prises pour ce client,
+  /// quel que soit l'appareil qui les a enregistrées à l'origine — sans
+  /// ceci, la fiche client (et le pré-remplissage du formulaire de prise de
+  /// mesure) ne montre jamais aucune mesure sur un appareil qui ne l'a pas
+  /// prise lui-même (changement de téléphone, réinstallation, apprenti vs
+  /// propriétaire), même si elle existe bien côté serveur.
+  Future<void> chargerDepuisServeur(String clientId) async {
+    try {
+      final lignes = await _client.from('mesures').select().eq('client_id', clientId);
+      for (final ligne in lignes) {
+        await _mettreEnCache(Mesure.depuisJson(ligne));
+      }
+    } catch (_) {
+      // Hors-ligne : le cache existant reste utilisable.
+    }
+  }
+
   /// Dernières valeurs enregistrées pour ce client et ce type de tenue,
   /// utilisées pour pré-remplir le formulaire de prise de mesure.
   Future<Map<String, String>?> dernieresValeurs(String clientId, String typeTenueId) async {

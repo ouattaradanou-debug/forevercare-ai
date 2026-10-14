@@ -46,7 +46,11 @@ class _EcranFicheMembreState extends ConsumerState<EcranFicheMembre> {
     });
   }
 
-  Future<List<GroupeMesureExport>> _charger() {
+  Future<List<GroupeMesureExport>> _charger() async {
+    // Attendu (pas en arrière-plan) : même raison que
+    // EcranFicheClient._charger, sinon un appareil qui n'a pas pris la
+    // mesure lui-même afficherait une fiche vide.
+    await ref.read(mesuresUniformeRepositoryProvider).chargerDepuisServeur(_membre.id);
     return ref.read(donneesExportMembreProvider).dernieresMesuresParType(_membre.id);
   }
 

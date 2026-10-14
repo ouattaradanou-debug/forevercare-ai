@@ -57,16 +57,31 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
   // ne pas encore avoir reçu la commande existante) : on ne doit jamais
   // proposer "Créer une commande" sur la seule foi d'un cache encore vide
   // à cet instant précis, sous peine de créer un doublon si le tailleur
-  // appuie avant la fin de ce chargement.
+  // appuie avant la fin de ce chargement. Le même risque existe si ce
+  // chargement a ÉCHOUÉ (coupure réseau) plutôt que d'avoir simplement
+  // trouvé une liste vide — _erreurChargement distingue les deux cas pour
+  // ne jamais proposer "Créer une commande" sur la foi d'un échec.
   bool _chargementInitial = true;
+  bool _erreurChargement = false;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      await ref.read(financesRepositoryProvider).chargerDepuisServeur(widget.clientId);
-      if (mounted) setState(() => _chargementInitial = false);
+    _chargerDepuisServeur();
+  }
+
+  Future<void> _chargerDepuisServeur() async {
+    setState(() {
+      _chargementInitial = true;
+      _erreurChargement = false;
     });
+    try {
+      await ref.read(financesRepositoryProvider).chargerDepuisServeur(widget.clientId);
+    } catch (_) {
+      if (mounted) setState(() => _erreurChargement = true);
+    } finally {
+      if (mounted) setState(() => _chargementInitial = false);
+    }
   }
 
   @override
@@ -416,6 +431,34 @@ class _SectionFinancesClientState extends ConsumerState<SectionFinancesClient> {
         if (commandes.isEmpty) {
           if (_chargementInitial) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (_erreurChargement) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Impossible de récupérer les finances de ce client. '
+                      'Vérifiez votre connexion avant de créer une commande '
+                      '— une commande existe peut-être déjà.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _chargerDepuisServeur,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _bleuSeda,
+                        side: const BorderSide(color: _bleuSeda),
+                      ),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Réessayer'),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
           return Center(
             child: ElevatedButton.icon(

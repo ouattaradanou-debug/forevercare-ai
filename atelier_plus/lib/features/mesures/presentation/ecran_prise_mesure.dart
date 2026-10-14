@@ -47,6 +47,11 @@ class _EcranPriseMesureState extends ConsumerState<EcranPriseMesure> {
 
   Future<void> _preremplir() async {
     final repo = ref.read(mesuresRepositoryProvider);
+    // Sans ce rapatriement, une mesure prise sur un autre appareil (ou avant
+    // une réinstallation) resterait invisible ici : le formulaire semblerait
+    // vierge alors qu'une mesure existe déjà, risquant une double saisie
+    // incohérente.
+    await repo.chargerDepuisServeur(widget.clientId);
     final valeurs = await repo.dernieresValeurs(widget.clientId, widget.typeTenueId);
     final date = await repo.dateDerniereMesure(widget.clientId, widget.typeTenueId);
 

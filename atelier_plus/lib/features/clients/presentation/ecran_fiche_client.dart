@@ -25,6 +25,7 @@ import '../../branding/providers/branding_providers.dart';
 import '../../finances/presentation/section_finances_client.dart';
 import '../../finances/providers/finances_providers.dart';
 import '../../mesures/providers/gabarits_providers.dart';
+import '../../mesures/providers/mesures_providers.dart';
 import '../../mesures/utils/choix_gabarit.dart';
 import '../../rendezvous/providers/rendezvous_providers.dart';
 import '../providers/clients_providers.dart';
@@ -89,6 +90,13 @@ class _EcranFicheClientState extends ConsumerState<EcranFicheClient> {
     unawaited(ref.read(gabaritsRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId));
     unawaited(ref.read(rendezVousRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId));
     unawaited(ref.read(photosRepositoryProvider).chargerDepuisServeur(widget.clientId));
+    // Contrairement aux rapatriements ci-dessus (best-effort en arrière-plan,
+    // acceptable pour des données qui changent rarement), celui des mesures
+    // est attendu : sans lui, un appareil qui n'a pas pris la mesure
+    // lui-même (changement de téléphone, réinstallation, apprenti) afficherait
+    // une fiche vide alors que la mesure existe bien côté serveur — risque
+    // concret d'erreur de couture.
+    await ref.read(mesuresRepositoryProvider).chargerDepuisServeur(widget.clientId);
 
     final client = await ref.read(clientParIdProvider(widget.clientId).future);
     if (client == null) return null;

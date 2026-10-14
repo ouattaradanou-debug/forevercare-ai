@@ -50,6 +50,9 @@ class _EcranPriseMesureMembreState extends ConsumerState<EcranPriseMesureMembre>
 
   Future<void> _preremplir() async {
     final repo = ref.read(mesuresUniformeRepositoryProvider);
+    // Même raison que EcranPriseMesure._preremplir : sans ce rapatriement,
+    // une mesure prise sur un autre appareil resterait invisible ici.
+    await repo.chargerDepuisServeur(widget.membreId);
     final valeurs = await repo.dernieresValeurs(widget.membreId, widget.typeTenueId);
     final date = await repo.dateDerniereMesure(widget.membreId, widget.typeTenueId);
 

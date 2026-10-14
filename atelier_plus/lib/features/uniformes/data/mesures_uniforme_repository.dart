@@ -48,6 +48,20 @@ class MesuresUniformeRepository {
     return mesure;
   }
 
+  /// Rapatrie depuis Supabase toutes les mesures déjà prises pour ce membre
+  /// — même raison que MesuresRepository.chargerDepuisServeur (sinon
+  /// jamais visible sur un appareil qui ne l'a pas prise lui-même).
+  Future<void> chargerDepuisServeur(String membreId) async {
+    try {
+      final lignes = await _client.from('mesures_uniforme').select().eq('membre_id', membreId);
+      for (final ligne in lignes) {
+        await _mettreEnCache(MesureUniforme.depuisJson(ligne));
+      }
+    } catch (_) {
+      // Hors-ligne : le cache existant reste utilisable.
+    }
+  }
+
   Future<Map<String, String>?> dernieresValeurs(String membreId, String typeTenueId) async {
     final ligne = await _baseLocale.derniereMesureUniforme(membreId, typeTenueId);
     if (ligne == null) return null;
