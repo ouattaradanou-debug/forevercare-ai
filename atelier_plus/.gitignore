@@ -17,6 +17,14 @@ pubspec.lock
 dart_define.json
 *.dart_define.json
 
+# Signature de la version "release" Android — ne jamais commiter : le
+# fichier .jks et son mot de passe permettent de publier des mises à jour
+# de l'application sous l'identité de l'atelier (voir le commentaire dans
+# android/app/build.gradle.kts).
+android/key.properties
+*.jks
+*.keystore
+
 # IDE
 .idea/
 .vscode/
