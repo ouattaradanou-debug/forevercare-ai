@@ -32,27 +32,6 @@ class PermissionsRepository {
     return permissions;
   }
 
-  /// Lecture prioritairement locale (fonctionnement hors-ligne au
-  /// quotidien) : utilisée par le reste de l'application pour savoir si
-  /// l'utilisateur courant peut afficher une action donnée.
-  Future<PermissionsApprenti> lireDepuisCache(String utilisateurId) async {
-    final ligne = await _baseLocale.permissionsDe(utilisateurId);
-    if (ligne == null) {
-      return PermissionsApprenti.aucunePermission(utilisateurId);
-    }
-    return PermissionsApprenti(
-      utilisateurId: ligne.utilisateurId,
-      creerClient: ligne.creerClient,
-      modifierClient: ligne.modifierClient,
-      prendreMesures: ligne.prendreMesures,
-      ajouterPhotos: ligne.ajouterPhotos,
-      modifierGabarits: ligne.modifierGabarits,
-      ventes: ligne.ventes,
-      stock: ligne.stock,
-      enregistrerDepenses: ligne.enregistrerDepenses,
-    );
-  }
-
   Future<void> mettreAJour(PermissionsApprenti permissions) async {
     await _client
         .from('permissions_apprenti')

@@ -760,11 +760,6 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  Future<PermissionEntry?> permissionsDe(String utilisateurId) {
-    return (select(permissionEntries)..where((t) => t.utilisateurId.equals(utilisateurId)))
-        .getSingleOrNull();
-  }
-
   // --- Clients ---
 
   Future<void> enregistrerClient({

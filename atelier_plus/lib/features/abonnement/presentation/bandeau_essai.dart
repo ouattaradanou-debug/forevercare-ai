@@ -36,7 +36,7 @@ class BandeauEssai extends ConsumerWidget {
     }
 
     return Material(
-      color: consultationSeule ? Colors.red.shade700 : Colors.orange.shade700,
+      color: consultationSeule ? const Color(0xFFB3261E) : const Color(0xFFED6C02),
       child: InkWell(
         onTap: () => context.push(AppRoutes.abonnement),
         child: Padding(

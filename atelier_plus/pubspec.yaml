@@ -13,7 +13,6 @@ dependencies:
   # est déclarée dans MaterialApp — sinon crash au démarrage).
   flutter_localizations:
     sdk: flutter
-  cupertino_icons: ^1.0.8
 
   # --- Gestion d'état ---
   flutter_riverpod: ^2.6.1

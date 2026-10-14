@@ -88,7 +88,7 @@ class EcranAbonnement extends ConsumerWidget {
                 Icon(
                   consultationSeule ? Icons.lock_clock_outlined : Icons.verified_outlined,
                   size: 64,
-                  color: consultationSeule ? Colors.red : Colors.green,
+                  color: consultationSeule ? const Color(0xFFB3261E) : const Color(0xFF2E7D32),
                 ),
                 const SizedBox(height: 16),
                 Text(

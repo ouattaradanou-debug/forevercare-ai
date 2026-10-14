@@ -609,7 +609,10 @@ begin
 end $$;
 
 -- 3.2 À la création d'un compte apprenti : ligne de permissions créée
---     automatiquement avec AUCUNE permission active par défaut.
+--     automatiquement. Seules ventes/stock/enregistrer_depenses démarrent
+--     actives (default true, voir plus bas) ; les autres colonnes restent
+--     sans effet RLS (voir la remarque de la section 4 sur les 7 fonctions
+--     a_permission_* qui renvoient désormais toujours vrai).
 create or replace function public.creer_permissions_apprenti_par_defaut()
 returns trigger
 language plpgsql
@@ -840,17 +843,18 @@ create policy utilisateurs_insert on public.utilisateurs
     or (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
   );
 
+-- Propriétaire uniquement, jamais de branche "id = auth.uid()" pour un
+-- utilisateur modifiant sa propre ligne : RLS s'applique ligne par ligne,
+-- jamais colonne par colonne — une telle branche aurait laissé n'importe
+-- quel apprenti authentifié s'auto-promouvoir "proprietaire" (ou changer
+-- d'atelier) via un simple appel REST direct, hors de l'application, qui
+-- elle-même n'appelle jamais update() sur cette table (seulement insert(),
+-- à la création du compte).
 drop policy if exists utilisateurs_update on public.utilisateurs;
 create policy utilisateurs_update on public.utilisateurs
   for update to authenticated
-  using (
-    id = auth.uid()
-    or (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
-  )
-  with check (
-    id = auth.uid()
-    or (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
-  );
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
 
 drop policy if exists utilisateurs_delete on public.utilisateurs;
 create policy utilisateurs_delete on public.utilisateurs
@@ -1337,6 +1341,46 @@ create policy mesures_uniforme_insert on public.mesures_uniforme
     )
   );
 
+-- Modification/suppression réservées au propriétaire, même principe que
+-- mesures_update/mesures_delete (intégrité de l'historique) — l'application
+-- n'écrit d'ailleurs jamais ces mesures qu'en insertion (chaque prise crée
+-- une nouvelle ligne), ces deux policies ne servent qu'à ne pas laisser
+-- cette table plus permissive que sa table sœur mesures.
+drop policy if exists mesures_uniforme_update on public.mesures_uniforme;
+create policy mesures_uniforme_update on public.mesures_uniforme
+  for update to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  )
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists mesures_uniforme_delete on public.mesures_uniforme;
+create policy mesures_uniforme_delete on public.mesures_uniforme
+  for delete to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
 -- -----------------------------------------------------------------------------
 -- 5.11sexies PHOTOS_GROUPE_UNIFORME — accès via le groupe parent, même règle
 --            que photos (lecture/écriture par tout l'atelier, pas réservé au
@@ -1357,7 +1401,8 @@ drop policy if exists photos_groupe_insert on public.photos_groupe_uniforme;
 create policy photos_groupe_insert on public.photos_groupe_uniforme
   for insert to authenticated
   with check (
-    exists (
+    (public.est_proprietaire() or public.a_permission_ajouter_photos())
+    and exists (
       select 1 from public.groupes_uniformes g
       where g.id = photos_groupe_uniforme.groupe_id
         and g.atelier_id = public.mon_atelier_id()
