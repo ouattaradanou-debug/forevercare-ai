@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/mesure.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 /// Prise de mesure : écriture locale d'abord (comme `ClientsRepository`),
@@ -69,9 +70,7 @@ class MesuresRepository {
           .select()
           .eq('client_id', clientId)
           .timeout(const Duration(seconds: 6));
-      for (final ligne in lignes) {
-        await _mettreEnCache(Mesure.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignes, (ligne) => _mettreEnCache(Mesure.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne (ou délai dépassé) : le cache existant reste utilisable.
     }
@@ -90,9 +89,7 @@ class MesuresRepository {
           .select()
           .eq('atelier_id', atelierId)
           .timeout(const Duration(seconds: 20));
-      for (final ligne in lignes) {
-        await _mettreEnCache(Mesure.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignes, (ligne) => _mettreEnCache(Mesure.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne (ou délai dépassé) : le cache existant reste utilisable.
     }

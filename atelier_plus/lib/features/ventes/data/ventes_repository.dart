@@ -6,6 +6,7 @@ import '../../../data/models/article.dart';
 import '../../../data/models/categorie_vente.dart';
 import '../../../data/models/vente.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 import 'articles_repository.dart';
 
@@ -162,9 +163,7 @@ class VentesRepository {
   Future<void> chargerDepuisServeur(String atelierId) async {
     try {
       final lignes = await _client.from('ventes').select().eq('atelier_id', atelierId);
-      for (final ligne in lignes) {
-        await _mettreEnCache(Vente.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignes, (ligne) => _mettreEnCache(Vente.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne : le cache existant reste utilisable.
     }

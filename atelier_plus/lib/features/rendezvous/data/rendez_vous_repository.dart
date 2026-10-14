@@ -6,6 +6,7 @@ import '../../../core/notifications/notifications_service.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/rendez_vous.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des rendez-vous : écriture locale d'abord, comme les clients et
@@ -148,9 +149,7 @@ class RendezVousRepository {
   Future<void> chargerDepuisServeur(String atelierId) async {
     try {
       final lignes = await _client.from('rendez_vous').select().eq('atelier_id', atelierId);
-      for (final ligne in lignes) {
-        await _mettreEnCache(RendezVous.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignes, (ligne) => _mettreEnCache(RendezVous.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne : le cache local existant reste utilisable.
     }

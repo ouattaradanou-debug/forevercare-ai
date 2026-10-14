@@ -7,6 +7,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/client.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des fiches clients : écriture toujours locale d'abord (l'écran
@@ -168,11 +169,11 @@ class ClientsRepository {
       // pas le remettre en cache ici, sous peine de le faire réapparaître
       // (voir AppDatabase.idsEnAttenteDeSuppression).
       final idsSupprimes = await _baseLocale.idsEnAttenteDeSuppression('clients');
-      for (final ligne in lignes) {
+      await pourChaqueLigne(lignes, (ligne) async {
         final client = Client.depuisJson(ligne);
-        if (idsSupprimes.contains(client.id)) continue;
+        if (idsSupprimes.contains(client.id)) return;
         await _mettreEnCache(client);
-      }
+      });
     } catch (_) {
       // Hors-ligne : l'écran continue de fonctionner avec le cache local
       // existant, conformément à l'exigence d'usage hors-ligne quotidien.

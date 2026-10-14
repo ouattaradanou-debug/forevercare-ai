@@ -10,6 +10,7 @@ import '../../../data/local/database.dart';
 import '../../../data/models/photo_client.dart';
 import '../../../data/remote/stockage_repository.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../../data/sync/sync_engine.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
@@ -240,9 +241,7 @@ class PhotosRepository {
   Future<void> chargerDepuisServeur(String clientId) async {
     try {
       final lignes = await _client.from('photos').select().eq('client_id', clientId);
-      for (final ligne in lignes) {
-        await _mettreEnCache(PhotoClient.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignes, (ligne) => _mettreEnCache(PhotoClient.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne : les photos déjà en cache restent consultables.
     }
@@ -253,9 +252,7 @@ class PhotosRepository {
   Future<void> chargerPhotosGroupeDepuisServeur(String groupeId) async {
     try {
       final lignes = await _client.from('photos').select().eq('groupe_id', groupeId);
-      for (final ligne in lignes) {
-        await _mettreEnCache(PhotoClient.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignes, (ligne) => _mettreEnCache(PhotoClient.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne : les photos déjà en cache restent consultables.
     }

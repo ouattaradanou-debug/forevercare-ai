@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/champ_mesure.dart';
 import '../../../data/models/type_tenue.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des gabarits (types de tenue + champs de mesure).
@@ -35,7 +36,11 @@ class GabaritsRepository {
           .select()
           .or('atelier_id.is.null,atelier_id.eq.$atelierId');
 
-      for (final ligne in typesJson) {
+      // pourChaqueLigne isole chaque type de tenue (et chaque champ) : un
+      // seul gabarit malformé ne doit jamais faire disparaître les AUTRES
+      // du formulaire de prise de mesure — ce qui aurait empêché de
+      // prendre une mesure pour n'importe quel client, pas seulement un.
+      await pourChaqueLigne(typesJson, (ligne) async {
         final type = TypeTenue.depuisJson(ligne);
         await _baseLocale.enregistrerTypeTenue(
           id: type.id,
@@ -47,7 +52,7 @@ class GabaritsRepository {
 
         final champsJson =
             await _client.from('champs_mesure').select().eq('type_tenue_id', type.id);
-        for (final ligneChamp in champsJson) {
+        await pourChaqueLigne(champsJson, (ligneChamp) async {
           final champ = ChampMesure.depuisJson(ligneChamp);
           await _baseLocale.enregistrerChampMesure(
             id: champ.id,
@@ -58,8 +63,8 @@ class GabaritsRepository {
             ordre: champ.ordre,
             updatedAt: champ.updatedAt,
           );
-        }
-      }
+        });
+      });
     } catch (_) {
       // Hors-ligne : le cache existant (chargé lors d'une précédente
       // connexion) reste utilisable pour la prise de mesure.

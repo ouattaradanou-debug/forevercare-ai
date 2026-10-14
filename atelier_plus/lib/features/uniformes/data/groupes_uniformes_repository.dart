@@ -7,6 +7,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/groupe_uniforme.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des groupes de mesures d'uniformes (promotion, établissement,
@@ -164,11 +165,11 @@ class GroupesUniformesRepository {
       // remettre en cache ici, sous peine de le faire réapparaître — même
       // principe que ClientsRepository.chargerDepuisServeur.
       final idsSupprimes = await _baseLocale.idsEnAttenteDeSuppression('groupes_uniformes');
-      for (final ligne in lignes) {
+      await pourChaqueLigne(lignes, (ligne) async {
         final groupe = GroupeUniforme.depuisJson(ligne);
-        if (idsSupprimes.contains(groupe.id)) continue;
+        if (idsSupprimes.contains(groupe.id)) return;
         await _mettreEnCache(groupe);
-      }
+      });
     } catch (_) {
       // Hors-ligne : le cache local existant reste utilisable.
     }

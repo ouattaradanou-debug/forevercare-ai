@@ -8,6 +8,7 @@ import '../../../data/models/depense.dart';
 import '../../../data/models/paiement.dart';
 import '../../../data/models/vente.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 import '../../ventes/data/ventes_repository.dart';
 import 'finances_groupe_repository.dart';
@@ -385,18 +386,14 @@ class FinancesRepository {
     try {
       final lignesPaiements =
           await _client.from('paiements').select().eq('atelier_id', atelierId);
-      for (final ligne in lignesPaiements) {
-        await _mettreEnCachePaiement(Paiement.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignesPaiements, (ligne) => _mettreEnCachePaiement(Paiement.depuisJson(ligne)));
       await _financesGroupeRepository.chargerTousPaiementsDepuisServeur(atelierId);
 
       await _ventesRepository.chargerDepuisServeur(atelierId);
 
       final lignesDepenses =
           await _client.from('depenses').select().eq('atelier_id', atelierId);
-      for (final ligne in lignesDepenses) {
-        await _mettreEnCacheDepense(Depense.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignesDepenses, (ligne) => _mettreEnCacheDepense(Depense.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne : le cache existant reste utilisable.
     }
@@ -422,7 +419,13 @@ class FinancesRepository {
         .select()
         .eq('client_id', clientId)
         .timeout(const Duration(seconds: 6));
-    for (final ligneCommande in lignesCommandes) {
+    // pourChaqueLigne isole chaque commande individuellement (une commande
+    // malformée ne doit jamais faire disparaître les AUTRES commandes de ce
+    // client), mais l'échec de la requête lignesCommandes ci-dessus — le
+    // rapatriement principal — continue lui de remonter normalement :
+    // l'appelant doit savoir si CELUI-LÀ a échoué (voir le commentaire de
+    // cette méthode plus haut).
+    await pourChaqueLigne(lignesCommandes, (ligneCommande) async {
       final commande = Commande.depuisJson(ligneCommande);
       await _mettreEnCacheCommande(commande);
 
@@ -431,10 +434,9 @@ class FinancesRepository {
           .select()
           .eq('commande_id', commande.id)
           .timeout(const Duration(seconds: 6));
-      for (final lignePaiement in lignesPaiements) {
-        await _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement));
-      }
-    }
+      await pourChaqueLigne(
+          lignesPaiements, (lignePaiement) => _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement)));
+    });
   }
 
   Future<void> _mettreEnCacheCommande(Commande commande) {

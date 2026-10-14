@@ -5,6 +5,7 @@ import '../../../data/local/database.dart';
 import '../../../data/models/article.dart';
 import '../../../data/models/categorie_vente.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 /// Catalogue d'articles suivis en stock (prêt-à-porter, tissu, article de
@@ -202,13 +203,13 @@ class ArticlesRepository {
   Future<void> chargerDepuisServeur(String atelierId) async {
     try {
       final lignes = await _client.from('articles').select().eq('atelier_id', atelierId);
-      for (final ligne in lignes) {
+      await pourChaqueLigne(lignes, (ligne) async {
         final distant = Article.depuisJson(ligne);
         final local = await _baseLocale.articleParId(distant.id);
         if (local == null || !local.updatedAt.isAfter(distant.updatedAt)) {
           await _mettreEnCache(distant);
         }
-      }
+      });
     } catch (_) {
       // Hors-ligne : le cache existant reste utilisable.
     }

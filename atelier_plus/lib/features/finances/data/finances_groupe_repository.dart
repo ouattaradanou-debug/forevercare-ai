@@ -5,6 +5,7 @@ import '../../../data/local/database.dart';
 import '../../../data/models/commande_groupe.dart';
 import '../../../data/models/paiement.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion de la commande et des paiements d'un groupe d'uniformes —
@@ -184,16 +185,15 @@ class FinancesGroupeRepository {
     try {
       final lignesCommandes =
           await _client.from('commandes_groupe').select().eq('groupe_id', groupeId);
-      for (final ligneCommande in lignesCommandes) {
+      await pourChaqueLigne(lignesCommandes, (ligneCommande) async {
         final commande = CommandeGroupe.depuisJson(ligneCommande);
         await _mettreEnCacheCommande(commande);
 
         final lignesPaiements =
             await _client.from('paiements_groupe').select().eq('commande_id', commande.id);
-        for (final lignePaiement in lignesPaiements) {
-          await _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement));
-        }
-      }
+        await pourChaqueLigne(
+            lignesPaiements, (lignePaiement) => _mettreEnCachePaiement(Paiement.depuisJson(lignePaiement)));
+      });
     } catch (_) {
       // Hors-ligne : le cache existant reste utilisable.
     }
@@ -208,9 +208,7 @@ class FinancesGroupeRepository {
     try {
       final lignes =
           await _client.from('paiements_groupe').select().eq('atelier_id', atelierId);
-      for (final ligne in lignes) {
-        await _mettreEnCachePaiement(Paiement.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignes, (ligne) => _mettreEnCachePaiement(Paiement.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne : le cache existant reste utilisable.
     }

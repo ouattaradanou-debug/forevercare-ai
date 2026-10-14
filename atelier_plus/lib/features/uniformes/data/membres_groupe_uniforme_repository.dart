@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/membre_groupe_uniforme.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des membres d'un groupe d'uniformes (les personnes dont on
@@ -135,9 +136,8 @@ class MembresGroupeUniformeRepository {
     try {
       final lignes =
           await _client.from('membres_groupe_uniforme').select().eq('groupe_id', groupeId);
-      for (final ligne in lignes) {
-        await _mettreEnCache(MembreGroupeUniforme.depuisJson(ligne));
-      }
+      await pourChaqueLigne(
+          lignes, (ligne) => _mettreEnCache(MembreGroupeUniforme.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne : le cache local existant reste utilisable.
     }

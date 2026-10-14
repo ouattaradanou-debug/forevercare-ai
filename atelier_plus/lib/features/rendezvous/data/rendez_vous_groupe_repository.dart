@@ -6,6 +6,7 @@ import '../../../core/notifications/notifications_service.dart';
 import '../../../data/local/database.dart';
 import '../../../data/models/rendez_vous_groupe.dart';
 import '../../../data/sync/ecriture_synchronisee.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import '../../abonnement/data/abonnement_guard.dart';
 
 /// Gestion des rendez-vous rattachés à un groupe d'uniformes — même
@@ -143,9 +144,7 @@ class RendezVousGroupeRepository {
   Future<void> chargerDepuisServeur(String groupeId) async {
     try {
       final lignes = await _client.from('rendez_vous_groupe').select().eq('groupe_id', groupeId);
-      for (final ligne in lignes) {
-        await _mettreEnCache(RendezVousGroupe.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignes, (ligne) => _mettreEnCache(RendezVousGroupe.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne : le cache local existant reste utilisable.
     }
@@ -160,9 +159,7 @@ class RendezVousGroupeRepository {
     try {
       final lignes =
           await _client.from('rendez_vous_groupe').select().eq('atelier_id', atelierId);
-      for (final ligne in lignes) {
-        await _mettreEnCache(RendezVousGroupe.depuisJson(ligne));
-      }
+      await pourChaqueLigne(lignes, (ligne) => _mettreEnCache(RendezVousGroupe.depuisJson(ligne)));
     } catch (_) {
       // Hors-ligne : le cache local existant reste utilisable.
     }
