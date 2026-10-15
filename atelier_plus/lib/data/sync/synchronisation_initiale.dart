@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/abonnement/providers/abonnement_providers.dart';
+import '../../features/auth/providers/auth_providers.dart';
 import '../../features/clients/providers/clients_providers.dart';
 import '../../features/finances/providers/finances_providers.dart';
 import '../../features/mesures/providers/gabarits_providers.dart';
@@ -12,8 +13,9 @@ import '../../features/ventes/providers/ventes_providers.dart';
 
 /// Rapatrie en une seule fois toutes les listes de l'atelier depuis
 /// Supabase (clients, groupes d'uniformes, rendez-vous, catalogue de
-/// ventes, gabarits de mesure, mesures de tous les clients, abonnement,
-/// récapitulatif financier) — appelé juste après une connexion réussie
+/// ventes, gabarits de mesure, mesures de tous les clients, équipe
+/// (propriétaire + apprentis), abonnement, récapitulatif financier) —
+/// appelé juste après une connexion réussie
 /// (voir EcranConnexion), pour que le tailleur retrouve immédiatement
 /// toutes ses données déjà enregistrées sans avoir à ouvrir chaque écran
 /// un par un ("perte de téléphone", changement d'appareil,
@@ -44,6 +46,7 @@ Future<void> synchroniserIntegralementApresConnexion(
     conteneur.read(ventesRepositoryProvider).chargerDepuisServeur(atelierId),
     conteneur.read(gabaritsRepositoryProvider).chargerDepuisServeur(atelierId),
     conteneur.read(mesuresRepositoryProvider).chargerToutesDepuisServeur(atelierId),
+    conteneur.read(authRepositoryProvider).chargerEquipeDepuisServeur(atelierId),
     conteneur.read(abonnementRepositoryProvider).chargerDepuisServeur(atelierId),
     conteneur.read(financesRepositoryProvider).chargerRecapitulatifDepuisServeur(atelierId),
   ]);

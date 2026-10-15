@@ -10,6 +10,7 @@ import '../../../data/models/permissions_apprenti.dart';
 import '../../../data/models/role_utilisateur.dart';
 import '../../../data/models/utilisateur.dart';
 import '../../../data/remote/stockage_repository.dart';
+import '../../../data/sync/lecture_tolerante.dart';
 import 'exceptions_auth.dart';
 
 const String bucketLogosAteliers = 'logos-ateliers';
@@ -366,6 +367,37 @@ class AuthRepository {
     // survivre à la déconnexion (voir AppDatabase.effacerCacheFinancierSiSynchronise).
     await _baseLocale.effacerCacheFinancierSiSynchronise();
     await _baseLocale.definirUtilisateurConnecte(null);
+  }
+
+  /// Récupère tous les membres (propriétaire + apprentis) de l'atelier
+  /// depuis le serveur et les met en cache localement — appelé après
+  /// connexion (voir `synchroniserIntegralementApresConnexion`), pour que
+  /// l'écran "Mon équipe" retrouve les apprentis déjà créés, y compris
+  /// après une réinstallation qui a vidé le cache local (changement
+  /// d'appareil, perte de téléphone...). Jusqu'ici absente de ce cycle de
+  /// synchronisation : un apprenti créé restait invisible sur tout appareil
+  /// n'ayant pas lui-même exécuté `creerApprenti`.
+  Future<void> chargerEquipeDepuisServeur(String atelierId) async {
+    try {
+      final lignes = await _client
+          .from('utilisateurs')
+          .select()
+          .eq('atelier_id', atelierId)
+          .timeout(const Duration(seconds: 15));
+      await pourChaqueLigne(lignes, (ligne) async {
+        final utilisateur = Utilisateur.depuisJson(ligne);
+        await _baseLocale.enregistrerUtilisateur(
+          id: utilisateur.id,
+          atelierId: utilisateur.atelierId,
+          nom: utilisateur.nom,
+          telephone: utilisateur.telephone,
+          role: utilisateur.role.name,
+          updatedAt: utilisateur.updatedAt,
+        );
+      });
+    } catch (_) {
+      // Hors-ligne (ou délai dépassé) : le cache existant reste utilisable.
+    }
   }
 
   Future<void> _mettreEnCache({
