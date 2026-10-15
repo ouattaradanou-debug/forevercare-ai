@@ -93,6 +93,10 @@ Deno.serve(async (requete) => {
         email: emailSynthetique(telephone),
         password: pin,
         email_confirm: true,
+        // Voir le commentaire équivalent dans auth_repository.dart : le
+        // projet Supabase est partagé avec une autre application, ce champ
+        // évite que ce compte soit classé par erreur dans l'autre appli.
+        user_metadata: { app: 'atelier-plus' },
       });
 
     if (erreurCreationAuth || !nouvelUtilisateurAuth.user) {

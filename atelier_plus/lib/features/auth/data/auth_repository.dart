@@ -57,7 +57,16 @@ class AuthRepository {
 
     final AuthResponse reponseAuth;
     try {
-      reponseAuth = await _client.auth.signUp(email: email, password: pin);
+      reponseAuth = await _client.auth.signUp(
+        email: email,
+        password: pin,
+        // Le projet Supabase est partagé avec une autre application ; un
+        // déclencheur commun sur auth.users distingue les comptes via ce
+        // champ (sinon il les classe par défaut dans l'autre application,
+        // qui exige un numéro de téléphone qu'Atelier+ ne fournit jamais —
+        // voir la fonction handle_new_user côté base de données).
+        data: const {'app': 'atelier-plus'},
+      );
     } on AuthException catch (e) {
       if (e.message.toLowerCase().contains('already registered')) {
         throw const TelephoneDejaUtiliseException();
