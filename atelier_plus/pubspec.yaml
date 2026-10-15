@@ -1,0 +1,101 @@
+name: atelier_plus
+description: "Atelier + — application de gestion de clientèle pour tailleurs et couturiers, fonctionnant intégralement hors-ligne avec synchronisation Supabase."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Traductions Material/Cupertino en français (requis dès qu'une locale
+  # est déclarée dans MaterialApp — sinon crash au démarrage).
+  flutter_localizations:
+    sdk: flutter
+
+  # --- Gestion d'état ---
+  flutter_riverpod: ^2.6.1
+
+  # --- Navigation déclarative ---
+  go_router: ^14.6.2
+
+  # --- Backend Supabase (Auth, PostgreSQL, Storage, RLS) ---
+  supabase_flutter: ^2.8.0
+
+  # --- Base locale hors-ligne (cache SQLite via Drift) ---
+  drift: ^2.22.0
+  sqlite3_flutter_libs: ^0.5.26
+  path_provider: ^2.1.5
+  path: ^1.9.0
+
+  # --- Détection de connectivité (déclenche la synchronisation auto) ---
+  connectivity_plus: ^6.1.0
+
+  # --- Photos : capture caméra ET galerie obligatoires, avec compression ---
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+  # Mise en cache disque des photos de tissu/modèle (Supabase Storage) :
+  # affichage instantané aux visites suivantes de la fiche client, au lieu
+  # de retélécharger l'image à chaque fois.
+  cached_network_image: ^3.4.1
+
+  # --- Note vocale de description sous chaque photo (tissu/modèle) ---
+  # Version 7.x requise : 5.2.x résout une combinaison record_linux/
+  # record_platform_interface incompatible (erreur de compilation), corrigée
+  # dans les versions plus récentes.
+  record: ^7.1.1
+  audioplayers: ^6.1.0
+
+  # --- Dictée vocale (nom/téléphone) pour un tailleur qui ne sait pas
+  # écrire : reconnaissance vocale du téléphone, transcrite dans le champ.
+  speech_to_text: ^7.0.0
+  # --- Confirmation parlée (date/heure du rendez-vous répétée à voix haute
+  # avant enregistrement) : synthèse vocale, même logique d'accessibilité.
+  flutter_tts: ^4.2.0
+
+  # --- Notifications locales (rappels de rendez-vous) ---
+  flutter_local_notifications: ^18.0.1
+  # Requis par flutter_local_notifications pour la planification exacte
+  # (zonedSchedule a besoin d'un DateTime conscient du fuseau horaire).
+  timezone: ^0.9.4
+  flutter_timezone: ^5.1.0
+
+  # --- Formatage des montants (FCFA) et des dates en français ---
+  intl: ^0.20.3
+
+  # --- Identifiants uniques générés côté client (indispensable hors-ligne) ---
+  uuid: ^4.5.1
+
+  # --- Persistance de préférences simples (délai de rappel des rendez-vous) ---
+  shared_preferences: ^2.3.3
+
+  # --- Export PDF de fiche client, avec logo/nom d'atelier ---
+  pdf: ^3.11.1
+  printing: ^5.13.4
+  # Téléchargement du logo (Supabase Storage) pour l'incorporer au PDF.
+  http: ^1.2.2
+
+  # --- Appel/SMS en un tap depuis la fiche client (icônes téléphone/message
+  # à côté du numéro, comme dans l'ancienne application) ---
+  url_launcher: ^6.3.1
+
+  # --- Partage de la facture (image) via le menu de partage natif,
+  # notamment vers WhatsApp ---
+  share_plus: ^10.1.4
+
+  # --- Signature manuscrite du tailleur (dessinée une fois dans Paramètres,
+  # réutilisée sur chaque facture PDF) ---
+  signature: ^5.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.13
+  drift_dev: ^2.22.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/logo_seda_tech.png

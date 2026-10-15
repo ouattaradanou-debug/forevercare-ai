@@ -1,0 +1,281 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../data/local/database.dart';
+import '../../../data/models/champ_mesure.dart';
+import '../../../data/models/type_tenue.dart';
+import '../../../data/sync/lecture_tolerante.dart';
+import '../../abonnement/data/abonnement_guard.dart';
+
+/// Gestion des gabarits (types de tenue + champs de mesure).
+///
+/// Contrairement à `ClientsRepository`/`MesuresRepository`, les écritures
+/// passent par le serveur EN PREMIER (pas d'écriture locale immédiate) :
+/// modifier un gabarit est une action administrative peu fréquente, pas une
+/// opération quotidienne (voir la liste "créer client / prendre mesure /
+/// noter RDV" du cahier des charges), et sa cohérence doit être garantie
+/// par Supabase (contrainte d'unicité, RLS propriétaire uniquement) avant
+/// d'être reflétée localement. Cette action nécessite donc une connexion —
+/// contrairement à sa LECTURE, qui reste disponible hors-ligne via le cache
+/// local pour que l'écran de prise de mesure fonctionne au quotidien.
+class GabaritsRepository {
+  GabaritsRepository({required SupabaseClient client, required AppDatabase baseLocale})
+      : _client = client,
+        _baseLocale = baseLocale;
+
+  final SupabaseClient _client;
+  final AppDatabase _baseLocale;
+
+  /// Rapatrie les gabarits par défaut et ceux de l'atelier, avec leurs
+  /// champs de mesure, dans le cache local. À appeler à la connexion et à
+  /// l'ouverture des écrans de gabarits/mesures ; échoue silencieusement
+  /// hors-ligne (le cache existant reste utilisable).
+  Future<void> chargerDepuisServeur(String atelierId) async {
+    try {
+      final typesJson = await _client
+          .from('types_tenue')
+          .select()
+          .or('atelier_id.is.null,atelier_id.eq.$atelierId');
+
+      // pourChaqueLigne isole chaque type de tenue (et chaque champ) : un
+      // seul gabarit malformé ne doit jamais faire disparaître les AUTRES
+      // du formulaire de prise de mesure — ce qui aurait empêché de
+      // prendre une mesure pour n'importe quel client, pas seulement un.
+      await pourChaqueLigne(typesJson, (ligne) async {
+        final type = TypeTenue.depuisJson(ligne);
+        await _baseLocale.enregistrerTypeTenue(
+          id: type.id,
+          atelierId: type.atelierId,
+          nom: type.nom,
+          sexe: type.sexe,
+          updatedAt: type.updatedAt,
+        );
+
+        final champsJson =
+            await _client.from('champs_mesure').select().eq('type_tenue_id', type.id);
+        await pourChaqueLigne(champsJson, (ligneChamp) async {
+          final champ = ChampMesure.depuisJson(ligneChamp);
+          await _baseLocale.enregistrerChampMesure(
+            id: champ.id,
+            typeTenueId: champ.typeTenueId,
+            nom: champ.nom,
+            unite: champ.unite,
+            statut: champ.statut.name,
+            ordre: champ.ordre,
+            updatedAt: champ.updatedAt,
+          );
+        });
+      });
+    } catch (_) {
+      // Hors-ligne : le cache existant (chargé lors d'une précédente
+      // connexion) reste utilisable pour la prise de mesure.
+    }
+  }
+
+  Future<TypeTenue> creerTypePersonnalise({
+    required String atelierId,
+    required String nom,
+    required String sexe,
+  }) async {
+    await verifierEcritureAutorisee(_baseLocale, atelierId);
+    final ligne = await _client
+        .from('types_tenue')
+        .insert({'atelier_id': atelierId, 'nom': nom, 'sexe': sexe})
+        .select()
+        .single();
+    final type = TypeTenue.depuisJson(ligne);
+    await _baseLocale.enregistrerTypeTenue(
+      id: type.id,
+      atelierId: type.atelierId,
+      nom: type.nom,
+      sexe: type.sexe,
+      updatedAt: type.updatedAt,
+    );
+    return type;
+  }
+
+  /// Duplique un gabarit (par défaut ou personnalisé) en une nouvelle copie
+  /// propre à l'atelier, avec tous ses champs actuellement actifs recopiés
+  /// à l'état actif (la copie démarre sans historique de mesures, masquer
+  /// un champ de l'original n'a pas de sens à reporter sur la copie).
+  Future<TypeTenue> dupliquerGabarit({
+    required TypeTenue source,
+    required String atelierId,
+    String? nouveauNom,
+  }) async {
+    final nouveauType = await creerTypePersonnalise(
+      atelierId: atelierId,
+      nom: nouveauNom ?? '${source.nom} (copie)',
+      sexe: source.sexe,
+    );
+
+    final champsSourceJson = await _client
+        .from('champs_mesure')
+        .select()
+        .eq('type_tenue_id', source.id)
+        .order('ordre');
+
+    for (final ligneChamp in champsSourceJson) {
+      final champSource = ChampMesure.depuisJson(ligneChamp);
+      await ajouterChamp(
+        typeTenueId: nouveauType.id,
+        nom: champSource.nom,
+        unite: champSource.unite,
+        ordre: champSource.ordre,
+      );
+    }
+
+    return nouveauType;
+  }
+
+  /// Gabarit modifiable par CET atelier pour [sexe] ("Homme"/"Femme") : sa
+  /// propre copie si elle existe déjà, sinon une duplication automatique et
+  /// transparente du gabarit par défaut partagé (lecture seule entre
+  /// ateliers, voir TypeTenue.estGabaritParDefaut) — appelé à l'ouverture
+  /// de l'écran "Champs de mesure", qui ne doit jamais montrer le gabarit
+  /// partagé lui-même.
+  Future<TypeTenue> gabaritModifiablePourSexe({
+    required String atelierId,
+    required String sexe,
+  }) async {
+    final liste = await _baseLocale.observerTypesTenueVisibles(atelierId).first;
+
+    TypeTenueEntry? propre;
+    TypeTenueEntry? parDefaut;
+    for (final t in liste) {
+      if (t.sexe != sexe) continue;
+      if (t.atelierId == atelierId) {
+        propre = t;
+      } else if (t.atelierId == null) {
+        parDefaut = t;
+      }
+    }
+
+    if (propre != null) {
+      return TypeTenue(
+        id: propre.id,
+        atelierId: propre.atelierId,
+        nom: propre.nom,
+        sexe: propre.sexe,
+        updatedAt: propre.updatedAt,
+      );
+    }
+    if (parDefaut == null) {
+      throw StateError('Aucun gabarit par défaut pour "$sexe".');
+    }
+
+    final source = TypeTenue(
+      id: parDefaut.id,
+      atelierId: parDefaut.atelierId,
+      nom: parDefaut.nom,
+      sexe: parDefaut.sexe,
+      updatedAt: parDefaut.updatedAt,
+    );
+    return dupliquerGabarit(source: source, atelierId: atelierId, nouveauNom: parDefaut.nom);
+  }
+
+  Future<ChampMesure> ajouterChamp({
+    required String typeTenueId,
+    required String nom,
+    String unite = 'cm',
+    int ordre = 0,
+    String? atelierId,
+  }) async {
+    if (atelierId != null) {
+      await verifierEcritureAutorisee(_baseLocale, atelierId);
+    }
+    final ligne = await _client
+        .from('champs_mesure')
+        .insert({'type_tenue_id': typeTenueId, 'nom': nom, 'unite': unite, 'ordre': ordre})
+        .select()
+        .single();
+    final champ = ChampMesure.depuisJson(ligne);
+    await _baseLocale.enregistrerChampMesure(
+      id: champ.id,
+      typeTenueId: champ.typeTenueId,
+      nom: champ.nom,
+      unite: champ.unite,
+      statut: champ.statut.name,
+      ordre: champ.ordre,
+      updatedAt: champ.updatedAt,
+    );
+    return champ;
+  }
+
+  /// Vérifie si des mesures existantes (en cache local) référencent ce
+  /// champ, pour avertir le propriétaire avant masquage — le masquage ne
+  /// supprime jamais l'historique (aucune politique DELETE n'existe côté
+  /// base sur champs_mesure), mais le champ disparaît des nouvelles prises
+  /// de mesure : la vérification informe d'une conséquence réelle, elle ne
+  /// bloque rien techniquement.
+  ///
+  /// Vérification effectuée sur le cache local uniquement (best-effort) :
+  /// une mesure prise sur un autre appareil et pas encore synchronisée ici
+  /// ne sera détectée qu'après la synchronisation complète (Phase 3).
+  Future<bool> champUtiliseParDesMesures(ChampMesure champ) async {
+    final mesures = await _baseLocale.mesuresParType(champ.typeTenueId);
+    // Recherche textuelle simple de la clé JSON plutôt qu'un décodage
+    // complet : suffisant car les identifiants de champ sont des UUID
+    // (aucun risque de faux positif par sous-chaîne).
+    return mesures.any((m) => m.valeursJson.contains('"${champ.id}"'));
+  }
+
+  /// Met à jour l'ordre d'affichage des champs selon leur position dans
+  /// [champsOrdonnes] (l'index dans la liste devient le nouvel `ordre`) —
+  /// utilisé par le glisser-déposer de l'écran de gestion des champs, pour
+  /// que le tailleur organise les champs selon ses préférences. Cet ordre
+  /// est partagé par la prise de mesure (client et membre de groupe
+  /// d'uniformes), qui lit la même colonne `ordre`.
+  Future<void> reordonnerChamps(List<ChampMesure> champsOrdonnes, {String? atelierId}) async {
+    if (atelierId != null) {
+      await verifierEcritureAutorisee(_baseLocale, atelierId);
+    }
+    for (var i = 0; i < champsOrdonnes.length; i++) {
+      final champ = champsOrdonnes[i];
+      if (champ.ordre == i) continue;
+      final ligne = await _client
+          .from('champs_mesure')
+          .update({'ordre': i})
+          .eq('id', champ.id)
+          .select()
+          .single();
+      final miseAJour = ChampMesure.depuisJson(ligne);
+      await _baseLocale.enregistrerChampMesure(
+        id: miseAJour.id,
+        typeTenueId: miseAJour.typeTenueId,
+        nom: miseAJour.nom,
+        unite: miseAJour.unite,
+        statut: miseAJour.statut.name,
+        ordre: miseAJour.ordre,
+        updatedAt: miseAJour.updatedAt,
+      );
+    }
+  }
+
+  Future<void> masquerChamp(ChampMesure champ, {String? atelierId}) =>
+      _changerStatutChamp(champ.id, StatutChamp.masque, atelierId);
+
+  Future<void> reactiverChamp(ChampMesure champ, {String? atelierId}) =>
+      _changerStatutChamp(champ.id, StatutChamp.actif, atelierId);
+
+  Future<void> _changerStatutChamp(String champId, StatutChamp statut, String? atelierId) async {
+    if (atelierId != null) {
+      await verifierEcritureAutorisee(_baseLocale, atelierId);
+    }
+    final ligne = await _client
+        .from('champs_mesure')
+        .update({'statut': statut.name})
+        .eq('id', champId)
+        .select()
+        .single();
+    final champ = ChampMesure.depuisJson(ligne);
+    await _baseLocale.enregistrerChampMesure(
+      id: champ.id,
+      typeTenueId: champ.typeTenueId,
+      nom: champ.nom,
+      unite: champ.unite,
+      statut: champ.statut.name,
+      ordre: champ.ordre,
+      updatedAt: champ.updatedAt,
+    );
+  }
+}

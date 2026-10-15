@@ -1,0 +1,1601 @@
+-- =============================================================================
+-- ATELIER+ — Schéma Supabase (PostgreSQL) complet
+-- =============================================================================
+-- Ce script est idempotent (peut être rejoué sans erreur) et couvre :
+--   1. Extensions
+--   2. Tables et relations
+--   3. Déclencheurs (updated_at, permissions par défaut, abonnement d'essai)
+--   4. Fonctions utilitaires pour les politiques RLS
+--   5. Activation et définition des politiques RLS
+--
+-- Principe central des politiques RLS :
+--   - Un utilisateur ne voit/écrit que les données de SON atelier.
+--   - Un apprenti ne peut JAMAIS lire ni écrire dans commandes/paiements,
+--     quelle que soit la permission qui lui a été accordée (aucune colonne
+--     financière n'existe même dans permissions_apprenti, par conception).
+--   - Seul le rôle "proprietaire" peut modifier ateliers (nom/logo) et les
+--     types_tenue / champs_mesure de premier niveau (structure des gabarits),
+--     même si la colonne permissions_apprenti.modifier_gabarits est activée :
+--     cette colonne est réservée à un usage futur / UI (ex : affichage de
+--     l'écran de gestion des gabarits), pas à un droit d'écriture RLS.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. EXTENSIONS
+-- -----------------------------------------------------------------------------
+create extension if not exists "pgcrypto";
+-- Permet d'ignorer les accents dans la réponse à la question secrète (voir
+-- normaliser_reponse_secrete plus bas) : "café", "Café" et "cafe" doivent
+-- être acceptés indifféremment, le tailleur n'étant pas censé se souvenir
+-- s'il avait mis des accents.
+create extension if not exists "unaccent";
+
+-- -----------------------------------------------------------------------------
+-- 2. TABLES
+-- -----------------------------------------------------------------------------
+
+-- Un atelier = un compte "entreprise" (le tailleur et ses éventuels apprentis).
+create table if not exists public.ateliers (
+  id            uuid primary key default gen_random_uuid(),
+  nom           text not null,
+  logo_url      text,
+  signature_url text,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+comment on table public.ateliers is 'Un atelier de couture = un compte client de l''application.';
+
+-- Signature manuscrite du tailleur (dessinée une fois dans Paramètres,
+-- réutilisée sur chaque facture PDF).
+alter table public.ateliers add column if not exists signature_url text;
+
+-- Un utilisateur applicatif = auth.users(id) + informations métier (atelier, rôle).
+-- utilisateurs.id doit être identique à auth.users.id (créé lors du sign-up).
+create table if not exists public.utilisateurs (
+  id          uuid primary key references auth.users (id) on delete cascade,
+  atelier_id  uuid not null references public.ateliers (id) on delete cascade,
+  nom         text not null,
+  telephone   text not null unique,
+  role        text not null check (role in ('proprietaire', 'apprenti')),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+comment on table public.utilisateurs is 'Utilisateurs applicatifs : le propriétaire de l''atelier et ses apprentis.';
+
+create index if not exists idx_utilisateurs_atelier on public.utilisateurs (atelier_id);
+
+-- Ajout a posteriori : question secrète permettant au propriétaire de
+-- récupérer l'accès à son compte s'il a oublié son code PIN (voir la
+-- fonction Edge `recuperer-compte`) — la réponse n'est jamais stockée en
+-- clair, seulement son empreinte (`crypt`, voir definir_question_secrete
+-- ci-dessous), comme un mot de passe.
+alter table public.utilisateurs add column if not exists question_secrete text;
+alter table public.utilisateurs add column if not exists reponse_secrete_hash text;
+
+-- Normalise une réponse à la question secrète avant hachage/comparaison :
+-- espaces superflus retirés, minuscules, accents ignorés — le tailleur
+-- peut répondre "Marie", "MARIE", "marie" ou "marié" indifféremment.
+-- `set search_path` inclut `extensions` : sur un projet Supabase, pgcrypto
+-- et unaccent sont le plus souvent installées dans ce schéma dédié plutôt
+-- que `public`, même quand `create extension` ci-dessus semble avoir
+-- réussi (silencieusement sans effet si déjà présentes ailleurs) —
+-- `crypt`/`gen_salt`/`unaccent` restaient donc introuvables pour ces
+-- fonctions tant que `public` seul figurait dans leur search_path.
+create or replace function public.normaliser_reponse_secrete(reponse text)
+returns text
+language sql
+immutable
+set search_path = public, extensions
+as $$
+  select lower(trim(unaccent(reponse)));
+$$;
+
+-- Définit (ou remplace) la question secrète de l'utilisateur connecté —
+-- jamais pour un autre utilisateur (toujours `auth.uid()`, jamais un
+-- paramètre d'identifiant).
+create or replace function public.definir_question_secrete(question text, reponse text)
+returns void
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Authentification requise.';
+  end if;
+  update public.utilisateurs
+  set question_secrete = question,
+      reponse_secrete_hash = crypt(normaliser_reponse_secrete(reponse), gen_salt('bf'))
+  where id = auth.uid();
+end;
+$$;
+
+grant execute on function public.definir_question_secrete(text, text) to authenticated;
+
+-- Vérifie la réponse à la question secrète d'un propriétaire identifié par
+-- son numéro de téléphone — utilisée uniquement par la fonction Edge
+-- `recuperer-compte` via la clé `service_role` (AUCUN grant à anon/
+-- authenticated ci-dessous : PostgREST ne doit jamais exposer cette
+-- fonction directement, sous peine d'offrir un oracle de vérification
+-- exploitable par force brute en dehors de la fonction Edge).
+create or replace function public.verifier_reponse_secrete(p_telephone text, p_reponse text)
+returns table(utilisateur_id uuid, valide boolean)
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_id uuid;
+  v_hash text;
+begin
+  select id, reponse_secrete_hash into v_id, v_hash
+  from public.utilisateurs
+  where telephone = p_telephone and role = 'proprietaire';
+
+  if v_id is null or v_hash is null then
+    return query select null::uuid, false;
+    return;
+  end if;
+
+  return query
+    select v_id, (crypt(normaliser_reponse_secrete(p_reponse), v_hash) = v_hash);
+end;
+$$;
+
+-- Permissions accordées à un compte apprenti. Un apprenti ne peut JAMAIS se
+-- voir accorder un accès à commandes/paiements (le suivi financier par
+-- client) : ce droit n'existe toujours dans aucune colonne ci-dessous, même
+-- par erreur d'un propriétaire. ventes/stock/depenses sont un choix distinct
+-- et explicite du propriétaire (voir a_permission_ventes/a_permission_stock/
+-- a_permission_enregistrer_depenses) : ce sont les ventes/dépenses globales
+-- de l'atelier, pas le suivi financier d'un client en particulier. Elles
+-- sont activées PAR DÉFAUT (contrairement aux autres permissions de cette
+-- table) : un propriétaire qui ne veut pas les accorder à un apprenti donné
+-- doit les désactiver lui-même depuis le panneau de permissions.
+create table if not exists public.permissions_apprenti (
+  id                   uuid primary key default gen_random_uuid(),
+  utilisateur_id       uuid not null unique references public.utilisateurs (id) on delete cascade,
+  creer_client         boolean not null default false,
+  modifier_client      boolean not null default false,
+  prendre_mesures      boolean not null default false,
+  ajouter_photos       boolean not null default false,
+  modifier_gabarits    boolean not null default false,
+  ventes               boolean not null default true,
+  stock                boolean not null default true,
+  enregistrer_depenses boolean not null default true,
+  updated_at           timestamptz not null default now()
+);
+
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante) — même précaution que les
+-- autres `alter table ... add column if not exists` de ce fichier.
+alter table public.permissions_apprenti add column if not exists ventes boolean not null default true;
+alter table public.permissions_apprenti add column if not exists stock boolean not null default true;
+alter table public.permissions_apprenti add column if not exists enregistrer_depenses boolean not null default true;
+
+-- Si les colonnes existaient déjà (base migrée avant ce changement de
+-- défaut), `add column if not exists` ci-dessus ne les touche pas : ces
+-- lignes mettent à jour le défaut pour les PROCHAINS apprentis créés, sans
+-- toucher aux réglages déjà faits par le propriétaire pour des apprentis
+-- existants.
+alter table public.permissions_apprenti alter column ventes set default true;
+alter table public.permissions_apprenti alter column stock set default true;
+alter table public.permissions_apprenti alter column enregistrer_depenses set default true;
+
+comment on table public.permissions_apprenti is
+  'Permissions fines d''un apprenti. Jamais de colonne donnant accès à '
+  'commandes/paiements (suivi financier par client), par conception.';
+
+-- Clients de l'atelier (les personnes habillées par le tailleur).
+create table if not exists public.clients (
+  id          uuid primary key default gen_random_uuid(),
+  atelier_id  uuid not null references public.ateliers (id) on delete cascade,
+  nom         text not null,
+  prenom      text,
+  telephone   text,
+  sexe        text check (sexe in ('homme', 'femme')),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists idx_clients_atelier on public.clients (atelier_id);
+create index if not exists idx_clients_recherche on public.clients (atelier_id, nom, prenom, telephone);
+
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante) : un client "supprimé"
+-- depuis plus de deux semaines (voir AppConstants.dureeConservationFinances
+-- côté application) n'est en réalité que masqué, jamais réellement effacé
+-- de la table — ses commandes/paiements restent alors valides en base
+-- (toujours rattachés à ce client) et continuent donc à compter dans les
+-- récapitulatifs financiers de l'atelier. Un client plus récent, lui, est
+-- toujours réellement supprimé (voir clients_delete ci-dessous).
+alter table public.clients add column if not exists supprime_le timestamptz;
+
+-- Types de tenue : gabarits par défaut (atelier_id NULL, partagés par tous)
+-- ou gabarits personnalisés d'un atelier (atelier_id renseigné).
+create table if not exists public.types_tenue (
+  id          uuid primary key default gen_random_uuid(),
+  atelier_id  uuid references public.ateliers (id) on delete cascade,
+  nom         text not null,
+  sexe        text not null check (sexe in ('homme', 'femme', 'mixte')),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+comment on table public.types_tenue is
+  'atelier_id NULL = gabarit par défaut fourni par l''application (lecture seule côté client).';
+
+create index if not exists idx_types_tenue_atelier on public.types_tenue (atelier_id);
+
+-- Groupes de mesures d'uniformes (promotion, établissement, équipe) : un
+-- conteneur sous lequel on prendra les mesures de plusieurs personnes en une
+-- fois, séparément des fiches clients individuelles.
+create table if not exists public.groupes_uniformes (
+  id                    uuid primary key default gen_random_uuid(),
+  atelier_id            uuid not null references public.ateliers (id) on delete cascade,
+  nom                   text not null,
+  repondant_nom         text,
+  repondant_telephone   text,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now()
+);
+
+create index if not exists idx_groupes_uniformes_atelier on public.groupes_uniformes (atelier_id);
+
+-- Même principe que `clients.supprime_le` ci-dessus — pas de politique
+-- RESTRICTIVE supplémentaire nécessaire ici : `groupes_uniformes_update`
+-- (voir plus bas) exige déjà `est_proprietaire()` pour toute modification,
+-- apprenti compris.
+alter table public.groupes_uniformes add column if not exists supprime_le timestamptz;
+
+-- Membres d'un groupe d'uniformes (une personne dont on prend les mesures
+-- dans le cadre d'une commande groupée, sans fiche client individuelle).
+create table if not exists public.membres_groupe_uniforme (
+  id               uuid primary key default gen_random_uuid(),
+  groupe_id        uuid not null references public.groupes_uniformes (id) on delete cascade,
+  nom              text,
+  prenom           text,
+  sexe             text,
+  tenue_terminee   boolean not null default false,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+create index if not exists idx_membres_groupe on public.membres_groupe_uniforme (groupe_id);
+
+-- Mesures prises pour un membre de groupe — même principe que `mesures`
+-- (jamais de mise à jour, chaque prise crée une nouvelle ligne), mais
+-- rattachées à un membre plutôt qu'à un client.
+create table if not exists public.mesures_uniforme (
+  id             uuid primary key default gen_random_uuid(),
+  membre_id      uuid not null references public.membres_groupe_uniforme (id) on delete cascade,
+  type_tenue_id  uuid not null references public.types_tenue (id) on delete cascade,
+  date_prise     timestamptz not null default now(),
+  valeurs        jsonb not null default '{}'::jsonb,
+  prise_par      uuid references public.utilisateurs (id) on delete set null,
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists idx_mesures_uniforme_membre on public.mesures_uniforme (membre_id);
+
+-- Photos (tissus/modèles) associées à un groupe d'uniformes.
+create table if not exists public.photos_groupe_uniforme (
+  id            uuid primary key default gen_random_uuid(),
+  groupe_id     uuid not null references public.groupes_uniformes (id) on delete cascade,
+  type          text not null,
+  url           text not null,
+  source        text not null,
+  commentaire   text,
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists idx_photos_groupe on public.photos_groupe_uniforme (groupe_id);
+
+-- Champs de mesure appartenant à un type de tenue.
+create table if not exists public.champs_mesure (
+  id            uuid primary key default gen_random_uuid(),
+  type_tenue_id uuid not null references public.types_tenue (id) on delete cascade,
+  nom           text not null,
+  unite         text not null default 'cm',
+  statut        text not null default 'actif' check (statut in ('actif', 'masque')),
+  ordre         integer not null default 0,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+comment on column public.champs_mesure.statut is
+  'Un champ utilisé par au moins une mesure existante ne doit jamais être supprimé, seulement masqué (vérification applicative avant tout masquage/suppression).';
+
+create index if not exists idx_champs_mesure_type on public.champs_mesure (type_tenue_id);
+
+-- Mesures prises pour un client, pour un type de tenue donné.
+-- Chaque prise crée une NOUVELLE ligne (historique), jamais d'écrasement.
+create table if not exists public.mesures (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  client_id      uuid not null references public.clients (id) on delete cascade,
+  type_tenue_id  uuid not null references public.types_tenue (id),
+  date_prise     timestamptz not null default now(),
+  valeurs        jsonb not null default '{}'::jsonb,
+  prise_par      uuid references public.utilisateurs (id),
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+comment on column public.mesures.valeurs is
+  'Paires {champ_mesure_id: valeur} correspondant au gabarit au moment de la prise.';
+
+create index if not exists idx_mesures_client on public.mesures (client_id, type_tenue_id, date_prise desc);
+create index if not exists idx_mesures_atelier on public.mesures (atelier_id);
+
+-- Photos de tissus ou de modèles associées à un client, OU à un groupe
+-- d'uniformes séparé par sexe (exactement l'un des deux doit être renseigné :
+-- voir le check `photos_client_ou_groupe` ci-dessous). Une seule table pour
+-- les deux usages afin que toute évolution côté client s'applique aussi aux
+-- groupes (voir PhotosRepository côté application).
+create table if not exists public.photos (
+  id          uuid primary key default gen_random_uuid(),
+  atelier_id  uuid not null references public.ateliers (id) on delete cascade,
+  client_id   uuid references public.clients (id) on delete cascade,
+  groupe_id   uuid references public.groupes_uniformes (id) on delete cascade,
+  sexe        text check (sexe in ('Homme', 'Femme')),
+  type        text not null check (type in ('tissu', 'modele')),
+  url         text not null,
+  source      text not null check (source in ('camera', 'galerie')),
+  audio_url   text,
+  created_at  timestamptz not null default now()
+);
+
+-- Ajouts a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante) : note vocale de
+-- description optionnelle, une par photo ; puis rattachement possible à un
+-- groupe d'uniformes au lieu d'un client (client_id devient nullable).
+alter table public.photos add column if not exists audio_url text;
+alter table public.photos alter column client_id drop not null;
+alter table public.photos add column if not exists groupe_id uuid references public.groupes_uniformes (id) on delete cascade;
+alter table public.photos add column if not exists sexe text check (sexe in ('Homme', 'Femme'));
+
+alter table public.photos drop constraint if exists photos_client_ou_groupe;
+alter table public.photos add constraint photos_client_ou_groupe
+  check ((client_id is null) <> (groupe_id is null));
+
+create index if not exists idx_photos_client on public.photos (client_id);
+create index if not exists idx_photos_groupe on public.photos (groupe_id);
+create index if not exists idx_photos_atelier on public.photos (atelier_id);
+
+-- Rendez-vous (essayage ou livraison).
+create table if not exists public.rendez_vous (
+  id          uuid primary key default gen_random_uuid(),
+  atelier_id  uuid not null references public.ateliers (id) on delete cascade,
+  client_id   uuid not null references public.clients (id) on delete cascade,
+  date_heure  timestamptz not null,
+  type        text not null check (type in ('essayage', 'livraison')),
+  statut      text not null default 'planifie' check (statut in ('planifie', 'confirme', 'termine', 'annule')),
+  urgent      boolean not null default false,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+alter table public.rendez_vous add column if not exists urgent boolean not null default false;
+
+-- Le client est-il venu récupérer sa tenue à ce rendez-vous (typiquement
+-- une livraison) ? `tenue_retiree_le` sert à faire disparaître
+-- automatiquement le rendez-vous de la liste 10 minutes après ce marquage
+-- (filtre applicatif, voir EcranListeRendezVous), sans jamais supprimer la
+-- ligne elle-même (conservée pour l'historique).
+alter table public.rendez_vous add column if not exists tenue_retiree boolean not null default false;
+alter table public.rendez_vous add column if not exists tenue_retiree_le timestamptz;
+
+create index if not exists idx_rdv_atelier_date on public.rendez_vous (atelier_id, date_heure);
+create index if not exists idx_rdv_client on public.rendez_vous (client_id);
+
+-- Commandes (montant total, avance). Table financière — jamais accessible
+-- à un apprenti, quelle que soit sa permission.
+create table if not exists public.commandes (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  client_id      uuid not null references public.clients (id) on delete cascade,
+  montant_total  numeric(12, 2) not null default 0 check (montant_total >= 0),
+  avance         numeric(12, 2) not null default 0 check (avance >= 0),
+  tenue_retiree  boolean not null default false,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante) : le client est-il venu
+-- récupérer sa tenue terminée ? (case à cocher sur la fiche client).
+alter table public.commandes add column if not exists tenue_retiree boolean not null default false;
+
+create index if not exists idx_commandes_client on public.commandes (client_id);
+create index if not exists idx_commandes_atelier on public.commandes (atelier_id);
+
+-- Paiements successifs sur une commande. Table financière — même règle.
+create table if not exists public.paiements (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  commande_id    uuid not null references public.commandes (id) on delete cascade,
+  montant        numeric(12, 2) not null check (montant > 0),
+  date_paiement  timestamptz not null default now(),
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists idx_paiements_commande on public.paiements (commande_id);
+create index if not exists idx_paiements_atelier on public.paiements (atelier_id);
+
+-- Commande globale d'un groupe d'uniformes (montant total, avance) — table
+-- dédiée et séparée de `commandes` (clients) : un groupe a une seule
+-- commande plutôt qu'une par membre, et cette séparation évite tout ALTER
+-- sur une table déjà en production. Table financière — même règle.
+create table if not exists public.commandes_groupe (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  groupe_id      uuid not null references public.groupes_uniformes (id) on delete cascade,
+  montant_total  numeric(12, 2) not null default 0 check (montant_total >= 0),
+  avance         numeric(12, 2) not null default 0 check (avance >= 0),
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+create index if not exists idx_commandes_groupe_groupe on public.commandes_groupe (groupe_id);
+create index if not exists idx_commandes_groupe_atelier on public.commandes_groupe (atelier_id);
+
+-- Paiements successifs sur une commande de groupe — même principe que
+-- `paiements` (clients), table dédiée pour la même raison que
+-- `commandes_groupe`.
+create table if not exists public.paiements_groupe (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  commande_id    uuid not null references public.commandes_groupe (id) on delete cascade,
+  montant        numeric(12, 2) not null check (montant > 0),
+  date_paiement  timestamptz not null default now(),
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists idx_paiements_groupe_commande on public.paiements_groupe (commande_id);
+create index if not exists idx_paiements_groupe_atelier on public.paiements_groupe (atelier_id);
+
+-- Rendez-vous rattachés à un groupe d'uniformes — table dédiée et séparée
+-- de `rendez_vous` (clients), même raison que `commandes_groupe` : jamais
+-- d'ALTER sur une table déjà en production.
+create table if not exists public.rendez_vous_groupe (
+  id          uuid primary key default gen_random_uuid(),
+  atelier_id  uuid not null references public.ateliers (id) on delete cascade,
+  groupe_id   uuid not null references public.groupes_uniformes (id) on delete cascade,
+  date_heure  timestamptz not null,
+  type        text not null check (type in ('essayage', 'livraison')),
+  statut      text not null default 'planifie' check (statut in ('planifie', 'confirme', 'termine', 'annule')),
+  urgent      boolean not null default false,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists idx_rdv_groupe_atelier_date on public.rendez_vous_groupe (atelier_id, date_heure);
+
+-- Même principe que rendez_vous.tenue_retiree ci-dessus.
+alter table public.rendez_vous_groupe add column if not exists tenue_retiree boolean not null default false;
+alter table public.rendez_vous_groupe add column if not exists tenue_retiree_le timestamptz;
+create index if not exists idx_rdv_groupe_groupe on public.rendez_vous_groupe (groupe_id);
+
+-- Dépenses de l'atelier (loyer, fournitures, etc.). Table financière — même
+-- règle que commandes/paiements : jamais accessible à un apprenti.
+create table if not exists public.depenses (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  montant        numeric(12, 2) not null check (montant > 0),
+  description    text,
+  date_depense   timestamptz not null default now(),
+  created_at     timestamptz not null default now()
+);
+
+create index if not exists idx_depenses_atelier on public.depenses (atelier_id, date_depense);
+
+-- Catalogue des articles suivis en stock (prêt-à-porter, tissu, article de
+-- couture) — même règle que commandes/paiements/depenses : jamais
+-- accessible à un apprenti. `quantite_stock` est la source de vérité du
+-- "reste en stock", décrémentée automatiquement par chaque vente qui
+-- référence cet article (voir ventes.article_id) et augmentée manuellement
+-- via "Réapprovisionner" côté application.
+create table if not exists public.articles (
+  id                    uuid primary key default gen_random_uuid(),
+  atelier_id            uuid not null references public.ateliers (id) on delete cascade,
+  categorie             text not null check (categorie in ('pret_a_porter', 'tissu', 'article_couture')),
+  nom                   text not null,
+  prix_unitaire_defaut  numeric(12, 2) not null default 0 check (prix_unitaire_defaut >= 0),
+  quantite_stock        numeric(12, 2) not null default 0 check (quantite_stock >= 0),
+  seuil_alerte          numeric(12, 2) not null default 3 check (seuil_alerte >= 0),
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now(),
+  -- Unité choisie pour cet article (ex. "mètre" ou "pagne" pour un tissu) ;
+  -- null = unité par défaut de la catégorie (voir Article.uniteAffichee).
+  unite                 text
+);
+
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante).
+alter table public.articles add column if not exists unite text;
+
+create index if not exists idx_articles_atelier on public.articles (atelier_id, categorie);
+
+-- Ventes directes (prêt-à-porter, tissu, article de couture) — table
+-- financière, même règle que commandes/paiements/depenses : jamais
+-- accessible à un apprenti. L'unité (pièce/mètre) n'est pas stockée :
+-- dérivée de `categorie` côté application.
+create table if not exists public.ventes (
+  id             uuid primary key default gen_random_uuid(),
+  atelier_id     uuid not null references public.ateliers (id) on delete cascade,
+  categorie      text not null check (categorie in ('pret_a_porter', 'tissu', 'article_couture')),
+  designation    text not null,
+  quantite       numeric(12, 2) not null check (quantite > 0),
+  prix_unitaire  numeric(12, 2) not null check (prix_unitaire >= 0),
+  montant_total  numeric(12, 2) not null check (montant_total >= 0),
+  date_vente     timestamptz not null default now(),
+  created_at     timestamptz not null default now(),
+  -- Article du catalogue vendu, s'il a été choisi dans la liste plutôt que
+  -- saisi librement : permet la décrémentation automatique du stock.
+  article_id     uuid references public.articles (id) on delete set null
+);
+
+-- Ajout a posteriori sur une base déjà créée (create table if not exists
+-- ci-dessus ne modifie jamais une table existante).
+alter table public.ventes add column if not exists article_id uuid references public.articles (id) on delete set null;
+
+create index if not exists idx_ventes_atelier on public.ventes (atelier_id, date_vente);
+
+-- Journal d'actions : trace d'audit append-only (utilisée aussi pour logguer
+-- les résolutions de conflit de synchronisation "dernière modification gagne").
+create table if not exists public.journal_actions (
+  id              uuid primary key default gen_random_uuid(),
+  utilisateur_id  uuid references public.utilisateurs (id) on delete set null,
+  action          text not null,
+  cible_table     text,
+  cible_id        uuid,
+  details         jsonb,
+  "timestamp"     timestamptz not null default now()
+);
+
+create index if not exists idx_journal_utilisateur on public.journal_actions (utilisateur_id);
+create index if not exists idx_journal_cible on public.journal_actions (cible_table, cible_id);
+
+-- Abonnement d'un atelier (essai gratuit de 30 jours puis abonnement payant).
+create table if not exists public.abonnements (
+  id                   uuid primary key default gen_random_uuid(),
+  atelier_id           uuid not null unique references public.ateliers (id) on delete cascade,
+  statut               text not null default 'essai' check (statut in ('essai', 'actif', 'expire', 'suspendu')),
+  date_fin_essai       timestamptz not null,
+  date_renouvellement  timestamptz,
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
+);
+
+-- -----------------------------------------------------------------------------
+-- 3. DÉCLENCHEURS
+-- -----------------------------------------------------------------------------
+
+-- 3.1 Maintien automatique de updated_at (utilisé par la résolution de
+--     conflit "dernière modification gagne" de la synchronisation Phase 3).
+create or replace function public.maj_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+do $$
+declare
+  t text;
+begin
+  for t in
+    select unnest(array[
+      'ateliers', 'utilisateurs', 'permissions_apprenti', 'clients',
+      'types_tenue', 'champs_mesure', 'mesures', 'rendez_vous',
+      'commandes', 'abonnements', 'groupes_uniformes', 'membres_groupe_uniforme', 'articles',
+      'commandes_groupe', 'rendez_vous_groupe'
+    ])
+  loop
+    execute format(
+      'drop trigger if exists trg_%1$s_updated_at on public.%1$s;
+       create trigger trg_%1$s_updated_at
+       before update on public.%1$s
+       for each row execute function public.maj_updated_at();',
+      t
+    );
+  end loop;
+end $$;
+
+-- 3.2 À la création d'un compte apprenti : ligne de permissions créée
+--     automatiquement. Seules ventes/stock/enregistrer_depenses démarrent
+--     actives (default true, voir plus bas) ; les autres colonnes restent
+--     sans effet RLS (voir la remarque de la section 4 sur les 7 fonctions
+--     a_permission_* qui renvoient désormais toujours vrai).
+create or replace function public.creer_permissions_apprenti_par_defaut()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.role = 'apprenti' then
+    insert into public.permissions_apprenti (utilisateur_id)
+    values (new.id)
+    on conflict (utilisateur_id) do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_utilisateurs_permissions_defaut on public.utilisateurs;
+create trigger trg_utilisateurs_permissions_defaut
+after insert on public.utilisateurs
+for each row execute function public.creer_permissions_apprenti_par_defaut();
+
+-- 3.3 À la création d'un atelier : abonnement d'essai de 30 jours créé
+--     automatiquement.
+create or replace function public.creer_abonnement_essai()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.abonnements (atelier_id, statut, date_fin_essai)
+  values (new.id, 'essai', now() + interval '30 days')
+  on conflict (atelier_id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_ateliers_abonnement_essai on public.ateliers;
+create trigger trg_ateliers_abonnement_essai
+after insert on public.ateliers
+for each row execute function public.creer_abonnement_essai();
+
+-- -----------------------------------------------------------------------------
+-- 4. FONCTIONS UTILITAIRES POUR LES POLITIQUES RLS
+-- -----------------------------------------------------------------------------
+-- SECURITY DEFINER + search_path fixé : évite toute récursion RLS lors de la
+-- lecture de la table utilisateurs/permissions_apprenti depuis une policy.
+
+create or replace function public.mon_atelier_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select atelier_id from public.utilisateurs where id = auth.uid();
+$$;
+
+create or replace function public.mon_role()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from public.utilisateurs where id = auth.uid();
+$$;
+
+create or replace function public.est_proprietaire()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(public.mon_role() = 'proprietaire', false);
+$$;
+
+-- Depuis la demande "compte apprenti identique au propriétaire (sauf
+-- argent)", ces 7 fonctions renvoient désormais TOUJOURS vrai : le travail
+-- quotidien (clients, mesures, photos, ventes, stock, dépenses) n'est plus
+-- soumis à un réglage par apprenti. Elles restent nommées/appelées comme
+-- avant dans les politiques RLS plus bas (clients_insert, mesures_all,
+-- etc.) pour ne pas avoir à les réécrire : seul leur corps change. Les
+-- colonnes correspondantes de permissions_apprenti ne sont donc plus lues
+-- ici (elles restent en base, mais sans effet) — ce qui NE change PAS :
+-- commandes/paiements (suivi financier par client) et le récapitulatif
+-- global ("Suivi des finances") restent exclusivement réservés au
+-- propriétaire, et ne passent jamais par ces fonctions.
+create or replace function public.a_permission_creer_client()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select true;
+$$;
+
+create or replace function public.a_permission_modifier_client()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select true;
+$$;
+
+create or replace function public.a_permission_prendre_mesures()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select true;
+$$;
+
+create or replace function public.a_permission_ajouter_photos()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select true;
+$$;
+
+create or replace function public.a_permission_ventes()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select true;
+$$;
+
+create or replace function public.a_permission_stock()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select true;
+$$;
+
+create or replace function public.a_permission_enregistrer_depenses()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select true;
+$$;
+
+-- -----------------------------------------------------------------------------
+-- 5. ACTIVATION DE LA ROW LEVEL SECURITY
+-- -----------------------------------------------------------------------------
+alter table public.ateliers enable row level security;
+alter table public.utilisateurs enable row level security;
+alter table public.permissions_apprenti enable row level security;
+alter table public.clients enable row level security;
+alter table public.types_tenue enable row level security;
+alter table public.champs_mesure enable row level security;
+alter table public.mesures enable row level security;
+alter table public.photos enable row level security;
+alter table public.rendez_vous enable row level security;
+alter table public.commandes enable row level security;
+alter table public.paiements enable row level security;
+alter table public.commandes_groupe enable row level security;
+alter table public.paiements_groupe enable row level security;
+alter table public.rendez_vous_groupe enable row level security;
+alter table public.depenses enable row level security;
+alter table public.ventes enable row level security;
+alter table public.articles enable row level security;
+alter table public.groupes_uniformes enable row level security;
+alter table public.membres_groupe_uniforme enable row level security;
+alter table public.mesures_uniforme enable row level security;
+alter table public.photos_groupe_uniforme enable row level security;
+alter table public.journal_actions enable row level security;
+alter table public.abonnements enable row level security;
+
+-- -----------------------------------------------------------------------------
+-- 5.1 ATELIERS — seul le propriétaire peut modifier nom/logo.
+-- -----------------------------------------------------------------------------
+drop policy if exists ateliers_select on public.ateliers;
+create policy ateliers_select on public.ateliers
+  for select to authenticated
+  using (id = public.mon_atelier_id());
+
+-- Création autorisée à tout utilisateur authentifié (chicken-and-egg : au
+-- moment de l'inscription, l'utilisateur n'a pas encore de ligne dans
+-- utilisateurs). L'application crée l'atelier PUIS la ligne utilisateur
+-- "proprietaire" dans la même transaction logique côté client.
+drop policy if exists ateliers_insert on public.ateliers;
+create policy ateliers_insert on public.ateliers
+  for insert to authenticated
+  with check (true);
+
+drop policy if exists ateliers_update on public.ateliers;
+create policy ateliers_update on public.ateliers
+  for update to authenticated
+  using (id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- Aucune politique DELETE : la suppression d'un atelier est bloquée par
+-- défaut (principe "jamais de perte de données").
+
+-- -----------------------------------------------------------------------------
+-- 5.2 UTILISATEURS
+-- -----------------------------------------------------------------------------
+drop policy if exists utilisateurs_select on public.utilisateurs;
+create policy utilisateurs_select on public.utilisateurs
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+-- Auto-inscription (propriétaire créant son propre compte) OU propriétaire
+-- créant un compte apprenti dans son atelier.
+drop policy if exists utilisateurs_insert on public.utilisateurs;
+create policy utilisateurs_insert on public.utilisateurs
+  for insert to authenticated
+  with check (
+    id = auth.uid()
+    or (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  );
+
+-- Propriétaire uniquement, jamais de branche "id = auth.uid()" pour un
+-- utilisateur modifiant sa propre ligne : RLS s'applique ligne par ligne,
+-- jamais colonne par colonne — une telle branche aurait laissé n'importe
+-- quel apprenti authentifié s'auto-promouvoir "proprietaire" (ou changer
+-- d'atelier) via un simple appel REST direct, hors de l'application, qui
+-- elle-même n'appelle jamais update() sur cette table (seulement insert(),
+-- à la création du compte).
+drop policy if exists utilisateurs_update on public.utilisateurs;
+create policy utilisateurs_update on public.utilisateurs
+  for update to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists utilisateurs_delete on public.utilisateurs;
+create policy utilisateurs_delete on public.utilisateurs
+  for delete to authenticated
+  using (
+    atelier_id = public.mon_atelier_id()
+    and public.est_proprietaire()
+    and id <> auth.uid()
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.3 PERMISSIONS_APPRENTI — seul le propriétaire écrit ; l'apprenti peut
+--     lire uniquement sa propre ligne (pour piloter son UI).
+-- -----------------------------------------------------------------------------
+drop policy if exists permissions_select on public.permissions_apprenti;
+create policy permissions_select on public.permissions_apprenti
+  for select to authenticated
+  using (
+    utilisateur_id = auth.uid()
+    or exists (
+      select 1 from public.utilisateurs u
+      where u.id = permissions_apprenti.utilisateur_id
+        and u.atelier_id = public.mon_atelier_id()
+        and public.est_proprietaire()
+    )
+  );
+
+drop policy if exists permissions_insert on public.permissions_apprenti;
+create policy permissions_insert on public.permissions_apprenti
+  for insert to authenticated
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.utilisateurs u
+      where u.id = permissions_apprenti.utilisateur_id
+        and u.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists permissions_update on public.permissions_apprenti;
+create policy permissions_update on public.permissions_apprenti
+  for update to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.utilisateurs u
+      where u.id = permissions_apprenti.utilisateur_id
+        and u.atelier_id = public.mon_atelier_id()
+    )
+  )
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.utilisateurs u
+      where u.id = permissions_apprenti.utilisateur_id
+        and u.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.4 CLIENTS
+-- -----------------------------------------------------------------------------
+drop policy if exists clients_select on public.clients;
+create policy clients_select on public.clients
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+drop policy if exists clients_insert on public.clients;
+create policy clients_insert on public.clients
+  for insert to authenticated
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_creer_client())
+  );
+
+drop policy if exists clients_update on public.clients;
+create policy clients_update on public.clients
+  for update to authenticated
+  using (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_modifier_client())
+  )
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_modifier_client())
+  );
+
+-- Suppression réservée au propriétaire (protection contre la perte de données).
+drop policy if exists clients_delete on public.clients;
+create policy clients_delete on public.clients
+  for delete to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- Masquage (colonne `supprime_le`) également réservé au propriétaire :
+-- `clients_update` ci-dessus autorise par ailleurs un apprenti disposant de
+-- la permission "modifier_client" à modifier un client, ce qui inclurait
+-- sinon aussi cette colonne. Politique RESTRICTIVE (combinée en ET, jamais
+-- en OU, avec les politiques permissives ci-dessus) : toute mise à jour
+-- doit en plus laisser `supprime_le` tel quel, sauf à être le propriétaire.
+-- Verrouille donc aussi, de fait, tout client déjà masqué contre une
+-- nouvelle modification par un apprenti.
+drop policy if exists clients_update_masquage_proprietaire on public.clients;
+create policy clients_update_masquage_proprietaire on public.clients
+  as restrictive
+  for update to authenticated
+  using (true)
+  with check (supprime_le is null or public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.5 TYPES_TENUE — lecture des gabarits par défaut + gabarits de l'atelier ;
+--     écriture réservée AU PROPRIÉTAIRE UNIQUEMENT (voir note en tête de
+--     fichier concernant permissions_apprenti.modifier_gabarits).
+-- -----------------------------------------------------------------------------
+drop policy if exists types_tenue_select on public.types_tenue;
+create policy types_tenue_select on public.types_tenue
+  for select to authenticated
+  using (atelier_id is null or atelier_id = public.mon_atelier_id());
+
+drop policy if exists types_tenue_insert on public.types_tenue;
+create policy types_tenue_insert on public.types_tenue
+  for insert to authenticated
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists types_tenue_update on public.types_tenue;
+create policy types_tenue_update on public.types_tenue
+  for update to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists types_tenue_delete on public.types_tenue;
+create policy types_tenue_delete on public.types_tenue
+  for delete to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.6 CHAMPS_MESURE — même règle que types_tenue (accès via le type de tenue
+--     parent, propriétaire uniquement en écriture).
+-- -----------------------------------------------------------------------------
+drop policy if exists champs_mesure_select on public.champs_mesure;
+create policy champs_mesure_select on public.champs_mesure
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.types_tenue tt
+      where tt.id = champs_mesure.type_tenue_id
+        and (tt.atelier_id is null or tt.atelier_id = public.mon_atelier_id())
+    )
+  );
+
+drop policy if exists champs_mesure_insert on public.champs_mesure;
+create policy champs_mesure_insert on public.champs_mesure
+  for insert to authenticated
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.types_tenue tt
+      where tt.id = champs_mesure.type_tenue_id
+        and tt.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists champs_mesure_update on public.champs_mesure;
+create policy champs_mesure_update on public.champs_mesure
+  for update to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.types_tenue tt
+      where tt.id = champs_mesure.type_tenue_id
+        and tt.atelier_id = public.mon_atelier_id()
+    )
+  )
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.types_tenue tt
+      where tt.id = champs_mesure.type_tenue_id
+        and tt.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+-- Pas de politique DELETE : un champ de mesure n'est jamais supprimé
+-- (uniquement masqué via UPDATE statut='masque'), y compris par le
+-- propriétaire, afin de ne jamais casser l'historique des mesures existantes.
+
+-- -----------------------------------------------------------------------------
+-- 5.7 MESURES — écriture par le propriétaire ou l'apprenti autorisé ;
+--     modification/suppression réservées au propriétaire (intégrité de
+--     l'historique).
+-- -----------------------------------------------------------------------------
+drop policy if exists mesures_select on public.mesures;
+create policy mesures_select on public.mesures
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+drop policy if exists mesures_insert on public.mesures;
+create policy mesures_insert on public.mesures
+  for insert to authenticated
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_prendre_mesures())
+  );
+
+drop policy if exists mesures_update on public.mesures;
+create policy mesures_update on public.mesures
+  for update to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists mesures_delete on public.mesures;
+create policy mesures_delete on public.mesures
+  for delete to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.8 PHOTOS
+-- -----------------------------------------------------------------------------
+drop policy if exists photos_select on public.photos;
+create policy photos_select on public.photos
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+drop policy if exists photos_insert on public.photos;
+create policy photos_insert on public.photos
+  for insert to authenticated
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_ajouter_photos())
+  );
+
+drop policy if exists photos_delete on public.photos;
+create policy photos_delete on public.photos
+  for delete to authenticated
+  using (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_ajouter_photos())
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.9 RENDEZ_VOUS — accessible à tout membre de l'atelier (aucune permission
+--     dédiée dans permissions_apprenti : action non sensible, non financière).
+-- -----------------------------------------------------------------------------
+drop policy if exists rdv_select on public.rendez_vous;
+create policy rdv_select on public.rendez_vous
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+drop policy if exists rdv_insert on public.rendez_vous;
+create policy rdv_insert on public.rendez_vous
+  for insert to authenticated
+  with check (atelier_id = public.mon_atelier_id());
+
+drop policy if exists rdv_update on public.rendez_vous;
+create policy rdv_update on public.rendez_vous
+  for update to authenticated
+  using (atelier_id = public.mon_atelier_id())
+  with check (atelier_id = public.mon_atelier_id());
+
+drop policy if exists rdv_delete on public.rendez_vous;
+create policy rdv_delete on public.rendez_vous
+  for delete to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+-- -----------------------------------------------------------------------------
+-- 5.9bis RENDEZ_VOUS_GROUPE — même règle que RENDEZ_VOUS : accessible à tout
+--        membre de l'atelier, aucune permission dédiée.
+-- -----------------------------------------------------------------------------
+drop policy if exists rdv_groupe_select on public.rendez_vous_groupe;
+create policy rdv_groupe_select on public.rendez_vous_groupe
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+drop policy if exists rdv_groupe_insert on public.rendez_vous_groupe;
+create policy rdv_groupe_insert on public.rendez_vous_groupe
+  for insert to authenticated
+  with check (atelier_id = public.mon_atelier_id());
+
+drop policy if exists rdv_groupe_update on public.rendez_vous_groupe;
+create policy rdv_groupe_update on public.rendez_vous_groupe
+  for update to authenticated
+  using (atelier_id = public.mon_atelier_id())
+  with check (atelier_id = public.mon_atelier_id());
+
+drop policy if exists rdv_groupe_delete on public.rendez_vous_groupe;
+create policy rdv_groupe_delete on public.rendez_vous_groupe
+  for delete to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+-- -----------------------------------------------------------------------------
+-- 5.10 COMMANDES — PROPRIÉTAIRE UNIQUEMENT, sans aucune exception. C'est la
+--      garantie centrale demandée : un apprenti n'a JAMAIS accès à cette
+--      table, quelle que soit sa permission (qui n'existe même pas ici).
+-- -----------------------------------------------------------------------------
+drop policy if exists commandes_all on public.commandes;
+create policy commandes_all on public.commandes
+  for all to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.11 PAIEMENTS — même garantie que commandes.
+-- -----------------------------------------------------------------------------
+drop policy if exists paiements_all on public.paiements;
+create policy paiements_all on public.paiements
+  for all to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.10bis COMMANDES_GROUPE / PAIEMENTS_GROUPE — même garantie que
+--         commandes/paiements, pour la commande globale d'un groupe
+--         d'uniformes.
+-- -----------------------------------------------------------------------------
+drop policy if exists commandes_groupe_all on public.commandes_groupe;
+create policy commandes_groupe_all on public.commandes_groupe
+  for all to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists paiements_groupe_all on public.paiements_groupe;
+create policy paiements_groupe_all on public.paiements_groupe
+  for all to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.11bis DÉPENSES — propriétaire, ou apprenti avec la permission
+--         `enregistrer_depenses` explicitement activée (voir
+--         a_permission_enregistrer_depenses ci-dessus). Distinct de la
+--         garantie "jamais commandes/paiements" : les dépenses de l'atelier
+--         ne sont pas le suivi financier d'un client en particulier.
+-- -----------------------------------------------------------------------------
+drop policy if exists depenses_all on public.depenses;
+create policy depenses_all on public.depenses
+  for all to authenticated
+  using (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_enregistrer_depenses())
+  )
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_enregistrer_depenses())
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.11quater VENTES — propriétaire, ou apprenti avec la permission `ventes`.
+-- -----------------------------------------------------------------------------
+drop policy if exists ventes_all on public.ventes;
+create policy ventes_all on public.ventes
+  for all to authenticated
+  using (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_ventes())
+  )
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_ventes())
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.11quinquies ARTICLES (catalogue/stock) — propriétaire, ou apprenti avec
+--         la permission `stock`.
+-- -----------------------------------------------------------------------------
+drop policy if exists articles_all on public.articles;
+create policy articles_all on public.articles
+  for all to authenticated
+  using (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_stock())
+  )
+  with check (
+    atelier_id = public.mon_atelier_id()
+    and (public.est_proprietaire() or public.a_permission_stock())
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.11ter GROUPES_UNIFORMES — lecture par tout l'atelier, écriture réservée
+--         au propriétaire (même règle que types_tenue).
+-- -----------------------------------------------------------------------------
+drop policy if exists groupes_uniformes_select on public.groupes_uniformes;
+create policy groupes_uniformes_select on public.groupes_uniformes
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+drop policy if exists groupes_uniformes_insert on public.groupes_uniformes;
+create policy groupes_uniformes_insert on public.groupes_uniformes
+  for insert to authenticated
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists groupes_uniformes_update on public.groupes_uniformes;
+create policy groupes_uniformes_update on public.groupes_uniformes
+  for update to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire())
+  with check (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+drop policy if exists groupes_uniformes_delete on public.groupes_uniformes;
+create policy groupes_uniformes_delete on public.groupes_uniformes
+  for delete to authenticated
+  using (atelier_id = public.mon_atelier_id() and public.est_proprietaire());
+
+-- -----------------------------------------------------------------------------
+-- 5.11quater MEMBRES_GROUPE_UNIFORME — accès via le groupe parent, même
+--            règle que groupes_uniformes (lecture atelier, écriture propriétaire).
+-- -----------------------------------------------------------------------------
+drop policy if exists membres_groupe_select on public.membres_groupe_uniforme;
+create policy membres_groupe_select on public.membres_groupe_uniforme
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists membres_groupe_insert on public.membres_groupe_uniforme;
+create policy membres_groupe_insert on public.membres_groupe_uniforme
+  for insert to authenticated
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists membres_groupe_update on public.membres_groupe_uniforme;
+create policy membres_groupe_update on public.membres_groupe_uniforme
+  for update to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  )
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists membres_groupe_delete on public.membres_groupe_uniforme;
+create policy membres_groupe_delete on public.membres_groupe_uniforme
+  for delete to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = membres_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.11quinquies MESURES_UNIFORME — accès via le membre puis le groupe parent.
+-- -----------------------------------------------------------------------------
+drop policy if exists mesures_uniforme_select on public.mesures_uniforme;
+create policy mesures_uniforme_select on public.mesures_uniforme
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists mesures_uniforme_insert on public.mesures_uniforme;
+create policy mesures_uniforme_insert on public.mesures_uniforme
+  for insert to authenticated
+  with check (
+    exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+-- Modification/suppression réservées au propriétaire, même principe que
+-- mesures_update/mesures_delete (intégrité de l'historique) — l'application
+-- n'écrit d'ailleurs jamais ces mesures qu'en insertion (chaque prise crée
+-- une nouvelle ligne), ces deux policies ne servent qu'à ne pas laisser
+-- cette table plus permissive que sa table sœur mesures.
+drop policy if exists mesures_uniforme_update on public.mesures_uniforme;
+create policy mesures_uniforme_update on public.mesures_uniforme
+  for update to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  )
+  with check (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists mesures_uniforme_delete on public.mesures_uniforme;
+create policy mesures_uniforme_delete on public.mesures_uniforme
+  for delete to authenticated
+  using (
+    public.est_proprietaire()
+    and exists (
+      select 1 from public.membres_groupe_uniforme m
+      join public.groupes_uniformes g on g.id = m.groupe_id
+      where m.id = mesures_uniforme.membre_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.11sexies PHOTOS_GROUPE_UNIFORME — accès via le groupe parent, même règle
+--            que photos (lecture/écriture par tout l'atelier, pas réservé au
+--            propriétaire : action non financière, comme les photos clients).
+-- -----------------------------------------------------------------------------
+drop policy if exists photos_groupe_select on public.photos_groupe_uniforme;
+create policy photos_groupe_select on public.photos_groupe_uniforme
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = photos_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists photos_groupe_insert on public.photos_groupe_uniforme;
+create policy photos_groupe_insert on public.photos_groupe_uniforme
+  for insert to authenticated
+  with check (
+    (public.est_proprietaire() or public.a_permission_ajouter_photos())
+    and exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = photos_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+drop policy if exists photos_groupe_delete on public.photos_groupe_uniforme;
+create policy photos_groupe_delete on public.photos_groupe_uniforme
+  for delete to authenticated
+  using (
+    exists (
+      select 1 from public.groupes_uniformes g
+      where g.id = photos_groupe_uniforme.groupe_id
+        and g.atelier_id = public.mon_atelier_id()
+    )
+  );
+
+-- -----------------------------------------------------------------------------
+-- 5.12 JOURNAL_ACTIONS — append-only. Le propriétaire voit tout le journal
+--      de son atelier ; chaque utilisateur voit ses propres actions.
+-- -----------------------------------------------------------------------------
+drop policy if exists journal_select on public.journal_actions;
+create policy journal_select on public.journal_actions
+  for select to authenticated
+  using (
+    utilisateur_id = auth.uid()
+    or (
+      public.est_proprietaire()
+      and exists (
+        select 1 from public.utilisateurs u
+        where u.id = journal_actions.utilisateur_id
+          and u.atelier_id = public.mon_atelier_id()
+      )
+    )
+  );
+
+drop policy if exists journal_insert on public.journal_actions;
+create policy journal_insert on public.journal_actions
+  for insert to authenticated
+  with check (utilisateur_id = auth.uid());
+
+-- Aucune politique UPDATE/DELETE : le journal est immuable.
+
+-- -----------------------------------------------------------------------------
+-- 5.13 ABONNEMENTS — lecture par tous les membres de l'atelier (nécessaire
+--      pour afficher le bandeau d'essai/le mode consultation seule) ;
+--      écriture interdite depuis le client (gérée côté serveur via une
+--      fonction Edge avec la clé service_role, après confirmation de
+--      paiement — voir Phase 4).
+-- -----------------------------------------------------------------------------
+drop policy if exists abonnements_select on public.abonnements;
+create policy abonnements_select on public.abonnements
+  for select to authenticated
+  using (atelier_id = public.mon_atelier_id());
+
+-- Pas de politique INSERT/UPDATE/DELETE pour le rôle "authenticated" :
+-- seule une fonction utilisant la clé service_role (donc contournant RLS)
+-- peut modifier cette table.
+
+-- =============================================================================
+-- 6. DONNÉES DE BASE (SEED)
+-- =============================================================================
+-- 6.1 Gabarits par défaut (atelier_id NULL) utilisés par l'écran "Nouveau
+--     client" : une liste FIXE de champs de mesure selon le sexe (pas de
+--     choix de type de tenue à cette étape — reconstitué à l'identique de
+--     l'ancienne application à partir de captures d'écran). Id fixes pour
+--     que ce script reste rejouable sans dupliquer les lignes.
+-- -----------------------------------------------------------------------------
+insert into public.types_tenue (id, atelier_id, nom, sexe)
+values
+  ('11111111-1111-1111-1111-111111111100', null, 'Standard homme', 'Homme'),
+  ('22222222-2222-2222-2222-222222222200', null, 'Standard femme', 'Femme')
+on conflict (id) do update set nom = excluded.nom, sexe = excluded.sexe;
+
+insert into public.champs_mesure (id, type_tenue_id, nom, unite, ordre)
+values
+  -- Standard homme (20 champs, ordre = ordre d'affichage exact de l'ancienne application)
+  ('11111111-1111-1111-1111-111111111101', '11111111-1111-1111-1111-111111111100', 'Dos', 'cm', 0),
+  ('11111111-1111-1111-1111-111111111102', '11111111-1111-1111-1111-111111111100', 'Épaule', 'cm', 1),
+  ('11111111-1111-1111-1111-111111111103', '11111111-1111-1111-1111-111111111100', 'Poitrine', 'cm', 2),
+  ('11111111-1111-1111-1111-111111111104', '11111111-1111-1111-1111-111111111100', 'Hauteur de taille', 'cm', 3),
+  ('11111111-1111-1111-1111-111111111105', '11111111-1111-1111-1111-111111111100', 'Long. Manche', 'cm', 4),
+  ('11111111-1111-1111-1111-111111111106', '11111111-1111-1111-1111-111111111100', 'Poignet', 'cm', 5),
+  ('11111111-1111-1111-1111-111111111107', '11111111-1111-1111-1111-111111111100', 'Tour de manche', 'cm', 6),
+  ('11111111-1111-1111-1111-111111111108', '11111111-1111-1111-1111-111111111100', 'Tour de taille', 'cm', 7),
+  ('11111111-1111-1111-1111-111111111109', '11111111-1111-1111-1111-111111111100', 'Long. Chemise', 'cm', 8),
+  ('11111111-1111-1111-1111-111111111110', '11111111-1111-1111-1111-111111111100', 'Long. Veste', 'cm', 9),
+  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111100', 'Long. Tunique', 'cm', 10),
+  ('11111111-1111-1111-1111-111111111112', '11111111-1111-1111-1111-111111111100', 'Tour de Cou', 'cm', 11),
+  ('11111111-1111-1111-1111-111111111113', '11111111-1111-1111-1111-111111111100', 'Bonnet', 'cm', 12),
+  ('11111111-1111-1111-1111-111111111114', '11111111-1111-1111-1111-111111111100', 'Ceinture', 'cm', 13),
+  ('11111111-1111-1111-1111-111111111115', '11111111-1111-1111-1111-111111111100', 'Bassin', 'cm', 14),
+  ('11111111-1111-1111-1111-111111111116', '11111111-1111-1111-1111-111111111100', 'Cuisse', 'cm', 15),
+  ('11111111-1111-1111-1111-111111111117', '11111111-1111-1111-1111-111111111100', 'Long. Pantalon', 'cm', 16),
+  ('11111111-1111-1111-1111-111111111118', '11111111-1111-1111-1111-111111111100', 'Long. Genoux', 'cm', 17),
+  ('11111111-1111-1111-1111-111111111119', '11111111-1111-1111-1111-111111111100', 'Tour de mollet', 'cm', 18),
+  ('11111111-1111-1111-1111-111111111120', '11111111-1111-1111-1111-111111111100', 'Bas', 'cm', 19),
+  -- Standard femme (23 champs)
+  ('22222222-2222-2222-2222-222222222201', '22222222-2222-2222-2222-222222222200', 'Épaule', 'cm', 0),
+  ('22222222-2222-2222-2222-222222222202', '22222222-2222-2222-2222-222222222200', 'Poitrine', 'cm', 1),
+  ('22222222-2222-2222-2222-222222222203', '22222222-2222-2222-2222-222222222200', 'Tour de taille', 'cm', 2),
+  ('22222222-2222-2222-2222-222222222204', '22222222-2222-2222-2222-222222222200', 'Long. Taille', 'cm', 3),
+  ('22222222-2222-2222-2222-222222222205', '22222222-2222-2222-2222-222222222200', 'Long. Manche', 'cm', 4),
+  ('22222222-2222-2222-2222-222222222206', '22222222-2222-2222-2222-222222222200', 'Tour manche', 'cm', 5),
+  ('22222222-2222-2222-2222-222222222207', '22222222-2222-2222-2222-222222222200', 'Col', 'cm', 6),
+  ('22222222-2222-2222-2222-222222222208', '22222222-2222-2222-2222-222222222200', 'Long. Habit', 'cm', 7),
+  ('22222222-2222-2222-2222-222222222209', '22222222-2222-2222-2222-222222222200', 'Long. Sein', 'cm', 8),
+  ('22222222-2222-2222-2222-222222222210', '22222222-2222-2222-2222-222222222200', 'Pinces', 'cm', 9),
+  ('22222222-2222-2222-2222-222222222211', '22222222-2222-2222-2222-222222222200', 'Long. Camisole', 'cm', 10),
+  ('22222222-2222-2222-2222-222222222212', '22222222-2222-2222-2222-222222222200', 'Long. Robe', 'cm', 11),
+  ('22222222-2222-2222-2222-222222222213', '22222222-2222-2222-2222-222222222200', 'Frappe', 'cm', 12),
+  ('22222222-2222-2222-2222-222222222214', '22222222-2222-2222-2222-222222222200', 'Long. Chemise', 'cm', 13),
+  ('22222222-2222-2222-2222-222222222215', '22222222-2222-2222-2222-222222222200', 'Ceinture', 'cm', 14),
+  ('22222222-2222-2222-2222-222222222216', '22222222-2222-2222-2222-222222222200', 'Bassin', 'cm', 15),
+  ('22222222-2222-2222-2222-222222222217', '22222222-2222-2222-2222-222222222200', 'Cuisse', 'cm', 16),
+  ('22222222-2222-2222-2222-222222222218', '22222222-2222-2222-2222-222222222200', 'Long. Genoux', 'cm', 17),
+  ('22222222-2222-2222-2222-222222222219', '22222222-2222-2222-2222-222222222200', 'Long. Jupe', 'cm', 18),
+  ('22222222-2222-2222-2222-222222222220', '22222222-2222-2222-2222-222222222200', 'Poignet', 'cm', 19),
+  ('22222222-2222-2222-2222-222222222221', '22222222-2222-2222-2222-222222222200', 'Long. Pantalon', 'cm', 20),
+  ('22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222200', 'Bas', 'cm', 21),
+  ('22222222-2222-2222-2222-222222222223', '22222222-2222-2222-2222-222222222200', 'Long. Tunique', 'cm', 22)
+on conflict (id) do update set nom = excluded.nom, unite = excluded.unite, ordre = excluded.ordre;
+
+-- =============================================================================
+-- 7. STOCKAGE (SUPABASE STORAGE)
+-- =============================================================================
+-- Les buckets utilisés par l'application (photos de tissus/modèles, logo
+-- d'atelier) n'avaient jamais été créés ni dotés de règles d'accès (RLS) —
+-- d'où l'erreur "new row violates row-level security policy" lors du tout
+-- premier envoi de photo. `public = true` permet à `getPublicUrl()` de
+-- fonctionner sans authentification côté lecture (affichage des photos).
+insert into storage.buckets (id, name, public)
+values
+  ('photos-clients', 'photos-clients', true),
+  ('logos-ateliers', 'logos-ateliers', true),
+  ('audios-clients', 'audios-clients', true),
+  ('signatures-ateliers', 'signatures-ateliers', true)
+on conflict (id) do nothing;
+
+drop policy if exists photos_clients_insert on storage.objects;
+create policy photos_clients_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'photos-clients');
+
+drop policy if exists photos_clients_select on storage.objects;
+create policy photos_clients_select on storage.objects
+  for select to authenticated
+  using (bucket_id = 'photos-clients');
+
+drop policy if exists logos_ateliers_insert on storage.objects;
+create policy logos_ateliers_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'logos-ateliers');
+
+drop policy if exists logos_ateliers_update on storage.objects;
+create policy logos_ateliers_update on storage.objects
+  for update to authenticated
+  using (bucket_id = 'logos-ateliers')
+  with check (bucket_id = 'logos-ateliers');
+
+drop policy if exists logos_ateliers_select on storage.objects;
+create policy logos_ateliers_select on storage.objects
+  for select to authenticated
+  using (bucket_id = 'logos-ateliers');
+
+drop policy if exists signatures_ateliers_insert on storage.objects;
+create policy signatures_ateliers_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'signatures-ateliers');
+
+drop policy if exists signatures_ateliers_update on storage.objects;
+create policy signatures_ateliers_update on storage.objects
+  for update to authenticated
+  using (bucket_id = 'signatures-ateliers')
+  with check (bucket_id = 'signatures-ateliers');
+
+drop policy if exists signatures_ateliers_select on storage.objects;
+create policy signatures_ateliers_select on storage.objects
+  for select to authenticated
+  using (bucket_id = 'signatures-ateliers');
+
+drop policy if exists audios_clients_insert on storage.objects;
+create policy audios_clients_insert on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'audios-clients');
+
+drop policy if exists audios_clients_update on storage.objects;
+create policy audios_clients_update on storage.objects
+  for update to authenticated
+  using (bucket_id = 'audios-clients')
+  with check (bucket_id = 'audios-clients');
+
+drop policy if exists audios_clients_select on storage.objects;
+create policy audios_clients_select on storage.objects
+  for select to authenticated
+  using (bucket_id = 'audios-clients');

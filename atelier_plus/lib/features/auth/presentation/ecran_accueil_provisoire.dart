@@ -1,0 +1,1019 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/constants/app_constants.dart';
+import '../../../core/notifications/notifications_service.dart';
+import '../../../core/notifications/preference_rappel.dart';
+import '../../../core/router/app_router.dart';
+import '../../../core/utils/formatters.dart';
+import '../../../core/utils/gestion_erreurs.dart';
+import '../../../data/models/atelier.dart';
+import '../../../data/models/client.dart';
+import '../../../data/models/groupe_uniforme.dart';
+import '../../../data/models/rendez_vous.dart';
+import '../../../data/models/rendez_vous_groupe.dart';
+import '../../../data/models/utilisateur.dart';
+import '../../../data/sync/sync_providers.dart';
+import '../../../shared/widgets/selecteur_source_image.dart';
+import '../../abonnement/data/etat_abonnement.dart';
+import '../../abonnement/providers/abonnement_providers.dart';
+import '../../clients/providers/clients_providers.dart';
+import '../../rendezvous/providers/rendez_vous_groupe_providers.dart';
+import '../../rendezvous/providers/rendezvous_providers.dart';
+import '../../uniformes/providers/uniformes_providers.dart';
+import '../providers/auth_providers.dart';
+
+/// Un rendez-vous (client ou groupe) prêt à afficher dans la carte
+/// "Rendez-vous aujourd'hui" — même principe que la fusion de l'écran
+/// "Rendez-vous" (voir ecran_liste_rendez_vous.dart), simplifié ici car
+/// purement en lecture (pas d'action de statut depuis l'accueil).
+class _RdvAujourdhui {
+  const _RdvAujourdhui({
+    required this.id,
+    required this.nom,
+    required this.dateHeure,
+    required this.estGroupe,
+  });
+
+  final String id;
+  final String nom;
+  final DateTime dateHeure;
+  final bool estGroupe;
+}
+
+/// Couleurs propres à l'en-tête de l'accueil — dégradé bleu vers orange
+/// SEDA Tech (voir AppColors pour la palette globale, qui reprend les
+/// mêmes couleurs de marque).
+class _CouleursAccueil {
+  const _CouleursAccueil._();
+
+  static const Color enteteHaut = Color(0xFF1B4FA0);
+  static const Color enteteBas = Color(0xFFE8701A);
+  static const Color carteEssaiFond = Color(0xFFFCE4CC);
+  static const Color carteEssaiIcone = Color(0xFFF5821F);
+}
+
+/// Couleurs cycliques des puces devant chaque client concerné par le
+/// rappel (_CarteRappel) — simple repère visuel, sans signification propre.
+const List<Color> _couleursPuces = [
+  Color(0xFFF5821F),
+  Color(0xFF1B4FA0),
+  Color(0xFF2E7D32),
+  Color(0xFF8456D9),
+];
+
+/// Écran d'accueil : en-tête bleu marine (logo/nom d'atelier, bouton de
+/// déconnexion, salutation et date), rappel d'essai gratuit en cours, puis
+/// une grille d'actions rapides (nouveau client, clients, rendez-vous,
+/// équipe, et pour le propriétaire : types de tenue, abonnement). Le vrai
+/// tableau de bord (statistiques) sera construit dans une phase ultérieure.
+class EcranAccueilProvisoire extends ConsumerStatefulWidget {
+  const EcranAccueilProvisoire({super.key});
+
+  @override
+  ConsumerState<EcranAccueilProvisoire> createState() => _EcranAccueilProvisoireState();
+}
+
+class _EcranAccueilProvisoireState extends ConsumerState<EcranAccueilProvisoire> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      final utilisateur = await ref.read(utilisateurCourantProvider.future);
+      if (utilisateur == null) return;
+      await ref.read(abonnementRepositoryProvider).chargerDepuisServeur(utilisateur.atelierId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final atelier = ref.watch(atelierCourantProvider);
+    final utilisateur = ref.watch(utilisateurCourantProvider);
+    final estProprietaire = ref.watch(estProprietaireProvider);
+    final tachesEnAttente = ref.watch(tachesSyncEnAttenteProvider).valueOrNull ?? 0;
+
+    // Tant que utilisateurCourantProvider n'a pas encore résolu une première
+    // fois (bref instant à l'ouverture de l'application, avant la toute
+    // première lecture du cache local), on ne sait pas encore qui est
+    // connecté. Plutôt que de bloquer tout l'écran derrière un indicateur
+    // de chargement (ce qui donne l'impression que l'application met plus
+    // de temps à s'ouvrir, pour un gain purement visuel) ou de laisser les
+    // actions rapides/"Aujourd'hui" apparaître d'un coup sans prévenir, on
+    // affiche l'écran tout de suite avec un petit indicateur discret à la
+    // place du contenu encore en résolution.
+    final enResolution = utilisateur.isLoading && !utilisateur.hasValue;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAF6F1),
+      body: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _EnTete(
+                atelier: atelier,
+                utilisateur: utilisateur,
+                tachesEnAttente: tachesEnAttente,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // L'abonnement est celui de l'atelier, géré uniquement
+                    // par le propriétaire — un apprenti n'a pas à s'en
+                    // soucier, sa couverture s'applique déjà automatiquement
+                    // (voir la remarque équivalente dans EcranParametres).
+                    if (estProprietaire) ...[
+                      const _CarteEssai(),
+                      const SizedBox(height: 4),
+                    ],
+                    Row(
+                      children: const [
+                        Icon(Icons.bolt, color: _CouleursAccueil.carteEssaiIcone, size: 18),
+                        SizedBox(width: 6),
+                        Text(
+                          'Actions rapides',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: _CouleursAccueil.enteteHaut,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 6,
+                      crossAxisSpacing: 6,
+                      childAspectRatio: 0.92,
+                      children: [
+                        // Le compte d'un apprenti est identique à celui du
+                        // propriétaire pour tout le travail quotidien :
+                        // aucune de ces actions n'est plus soumise à une
+                        // permission réglable par apprenti. Seuls le suivi
+                        // des finances (par client ou global) et les
+                        // réglages administratifs (équipe, types de tenue,
+                        // champs de mesure, paramètres de l'atelier)
+                        // restent réservés au propriétaire.
+                        if (enResolution)
+                          const _CarteActionChargement()
+                        else ...[
+                          _CarteAction(
+                            icone: Icons.person_add_alt_1_outlined,
+                            libelle: 'Nouveau client',
+                            couleur: const Color(0xFF1B4FA0),
+                            onTap: () => context.push(AppRoutes.creationClient),
+                          ),
+                          _CarteAction(
+                            icone: Icons.groups_outlined,
+                            libelle: 'Mes clients',
+                            couleur: const Color(0xFFF5821F),
+                            onTap: () => context.push(AppRoutes.clients),
+                          ),
+                          _CarteAction(
+                            icone: Icons.event_outlined,
+                            libelle: 'Rendez-vous',
+                            couleur: const Color(0xFF6741D9),
+                            onTap: () => context.push(AppRoutes.rendezVous),
+                          ),
+                          _CarteAction(
+                            icone: Icons.remove_circle_outline,
+                            libelle: 'Enregistrer dépenses',
+                            couleur: const Color(0xFF2E7D32),
+                            onTap: () => context.push(AppRoutes.nouvelleDepense),
+                          ),
+                          _CarteAction(
+                            icone: Icons.storefront_outlined,
+                            libelle: 'Ventes',
+                            couleur: const Color(0xFF8456D9),
+                            onTap: () => context.push(AppRoutes.ventes),
+                          ),
+                          _CarteAction(
+                            icone: Icons.inventory_2_outlined,
+                            libelle: 'Stock',
+                            couleur: const Color(0xFFB3261E),
+                            onTap: () => context.push(AppRoutes.gestionStock),
+                          ),
+                        ],
+                      ],
+                    ),
+                    // "Aujourd'hui" (clients/rendez-vous du jour, rappel de
+                    // rendez-vous) ne contient rien de financier : visible à
+                    // tout utilisateur connecté, propriétaire ou apprenti.
+                    if (!enResolution) ...[
+                      const SizedBox(height: 8),
+                      const Divider(color: Color(0xFFDDD3C8), height: 1),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: const [
+                          Icon(Icons.calendar_month, color: _CouleursAccueil.enteteHaut, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            'Aujourd\'hui',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: _CouleursAccueil.enteteHaut,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      const _SectionAujourdhui(),
+                    ] else ...[
+                      const SizedBox(height: 14),
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EnTete extends StatelessWidget {
+  const _EnTete({
+    required this.atelier,
+    required this.utilisateur,
+    required this.tachesEnAttente,
+  });
+
+  final AsyncValue<Atelier?> atelier;
+  final AsyncValue<Utilisateur?> utilisateur;
+  final int tachesEnAttente;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(32),
+        bottomRight: Radius.circular(32),
+      ),
+      child: Stack(
+        children: [
+          // Fond surtout bleu, avec l'orange qui n'apparaît qu'en touche
+          // décorative dans le coin bas-droit (pas un dégradé uniforme sur
+          // toute la largeur) — plus proche du modèle envoyé.
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    _CouleursAccueil.enteteHaut,
+                    _CouleursAccueil.enteteHaut,
+                    _CouleursAccueil.enteteBas,
+                  ],
+                  stops: [0, 0.6, 1],
+                ),
+              ),
+            ),
+          ),
+          // Dégradé radial (plutôt qu'un cercle à bord net) pour un
+          // fondu doux vers l'orange, sans bord visible disgracieux.
+          Positioned(
+            right: -60,
+            bottom: -90,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    _CouleursAccueil.enteteBas.withOpacity(0.85),
+                    _CouleursAccueil.enteteBas.withOpacity(0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          _contenu(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _contenu(BuildContext context) {
+    return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _LogoAtelier(
+                  atelier: atelier,
+                  modifiable: utilisateur.valueOrNull?.estProprietaire ?? false,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      atelier.when(
+                        data: (a) => Text(
+                          a?.nom ?? 'Atelier +',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                      const Text(
+                        'Votre style, notre priorité',
+                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      utilisateur.when(
+                        data: (u) => u == null
+                            ? const SizedBox.shrink()
+                            : RichText(
+                                maxLines: 1,
+                                overflow: TextOverflow.visible,
+                                text: TextSpan(
+                                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                                  children: [
+                                    const TextSpan(
+                                      text: 'Bonjour, ',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    TextSpan(
+                                      text: u.nom,
+                                      style: const TextStyle(color: _CouleursAccueil.carteEssaiIcone),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        loading: () => const SizedBox(height: 20),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        Formatters.dateLongue(DateTime.now()),
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                  tooltip: 'Paramètres',
+                  icon: const Icon(Icons.settings_outlined, color: Colors.white, size: 22),
+                  onPressed: () => context.push(AppRoutes.parametres),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                  tooltip: 'Se déconnecter',
+                  icon: const Icon(Icons.logout, color: Colors.white, size: 22),
+                  onPressed: () async {
+                    final conteneur = ProviderScope.containerOf(context, listen: false);
+                    await conteneur.read(authRepositoryProvider).deconnecter();
+                    if (context.mounted) context.go(AppRoutes.connexion);
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+    );
+  }
+}
+
+/// Logo de l'atelier, touché par le propriétaire pour le remplacer (photo
+/// ou galerie) — jamais par un apprenti, pour qui le logo n'est qu'un
+/// affichage. Un badge appareil photo discret indique que c'est possible.
+class _LogoAtelier extends ConsumerStatefulWidget {
+  const _LogoAtelier({required this.atelier, required this.modifiable});
+
+  final AsyncValue<Atelier?> atelier;
+  final bool modifiable;
+
+  @override
+  ConsumerState<_LogoAtelier> createState() => _LogoAtelierState();
+}
+
+class _LogoAtelierState extends ConsumerState<_LogoAtelier> {
+  bool _enEnvoi = false;
+
+  Future<void> _modifierLogo() async {
+    final atelierActuel = widget.atelier.valueOrNull;
+    if (atelierActuel == null) return;
+
+    final choix = await choisirSourceEtImage(context);
+    if (choix == null || !mounted) return;
+    final (fichier, _) = choix;
+
+    setState(() => _enEnvoi = true);
+    await executerAvecErreurAffichee(
+      context,
+      () async {
+        await ref.read(authRepositoryProvider).modifierLogoAtelier(
+              atelierActuel: atelierActuel,
+              logo: fichier,
+            );
+        ref.invalidate(atelierCourantProvider);
+      },
+    );
+    if (mounted) setState(() => _enEnvoi = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.modifiable ? _modifierLogo : null,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+            child: widget.atelier.when(
+              data: (a) => CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.white24,
+                backgroundImage: a?.logoUrl == null ? null : NetworkImage(a!.logoUrl!),
+                child: a?.logoUrl == null
+                    ? const Icon(Icons.storefront, color: _CouleursAccueil.enteteHaut, size: 20)
+                    : null,
+              ),
+              loading: () => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
+              error: (_, __) => const CircleAvatar(radius: 24, backgroundColor: Colors.white24),
+            ),
+          ),
+          if (_enEnvoi)
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black38),
+                child: const Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  ),
+                ),
+              ),
+            )
+          else if (widget.modifiable)
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _CouleursAccueil.carteEssaiIcone,
+                ),
+                child: const Icon(Icons.photo_camera, color: Colors.white, size: 12),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CarteEssai extends ConsumerWidget {
+  const _CarteEssai();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final abonnement = ref.watch(abonnementCourantProvider).valueOrNull;
+    if (abonnement == null || abonnement.statut != 'essai') return const SizedBox.shrink();
+    if (estEnModeConsultationSeule(abonnement)) return const SizedBox.shrink();
+
+    final jours = joursRestantsEssai(abonnement);
+    final String sousTitre;
+    if (jours <= 0) {
+      sousTitre = 'Se termine aujourd\'hui';
+    } else if (jours == 1) {
+      sousTitre = '1 jour restant';
+    } else {
+      sousTitre = '$jours jours restants';
+    }
+
+    return Material(
+      color: _CouleursAccueil.carteEssaiFond,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => context.push(AppRoutes.abonnement),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: _CouleursAccueil.carteEssaiIcone,
+                child: const Icon(Icons.hourglass_top, color: Colors.white, size: 16),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Essai gratuit en cours',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF231A14)),
+                    ),
+                    Text(sousTitre, style: const TextStyle(color: Color(0xFF6F6259), fontSize: 12)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Color(0xFF6F6259), size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Statistiques du jour (nombre de clients, rendez-vous du jour), rappel de
+/// rendez-vous configurable, et accès au suivi des finances / aux mesures
+/// d'uniformes — visible uniquement du propriétaire (données financières et
+/// réglages d'atelier).
+class _SectionAujourdhui extends ConsumerWidget {
+  const _SectionAujourdhui();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clients = ref.watch(rechercheClientsProvider('')).valueOrNull ?? const <Client>[];
+    final rendezVous = ref.watch(rendezVousTriesProvider).valueOrNull ?? const <RendezVous>[];
+    final rendezVousGroupe =
+        ref.watch(rendezVousGroupeTriesProvider).valueOrNull ?? const <RendezVousGroupe>[];
+    final groupes = ref.watch(groupesUniformesProvider).valueOrNull ?? const <GroupeUniforme>[];
+    final parGroupe = {for (final g in groupes) g.id: g};
+    final parClient = {for (final c in clients) c.id: c};
+
+    final maintenant = DateTime.now();
+    final debutJour = DateTime(maintenant.year, maintenant.month, maintenant.day);
+    final finJour = debutJour.add(const Duration(days: 1));
+    bool estAujourdhui(DateTime dateHeure, String statut) {
+      if (statut == AppConstants.rdvAnnule) return false;
+      final local = dateHeure.toLocal();
+      return !local.isBefore(debutJour) && local.isBefore(finJour);
+    }
+
+    final rdvAujourdhui = [
+      ...rendezVous.where((r) => estAujourdhui(r.dateHeure, r.statut)).map(
+            (r) => _RdvAujourdhui(
+              id: r.clientId,
+              nom: parClient[r.clientId]?.nomComplet ?? '…',
+              dateHeure: r.dateHeure,
+              estGroupe: false,
+            ),
+          ),
+      ...rendezVousGroupe.where((r) => estAujourdhui(r.dateHeure, r.statut)).map(
+            (r) => _RdvAujourdhui(
+              id: r.groupeId,
+              // Nom du répondant (plus parlant que le nom interne du
+              // groupe) — même choix que l'écran "Rendez-vous".
+              nom: parGroupe[r.groupeId]?.repondantNom ?? parGroupe[r.groupeId]?.nom ?? '…',
+              dateHeure: r.dateHeure,
+              estGroupe: true,
+            ),
+          ),
+    ]..sort((a, b) => a.dateHeure.compareTo(b.dateHeure));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFE3EAF7),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.all(10),
+          child: IntrinsicHeight(
+            // Nécessaire pour que les 3 cartes ci-dessous (tailles de
+            // contenu différentes) s'étirent correctement à la même
+            // hauteur : sans IntrinsicHeight, Stack (utilisé par
+            // _CarteStat pour sa grande icône décorative) ne donne pas à
+            // Row une hauteur fiable à calculer en amont, ce qui cassait
+            // l'affichage de toute la page.
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _CarteStat(
+                    icone: Icons.groups_outlined,
+                    valeur: '${clients.length}',
+                    libelle: 'Clients',
+                    couleur: _CouleursAccueil.carteEssaiIcone,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _CarteStat(
+                    icone: Icons.event_outlined,
+                    valeur: '${rdvAujourdhui.length}',
+                    libelle: 'Rendez-vous\naujourd\'hui',
+                    couleur: _CouleursAccueil.enteteHaut,
+                    onTap: rdvAujourdhui.isEmpty
+                        ? null
+                        : () => _afficherRdvAujourdhui(context, rdvAujourdhui),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(child: _CarteCitation()),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _CarteRappel(clients: clients, rendezVous: rendezVous),
+      ],
+    );
+  }
+}
+
+/// Liste, dans une boîte en bas d'écran, les clients et groupes d'uniformes
+/// ayant rendez-vous aujourd'hui (déjà triés par heure) — touchée depuis la
+/// carte "Rendez-vous aujourd'hui". Toucher une ligne ouvre directement la
+/// fiche du client ou le détail du groupe concerné.
+void _afficherRdvAujourdhui(
+  BuildContext context,
+  List<_RdvAujourdhui> rdvAujourdhui,
+) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) => SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Rendez-vous aujourd\'hui',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B4FA0)),
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final r in rdvAujourdhui)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          r.estGroupe ? Icons.groups_outlined : Icons.person_outline,
+                          color: const Color(0xFF1B4FA0),
+                        ),
+                        title: Text(r.nom),
+                        subtitle: Text(Formatters.heure(r.dateHeure.toLocal())),
+                        trailing: const Icon(Icons.chevron_right, color: Color(0xFF6F6259)),
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push(
+                            r.estGroupe
+                                ? AppRoutes.detailGroupeUniforme(r.id)
+                                : AppRoutes.ficheClient(r.id),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _CarteStat extends StatelessWidget {
+  const _CarteStat({
+    required this.icone,
+    required this.valeur,
+    required this.libelle,
+    required this.couleur,
+    this.onTap,
+  });
+
+  final IconData icone;
+  final String valeur;
+  final String libelle;
+  final Color couleur;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Stack(
+          children: [
+            // Grande icône fantôme en fond, simple touche décorative.
+            Positioned(
+              right: -8,
+              bottom: -8,
+              child: Icon(icone, size: 46, color: couleur.withOpacity(0.08)),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CircleAvatar(
+                        radius: 13,
+                        backgroundColor: couleur,
+                        child: Icon(icone, color: Colors.white, size: 13),
+                      ),
+                      if (onTap != null)
+                        const Icon(Icons.chevron_right, color: Color(0xFF6F6259), size: 16),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    valeur,
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: couleur),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    libelle,
+                    style: const TextStyle(
+                      color: Color(0xFF231A14),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Troisième carte de la section "Aujourd'hui", purement décorative :
+/// même format que les deux cartes statistiques à côté, pour que les trois
+/// soient alignées harmonieusement en une seule rangée.
+class _CarteCitation extends StatelessWidget {
+  const _CarteCitation();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.favorite, color: _CouleursAccueil.enteteBas, size: 18),
+          SizedBox(height: 4),
+          Text(
+            'Chaque rendez-vous\nest une création\nunique !',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: _CouleursAccueil.enteteHaut,
+              fontSize: 11,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CarteRappel extends ConsumerWidget {
+  const _CarteRappel({required this.clients, required this.rendezVous});
+
+  final List<Client> clients;
+  final List<RendezVous> rendezVous;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final joursAvant = ref.watch(preferenceRappelProvider);
+    final maintenant = DateTime.now();
+    final limite = maintenant.add(Duration(days: joursAvant));
+    final parClient = {for (final c in clients) c.id: c};
+
+    // Déjà triés par date croissante (observerRendezVousTries).
+    final concernes = <String>[];
+    for (final r in rendezVous) {
+      if (r.statut == AppConstants.rdvAnnule) continue;
+      final local = r.dateHeure.toLocal();
+      if (local.isBefore(maintenant) || local.isAfter(limite)) continue;
+      final nom = parClient[r.clientId]?.nomComplet;
+      if (nom != null && !concernes.contains(nom)) concernes.add(nom);
+    }
+
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.notifications_outlined, color: Color(0xFFF5821F)),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Me rappeler les rendez-vous',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<int>(
+            value: joursAvant,
+            items: choixJoursAvantRappel
+                .map(
+                  (j) => DropdownMenuItem(
+                    value: j,
+                    child: Text(j == 1 ? '1 jour avant' : '$j jours avant'),
+                  ),
+                )
+                .toList(),
+            onChanged: (j) {
+              if (j != null) ref.read(preferenceRappelProvider.notifier).definir(j);
+            },
+          ),
+          const SizedBox(height: 16),
+          const Text('Clients concernés par ce rappel', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          if (concernes.isEmpty)
+            const Text(
+              'Aucun rendez-vous à venir pour le moment.',
+              style: TextStyle(color: Color(0xFF6F6259)),
+            )
+          else
+            for (var i = 0; i < concernes.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _couleursPuces[i % _couleursPuces.length],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(concernes[i]),
+                  ],
+                ),
+              ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () => NotificationsService.instance.envoyerNotificationTest(),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.notifications_active_outlined,
+                    size: 18, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  'Tester un rappel maintenant',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CarteAction extends StatelessWidget {
+  const _CarteAction({
+    required this.icone,
+    required this.libelle,
+    required this.couleur,
+    required this.onTap,
+  });
+
+  final IconData icone;
+  final String libelle;
+  final Color couleur;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final fond = Color.alphaBlend(couleur.withOpacity(0.1), Colors.white);
+    return Material(
+      color: fond,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 1,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: couleur,
+                    child: Icon(icone, color: Colors.white, size: 18),
+                  ),
+                  Icon(Icons.chevron_right, color: couleur, size: 18),
+                ],
+              ),
+              Text(
+                libelle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  height: 1.15,
+                  color: couleur,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Occupe la place des tuiles réservées au propriétaire pendant que
+/// `utilisateurCourantProvider` résout encore (voir la remarque dans
+/// EcranAccueilProvisoire.build) — même forme que _CarteAction, pour que la
+/// grille ne change pas brutalement de mise en page une fois le rôle connu.
+class _CarteActionChargement extends StatelessWidget {
+  const _CarteActionChargement();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 1,
+      child: const Center(
+        child: SizedBox(
+          height: 22,
+          width: 22,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+    );
+  }
+}
