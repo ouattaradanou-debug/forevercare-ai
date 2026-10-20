@@ -11,27 +11,43 @@
 
 -- Comptes de test (Supabase Auth local)
 insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-                        created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
-values
-  ('00000000-0000-0000-0000-000000000000', 'a0000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated',
-   'directeur@ecole-test.local', extensions.crypt('motdepasse-test', extensions.gen_salt('bf')), now(), now(), now(),
-   '{"provider":"email","providers":["email"]}', '{}'),
-  ('00000000-0000-0000-0000-000000000000', 'a0000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated',
-   'enseignant1@ecole-test.local', extensions.crypt('motdepasse-test', extensions.gen_salt('bf')), now(), now(), now(),
-   '{"provider":"email","providers":["email"]}', '{}'),
-  ('00000000-0000-0000-0000-000000000000', 'a0000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated',
-   'enseignant2@ecole-test.local', extensions.crypt('motdepasse-test', extensions.gen_salt('bf')), now(), now(), now(),
-   '{"provider":"email","providers":["email"]}', '{}');
+                        created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
+                        confirmation_token, recovery_token, email_change_token_new, email_change,
+                        email_change_token_current, phone_change, phone_change_token, reauthentication_token)
+select '00000000-0000-0000-0000-000000000000', u.id::uuid, 'authenticated', 'authenticated', u.email,
+       extensions.crypt('motdepasse-test', extensions.gen_salt('bf')), now(), now(), now(),
+       '{"provider":"email","providers":["email"]}', '{}', '', '', '', '', '', '', '', ''
+  from (values
+  ('a0000000-0000-4000-8000-000000000001', 'directeur@ecole-test.local'),
+  ('a0000000-0000-4000-8000-000000000002', 'enseignant1@ecole-test.local'),
+  ('a0000000-0000-4000-8000-000000000003', 'enseignant2@ecole-test.local'),
+  ('a0000000-0000-4000-8000-000000000004', 'secretaire@ecole-test.local'),
+  ('a0000000-0000-4000-8000-000000000009', 'directeur@ecole-temoin.local')
+  ) as u(id, email);
+
+insert into auth.identities (id, user_id, provider_id, provider, identity_data, created_at, updated_at)
+select gen_random_uuid(), u.id, u.id::text, 'email',
+       jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true), now(), now()
+  from auth.users u where u.email like '%@ecole-te%.local';
 
 insert into public.schools (id, name, commune, departement, province, region, school_type, phone, director_name)
 values ('10000000-0000-4000-8000-000000000001', 'École Test', 'Commune Test', 'Département Test',
-        'Province Test', 'Région Test', 'publique', '+226 00 00 00 00', 'Directeur Test');
+        'Province Test', 'Région Test', 'publique', '+226 00 00 00 00', 'Directeur Test'),
+       -- Seconde école : sert à prouver qu'une école ne voit jamais les données d'une autre.
+       ('10000000-0000-4000-8000-000000000002', 'École Témoin', 'Commune Témoin', null,
+        'Province Témoin', 'Région Témoin', 'privee', null, 'Directeur Témoin');
 
-insert into public.school_years (id, school_id, label, starts_on, ends_on, is_current, archived_at) values
+insert into public.school_years (id, school_id, label, starts_on, ends_on, archived_at) values
   ('20000000-0000-4000-8000-000000002024', '10000000-0000-4000-8000-000000000001', '2024-2025',
-   '2024-10-01', '2025-07-31', false, '2025-08-31'),
+   '2024-10-01', '2025-07-31', '2025-08-31'),
   ('20000000-0000-4000-8000-000000002025', '10000000-0000-4000-8000-000000000001', '2025-2026',
-   '2025-10-01', '2026-07-31', true, null);
+   '2025-10-01', '2026-07-31', null),
+  ('20000000-0000-4000-8000-000000009025', '10000000-0000-4000-8000-000000000002', '2025-2026',
+   '2025-10-01', '2026-07-31', null);
+update public.schools set current_school_year_id = '20000000-0000-4000-8000-000000002025'
+ where id = '10000000-0000-4000-8000-000000000001';
+update public.schools set current_school_year_id = '20000000-0000-4000-8000-000000009025'
+ where id = '10000000-0000-4000-8000-000000000002';
 
 -- Deux années, deux en-têtes différents (les en-têtes ne sont jamais codés en dur).
 insert into public.admin_headers (school_id, school_year_id, ministry, region, regional_direction,
@@ -44,10 +60,8 @@ values
    'Région Test B', 'Direction régionale Test B', 'Direction provinciale Test B', 'CEB Test 2',
    'Province Test B', 'Département Test', 'Commune Test', 'École Test');
 
-insert into public.school_modules (school_id, module_key, enabled) values
-  ('10000000-0000-4000-8000-000000000001', 'maternelle', false),
-  ('10000000-0000-4000-8000-000000000001', 'cantine', false),
-  ('10000000-0000-4000-8000-000000000001', 'medico_scolaire', false);
+insert into public.school_modules (school_id, module_key, enabled)
+select s.id, mc.key, false from public.schools s cross join public.modules_catalog mc;
 
 insert into public.teachers (id, school_id, last_name, first_names, sex, matricule, birth_date, birth_place,
                              emploi, categorie, echelon, tenure_status, commune_nomination_date,
@@ -74,13 +88,26 @@ insert into public.memberships (id, school_id, user_id, role, teacher_id, displa
   ('a1000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001',
    'a0000000-0000-4000-8000-000000000002', 'enseignant', 'b0000000-0000-4000-8000-000000000001', 'Enseignant Un'),
   ('a1000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000001',
-   'a0000000-0000-4000-8000-000000000003', 'enseignant', 'b0000000-0000-4000-8000-000000000002', 'Enseignant Deux');
+   'a0000000-0000-4000-8000-000000000003', 'enseignant', 'b0000000-0000-4000-8000-000000000002', 'Enseignant Deux'),
+  ('a1000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001',
+   'a0000000-0000-4000-8000-000000000004', 'delegue', null, 'Secrétaire Test'),
+  ('a1000000-0000-4000-8000-000000000009', '10000000-0000-4000-8000-000000000002',
+   'a0000000-0000-4000-8000-000000000009', 'directeur', null, 'Directeur Témoin');
+
+-- La secrétaire a reçu uniquement le droit « finances ».
+insert into public.delegate_permissions (school_id, membership_id, permission_key) values
+  ('10000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000004', 'finances');
+
+-- Un élève de l'École Témoin (ne doit jamais être visible depuis l'École Test).
+insert into public.students (id, school_id, last_name, first_names, sex)
+values ('d0000000-0000-4000-8000-000000000099', '10000000-0000-4000-8000-000000000002', 'TÉMOIN', 'Élève', 'F');
 
 insert into public.devices (id, school_id, user_id, label, series_code) values
   ('90000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
    'a0000000-0000-4000-8000-000000000001', 'Téléphone du directeur', 'A'),
   ('90000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001',
    'a0000000-0000-4000-8000-000000000001', 'Tablette du secrétariat', 'B');
+select app.bump_counter('10000000-0000-4000-8000-000000000001', 'device_series', 2);
 
 -- Classes de l'année en cours
 insert into public.classes (id, school_id, school_year_id, level_code, name, main_teacher_id) values
@@ -132,7 +159,8 @@ select '10000000-0000-4000-8000-000000000001', s.id,
        '20000000-0000-4000-8000-000000002025',
        case when n <= 4 then 'CM1' when n <= 8 then 'CM2' else 'CE1' end,
        '2025-10-01'
-  from (select id, right(id::text, 2)::int as n from public.students) s;
+  from (select id, right(id::text, 2)::int as n from public.students
+         where school_id = '10000000-0000-4000-8000-000000000001') s;
 
 -- Historique 2024-2025 : Fatou était en CM1 (format « 7e/39 » pour la fiche de scolarité)
 insert into public.enrollments (school_id, student_id, class_id, school_year_id, level_code, starts_on, ends_on)

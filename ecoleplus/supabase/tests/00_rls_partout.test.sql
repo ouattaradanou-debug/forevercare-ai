@@ -1,5 +1,5 @@
--- R4 : RLS activée sur toutes les tables ; en phase 0, aucune donnée d'école
--- n'est lisible ni modifiable par les rôles de l'application.
+-- R4 : RLS activée sur toutes les tables. Les tables des phases à venir
+-- restent fermées tant que leurs règles ne sont pas écrites.
 begin;
 select plan(11);
 
@@ -18,8 +18,8 @@ set local role authenticated;
 select set_config('request.jwt.claims',
   '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 
-select is((select count(*)::int from public.students), 0, 'enseignant : aucun élève lisible sans politique');
-select is((select count(*)::int from public.schools), 0, 'enseignant : aucune école lisible sans politique');
+select is((select count(*)::int from public.grades), 0, 'enseignant : notes fermées jusqu''à la phase 3');
+select is((select count(*)::int from public.documents), 0, 'enseignant : documents fermés jusqu''à la phase 9');
 select is((select count(*)::int from public.payments), 0, 'enseignant : aucune donnée financière lisible');
 select is((select count(*)::int from public.levels), 9, 'le référentiel des niveaux reste lisible');
 select throws_ok(
