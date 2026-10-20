@@ -5,7 +5,7 @@ import 'fake_server.dart';
 /// Authentification simulée : comptes en mémoire, écoles créées directement
 /// dans le serveur simulé (comme le ferait create_school).
 class FakeAuthApi implements AuthApi {
-  FakeAuthApi(this.server);
+  new(this.server);
 
   final FakeServer server;
   final Map<String, (String password, String id)> users = {};

@@ -1,4 +1,3 @@
-import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -167,7 +166,7 @@ void main() {
       () => h.db.select(h.db.adminHeaders).get(),
     );
     expect(headers, hasLength(2));
-    expect(headers!.map((AdminHeaderRow x) => x.ceb).toSet(), {
+    expect(headers!.map((x) => x.ceb).toSet(), {
       'CEB Test 2',
     }, reason: 'en-têtes recopiés dans la nouvelle année');
     await h.dispose(tester);

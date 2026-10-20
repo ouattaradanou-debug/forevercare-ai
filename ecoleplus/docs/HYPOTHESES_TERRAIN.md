@@ -6,7 +6,7 @@ Toutes sont paramétrables ; aucune n'est présentée comme une règle officiell
 |---|---|---|---|
 | H1 | Barème par défaut : notes sur 10 par matière | Notes (phase 3) | `schools.grading_scale`, `assessments.max_score` |
 | H2 | Coefficient 1 par défaut ; un coefficient 0 n'influence pas la moyenne | Notes | `class_subjects.coefficient` |
-| H3 | Une épreuve où l'élève est « absent » et une matière sans aucune note sont **exclues** du calcul (et non comptées 0) | Notes, classement | à rendre paramétrable en phase 3 |
+| H3 | Élève absent : pas de note (« Abs. »), composition manquante non comptée à zéro (décision du porteur, valeur de départ) ; une matière sans aucune note est exclue du calcul | Notes, classement | `schools.absent_rule` (`non_compte` / `zero`) — à confirmer avec un directeur avant la phase 3 |
 | H4 | Moyenne de classe = moyenne des moyennes générales des élèves classés | Classement | — |
 | H5 | Terminologie de la maternelle : Petite / Moyenne / Grande section | Classes | table `levels` |
 | H6 | Le « Numéro d'ordre » du registre matricule (B2) est le « N° Mle » de la fiche de scolarité (B4) | B2, B4 | — |
@@ -21,5 +21,10 @@ Toutes sont paramétrables ; aucune n'est présentée comme une règle officiell
 | H15 | Pratiques financières des écoles publiques (contributions, cotisations) | Finances | rubriques libres |
 | H16 | Sens de « cantine endogène » pour l'école | Cantine | `canteen_settings.local_definition` |
 | H17 | Domaines d'apprentissage de la maternelle (à confronter au programme officiel du préscolaire) | Maternelle | `learning_domains` |
+| H18 | Les enseignants et délégués se connectent avec leur numéro de téléphone (sans SMS) ; seul le directeur a besoin d'une adresse e-mail | Connexion | — |
+| H19 | Un enseignant ne voit que les classes de l'année **en cours** ; les années archivées restent consultables par le directeur | Droits | `app.my_class_ids()` |
+| H20 | Un téléphone appartient à une seule école à la fois ; changer de compte efface les données locales (après avertissement si des éléments ne sont pas envoyés) | Hors ligne | — |
+| H21 | Rentrée scolaire en octobre : l'année proposée par défaut change en septembre | Années | `anneeScolaireProposee` |
+| H22 | En production, confirmation de l'adresse e-mail du directeur à la création du compte (désactivée en local) | Connexion | `config.toml` |
 
 Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, C.E.P., T/S, AV, AA, OD, OG, HTA, D.T.C.P., CEB.

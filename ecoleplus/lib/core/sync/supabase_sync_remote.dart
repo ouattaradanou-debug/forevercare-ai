@@ -66,13 +66,18 @@ class SupabaseSyncRemote implements SyncRemote {
     required String tieColumn,
     required int limit,
   }) => _call(() async {
-    final rows = await client
-        .from(table)
-        .select()
-        .or(
-          'synced_at.gt."$syncedAt",'
-          'and(synced_at.eq."$syncedAt",$tieColumn.gt."$tie")',
-        )
+    // Sans départage (premier passage, fenêtre de recouvrement) : >= suffit,
+    // l'application des lignes étant idempotente.
+    final filtered = tie.isEmpty
+        ? client.from(table).select().gte('synced_at', syncedAt)
+        : client
+              .from(table)
+              .select()
+              .or(
+                'synced_at.gt."$syncedAt",'
+                'and(synced_at.eq."$syncedAt",$tieColumn.gt."$tie")',
+              );
+    final rows = await filtered
         .order('synced_at', ascending: true)
         .order(tieColumn, ascending: true)
         .limit(limit);

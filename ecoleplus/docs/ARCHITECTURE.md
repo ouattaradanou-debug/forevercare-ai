@@ -46,8 +46,10 @@ Critères : maintenu (publication récente), compatible Flutter 3.47 / Dart 3.13
 | Formats FR | `intl` | 0.20.3 | 06/2026 | 1 | dates, nombres « 14,5 », FCFA |
 | PDF | `pdf` + `printing` | 3.13.1 / 5.15.1 | 09/2026 | 2 | dessin vectoriel A4 paysage, tableaux, **QR code intégré** (pas besoin de `qr_flutter`, non publié depuis 2023), impression et partage |
 | Excel | `excel` | 4.0.6 | 08/2024 | 2 | ⚠️ peu actif mais pur Dart, sans licence commerciale ; alternative `syncfusion_flutter_xlsio` écartée (licence Syncfusion). Repli prévu : import CSV |
-| Choix de fichiers | `file_picker` | 13.1.0 | 09/2026 | 2 | import Excel, ajout de documents en lot |
-| Partage | `share_plus` | 13.3.1 | 10/2026 | 2 | partage PDF (WhatsApp) |
+| Choix de fichiers | `file_picker` | 13.1.0 | 09/2026 | 1 | image d'en-tête (phase 1), import Excel, ajout de documents en lot |
+| Partage | `share_plus` | 13.3.1 | 10/2026 | 1 | fichier de sauvegarde (phase 1), partage PDF (WhatsApp) |
+| Traductions Material | `flutter_localizations` | SDK | — | 1 | sélecteurs de date, boutons système en français |
+| Dossiers locaux | `path_provider`, `path` | 2.1.x / 1.9.x | 2026 | 1 | images locales, fichiers de sauvegarde |
 | Dictée | `speech_to_text` | 7.5.0 | 09/2026 | 2 | reconnaissance native Android (voir §11) |
 | Caméra / photo | `image_picker` | 1.2.4 | 10/2026 | 8 | caméra système, pas de dépendance lourde |
 | Recadrage | `image_cropper` | 13.0.0 | 10/2026 | 8 | recadrage guidé du visage (exige Flutter ≥ 3.47) |
@@ -83,7 +85,7 @@ La logique métier (moyennes, rang, soldes, numérotation, normalisation des nom
 
 ## 5. Schéma de données
 
-71 tables (67 dans `public`, 4 dans `medical`), une migration par domaine :
+72 tables (68 dans `public` dont `modules_catalog` ajoutée en phase 1, 4 dans `medical`), une migration par domaine :
 
 | Migration | Contenu |
 |---|---|
@@ -97,6 +99,10 @@ La logique métier (moyennes, rang, soldes, numérotation, normalisation des nom
 | `…0800_formulaires_cartes` | `official_forms` (état, « Fait à … le … », date de référence B1), `form_versions` (version finale verrouillée), `activity_objectives`, `activity_lines` (B6 + B7), `scolarity_copy_log`, `card_templates`, `student_cards` (jeton QR opaque) |
 | `…0900_bibliotheque_ia` | `documents`, `document_levels`, `document_classes`, `document_chunks` (texte intégral FR + vecteur), `lesson_preps`, `ai_requests`, `ai_quotas` |
 | `…1000_rls_et_integrite` | RLS sur toutes les tables, triggers génériques (synced_at, interdiction de suppression, ajout seul) |
+| `20261021…0100_phase1_socle` | catalogue des modules, année en cours, règle de l'élève absent, fonctions d'accès, garde générique des modules, « au moins un niveau », dernier directeur protégé, auteur imposé |
+| `20261021…0200_phase1_rls` | politiques par profil (socle, personnel, classes, élèves, parents, inscriptions), gardes des modules et des niveaux |
+| `20261021…0300_phase1_fonctions_sync` | `create_school`, `register_device`, `server_now`, `sync_push`, `app.sync_tables` |
+| `20261021…0400_phase1_stockage` | compartiment privé `ecole-medias` et ses règles |
 
 ### 5.1 Conventions communes
 * `id uuid` généré **par l'appareil** ; `school_id` sur chaque ligne (cloisonnement et RLS simples).
@@ -114,24 +120,24 @@ La logique métier (moyennes, rang, soldes, numérotation, normalisation des nom
 * **Archives jamais indexées pour l'IA** (`CHECK` + trigger sur les vecteurs).
 * **Version finale de formulaire verrouillée**.
 
-### 5.3 Ce que le schéma ne fait pas encore (phases suivantes)
-Politiques RLS par profil (phase 1 pour le socle, puis chaque module), refus d'écriture des modules désactivés (phase 1), buckets de stockage (phases 8-9), fonctions d'accès au dossier médical (phase 7).
+### 5.3 Ajouts de la phase 1
+`modules_catalog` (catalogue des modules, dépendances), `schools.current_school_year_id` (année en cours : une seule ligne à modifier, sûr hors ligne), `schools.absent_rule`, suppression de `school_years.is_current` et `schools.manages_preschool` (la maternelle = module Maternelle). Restent pour les phases suivantes : politiques des tables de chaque module (notes, finances…), photos (phase 8), documents (phase 9), fonctions d'accès au dossier médico-scolaire (phase 7).
 
-## 6. Synchronisation hors ligne (conçue en phase 0, construite en phase 1)
+## 6. Synchronisation hors ligne (construite en phase 1)
 
 **Écriture** : écran → transaction Drift (ligne + entrée dans `outbox`) → retour immédiat. L'indicateur affiche « Tout est synchronisé » ou « N éléments en attente » (= taille de l'outbox).
 
-**Envoi (push)** : dès que le réseau revient (et toutes les X minutes), l'outbox est envoyée par lots à une fonction Postgres `sync_push` exécutée **avec les droits de l'utilisateur** (RLS appliquée). Chaque table suit une règle :
+**Envoi (push)** : au retour du réseau, 3 secondes après chaque saisie et toutes les 5 minutes (`SyncScheduler`), l'outbox est envoyée par lots de 100 à `public.sync_push`, exécutée **avec les droits de l'utilisateur** (RLS appliquée). Les modifications successives d'une même ligne non envoyée sont fusionnées en une seule entrée (`revision`). Seules les colonnes modifiées sont envoyées : le serveur ne met à jour que celles-ci. Chaque changement est traité isolément : un refus ne bloque pas le reste du lot. Résultat par changement : `ok`, `deja_recu`, `ignore_plus_ancien` (le téléphone reprend la version du serveur) ou `rejete` (message en français simple dans l'écran « Synchronisation », le téléphone reprend la version du serveur). Chaque table suit une règle :
 
 | Règle | Tables | Comportement serveur |
 |---|---|---|
 | Dernière modification gagne, avec trace | élèves, fiches, notes, bulletins, formulaires, paramètres… | si `updated_at` entrant ≥ serveur : écrase et copie la version perdante dans `sync_conflicts` ; sinon : ignore et trace |
-| Fusion par clé métier | `attendance` (élève + date), `meal_checks` (élève + jour), `meal_services` (jour + classe), `grades` (composition + élève + matière) | `insert … on conflict (clé métier)` puis règle précédente sur la ligne |
+| Fusion par clé métier | `attendance` (élève + date), `meal_checks` (élève + jour), `meal_services` (jour + classe), `grades` (composition + élève + matière), `school_modules` (école + module) | identifiant **déterministe** calculé à partir de la clé métier (UUID v5) ou clé composée déclarée dans `app.sync_tables` : deux téléphones produisent la même ligne, la règle précédente s'applique |
 | Ajout seul | `payments`, `payment_allocations`, `expenses`, `stock_movements`, journaux | `insert … on conflict (id) do nothing` : un renvoi ne crée jamais de doublon, rien n'est écrasé |
 
-**Téléchargement (pull)** : par table, lignes dont `synced_at` > dernier curseur (horloge serveur ; fenêtre de recouvrement de quelques minutes, application idempotente). Les valeurs attribuées par le serveur (numéro d'ordre du registre) reviennent ainsi sur l'appareil.
+**Téléchargement (pull)** : par table, via l'API REST (donc la RLS), lignes dont (`synced_at`, clé) > curseur, pages de 500, fenêtre de recouvrement de 2 minutes (application idempotente). Une ligne ayant une modification locale non envoyée n'est pas écrasée. Les tables de référence sans `synced_at` (`modules_catalog`) sont rechargées entièrement. Les valeurs attribuées par le serveur (numéro d'ordre du registre) reviennent ainsi sur l'appareil.
 
-**Horloges** : un téléphone à l'heure fausse fausserait « dernière modification gagne ». À chaque synchronisation, l'écart avec l'heure du serveur est mesuré et corrige `updated_at` des écritures en attente (à tester en phase 1).
+**Horloges** : à chaque synchronisation, l'écart avec l'heure du serveur est mesuré (`Clock.calibrate`) et mémorisé ; les écritures suivantes sont horodatées avec l'heure corrigée (testé). Le serveur refuse une date plus de 10 minutes dans le futur.
 
 **Fichiers** (photos, documents) : file séparée, envoi reprenable par morceaux ; jamais de téléchargement automatique des documents (catalogue seulement).
 
@@ -144,22 +150,32 @@ Politiques RLS par profil (phase 1 pour le socle, puis chaque module), refus d'�
 
 Limites (à valider) : la numérotation des reçus est continue **par série**, pas pour toute l'école ; si un téléphone est perdu avant synchronisation, sa série peut présenter un trou (les reçus papier remis existent). Réinstallation : l'appareil récupère son dernier numéro depuis le serveur avant tout nouveau reçu (sinon il reçoit une nouvelle série). Reprise d'un registre papier : un numéro saisi est accepté et le compteur repart après le plus grand.
 
-## 8. Sécurité et RLS (plan)
+## 8. Sécurité et RLS
 
-* Phase 0 : RLS activée **partout**, aucune politique → refus total pour `anon` et `authenticated` (testé). Seul le référentiel `levels` est lisible.
-* Phase 1 : fonctions `app.my_role(school)`, `app.my_class_ids()`, `app.has_permission(school, clé)`, `app.module_enabled(school, module)` (`security definer`, `stable`), puis politiques par famille :
+* RLS activée **partout** ; une table sans politique reste fermée (tables des phases à venir).
+* Fonctions (`security definer`, `stable`) : `app.is_member`, `app.is_director`, `app.has_perm(école, droit)`, `app.has_any_perm`, `app.my_teacher_ids`, `app.my_class_ids` (année en cours), `app.teacher_sees_student`, `app.module_enabled`, `app.level_allowed`. Politiques par famille (phase 1 : socle, classes, élèves, parents, inscriptions, personnel) :
   * données d'école (directeur) ; données de classe (enseignant : uniquement ses classes via `classes.main_teacher_id` / affectations) ;
   * finances : directeur + délégué `finances` ; jamais enseignant ;
   * personnel et registres : directeur + délégué `registres` ;
-  * modules optionnels : `module_enabled(...)` dans `using` **et** `with check` → lectures vides, écritures refusées, données conservées ;
+  * modules optionnels : `app.guard_module(table, module)` pose une politique **restrictive** (`using` et `with check`) → lectures vides, écritures refusées, données conservées, quelles que soient les autres politiques (posée sur les 16 tables Maternelle, Cantine, Médical) ;
+  * niveaux : politique restrictive `app.level_allowed` sur `classes` (primaire décoché ou maternelle désactivée → classes invisibles) ;
+  * auteur des écritures (`created_by`, `updated_by`) imposé par le serveur ; aucune politique `DELETE` ;
   * `medical` : aucune politique directe ; accès par fonctions dédiées journalisées (phase 7).
-* Stockage : buckets privés, chemins `{school_id}/…`, politiques sur `storage.objects` identiques aux tables, URL signées courtes.
+* Stockage : compartiment privé `ecole-medias` (images d'en-tête, 2 Mo max, PNG/JPEG), chemins `{school_id}/entetes/…`, lecture par les membres de l'école, dépôt par le directeur ou le délégué « formulaires » (testé). Photos d'élèves et documents : compartiments dédiés en phases 8 et 9.
 * Index IA : `document_chunks` hérite des droits du document (même fonction d'accès).
 * Secrets : `.env` ignoré par Git, modèle `.env.example` fourni.
 
+## 8 bis. Comptes et connexion (phase 1)
+
+* Un seul champ « Numéro de téléphone, e-mail ou identifiant ». Règle commune à l'application et au serveur (`identifiant.dart` / `identifiant.ts`, 14 exemples partagés vérifiés des deux côtés) : e-mail réel ; numéro burkinabè → `226XXXXXXXX@tel.ecoleplus.invalid` ; identifiant libre → `nom@id.ecoleplus.invalid` (domaine réservé : aucun e-mail n'y part). Pas de fournisseur SMS nécessaire.
+* Directeur : crée son compte (e-mail + mot de passe) et son école en ligne (`create_school`, idempotente). Mot de passe oublié : code à 6 chiffres par e-mail (modèle `supabase/templates/recuperation.html`).
+* Enseignants et délégués : comptes créés par le directeur (Edge Function `gerer-membres`, sans dépendance externe, clé `service_role` uniquement côté serveur) ; mot de passe provisoire lisible ; réinitialisation par le directeur ; désactivation sans suppression.
+* Chaque téléphone reçoit une identité et une série (A, B…) à la première connexion (`register_device`). Ensuite l'application s'ouvre sans réseau. Changer de compte efface les données locales (avertissement s'il reste des éléments non envoyés).
+* Sauvegarde : copie complète de la base du téléphone (`VACUUM INTO`), partagée par le directeur ; les données envoyées sont en plus sauvegardées par Supabase (sauvegardes quotidiennes du plan Pro ; **aucune sauvegarde automatique sur le plan gratuit**).
+
 ## 9. Modules optionnels (R11)
 
-Table `school_modules` (clé, activé, date, auteur), tout désactivé par défaut. P6 étant reporté, Finances, Cartes et Bibliothèque IA restent toujours actifs en version 1. Dépendance unique : la Cantine exige les Finances (toujours vraies en V1 tant que P6 est reporté). Aucune table du noyau ne référence une table optionnelle.
+Catalogue `modules_catalog` (clé, libellé, description, module requis) et état par école `school_modules`, tout désactivé par défaut. Écran « Options de l'école » : avant de désactiver, liste de ce qui sera masqué et « Vos données sont conservées » ; avertissement spécifique avant d'activer le dossier médico-scolaire ; au moins un niveau (primaire ou maternelle) reste actif (vérifié aussi par la base). P6 étant reporté, Finances, Cartes et Bibliothèque IA restent toujours actifs en version 1. Dépendance unique : la Cantine exige les Finances (toujours vraies en V1 tant que P6 est reporté). Aucune table du noyau ne référence une table optionnelle.
 
 ## 10. IA
 
@@ -182,5 +198,6 @@ Appels uniquement depuis une Edge Function (fournisseur et modèle par variables
 
 * `flutter analyze` (lints stricts) + `flutter test` (unitaires et widgets).
 * `supabase test db` : pgTAP (RLS partout, intégrité, calculs sur « École Test »).
-* `.github/workflows/ecoleplus.yml` : exécute les deux à chaque push touchant `ecoleplus/`.
+* Tests d'intégration (`test/integration/`) contre le serveur local complet (authentification, API, fonctions, Mailpit).
+* `.github/workflows/ecoleplus.yml` : trois tâches (Flutter, base, intégration) à chaque push touchant `ecoleplus/`.
 * Script local : `tools/check.sh`.

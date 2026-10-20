@@ -22,7 +22,7 @@ const anneeId = '20000000-0000-4000-8000-000000002025';
 /// L'application complète, branchée sur un serveur et une authentification
 /// simulés, avec une base locale en mémoire.
 class AppHarness {
-  AppHarness() {
+  new() {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     db = AppDatabase(NativeDatabase.memory());
     remote = FakeRemote(server);
@@ -33,8 +33,11 @@ class AppHarness {
   late final AppDatabase db;
   late final FakeRemote remote;
   late final FakeAuthApi auth;
-  final mediaDir = Directory.systemTemp.createTempSync('ecoleplus_media');
+  final Directory mediaDir = Directory.systemTemp.createTempSync(
+    'ecoleplus_media',
+  );
 
+  bool get online => remote.online;
   set online(bool v) {
     remote.online = v;
     auth.online = v;
