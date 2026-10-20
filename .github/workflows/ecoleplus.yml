@@ -1,0 +1,36 @@
+name: EcolePlus
+
+on:
+  push:
+    paths: ['ecoleplus/**', '.github/workflows/ecoleplus.yml']
+  pull_request:
+    paths: ['ecoleplus/**', '.github/workflows/ecoleplus.yml']
+
+defaults:
+  run:
+    working-directory: ecoleplus
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
+
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+      - run: supabase db start
+      - run: supabase db reset
+      - run: supabase test db

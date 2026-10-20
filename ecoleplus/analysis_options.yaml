@@ -1,0 +1,18 @@
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    - "**/*.g.dart"
+    - build/**
+    - android/**
+    - web/**
+
+linter:
+  rules:
+    # Application, pas une bibliothèque publiée : la doc de chaque membre public
+    # alourdirait le code sans valeur pour l'équipe.
+    public_member_api_docs: false
