@@ -1,0 +1,16 @@
+[
+  ["directeur@ecole.bf", "directeur@ecole.bf"],
+  ["  Directeur@Ecole.BF ", "directeur@ecole.bf"],
+  ["pas-un-email@", null],
+  ["70 11 22 33", "22670112233@tel.ecoleplus.invalid"],
+  ["+226 70 11 22 33", "22670112233@tel.ecoleplus.invalid"],
+  ["00226-70-11-22-33", "22670112233@tel.ecoleplus.invalid"],
+  ["22670112233", "22670112233@tel.ecoleplus.invalid"],
+  ["701122", null],
+  ["Aminata Test", "aminata.test@id.ecoleplus.invalid"],
+  ["aminata.test", "aminata.test@id.ecoleplus.invalid"],
+  ["Élodie Kaboré", "elodie.kabore@id.ecoleplus.invalid"],
+  ["ab", null],
+  ["", null],
+  ["nom/avec/barres", null]
+]

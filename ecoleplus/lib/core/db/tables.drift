@@ -1,0 +1,165 @@
+-- Base locale (source de vérité de l'interface). Les tables « miroir »
+-- reprennent les noms et colonnes du serveur (sous-ensemble utile au téléphone).
+-- Dates et horodatages : texte ISO 8601 (identique au JSON du serveur).
+
+CREATE TABLE schools (
+  id TEXT NOT NULL PRIMARY KEY,
+  name TEXT NOT NULL,
+  commune TEXT,
+  departement TEXT,
+  province TEXT,
+  region TEXT,
+  school_type TEXT NOT NULL DEFAULT 'publique',
+  phone TEXT,
+  email TEXT,
+  address TEXT,
+  director_name TEXT,
+  manages_primary BOOLEAN NOT NULL DEFAULT TRUE,
+  grading_scale REAL NOT NULL DEFAULT 10,
+  show_race_religion BOOLEAN NOT NULL DEFAULT FALSE,
+  absent_rule TEXT NOT NULL DEFAULT 'non_compte',
+  current_school_year_id TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS SchoolRow;
+
+CREATE TABLE school_years (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  label TEXT NOT NULL,
+  starts_on TEXT,
+  ends_on TEXT,
+  archived_at TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS SchoolYearRow;
+
+CREATE TABLE admin_headers (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  country TEXT NOT NULL DEFAULT 'BURKINA FASO',
+  motto TEXT,
+  ministry TEXT,
+  region TEXT,
+  regional_direction TEXT,
+  provincial_direction TEXT,
+  ceb TEXT,
+  province TEXT,
+  departement TEXT,
+  commune TEXT,
+  school_label TEXT,
+  emblem_path TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS AdminHeaderRow;
+
+CREATE TABLE modules_catalog (
+  "key" TEXT NOT NULL PRIMARY KEY,
+  label TEXT NOT NULL,
+  description TEXT NOT NULL,
+  depends_on TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0
+) AS ModuleCatalogRow;
+
+CREATE TABLE school_modules (
+  school_id TEXT NOT NULL,
+  module_key TEXT NOT NULL,
+  enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  synced_at TEXT,
+  PRIMARY KEY (school_id, module_key)
+) AS SchoolModuleRow;
+
+CREATE TABLE memberships (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  role TEXT NOT NULL,
+  teacher_id TEXT,
+  display_name TEXT NOT NULL,
+  phone TEXT,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS MembershipRow;
+
+CREATE TABLE delegate_permissions (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  membership_id TEXT NOT NULL,
+  permission_key TEXT NOT NULL,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS DelegatePermissionRow;
+
+-- ------------------------- Tables locales ---------------------------
+
+-- File d'envoi : une entrée par ligne modifiée (les modifications successives
+-- d'une même ligne non encore envoyée sont fusionnées ; « revision » change).
+CREATE TABLE outbox (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  target_table TEXT NOT NULL,
+  row_key TEXT NOT NULL,
+  payload TEXT NOT NULL,
+  revision INTEGER NOT NULL DEFAULT 1,
+  status TEXT NOT NULL DEFAULT 'en_attente',
+  message TEXT,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+) AS OutboxEntry;
+
+CREATE TABLE sync_cursors (
+  target_table TEXT NOT NULL PRIMARY KEY,
+  synced_at TEXT NOT NULL,
+  tie TEXT NOT NULL DEFAULT ''
+) AS SyncCursor;
+
+CREATE TABLE local_session (
+  id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+  user_id TEXT NOT NULL,
+  login TEXT NOT NULL,
+  membership_id TEXT NOT NULL,
+  school_id TEXT NOT NULL,
+  role TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  device_id TEXT NOT NULL,
+  device_series TEXT,
+  clock_offset_ms INTEGER NOT NULL DEFAULT 0,
+  last_sync_at TEXT
+) AS LocalSessionRow;
+
+-- Brouillons des formulaires (sauvegarde automatique ; jamais de mot de passe).
+CREATE TABLE drafts (
+  "key" TEXT NOT NULL PRIMARY KEY,
+  payload TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+) AS DraftRow;
+
+-- Fichiers à envoyer (image d'en-tête…), envoyés dès que le réseau revient.
+CREATE TABLE file_uploads (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  local_path TEXT NOT NULL,
+  bucket TEXT NOT NULL,
+  object_path TEXT NOT NULL,
+  content_type TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+) AS FileUploadRow;
+
+-- Identité de ce téléphone (conservée même quand on change de compte).
+CREATE TABLE device_identity (
+  id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+  device_id TEXT NOT NULL
+) AS DeviceIdentityRow;

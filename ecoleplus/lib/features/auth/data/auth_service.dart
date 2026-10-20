@@ -1,0 +1,214 @@
+import 'package:drift/drift.dart';
+import 'package:ecoleplus/core/db/app_database.dart';
+import 'package:ecoleplus/core/sync/local_store.dart';
+import 'package:ecoleplus/core/sync/sync_engine.dart';
+import 'package:ecoleplus/features/auth/data/auth_api.dart';
+import 'package:ecoleplus/features/auth/domain/identifiant.dart';
+import 'package:uuid/uuid.dart';
+
+/// Résultat d'une connexion.
+sealed class LoginOutcome;
+
+class LoggedIn extends LoginOutcome;
+
+/// Compte valide mais rattaché à aucune école : proposer « Créer mon école ».
+class NoSchool extends LoginOutcome;
+
+/// Données saisies à la création de l'école (première utilisation).
+class NewSchool {
+  const new({
+    required this.directorName,
+    required this.email,
+    required this.password,
+    required this.schoolName,
+    required this.yearLabel,
+    this.commune,
+    this.province,
+    this.region,
+    this.schoolType = 'publique',
+    this.phone,
+    this.managesPrimary = true,
+    this.managesPreschool = false,
+  });
+
+  final String directorName;
+  final String email;
+  final String password;
+  final String schoolName;
+  final String yearLabel;
+  final String? commune;
+  final String? province;
+  final String? region;
+  final String schoolType;
+  final String? phone;
+  final bool managesPrimary;
+  final bool managesPreschool;
+}
+
+class AuthService {
+  new({
+    required this.api,
+    required this.store,
+    required this.engine,
+    this.deviceLabel = 'Téléphone',
+  });
+
+  final AuthApi api;
+  final LocalStore store;
+  final SyncEngine engine;
+  final String deviceLabel;
+  static const _uuid = Uuid();
+
+  AppDatabase get db => store.db;
+
+  Stream<LocalSessionRow?> watchSession() =>
+      db.select(db.localSession).watchSingleOrNull();
+
+  Future<LocalSessionRow?> session() =>
+      db.select(db.localSession).getSingleOrNull();
+
+  /// Connexion (en ligne la première fois sur ce téléphone).
+  Future<LoginOutcome> login(String identifiant, String password) async {
+    final email = identifiantVersEmail(identifiant);
+    if (email == null) {
+      throw const UserMessage(
+        'Identifiant non reconnu : saisissez votre numéro de téléphone, '
+        'votre adresse e-mail ou votre identifiant.',
+      );
+    }
+    if (password.isEmpty) {
+      throw const UserMessage('Saisissez votre mot de passe.');
+    }
+    final userId = await api.signIn(email, password);
+    return await _openSession(userId, email);
+  }
+
+  Future<LoginOutcome> _openSession(String userId, String email) async {
+    final memberships = await api.myMemberships(userId);
+    if (memberships.isEmpty) return NoSchool();
+    final m = memberships.first;
+    final previous = await session();
+    if (previous != null && previous.userId != userId) {
+      await db.clearAll();
+    }
+    final schoolId = m['school_id'] as String;
+    final device = await _registerDevice(schoolId);
+    await db
+        .into(db.localSession)
+        .insertOnConflictUpdate(
+          LocalSessionCompanion.insert(
+            id: const Value(1),
+            userId: userId,
+            login: email,
+            membershipId: m['id'] as String,
+            schoolId: schoolId,
+            role: m['role'] as String,
+            displayName: m['display_name'] as String,
+            deviceId: device.$1,
+            deviceSeries: Value(device.$2),
+          ),
+        );
+    await engine.syncNow();
+    return LoggedIn();
+  }
+
+  Future<(String, String?)> _registerDevice(String schoolId) async {
+    var identity = await db.select(db.deviceIdentity).getSingleOrNull();
+    if (identity == null) {
+      final id = _uuid.v4();
+      await db
+          .into(db.deviceIdentity)
+          .insert(
+            DeviceIdentityCompanion.insert(id: const Value(1), deviceId: id),
+          );
+      identity = DeviceIdentityRow(id: 1, deviceId: id);
+    }
+    try {
+      final d = await api.registerDevice(
+        identity.deviceId,
+        schoolId,
+        deviceLabel,
+      );
+      return (identity.deviceId, d['series_code'] as String?);
+    } on UserMessage {
+      // Téléphone déjà inscrit dans une autre école : nouvelle identité.
+      final id = _uuid.v4();
+      await db
+          .into(db.deviceIdentity)
+          .insertOnConflictUpdate(
+            DeviceIdentityCompanion.insert(id: const Value(1), deviceId: id),
+          );
+      final d = await api.registerDevice(id, schoolId, deviceLabel);
+      return (id, d['series_code'] as String?);
+    }
+  }
+
+  /// Première utilisation : compte du directeur + école + première année.
+  Future<void> createSchool(NewSchool s) async {
+    final email = identifiantVersEmail(s.email);
+    if (email == null || typeIdentifiant(s.email) != TypeIdentifiant.email) {
+      throw const UserMessage(
+        'Saisissez une adresse e-mail valide : elle servira à récupérer '
+        'votre mot de passe.',
+      );
+    }
+    if (s.password.length < 8) {
+      throw const UserMessage(
+        'Choisissez un mot de passe d’au moins 8 caractères.',
+      );
+    }
+    final userId = api.currentUserId ?? await api.signUp(email, s.password);
+    await api.createSchool({
+      'school_id': _uuid.v4(),
+      'school_year_id': _uuid.v4(),
+      'membership_id': _uuid.v4(),
+      'admin_header_id': _uuid.v4(),
+      'name': s.schoolName.trim(),
+      'year_label': s.yearLabel.trim(),
+      'commune': s.commune,
+      'province': s.province,
+      'region': s.region,
+      'school_type': s.schoolType,
+      'phone': s.phone,
+      'email': email,
+      'director_name': s.directorName.trim(),
+      'manages_primary': s.managesPrimary,
+      'manages_preschool': s.managesPreschool,
+    });
+    await _openSession(userId, email);
+  }
+
+  Future<void> sendRecoveryCode(String identifiant) {
+    final type = typeIdentifiant(identifiant);
+    if (type != TypeIdentifiant.email) {
+      throw const UserMessage(
+        'Pour un numéro de téléphone ou un identifiant, demandez à votre '
+        'directeur de vous donner un nouveau mot de passe.',
+      );
+    }
+    return api.sendRecoveryCode(identifiantVersEmail(identifiant)!);
+  }
+
+  Future<void> confirmRecovery(
+    String identifiant,
+    String code,
+    String newPassword,
+  ) async {
+    if (newPassword.length < 8) {
+      throw const UserMessage(
+        'Choisissez un mot de passe d’au moins 8 caractères.',
+      );
+    }
+    final email = identifiantVersEmail(identifiant)!;
+    await api.confirmRecovery(email, code, newPassword);
+    final userId = api.currentUserId;
+    if (userId != null) await _openSession(userId, email);
+  }
+
+  /// Déconnexion : efface les données de l'école de ce téléphone.
+  /// L'écran prévient avant si des éléments ne sont pas encore envoyés.
+  Future<void> logout() async {
+    await api.signOut();
+    await db.clearAll();
+  }
+}
