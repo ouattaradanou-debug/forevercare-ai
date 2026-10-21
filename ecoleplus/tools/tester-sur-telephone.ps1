@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   EcolePlus : prépare le serveur de test et installe l'application sur le
   portable branché en USB. Une seule commande, à relancer après chaque phase.
@@ -30,7 +30,11 @@ param(
   [string]$Region = 'eu-west-3'
 )
 
-$ErrorActionPreference = 'Stop'
+# « Continue » et non « Stop » : sous Windows PowerShell 5.1, les messages
+# normaux que la CLI Supabase écrit sur le canal d'erreur seraient sinon pris
+# pour des erreurs et arrêteraient le script. Chaque commande est vérifiée
+# explicitement (code de retour).
+$ErrorActionPreference = 'Continue'
 $racine = Split-Path -Parent $PSScriptRoot          # dossier ecoleplus
 Set-Location $racine
 $fichierConfig = Join-Path $racine '.serveur-test.json'
@@ -41,15 +45,20 @@ function Ok($texte) { Write-Host "    OK : $texte" -ForegroundColor Green }
 function Arret($texte) { Write-Host ''; Write-Host "ARRÊT : $texte" -ForegroundColor Red; exit 1 }
 
 function Supabase {
-  # CLI Supabase à version fixe (téléchargée automatiquement par npx).
-  & npx --yes supabase@2.121.0 @args
+  # CLI Supabase à version fixe (téléchargée automatiquement par npx). Ses
+  # messages sont affichés en texte normal (sinon PowerShell 5.1 les montre
+  # en rouge alors que ce ne sont pas des erreurs).
+  & npx --yes supabase@2.121.0 @args 2>&1 | ForEach-Object { Write-Host "    $_" }
   if ($LASTEXITCODE -ne 0) { throw "La commande « supabase $($args -join ' ') » a échoué." }
 }
 
 function SupabaseJson {
   $sortie = & npx --yes supabase@2.121.0 @args -o json 2>$null
   if ($LASTEXITCODE -ne 0) { throw "La commande « supabase $($args -join ' ') » a échoué." }
-  return ($sortie -join "`n") | ConvertFrom-Json
+  $texte = ($sortie | Where-Object { $_ -is [string] }) -join "`n"
+  $debut = $texte.IndexOfAny([char[]]'[{')
+  if ($debut -lt 0) { return @() }
+  return $texte.Substring($debut) | ConvertFrom-Json
 }
 
 # --------------------------------------------------------------------------
@@ -70,7 +79,7 @@ try {
 
 if ($ChangerDeCompte) {
   Etape 'Changement de compte Supabase'
-  & npx --yes supabase@2.121.0 logout --yes *> $null
+  & npx --yes supabase@2.121.0 logout --yes 2>&1 | Out-Null
   # Oublie le serveur de test enregistré pour l'ancien compte (sur ce PC
   # seulement : rien n'est supprimé chez Supabase).
   Remove-Item -Force -ErrorAction SilentlyContinue $fichierConfig, $fichierEnv
@@ -80,10 +89,11 @@ if ($ChangerDeCompte) {
 }
 
 Etape 'Connexion à votre compte Supabase'
-& npx --yes supabase@2.121.0 projects list *> $null
+& npx --yes supabase@2.121.0 projects list 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) {
   Write-Host '    Une page va s''ouvrir dans le navigateur : connectez-vous à Supabase et autorisez la CLI.'
-  Supabase login
+  & npx --yes supabase@2.121.0 login
+  if ($LASTEXITCODE -ne 0) { Arret 'Connexion à Supabase impossible.' }
 }
 Ok 'connecté'
 
