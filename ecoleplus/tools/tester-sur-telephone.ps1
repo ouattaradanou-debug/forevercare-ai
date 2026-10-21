@@ -73,7 +73,7 @@ if ($ChangerDeCompte) {
   & npx --yes supabase@2.121.0 logout --yes *> $null
   # Oublie le serveur de test enregistré pour l'ancien compte (sur ce PC
   # seulement : rien n'est supprimé chez Supabase).
-  Remove-Item -ErrorAction SilentlyContinue $fichierConfig, $fichierEnv
+  Remove-Item -Force -ErrorAction SilentlyContinue $fichierConfig, $fichierEnv
   Write-Host '    Dans le navigateur, connectez-vous avec le NOUVEAU compte Supabase'
   Write-Host '    (déconnectez-vous d''abord de l''ancien sur supabase.com, ou utilisez une fenêtre de navigation privée).'
   Ok 'ancien compte oublié sur ce PC'
