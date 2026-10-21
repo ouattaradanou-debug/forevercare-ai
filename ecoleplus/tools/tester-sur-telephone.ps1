@@ -44,38 +44,45 @@ function Etape($texte) { Write-Host ''; Write-Host "==> $texte" -ForegroundColor
 function Ok($texte) { Write-Host "    OK : $texte" -ForegroundColor Green }
 function Arret($texte) { Write-Host ''; Write-Host "ARRÊT : $texte" -ForegroundColor Red; exit 1 }
 
-function Supabase {
+# Chaque commande est transmise sous forme de LISTE explicite, ex.
+#   Supabase @('link', '--project-ref', $ref, '-p', $mdp)
+# (sous Windows PowerShell 5.1, « @args » n'est pas transmis à npx, et des mots
+# comme « -p » seraient pris pour des options de PowerShell).
+function Supabase([string[]]$Mots) {
   # CLI Supabase à version fixe (téléchargée automatiquement par npx). Ses
   # messages sont affichés en texte normal (sinon PowerShell 5.1 les montre
   # en rouge alors que ce ne sont pas des erreurs).
-  $lignes = @(& npx --yes supabase@2.121.0 @args 2>&1 | ForEach-Object { "$_" })
+  $lignes = @(& npx --yes supabase@2.121.0 $Mots 2>&1 | ForEach-Object { "$_" })
   $lignes | ForEach-Object { Write-Host "    $_" }
   if ($LASTEXITCODE -ne 0 -or ($lignes -match '^\s*SUBCOMMANDS\s*$')) {
-    throw "La commande « supabase $($args -join ' ') » a échoué."
+    throw "La commande « supabase $($Mots -join ' ') » a échoué."
   }
 }
 
-function SupabaseJson {
+function SupabaseJson([string[]]$Mots) {
   # Réponse JSON de la CLI (option --output-format json). Selon les commandes,
   # la liste peut être directe ou rangée dans une enveloppe : on la retrouve.
-  $sortie = & npx --yes supabase@2.121.0 @args --output-format json 2>$null
+  $sortie = & npx --yes supabase@2.121.0 ($Mots + @('--output-format', 'json')) 2>$null
   $texte = ($sortie | Where-Object { $_ -is [string] }) -join "`n"
   $script:derniereReponse = $texte
   $debut = $texte.IndexOfAny([char[]]'[{')
   if ($debut -lt 0) {
-    if ($LASTEXITCODE -ne 0) { throw "La commande « supabase $($args -join ' ') » a échoué." }
+    if ($LASTEXITCODE -ne 0) { throw "La commande « supabase $($Mots -join ' ') » a échoué." }
     return @()
   }
   $json = $texte.Substring($debut) | ConvertFrom-Json
-  if ($json -is [array]) { return $json }
-  if ($json._tag -eq 'Error') {
-    throw "Supabase a répondu : $($json.error.message)"
-  }
-  foreach ($nom in @('data', 'items', 'result', 'value')) {
-    if ($json.PSObject.Properties[$nom]) { return @($json.$nom) }
-  }
-  foreach ($p in $json.PSObject.Properties) {
-    if ($p.Value -is [array]) { return $p.Value }
+  # Déballe jusqu'à trouver la liste : {"organizations":[...]}, {"data":...}…
+  for ($n = 0; $n -lt 5; $n++) {
+    if ($json -is [array]) { return $json }
+    if ($json._tag -eq 'Error') { throw "Supabase a répondu : $($json.error.message)" }
+    if ($json._tag -eq 'Help') { throw "Commande « supabase $($Mots -join ' ') » non comprise par Supabase." }
+    $suivant = $null
+    if ($json.PSObject.Properties['data']) { $suivant = $json.data }
+    else {
+      foreach ($p in $json.PSObject.Properties) { if ($p.Value -is [array]) { $suivant = $p.Value; break } }
+    }
+    if ($null -eq $suivant) { return @($json) }
+    $json = $suivant
   }
   return @($json)
 }
@@ -140,11 +147,11 @@ if ($config) {
   $nouveau = $false
 } else {
   Etape 'Création du serveur de test « ecoleplus-test » (offre gratuite)'
-  $orgs = @(SupabaseJson orgs list)
+  $orgs = @(SupabaseJson @('orgs', 'list'))
   if ($orgs.Count -eq 0) {
     Write-Host '    Aucune organisation sur ce compte : création de l''organisation « EcolePlus »...'
-    Supabase orgs create EcolePlus
-    $orgs = @(SupabaseJson orgs list)
+    Supabase @('orgs', 'create', 'EcolePlus')
+    $orgs = @(SupabaseJson @('orgs', 'list'))
     if ($orgs.Count -eq 0) { Arret 'Impossible de créer l''organisation. Créez-en une sur supabase.com (offre Free), puis relancez.' }
   }
   $org = $orgs[0]
@@ -156,12 +163,12 @@ if ($config) {
   [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($octets)
   $motDePasse = ([Convert]::ToBase64String($octets) -replace '[+/=]', 'x')
   try {
-    Supabase projects create ecoleplus-test --org-id $orgId --db-password $motDePasse --region $Region
+    Supabase @('projects', 'create', 'ecoleplus-test', '--org-id', $orgId, '--db-password', $motDePasse, '--region', $Region)
   } catch {
-    Arret ("Création impossible. L'offre gratuite permet 2 projets actifs : si Atelier Plus et un autre " +
-           "projet existent déjà, mettez-en un en pause sur supabase.com puis relancez ce script.")
+    Arret ("Création du projet impossible : lisez le message de Supabase juste au-dessus. " +
+           "(Si c'est la limite de 2 projets gratuits actifs, mettez-en un en pause sur supabase.com.)")
   }
-  $projet = @(SupabaseJson projects list) | Where-Object { (Champ $_ @('name')) -eq 'ecoleplus-test' } | Select-Object -First 1
+  $projet = @(SupabaseJson @('projects', 'list')) | Where-Object { (Champ $_ @('name')) -eq 'ecoleplus-test' } | Select-Object -First 1
   $ref = Champ $projet @('ref', 'id', 'project_ref')
   if (-not $ref) { ArretAvecReponse 'Le projet « ecoleplus-test » est introuvable après sa création.' }
   $config = [pscustomobject]@{ ref = $ref; motDePasse = $motDePasse; url = "https://$ref.supabase.co"; cle = '' }
@@ -171,7 +178,7 @@ if ($config) {
 
   Write-Host '    Préparation du serveur par Supabase (2 à 5 minutes)...'
   for ($i = 0; $i -lt 60; $i++) {
-    $etat = Champ (@(SupabaseJson projects list) | Where-Object { (Champ $_ @('name')) -eq 'ecoleplus-test' } | Select-Object -First 1) @('status')
+    $etat = Champ (@(SupabaseJson @('projects', 'list')) | Where-Object { (Champ $_ @('name')) -eq 'ecoleplus-test' } | Select-Object -First 1) @('status')
     if ($etat -eq 'ACTIVE_HEALTHY') { break }
     Start-Sleep -Seconds 10
   }
@@ -179,7 +186,7 @@ if ($config) {
 }
 
 if (-not $config.cle) {
-  $cles = @(SupabaseJson projects api-keys --project-ref $config.ref)
+  $cles = @(SupabaseJson @('projects', 'api-keys', '--project-ref', $config.ref))
   $anon = $cles | Where-Object { (Champ $_ @('name')) -eq 'anon' } | Select-Object -First 1
   if (-not $anon) { $anon = $cles | Where-Object { (Champ $_ @('type')) -eq 'publishable' } | Select-Object -First 1 }
   $config.cle = Champ $anon @('api_key', 'key')
@@ -190,17 +197,17 @@ if (-not $config.cle) {
 # --------------------------------------------------------------------------
 Etape 'Mise à jour du serveur de test'
 $env:SUPABASE_DB_PASSWORD = $config.motDePasse
-Supabase link --project-ref $config.ref -p $config.motDePasse
+Supabase @('link', '--project-ref', $config.ref, '-p', $config.motDePasse)
 if ($nouveau -or $Reinitialiser) {
   Write-Host '    Installation de toutes les tables et du jeu « École Test »...'
-  Supabase db reset --linked --yes
+  Supabase @('db', 'reset', '--linked', '--yes')
 } else {
-  Supabase db push --linked -p $config.motDePasse
+  Supabase @('db', 'push', '--linked', '-p', $config.motDePasse)
 }
 Ok 'tables à jour'
-try { Supabase config push --project-ref $config.ref --yes; Ok 'réglages de connexion appliqués' }
+try { Supabase @('config', 'push', '--project-ref', $config.ref, '--yes'); Ok 'réglages de connexion appliqués' }
 catch { Write-Host '    (réglages de connexion non appliqués : sans gravité pour l''essai)' -ForegroundColor Yellow }
-Supabase functions deploy gerer-membres recuperer-mot-de-passe --project-ref $config.ref --use-api
+Supabase @('functions', 'deploy', 'gerer-membres', 'recuperer-mot-de-passe', '--project-ref', $config.ref, '--use-api')
 Ok 'fonctions serveur déployées'
 
 # Fin de ligne Unix et sans BOM : sinon la clé lue par Flutter serait altérée.
