@@ -16,12 +16,16 @@
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1
   powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1 -Reinitialiser
+  powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1 -ChangerDeCompte
 #>
 param(
   # Remet le serveur de test à zéro avec « École Test » (efface vos essais).
   [switch]$Reinitialiser,
   # Met seulement le serveur à jour, sans installer sur le portable.
   [switch]$SansInstallation,
+  # Se déconnecter du compte Supabase actuel pour en utiliser un autre
+  # (ex. un compte réservé à EcolePlus). Ne touche à aucun projet existant.
+  [switch]$ChangerDeCompte,
   # Région du serveur (Paris par défaut, la plus proche du Burkina Faso).
   [string]$Region = 'eu-west-3'
 )
@@ -63,6 +67,17 @@ try {
     & flutter upgrade
   }
 } catch { Write-Host '    (version de Flutter non vérifiée)' -ForegroundColor Yellow }
+
+if ($ChangerDeCompte) {
+  Etape 'Changement de compte Supabase'
+  & npx --yes supabase@2.121.0 logout --yes *> $null
+  # Oublie le serveur de test enregistré pour l'ancien compte (sur ce PC
+  # seulement : rien n'est supprimé chez Supabase).
+  Remove-Item -ErrorAction SilentlyContinue $fichierConfig, $fichierEnv
+  Write-Host '    Dans le navigateur, connectez-vous avec le NOUVEAU compte Supabase'
+  Write-Host '    (déconnectez-vous d''abord de l''ancien sur supabase.com, ou utilisez une fenêtre de navigation privée).'
+  Ok 'ancien compte oublié sur ce PC'
+}
 
 Etape 'Connexion à votre compte Supabase'
 & npx --yes supabase@2.121.0 projects list *> $null
