@@ -198,11 +198,51 @@ if (-not $config.cle) {
 Etape 'Mise à jour du serveur de test'
 $env:SUPABASE_DB_PASSWORD = $config.motDePasse
 Supabase @('link', '--project-ref', $config.ref, '-p', $config.motDePasse)
-if ($nouveau -or $Reinitialiser) {
-  Write-Host '    Installation de toutes les tables et du jeu « École Test »...'
-  Supabase @('db', 'reset', '--linked', '--yes')
+if ($Reinitialiser) {
+  # La remise à zéro complète passe par la connexion directe à la base.
+  Write-Host '    Remise à zéro du serveur de test...'
+  try { Supabase @('db', 'reset', '--linked', '--yes') }
+  catch {
+    Arret ("La remise à zéro a besoin d'une connexion directe à la base (port 5432/6543), " +
+           "bloquée sur ce réseau. Essayez depuis une autre connexion (ex. partage de connexion du téléphone).")
+  }
 } else {
-  Supabase @('db', 'push', '--linked', '-p', $config.motDePasse)
+  # Installation par l'accès web de Supabase (HTTPS), qui fonctionne même si
+  # le réseau bloque la connexion directe à la base. Le registre des mises à
+  # jour installées est celui de l'outil officiel (supabase_migrations).
+  $tmp = Join-Path ([System.IO.Path]::GetTempPath()) 'ecoleplus-sql.sql'
+  function ExecuterSql([string]$sql, [string]$Etiquette = 'préparation') {
+    [System.IO.File]::WriteAllText($tmp, $sql, (New-Object System.Text.UTF8Encoding($false)))
+    # Sortie complète (erreurs comprises) pour pouvoir la montrer en cas d'échec.
+    $sortie = & npx --yes supabase@2.121.0 db query --linked -f $tmp --output-format json 2>&1
+    $script:derniereReponse = ($sortie | ForEach-Object { "$_" }) -join "`n"
+    if ($LASTEXITCODE -ne 0 -or $script:derniereReponse -match '"_tag"\s*:\s*"Error"') {
+      ArretAvecReponse "Le serveur a refusé une partie de l'installation ($Etiquette)."
+    }
+  }
+  ExecuterSql ("create schema if not exists supabase_migrations;`n" +
+               "create table if not exists supabase_migrations.schema_migrations " +
+               "(version text not null primary key, statements text[], name text);")
+  $faites = @(SupabaseJson @('db', 'query', '--linked',
+              'select version from supabase_migrations.schema_migrations')) |
+            ForEach-Object { Champ $_ @('version') }
+  $baseVide = ($faites.Count -eq 0)
+  $migrations = Get-ChildItem (Join-Path $racine 'supabase\migrations') -Filter '*.sql' | Sort-Object Name
+  foreach ($m in $migrations) {
+    $version = $m.BaseName.Split('_')[0]
+    if ($faites -contains $version) { continue }
+    $nom = $m.BaseName.Substring($version.Length + 1)
+    Write-Host "    Installation : $nom"
+    $contenu = [System.IO.File]::ReadAllText($m.FullName)
+    ExecuterSql ("begin;`n$contenu`n" +
+                 "insert into supabase_migrations.schema_migrations (version, name) values ('$version', '$nom');`n" +
+                 "commit;") $nom
+  }
+  if ($baseVide) {
+    Write-Host '    Installation du jeu de données fictif « École Test »...'
+    ExecuterSql ("begin;`n" + [System.IO.File]::ReadAllText((Join-Path $racine 'supabase\seed.sql')) + "`ncommit;") 'École Test'
+  }
+  Remove-Item -Force -ErrorAction SilentlyContinue $tmp
 }
 Ok 'tables à jour'
 try { Supabase @('config', 'push', '--project-ref', $config.ref, '--yes'); Ok 'réglages de connexion appliqués' }
