@@ -54,3 +54,6 @@ app.*.map.json
 supabase/.branches
 supabase/.temp
 sauvegardes/
+# Serveur de test (créé par tools/tester-sur-telephone.ps1) : contient un mot de passe
+.serveur-test.json
+telephone.env

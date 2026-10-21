@@ -1,5 +1,36 @@
 # Tester sur un vrai téléphone après chaque phase (A7)
 
+## Méthode simple (comme pour Atelier Plus) : PowerShell + portable en USB
+
+Une seule commande crée le serveur de test (la première fois), le met à jour, puis installe EcolePlus sur le portable branché.
+
+**Une seule fois** — récupérer le projet sur votre PC (dans PowerShell) :
+```powershell
+cd $HOME\Documents
+git clone -b claude/festive-brown-3fmkmm https://github.com/ouattaradanou-debug/forevercare-ai.git
+```
+(Si le dossier existe déjà : `cd forevercare-ai` puis `git fetch origin`, `git checkout claude/festive-brown-3fmkmm`, `git pull`.)
+
+**À chaque phase** :
+1. Branchez le portable en USB, déverrouillez-le (le débogage USB est déjà activé depuis Atelier Plus).
+2. Dans PowerShell :
+   ```powershell
+   cd $HOME\Documents\forevercare-ai
+   git pull
+   cd ecoleplus
+   powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1
+   ```
+3. La 1re fois, une page Supabase s'ouvre dans le navigateur : connectez-vous avec votre compte (celui d'Atelier Plus) et autorisez. Le script crée alors un projet **séparé** `ecoleplus-test` (Atelier Plus n'est pas touché), installe « École Test », puis l'application sur le portable (10 à 15 minutes la première fois).
+4. EcolePlus s'ouvre sur le portable. Dans PowerShell, tapez `q` pour terminer : l'application reste installée.
+
+Options : `-Reinitialiser` remet le serveur de test à zéro avec « École Test » ; `-SansInstallation` met seulement le serveur à jour.
+
+À savoir : l'offre gratuite de Supabase autorise **2 projets actifs**. Si vous en avez déjà deux (Atelier Plus + un autre), mettez-en un en pause sur supabase.com avant. Le mot de passe du serveur de test est gardé dans `ecoleplus\.serveur-test.json`, sur votre PC uniquement (jamais envoyé sur GitHub).
+
+---
+
+## Méthode automatique par GitHub (sans PC)
+
 Principe : un **serveur de test** en ligne (Supabase, offre gratuite) + un **APK** construit automatiquement par GitHub. À la fin de chaque phase, il suffit de lancer « Livraison téléphone » et de télécharger l'APK sur le téléphone.
 
 ⚠️ Serveur de test = **données fictives uniquement** (« École Test »). Ne jamais y mettre de vrais élèves.
