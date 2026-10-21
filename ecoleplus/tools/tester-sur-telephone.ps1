@@ -48,8 +48,11 @@ function Supabase {
   # CLI Supabase à version fixe (téléchargée automatiquement par npx). Ses
   # messages sont affichés en texte normal (sinon PowerShell 5.1 les montre
   # en rouge alors que ce ne sont pas des erreurs).
-  & npx --yes supabase@2.121.0 @args 2>&1 | ForEach-Object { Write-Host "    $_" }
-  if ($LASTEXITCODE -ne 0) { throw "La commande « supabase $($args -join ' ') » a échoué." }
+  $lignes = @(& npx --yes supabase@2.121.0 @args 2>&1 | ForEach-Object { "$_" })
+  $lignes | ForEach-Object { Write-Host "    $_" }
+  if ($LASTEXITCODE -ne 0 -or ($lignes -match '^\s*SUBCOMMANDS\s*$')) {
+    throw "La commande « supabase $($args -join ' ') » a échoué."
+  }
 }
 
 function SupabaseJson {
@@ -57,6 +60,7 @@ function SupabaseJson {
   # la liste peut être directe ou rangée dans une enveloppe : on la retrouve.
   $sortie = & npx --yes supabase@2.121.0 @args --output-format json 2>$null
   $texte = ($sortie | Where-Object { $_ -is [string] }) -join "`n"
+  $script:derniereReponse = $texte
   $debut = $texte.IndexOfAny([char[]]'[{')
   if ($debut -lt 0) {
     if ($LASTEXITCODE -ne 0) { throw "La commande « supabase $($args -join ' ') » a échoué." }
@@ -74,6 +78,20 @@ function SupabaseJson {
     if ($p.Value -is [array]) { return $p.Value }
   }
   return @($json)
+}
+
+function Champ($objet, [string[]]$noms) {
+  foreach ($n in $noms) {
+    if ($objet -and $objet.PSObject.Properties[$n] -and "$($objet.$n)" -ne '') { return "$($objet.$n)" }
+  }
+  return ''
+}
+
+function ArretAvecReponse($texte) {
+  Write-Host ''
+  Write-Host 'Réponse reçue de Supabase (à copier pour l''assistant) :' -ForegroundColor Yellow
+  Write-Host $script:derniereReponse
+  Arret $texte
 }
 
 # --------------------------------------------------------------------------
@@ -115,6 +133,9 @@ Ok 'connecté'
 # --------------------------------------------------------------------------
 if (Test-Path $fichierConfig) {
   $config = Get-Content $fichierConfig -Raw | ConvertFrom-Json
+  if (-not $config.ref) { Remove-Item -Force $fichierConfig; $config = $null }
+}
+if ($config) {
   Ok "serveur de test déjà créé (projet $($config.ref))"
   $nouveau = $false
 } else {
@@ -127,19 +148,22 @@ if (Test-Path $fichierConfig) {
     if ($orgs.Count -eq 0) { Arret 'Impossible de créer l''organisation. Créez-en une sur supabase.com (offre Free), puis relancez.' }
   }
   $org = $orgs[0]
-  Write-Host "    Organisation : $($org.name)"
+  $orgId = Champ $org @('id', 'slug', 'organization_id', 'organization_slug')
+  if (-not $orgId) { ArretAvecReponse 'Organisation Supabase illisible.' }
+  Write-Host "    Organisation : $(Champ $org @('name')) ($orgId)"
   # Mot de passe de la base, long et aléatoire, gardé sur ce PC seulement.
   $octets = New-Object byte[] 24
   [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($octets)
   $motDePasse = ([Convert]::ToBase64String($octets) -replace '[+/=]', 'x')
   try {
-    Supabase projects create ecoleplus-test --org-id $org.id --db-password $motDePasse --region $Region
+    Supabase projects create ecoleplus-test --org-id $orgId --db-password $motDePasse --region $Region
   } catch {
     Arret ("Création impossible. L'offre gratuite permet 2 projets actifs : si Atelier Plus et un autre " +
            "projet existent déjà, mettez-en un en pause sur supabase.com puis relancez ce script.")
   }
-  $projet = @(SupabaseJson projects list) | Where-Object { $_.name -eq 'ecoleplus-test' } | Select-Object -First 1
-  $ref = if ($projet.ref) { $projet.ref } else { $projet.id }
+  $projet = @(SupabaseJson projects list) | Where-Object { (Champ $_ @('name')) -eq 'ecoleplus-test' } | Select-Object -First 1
+  $ref = Champ $projet @('ref', 'id', 'project_ref')
+  if (-not $ref) { ArretAvecReponse 'Le projet « ecoleplus-test » est introuvable après sa création.' }
   $config = [pscustomobject]@{ ref = $ref; motDePasse = $motDePasse; url = "https://$ref.supabase.co"; cle = '' }
   $config | ConvertTo-Json | Set-Content $fichierConfig -Encoding UTF8
   Ok "projet créé : $ref"
@@ -147,7 +171,7 @@ if (Test-Path $fichierConfig) {
 
   Write-Host '    Préparation du serveur par Supabase (2 à 5 minutes)...'
   for ($i = 0; $i -lt 60; $i++) {
-    $etat = (@(SupabaseJson projects list) | Where-Object { $_.name -eq 'ecoleplus-test' } | Select-Object -First 1).status
+    $etat = Champ (@(SupabaseJson projects list) | Where-Object { (Champ $_ @('name')) -eq 'ecoleplus-test' } | Select-Object -First 1) @('status')
     if ($etat -eq 'ACTIVE_HEALTHY') { break }
     Start-Sleep -Seconds 10
   }
@@ -156,9 +180,10 @@ if (Test-Path $fichierConfig) {
 
 if (-not $config.cle) {
   $cles = @(SupabaseJson projects api-keys --project-ref $config.ref)
-  $anon = $cles | Where-Object { $_.name -eq 'anon' } | Select-Object -First 1
-  if (-not $anon) { $anon = $cles | Where-Object { $_.type -eq 'publishable' } | Select-Object -First 1 }
-  $config.cle = $anon.api_key
+  $anon = $cles | Where-Object { (Champ $_ @('name')) -eq 'anon' } | Select-Object -First 1
+  if (-not $anon) { $anon = $cles | Where-Object { (Champ $_ @('type')) -eq 'publishable' } | Select-Object -First 1 }
+  $config.cle = Champ $anon @('api_key', 'key')
+  if (-not $config.cle) { ArretAvecReponse 'Clé publique du projet introuvable.' }
   $config | ConvertTo-Json | Set-Content $fichierConfig -Encoding UTF8
 }
 
