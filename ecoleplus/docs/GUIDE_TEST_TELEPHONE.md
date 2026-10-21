@@ -39,7 +39,7 @@ Onglet **Variables** (« New repository variable ») :
    * La **première fois**, cochez « Remettre le serveur de test à zéro » (installe « École Test »).
    * Ensuite, laissez décoché : vos essais sont conservés et seules les nouveautés sont ajoutées.
 2. Attendez la coche verte (10 à 15 minutes). Le résumé indique le **poids de l'APK**.
-3. Sur le téléphone : ouvrez GitHub → **Releases** → la dernière « essai téléphone » → touchez `ecoleplus-test.apk`.
+3. Sur le téléphone : ouvrez GitHub → **Releases** → la dernière « essai téléphone » → touchez `ecoleplus-test-recent.apk` (≈ 23 Mo, la plupart des téléphones). S'il refuse de s'installer, prenez `ecoleplus-test-ancien.apk` (≈ 21 Mo, téléphones anciens).
 4. Android demande d'autoriser l'installation depuis le navigateur : acceptez (une fois).
 5. Ouvrez EcolePlus et suivez `docs/TESTS_PHASE_N.md` de la phase.
 

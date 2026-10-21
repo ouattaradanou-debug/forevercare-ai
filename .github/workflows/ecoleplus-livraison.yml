@@ -81,30 +81,26 @@ jobs:
           flutter-version: '3.47.7'
           channel: stable
       - run: flutter pub get
-      - name: APK pour tous les téléphones (à installer pour les essais)
-        run: >
-          flutter build apk --release
-          --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }}
-          --dart-define=SUPABASE_ANON_KEY=${{ vars.SUPABASE_ANON_KEY }}
-      - name: Mesurer le poids par type de téléphone (R5)
+      # Un APK par type de processeur : ~21-23 Mo au lieu de ~66 Mo pour l'APK
+      # « universel » (important avec une connexion mobile faible).
+      - name: Construire les APK (un par type de téléphone)
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk ecoleplus-test.apk
-          flutter build apk --release --split-per-abi \
+          flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64 \
             --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }} \
             --dart-define=SUPABASE_ANON_KEY=${{ vars.SUPABASE_ANON_KEY }}
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ecoleplus-test-recent.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ecoleplus-test-ancien.apk
           {
             echo "## Poids de l'APK"
-            echo "| Fichier | Poids |"
-            echo "|---|---|"
-            echo "| ecoleplus-test.apk (tous téléphones) | $(du -h ecoleplus-test.apk | cut -f1) |"
-            for f in build/app/outputs/flutter-apk/app-*-release.apk; do
-              echo "| $(basename "$f") | $(du -h "$f" | cut -f1) |"
-            done
+            echo "| Fichier | Pour | Poids |"
+            echo "|---|---|---|"
+            echo "| ecoleplus-test-recent.apk | la plupart des téléphones (64 bits) | $(du -h ecoleplus-test-recent.apk | cut -f1) |"
+            echo "| ecoleplus-test-ancien.apk | téléphones anciens (32 bits) | $(du -h ecoleplus-test-ancien.apk | cut -f1) |"
           } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: ecoleplus-apk
-          path: ecoleplus/ecoleplus-test.apk
+          path: ecoleplus/ecoleplus-test-*.apk
           retention-days: 30
       - name: Publier dans « Releases »
         if: vars.SUPABASE_URL != ''
@@ -113,8 +109,12 @@ jobs:
           tag_name: test-${{ github.run_number }}
           name: "EcolePlus — essai téléphone n° ${{ github.run_number }} (${{ github.ref_name }})"
           prerelease: true
-          files: ecoleplus/ecoleplus-test.apk
+          files: |
+            ecoleplus/ecoleplus-test-recent.apk
+            ecoleplus/ecoleplus-test-ancien.apk
           body: |
             APK d'essai, relié au serveur de TEST (données fictives uniquement).
-            Installation : ouvrir ce lien sur le téléphone, télécharger ecoleplus-test.apk,
-            autoriser l'installation, puis suivre ecoleplus/docs/TESTS_PHASE_N.md.
+            Sur le téléphone : télécharger ecoleplus-test-recent.apk (la plupart des
+            téléphones). S'il refuse de s'installer (« application incompatible »),
+            prendre ecoleplus-test-ancien.apk. Autoriser l'installation, puis suivre
+            ecoleplus/docs/TESTS_PHASE_N.md.
