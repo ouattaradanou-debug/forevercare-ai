@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:ecoleplus/core/db/app_database.dart';
+import 'package:ecoleplus/features/lock/data/biometric_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -37,6 +38,72 @@ void main() {
     expect(find.text('Bonjour Directeur Test'), findsOneWidget);
     await AppHarness.taperCode(tester, '9999');
     expect(find.text('Code incorrect.'), findsOneWidget);
+    await AppHarness.taperCode(tester, '4071');
+    expect(find.text('Mon école'), findsOneWidget);
+    await h.dispose(tester);
+  });
+
+  testWidgets('empreinte OU code : on choisit l’empreinte, aucun code n’est '
+      'créé et la réouverture se fait au doigt', (tester) async {
+    final capteur = FakeBiometricGate(accepte: false);
+    final h = AppHarness()
+      ..seedEcoleTest()
+      ..biometrie = capteur;
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local', creerCode: false);
+    expect(find.textContaining('Comment voulez-vous ouvrir'), findsOneWidget);
+    expect(find.text('Avec mon empreinte'), findsOneWidget);
+    expect(find.byKey(const Key('pin-1')), findsNothing);
+
+    await tester.tap(find.text('Avec mon empreinte'));
+    await AppHarness.settle(tester);
+    expect(find.textContaining('Empreinte non reconnue'), findsOneWidget);
+    capteur.accepte = true;
+    await tester.tap(find.text('Avec mon empreinte'));
+    await AppHarness.settle(tester);
+    expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+    final lock = await tester.runAsync(() => h.db.select(h.db.appLock).get());
+    expect(lock!.single.pinHash, isEmpty);
+    expect(lock.single.biometric, isTrue);
+
+    // Réouverture : pas de clavier, le doigt suffit.
+    capteur.accepte = false;
+    await h.relancer(tester);
+    expect(find.text('Posez votre doigt sur le capteur'), findsOneWidget);
+    expect(find.byKey(const Key('pin-1')), findsNothing);
+    capteur.accepte = true;
+    await tester.tap(find.text('Ouvrir avec mon empreinte'));
+    await AppHarness.settle(tester);
+    expect(find.text('Mon école'), findsOneWidget);
+    await h.dispose(tester);
+  });
+
+  testWidgets('empreinte OU code : on choisit le code ; l’empreinte n’est '
+      'alors plus proposée à l’ouverture', (tester) async {
+    final h = AppHarness()
+      ..seedEcoleTest()
+      ..biometrie = FakeBiometricGate();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local', creerCode: false);
+    await tester.tap(find.byKey(const Key('choisir-code')));
+    await AppHarness.settle(tester);
+    // ✓ inactif tant qu'il manque des chiffres.
+    await tester.tap(find.byKey(const Key('pin-4')));
+    await tester.pump();
+    expect(
+      tester.widget<FilledButton>(find.byKey(const Key('pin-ok'))).onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(const Key('pin-effacer')));
+    await tester.pump();
+    await AppHarness.taperCode(tester, '4071');
+    expect(find.textContaining('une seconde fois'), findsOneWidget);
+    await AppHarness.taperCode(tester, '4071');
+    expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+
+    await h.relancer(tester);
+    expect(find.text('Tapez votre code'), findsOneWidget);
+    expect(find.text('Ouvrir avec mon empreinte'), findsNothing);
     await AppHarness.taperCode(tester, '4071');
     expect(find.text('Mon école'), findsOneWidget);
     await h.dispose(tester);

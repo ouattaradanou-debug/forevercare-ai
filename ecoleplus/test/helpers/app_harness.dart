@@ -36,6 +36,9 @@ class AppHarness {
   late final AppDatabase db;
   late final FakeRemote remote;
   late final FakeAuthApi auth;
+
+  /// Capteur d'empreinte du téléphone simulé (absent par défaut).
+  BiometricGate biometrie = NoBiometricGate();
   final Directory mediaDir = Directory.systemTemp.createTempSync(
     'ecoleplus_media',
   );
@@ -148,7 +151,7 @@ class AppHarness {
           lockServiceProvider.overrideWithValue(
             LockService(db, iterations: 50),
           ),
-          biometricGateProvider.overrideWithValue(NoBiometricGate()),
+          biometricGateProvider.overrideWithValue(biometrie),
         ],
         child: const EcolePlusApp(),
       ),

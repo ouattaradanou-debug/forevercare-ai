@@ -13,8 +13,9 @@ class VerificationCode {
   final Duration attente;
 }
 
-/// Verrouillage de l'application par code PIN (et empreinte en option).
-/// Le code n'est jamais enregistré : seule son empreinte l'est.
+/// Verrouillage de l'application : par code PIN OU par l'empreinte (au
+/// choix, jamais les deux). Le code n'est jamais enregistré : seule son
+/// empreinte cryptographique l'est.
 class LockService {
   new(this.db, {this.iterations = 20000, DateTime Function()? now})
     : _now = now ?? DateTime.now;
@@ -26,7 +27,7 @@ class LockService {
   Stream<AppLockRow?> watch() => db.select(db.appLock).watchSingleOrNull();
   Future<AppLockRow?> get() => db.select(db.appLock).getSingleOrNull();
 
-  Future<void> definir(String pin, {bool biometrie = false}) async {
+  Future<void> definir(String pin) async {
     final erreur = validerPin(pin);
     if (erreur != null) throw UserMessage(erreur);
     final sel = nouveauSel();
@@ -40,7 +41,7 @@ class LockService {
             pinHash: hash,
             pinSalt: sel,
             iterations: iterations,
-            biometric: Value(biometrie),
+            biometric: const Value(false),
             failedAttempts: const Value(0),
             blockedUntil: const Value(null),
           ),
@@ -50,6 +51,7 @@ class LockService {
   Future<VerificationCode> verifier(String pin) async {
     final lock = await get();
     if (lock == null) return const VerificationCode(ResultatCode.ok);
+    if (lock.empreinteSeule) return const VerificationCode(ResultatCode.faux);
     if (attenteApresErreurs(lock.failedAttempts) == null) {
       return const VerificationCode(ResultatCode.motDePasseRequis);
     }
@@ -90,8 +92,20 @@ class LockService {
 
   Future<void> reussiteBiometrie() => _reinitialiserErreurs();
 
-  Future<void> setBiometrie({required bool active}) =>
-      db.update(db.appLock).write(AppLockCompanion(biometric: Value(active)));
+  /// Ouverture par l'empreinte seule : aucun code EcolePlus (pin_hash vide).
+  Future<void> definirEmpreinte() => db
+      .into(db.appLock)
+      .insertOnConflictUpdate(
+        AppLockCompanion.insert(
+          id: const Value(1),
+          pinHash: '',
+          pinSalt: '',
+          iterations: 0,
+          biometric: const Value(true),
+          failedAttempts: const Value(0),
+          blockedUntil: const Value(null),
+        ),
+      );
 
   /// Après reconnexion par mot de passe (code oublié) : nouveau code à choisir.
   Future<void> effacer() => db.delete(db.appLock).go();
@@ -104,4 +118,9 @@ class LockService {
           blockedUntil: Value(null),
         ),
       );
+}
+
+extension MethodeOuverture on AppLockRow {
+  /// Vrai si l'application s'ouvre avec l'empreinte (et non un code).
+  bool get empreinteSeule => biometric && pinHash.isEmpty;
 }

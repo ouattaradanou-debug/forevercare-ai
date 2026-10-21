@@ -56,7 +56,7 @@ Critères : maintenu (publication récente), compatible Flutter 3.47 / Dart 3.13
 | Compression | `flutter_image_compress` | 2.5.1 | 07/2026 | 8 | compression native (WebP/JPEG) ciblant ≤ 40 Ko |
 | Scan QR (si 12.4 accepté) | `mobile_scanner` | 7.4.2 | 09/2026 | 8 | ⚠️ ajout proposé, voir EVOLUTIONS |
 | Empreinte | `crypto` | 3.0.7 | 11/2025 | 1 | empreinte du code PIN (PBKDF2), plus tard SHA-256 des documents |
-| Empreinte digitale | `local_auth` | 3.0.2 | 07/2026 | 1 | ouverture par empreinte (facultative) |
+| Empreinte digitale | `local_auth` | 3.0.2 | 07/2026 | 1 | ouverture par empreinte (au choix, à la place du code) |
 | Connectivité | `connectivity_plus` | 7.3.2 | 10/2026 | 1 | déclenche la synchronisation au retour du réseau (jamais bloquant) |
 
 Écartés : `sqflite` (pas de typage ni de flux réactifs), `hive`/`isar` (pas de SQL ni de jointures pour les calculs de classement), Firebase (hors stack).
@@ -181,7 +181,7 @@ Limites (à valider) : la numérotation des reçus est continue **par série**, 
 * **Signal de synchronisation** (`device_heartbeat`) au début et à la fin de chaque synchronisation : le serveur connaît, pour chaque téléphone, la date de dernière synchronisation et le nombre d'éléments non envoyés (liste « Téléphones de l'école » du directeur).
 * **Téléphone perdu** : `revoke_device` (directeur ou propriétaire) marque le téléphone, ferme toutes les sessions de la personne ; au prochain contact, le téléphone efface les données de l'école et prend une nouvelle identité (avis affiché à l'ouverture). Jetons valables 15 minutes.
 * **Alerte conditionnelle** (`alerteSynchronisation`) : seulement si des données attendent depuis 3 jours (1 jour en composition) ; sinon après 30 jours sans nouvelles.
-* **Verrouillage** : code obligatoire (empreinte PBKDF2-SHA256, 20 000 itérations, calculée hors du fil de l'interface), empreinte digitale en option (`local_auth`), délais croissants après erreurs, reconnexion par mot de passe sans perte de données.
+* **Verrouillage** : au choix **code** (empreinte PBKDF2-SHA256, 20 000 itérations, calculée hors du fil de l'interface) **ou empreinte digitale** (`local_auth`, secours : code/schéma du téléphone), jamais les deux, délais croissants après erreurs, reconnexion par mot de passe sans perte de données.
 * **Question secrète** : `app.recovery_secrets` (réponse normalisée puis chiffrée bcrypt, hors API), `recovery_verify` (5 erreurs/heure → blocage), fonction `recuperer-mot-de-passe` (sans connexion préalable), récupération inscrite au journal du directeur.
 * **Journal d'activité** : déclencheur générique `app.audit_row` (création, modification avec colonnes et valeurs, suppression logique) + connexions, déconnexions de téléphones, récupérations ; ajout seul ; synchronisé en lecture seule vers le directeur.
 * **Sauvegarde du serveur** : `tools/sauvegarde_serveur.sh` (données, chiffrement AES-256), quotidienne par GitHub Actions, 30 jours ; restauration testée (`tools/test_restauration.sh`). Voir `docs/SAUVEGARDE_SERVEUR.md`.

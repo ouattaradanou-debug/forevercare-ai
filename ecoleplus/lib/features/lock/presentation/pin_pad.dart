@@ -34,7 +34,23 @@ class _PinPadState extends State<PinPad> {
       child: FilledButton.tonal(
         key: key,
         onPressed: widget.enabled ? onTap : null,
+        style: FilledButton.styleFrom(padding: EdgeInsets.zero),
         child: Text(label, style: const TextStyle(fontSize: 26)),
+      ),
+    ),
+  );
+
+  /// Touche de validation : pleine couleur, coche bien visible.
+  Widget _valider() => Padding(
+    padding: const EdgeInsets.all(6),
+    child: SizedBox(
+      width: 80,
+      height: 64,
+      child: FilledButton(
+        key: const Key('pin-ok'),
+        onPressed: widget.enabled && _code.length >= 4 ? _submit : null,
+        style: FilledButton.styleFrom(padding: EdgeInsets.zero),
+        child: const Icon(Icons.check, size: 34, semanticLabel: 'Valider'),
       ),
     ),
   );
@@ -50,7 +66,14 @@ class _PinPadState extends State<PinPad> {
           style: const TextStyle(fontSize: 32, letterSpacing: 8),
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 4),
+      Text(
+        _code.length < 4
+            ? 'Tapez 4 à 6 chiffres'
+            : 'Appuyez sur ✓ pour valider',
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
+      const SizedBox(height: 12),
       for (final row in const [
         ['1', '2', '3'],
         ['4', '5', '6'],
@@ -76,7 +99,7 @@ class _PinPadState extends State<PinPad> {
             ),
           ),
           _key('0', key: const Key('pin-0'), onTap: () => _tap('0')),
-          _key('OK', key: const Key('pin-ok'), onTap: _submit),
+          _valider(),
         ],
       ),
     ],

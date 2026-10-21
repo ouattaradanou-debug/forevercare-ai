@@ -53,11 +53,13 @@ Comptes de test (mot de passe `motdepasse-test`) : `directeur@ecole-test.local`,
 1. Se déconnecter → « Créer mon école ». Remplissez le début du formulaire, quittez l'écran puis revenez. ✅ Ce que vous aviez tapé est toujours là (sauf le mot de passe).
 2. Terminez avec une adresse e-mail neuve. ✅ Accueil de la nouvelle école ; « Options » : tout est désactivé.
 
-## 10. Code de verrouillage et empreinte
+## 10. Code de verrouillage OU empreinte
 1. Rouvrez l'application, tapez un mauvais code 5 fois. ✅ « Trop d'erreurs. Réessayez dans … ».
 2. « Code oublié ? » → tapez votre mot de passe (avec Internet). ✅ Nouveau code à choisir ; vos données sont toujours là.
 3. Mettez l'application en arrière-plan plus de 2 minutes, revenez. ✅ Le code est redemandé.
-4. **Sur un téléphone avec capteur** : « Mon compte » (ou Sécurité → Mon compte) → activez « Ouvrir avec mon empreinte ». Rouvrez. ✅ L'empreinte suffit. *(Non testable sur l'ordinateur de développement.)*
+4. **Sur un téléphone avec capteur** : à la 1re connexion, deux choix : « Avec mon empreinte » ou « Avec un code ». Choisissez l'empreinte, posez le doigt. ✅ Aucun code demandé. Rouvrez : ✅ « Posez votre doigt sur le capteur », sans clavier.
+5. Empreinte : faites-la échouer plusieurs fois (autre doigt). ✅ Le téléphone propose son propre code ou schéma ; il ouvre EcolePlus.
+6. « Mon compte » → « Changer ma façon d'ouvrir l'application » → « Avec un code de 4 à 6 chiffres ». Rouvrez : ✅ seul le code est demandé, pas l'empreinte. *(Points 4 à 6 non testables sur l'ordinateur de développement.)*
 
 ## 11. Question secrète
 1. Connecté comme enseignant (`enseignant1@ecole-test.local`) : « Mon compte » → « Choisir ma question secrète » → une question, une réponse (deux fois) → « Enregistrer ».

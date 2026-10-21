@@ -11,7 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Choix du code (première connexion, ou changement depuis « Mon compte »).
+/// Choix de la façon d'ouvrir l'application (première connexion, ou depuis
+/// « Mon compte ») : l'empreinte OU un code, jamais les deux.
 class CreatePinPage extends ConsumerStatefulWidget {
   const new({super.key});
 
@@ -20,19 +21,40 @@ class CreatePinPage extends ConsumerStatefulWidget {
 }
 
 class _CreatePinState extends ConsumerState<CreatePinPage> {
+  /// null : capteur pas encore interrogé.
+  bool? _capteur;
+  bool _avecCode = false;
   String? _premier;
   String? _message;
-  bool _biometrie = false;
-  bool _biometrieDisponible = false;
+  bool _occupe = false;
 
   @override
   void initState() {
     super.initState();
     unawaited(
       ref.read(biometricGateProvider).disponible().then((v) {
-        if (mounted) setState(() => _biometrieDisponible = v);
+        if (mounted) setState(() => _capteur = v);
       }),
     );
+  }
+
+  Future<void> _choisirEmpreinte() async {
+    setState(() {
+      _occupe = true;
+      _message = null;
+    });
+    final ok = await ref.read(biometricGateProvider).authentifier();
+    if (!mounted) return;
+    if (!ok) {
+      setState(() {
+        _occupe = false;
+        _message =
+            'Empreinte non reconnue. Réessayez, ou choisissez plutôt un code.';
+      });
+      return;
+    }
+    await ref.read(lockServiceProvider).definirEmpreinte();
+    _termine();
   }
 
   Future<void> _saisi(String code) async {
@@ -51,48 +73,100 @@ class _CreatePinState extends ConsumerState<CreatePinPage> {
       });
       return;
     }
-    await ref.read(lockServiceProvider).definir(code, biometrie: _biometrie);
+    await ref.read(lockServiceProvider).definir(code);
+    _termine();
+  }
+
+  void _termine() {
     ref.read(lockedProvider.notifier).unlock();
     if (mounted) context.go('/');
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Code de verrouillage')),
-    body: SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Text(
-            _premier == null
-                ? 'Choisissez un code de 4 à 6 chiffres. Il sera demandé à '
-                      'chaque ouverture de l’application : si le téléphone est '
-                      'prêté ou volé, les données de l’école restent protégées.'
-                : 'Tapez le même code une seconde fois.',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          if (_message != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              _message!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ],
-          const SizedBox(height: 16),
-          PinPad(key: ValueKey(_premier == null), onSubmit: _saisi),
-          if (_biometrieDisponible)
-            SwitchListTile(
-              title: const Text('Ouvrir aussi avec mon empreinte'),
-              value: _biometrie,
-              onChanged: (v) => setState(() => _biometrie = v),
-            ),
-        ],
+  Widget build(BuildContext context) {
+    final capteur = _capteur;
+    final enChoix = (capteur ?? false) && !_avecCode;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          enChoix ? 'Ouverture de l’application' : 'Code de verrouillage',
+        ),
       ),
-    ),
-  );
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            if (capteur == null)
+              const Center(child: CircularProgressIndicator())
+            else if (enChoix) ...[
+              Text(
+                'Comment voulez-vous ouvrir EcolePlus ? Ce sera demandé à '
+                'chaque ouverture : si le téléphone est prêté ou volé, les '
+                'données de l’école restent protégées.',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 24),
+              BigButton(
+                icon: Icons.fingerprint,
+                label: 'Avec mon empreinte',
+                onPressed: _occupe ? null : _choisirEmpreinte,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Si l’empreinte ne passe pas (doigt mouillé, capteur abîmé), '
+                'le téléphone propose son code ou son schéma habituel.',
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                key: const Key('choisir-code'),
+                icon: const Icon(Icons.pin_outlined),
+                label: const Text('Avec un code de 4 à 6 chiffres'),
+                onPressed: _occupe
+                    ? null
+                    : () => setState(() {
+                        _avecCode = true;
+                        _message = null;
+                      }),
+              ),
+            ] else ...[
+              Text(
+                _premier == null
+                    ? 'Choisissez un code de 4 à 6 chiffres. Il sera demandé '
+                          'à chaque ouverture de l’application : si le '
+                          'téléphone est prêté ou volé, les données de l’école '
+                          'restent protégées.'
+                    : 'Tapez le même code une seconde fois, puis ✓.',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ],
+            if (_message != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _message!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+            if (capteur != null && !enChoix) ...[
+              const SizedBox(height: 16),
+              PinPad(key: ValueKey(_premier == null), onSubmit: _saisi),
+              if (capteur)
+                TextButton(
+                  onPressed: () => setState(() {
+                    _avecCode = false;
+                    _premier = null;
+                    _message = null;
+                  }),
+                  child: const Text('Utiliser plutôt mon empreinte'),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-/// Écran verrouillé : code ou empreinte.
+/// Écran verrouillé : le code, ou l'empreinte, selon le choix fait.
 class LockPage extends ConsumerStatefulWidget {
   const new({super.key});
 
@@ -110,12 +184,14 @@ class _LockPageState extends ConsumerState<LockPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _empreinte());
   }
 
-  Future<void> _empreinte() async {
+  Future<void> _empreinte({bool demandee = false}) async {
     final lock = await ref.read(lockServiceProvider).get();
-    if (lock == null || !lock.biometric) return;
+    if (lock == null || !lock.empreinteSeule) return;
     if (await ref.read(biometricGateProvider).authentifier()) {
       await ref.read(lockServiceProvider).reussiteBiometrie();
       ref.read(lockedProvider.notifier).unlock();
+    } else if (demandee && mounted) {
+      setState(() => _message = 'Empreinte non reconnue. Réessayez.');
     }
   }
 
@@ -143,6 +219,7 @@ class _LockPageState extends ConsumerState<LockPage> {
   Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider).value;
     final lock = ref.watch(appLockProvider).value;
+    final empreinte = lock?.empreinteSeule ?? false;
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -150,7 +227,7 @@ class _LockPageState extends ConsumerState<LockPage> {
           children: [
             const SizedBox(height: 24),
             Icon(
-              Icons.lock_outline,
+              empreinte ? Icons.fingerprint : Icons.lock_outline,
               size: 64,
               color: Theme.of(context).colorScheme.primary,
             ),
@@ -160,7 +237,12 @@ class _LockPageState extends ConsumerState<LockPage> {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const Text('Tapez votre code', textAlign: TextAlign.center),
+            Text(
+              empreinte
+                  ? 'Posez votre doigt sur le capteur'
+                  : 'Tapez votre code',
+              textAlign: TextAlign.center,
+            ),
             if (_message != null) ...[
               const SizedBox(height: 8),
               Text(
@@ -170,16 +252,17 @@ class _LockPageState extends ConsumerState<LockPage> {
               ),
             ],
             const SizedBox(height: 16),
-            PinPad(onSubmit: _code, enabled: !_occupe),
-            if (lock?.biometric ?? false)
-              TextButton.icon(
-                icon: const Icon(Icons.fingerprint),
-                label: const Text('Utiliser mon empreinte'),
-                onPressed: _empreinte,
-              ),
+            if (empreinte)
+              BigButton(
+                icon: Icons.fingerprint,
+                label: 'Ouvrir avec mon empreinte',
+                onPressed: () => _empreinte(demandee: true),
+              )
+            else
+              PinPad(onSubmit: _code, enabled: !_occupe),
             TextButton(
               onPressed: () => context.go('/verrouille/mot-de-passe'),
-              child: const Text('Code oublié ?'),
+              child: Text(empreinte ? 'Empreinte refusée ?' : 'Code oublié ?'),
             ),
           ],
         ),
@@ -221,15 +304,15 @@ class _PasswordUnlockState extends ConsumerState<PasswordUnlockPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Code oublié')),
+    appBar: AppBar(title: const Text('Ouvrir avec le mot de passe')),
     body: SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [
           const Text(
-            'Tapez le mot de passe de votre compte pour choisir un nouveau '
-            'code. Il faut une connexion Internet. Vos données restent sur '
-            'le téléphone.',
+            'Tapez le mot de passe de votre compte, puis choisissez à nouveau '
+            'votre code ou votre empreinte. Il faut une connexion Internet. '
+            'Vos données restent sur le téléphone.',
           ),
           const SizedBox(height: 16),
           TextField(

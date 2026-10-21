@@ -1,13 +1,14 @@
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/features/lock/data/lock_service.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
 import 'package:ecoleplus/features/security/presentation/security_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Mon compte : code de verrouillage, empreinte, question secrète.
+/// Mon compte : ouverture (code ou empreinte), question secrète.
 class AccountPage extends ConsumerWidget {
   const new({super.key});
 
@@ -21,21 +22,17 @@ class AccountPage extends ConsumerWidget {
         padding: const EdgeInsets.all(24),
         children: [
           BigButton(
-            icon: Icons.pin_outlined,
-            label: 'Changer mon code',
+            icon: (lock?.empreinteSeule ?? false)
+                ? Icons.fingerprint
+                : Icons.pin_outlined,
+            label: 'Changer ma façon d’ouvrir l’application',
             onPressed: () => context.push('/code/creer'),
           ),
-          const SizedBox(height: 12),
-          FutureBuilder(
-            future: ref.read(biometricGateProvider).disponible(),
-            builder: (context, snap) => (snap.data ?? false)
-                ? SwitchListTile(
-                    title: const Text('Ouvrir avec mon empreinte'),
-                    value: lock?.biometric ?? false,
-                    onChanged: (v) =>
-                        ref.read(lockServiceProvider).setBiometrie(active: v),
-                  )
-                : const SizedBox.shrink(),
+          const SizedBox(height: 4),
+          Text(
+            (lock?.empreinteSeule ?? false)
+                ? 'Aujourd’hui : avec votre empreinte.'
+                : 'Aujourd’hui : avec votre code.',
           ),
           const SizedBox(height: 12),
           BigButton(
