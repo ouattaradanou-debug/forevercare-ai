@@ -53,12 +53,27 @@ function Supabase {
 }
 
 function SupabaseJson {
-  $sortie = & npx --yes supabase@2.121.0 @args -o json 2>$null
-  if ($LASTEXITCODE -ne 0) { throw "La commande « supabase $($args -join ' ') » a échoué." }
+  # Réponse JSON de la CLI (option --output-format json). Selon les commandes,
+  # la liste peut être directe ou rangée dans une enveloppe : on la retrouve.
+  $sortie = & npx --yes supabase@2.121.0 @args --output-format json 2>$null
   $texte = ($sortie | Where-Object { $_ -is [string] }) -join "`n"
   $debut = $texte.IndexOfAny([char[]]'[{')
-  if ($debut -lt 0) { return @() }
-  return $texte.Substring($debut) | ConvertFrom-Json
+  if ($debut -lt 0) {
+    if ($LASTEXITCODE -ne 0) { throw "La commande « supabase $($args -join ' ') » a échoué." }
+    return @()
+  }
+  $json = $texte.Substring($debut) | ConvertFrom-Json
+  if ($json -is [array]) { return $json }
+  if ($json._tag -eq 'Error') {
+    throw "Supabase a répondu : $($json.error.message)"
+  }
+  foreach ($nom in @('data', 'items', 'result', 'value')) {
+    if ($json.PSObject.Properties[$nom]) { return @($json.$nom) }
+  }
+  foreach ($p in $json.PSObject.Properties) {
+    if ($p.Value -is [array]) { return $p.Value }
+  }
+  return @($json)
 }
 
 # --------------------------------------------------------------------------
@@ -105,7 +120,12 @@ if (Test-Path $fichierConfig) {
 } else {
   Etape 'Création du serveur de test « ecoleplus-test » (offre gratuite)'
   $orgs = @(SupabaseJson orgs list)
-  if ($orgs.Count -eq 0) { Arret 'Aucune organisation Supabase sur ce compte.' }
+  if ($orgs.Count -eq 0) {
+    Write-Host '    Aucune organisation sur ce compte : création de l''organisation « EcolePlus »...'
+    Supabase orgs create EcolePlus
+    $orgs = @(SupabaseJson orgs list)
+    if ($orgs.Count -eq 0) { Arret 'Impossible de créer l''organisation. Créez-en une sur supabase.com (offre Free), puis relancez.' }
+  }
   $org = $orgs[0]
   Write-Host "    Organisation : $($org.name)"
   # Mot de passe de la base, long et aléatoire, gardé sur ce PC seulement.
@@ -113,7 +133,7 @@ if (Test-Path $fichierConfig) {
   [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($octets)
   $motDePasse = ([Convert]::ToBase64String($octets) -replace '[+/=]', 'x')
   try {
-    Supabase projects create ecoleplus-test --org-id $org.id --db-password $motDePasse --region $Region --size micro
+    Supabase projects create ecoleplus-test --org-id $org.id --db-password $motDePasse --region $Region
   } catch {
     Arret ("Création impossible. L'offre gratuite permet 2 projets actifs : si Atelier Plus et un autre " +
            "projet existent déjà, mettez-en un en pause sur supabase.com puis relancez ce script.")
