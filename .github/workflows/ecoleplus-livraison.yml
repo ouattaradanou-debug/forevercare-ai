@@ -97,6 +97,18 @@ jobs:
             echo "| ecoleplus-test-recent.apk | la plupart des téléphones (64 bits) | $(du -h ecoleplus-test-recent.apk | cut -f1) |"
             echo "| ecoleplus-test-ancien.apk | téléphones anciens (32 bits) | $(du -h ecoleplus-test-ancien.apk | cut -f1) |"
           } >> "$GITHUB_STEP_SUMMARY"
+      # L'optimisation Android (R8) ne doit pas renommer les méthodes Java
+      # appelées depuis Dart par leur nom : sinon plantage au démarrage.
+      - name: Vérifier les méthodes appelées depuis Dart
+        run: |
+          dexdump=$(ls "$ANDROID_HOME"/build-tools/*/dexdump | sort -V | tail -1)
+          rm -rf /tmp/dex && mkdir /tmp/dex && unzip -q -o ecoleplus-test-recent.apk 'classes*.dex' -d /tmp/dex
+          for f in /tmp/dex/*.dex; do "$dexdump" "$f"; done > /tmp/dex/tout.txt
+          awk "/Class descriptor  : 'Lio\/flutter\/plugins\/sharedpreferences\/SharedPreferencesApiRegistrar;'/{c=1;next} /Class descriptor/{c=0} c" /tmp/dex/tout.txt > /tmp/dex/classe.txt
+          for m in getAll setBool setString remove clear; do
+            grep -q "name *: '$m'" /tmp/dex/classe.txt || { echo "::error::Méthode $m renommée ou supprimée par R8"; exit 1; }
+          done
+          echo "Méthodes de shared_preferences conservées."
       - uses: actions/upload-artifact@v4
         with:
           name: ecoleplus-apk

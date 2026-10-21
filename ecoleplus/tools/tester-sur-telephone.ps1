@@ -52,7 +52,9 @@ function Supabase([string[]]$Mots) {
   # CLI Supabase à version fixe (téléchargée automatiquement par npx). Ses
   # messages sont affichés en texte normal (sinon PowerShell 5.1 les montre
   # en rouge alors que ce ne sont pas des erreurs).
-  $lignes = @(& npx --yes supabase@2.121.0 $Mots 2>&1 | ForEach-Object { "$_" })
+  # (Les lignes vides d'erreur s'affichent « System.Management...RemoteException ».)
+  $lignes = @(& npx --yes supabase@2.121.0 $Mots 2>&1 | ForEach-Object { "$_" } |
+              ForEach-Object { if ($_ -eq 'System.Management.Automation.RemoteException') { '' } else { $_ } })
   $lignes | ForEach-Object { Write-Host "    $_" }
   if ($LASTEXITCODE -ne 0 -or ($lignes -match '^\s*SUBCOMMANDS\s*$')) {
     throw "La commande « supabase $($Mots -join ' ') » a échoué."
@@ -245,8 +247,26 @@ if ($Reinitialiser) {
   Remove-Item -Force -ErrorAction SilentlyContinue $tmp
 }
 Ok 'tables à jour'
-try { Supabase @('config', 'push', '--project-ref', $config.ref, '--yes'); Ok 'réglages de connexion appliqués' }
+# Réglages de connexion (mot de passe de 8 caractères, durée de session...).
+# L'offre gratuite refuse de modifier le modèle d'e-mail : on envoie alors
+# une copie des réglages sans ce modèle (inutile ici, la récupération du mot
+# de passe passant par la question secrète).
+$dossierReglages = Join-Path ([System.IO.Path]::GetTempPath()) 'ecoleplus-reglages'
+Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $dossierReglages
+$null = New-Item -ItemType Directory -Force (Join-Path $dossierReglages 'supabase')
+$horsModele = $true
+$lignesReglages = foreach ($l in [System.IO.File]::ReadAllLines((Join-Path $racine 'supabase\config.toml'))) {
+  if ($l -match '^\s*\[') { $horsModele = ($l -notmatch '^\s*\[auth\.email\.template\.') }
+  if ($horsModele) { $l }
+}
+[System.IO.File]::WriteAllLines((Join-Path $dossierReglages 'supabase\config.toml'), [string[]]$lignesReglages,
+                                (New-Object System.Text.UTF8Encoding($false)))
+try {
+  Supabase @('config', 'push', '--project-ref', $config.ref, '--workdir', $dossierReglages, '--yes')
+  Ok 'réglages de connexion appliqués'
+}
 catch { Write-Host '    (réglages de connexion non appliqués : sans gravité pour l''essai)' -ForegroundColor Yellow }
+Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $dossierReglages
 Supabase @('functions', 'deploy', 'gerer-membres', 'recuperer-mot-de-passe', '--project-ref', $config.ref, '--use-api')
 Ok 'fonctions serveur déployées'
 
