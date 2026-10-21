@@ -2,7 +2,7 @@
 \set dir1 '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}'
 \set ens1 '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}'
 begin;
-select plan(17);
+select plan(19);
 set local role authenticated;
 select set_config('request.jwt.claims', :'dir1', true);
 
@@ -59,6 +59,14 @@ select is((select public.sync_push(jsonb_build_array(jsonb_build_object('change_
   'row', jsonb_build_object('id', '10000000-0000-4000-8000-000000000001', 'phone', '0',
                             'updated_at', (now() + interval '1 day')::text)))) -> 0 ->> 'code'),
   'P0002', 'date du téléphone dans le futur : refusée');
+
+-- La fiche école elle-même (pas de colonne school_id) : modification tracée.
+select is((select public.sync_push(jsonb_build_array(jsonb_build_object('change_id', 9, 'table', 'schools',
+  'row', jsonb_build_object('id', '10000000-0000-4000-8000-000000000001', 'commune', 'Commune synchronisée',
+                            'updated_at', (now() + interval '1 minute')::text)))) -> 0 ->> 'status'),
+  'ok', 'modification de la fiche école par synchronisation : acceptée');
+select is((select count(*)::int from public.sync_conflicts where table_name = 'schools'), 1,
+  'l''ancienne version de la fiche école est tracée');
 
 -- Un enseignant ne peut rien imposer par la synchronisation.
 select set_config('request.jwt.claims', :'ens1', true);

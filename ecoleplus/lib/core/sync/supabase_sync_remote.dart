@@ -118,4 +118,22 @@ class SupabaseSyncRemote implements SyncRemote {
           fileOptions: FileOptions(contentType: contentType, upsert: true),
         ),
   );
+
+  @override
+  Future<Uint8List> download(String bucket, String path) =>
+      _call(() => client.storage.from(bucket).download(path));
+
+  @override
+  Future<bool> heartbeat(String deviceId, int pending, String appVersion) =>
+      _call(() async {
+        final r = await client.rpc<dynamic>(
+          'device_heartbeat',
+          params: {
+            'p_device_id': deviceId,
+            'p_pending': pending,
+            'p_app_version': appVersion,
+          },
+        );
+        return (r as Map)['revoked'] == true;
+      });
 }

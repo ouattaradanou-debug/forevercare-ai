@@ -1,0 +1,101 @@
+# Livraison pour tester sur un vrai téléphone (A7).
+# Met à jour le serveur Supabase DE TEST puis construit l'APK Android,
+# publié dans « Releases » (téléchargeable depuis le téléphone).
+# Secrets requis (Settings → Secrets and variables → Actions) :
+#   SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD
+# Variables requises : SUPABASE_URL, SUPABASE_ANON_KEY (clé publique)
+# Mode d'emploi : ecoleplus/docs/GUIDE_TEST_TELEPHONE.md
+name: EcolePlus — livraison téléphone
+
+on:
+  workflow_dispatch:
+    inputs:
+      reinitialiser:
+        description: "Remettre le serveur de test à zéro avec « École Test » (efface tout !)"
+        type: boolean
+        default: false
+  push:
+    tags: ['phase-*']
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    working-directory: ecoleplus
+
+jobs:
+  serveur:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+      - name: Relier le projet de test
+        run: supabase link --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"
+      - name: Remise à zéro avec le jeu « École Test » (sur demande)
+        if: ${{ inputs.reinitialiser }}
+        run: supabase db reset --linked --yes
+      - name: Appliquer les nouvelles migrations
+        run: supabase db push --linked -p "$SUPABASE_DB_PASSWORD"
+      - name: Réglages d'authentification (mot de passe de 8 caractères, modèle d'e-mail)
+        run: supabase config push --project-ref "$PROJECT_REF" --yes
+        continue-on-error: true
+      - name: Déployer les fonctions serveur
+        run: supabase functions deploy gerer-membres recuperer-mot-de-passe --project-ref "$PROJECT_REF"
+
+  apk:
+    needs: serveur
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+      - run: flutter pub get
+      - name: APK pour tous les téléphones (à installer pour les essais)
+        run: >
+          flutter build apk --release
+          --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }}
+          --dart-define=SUPABASE_ANON_KEY=${{ vars.SUPABASE_ANON_KEY }}
+      - name: Mesurer le poids par type de téléphone (R5)
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk ecoleplus-test.apk
+          flutter build apk --release --split-per-abi \
+            --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ vars.SUPABASE_ANON_KEY }}
+          {
+            echo "## Poids de l'APK"
+            echo "| Fichier | Poids |"
+            echo "|---|---|"
+            echo "| ecoleplus-test.apk (tous téléphones) | $(du -h ecoleplus-test.apk | cut -f1) |"
+            for f in build/app/outputs/flutter-apk/app-*-release.apk; do
+              echo "| $(basename "$f") | $(du -h "$f" | cut -f1) |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ecoleplus-apk
+          path: ecoleplus/ecoleplus-test.apk
+          retention-days: 30
+      - name: Publier dans « Releases »
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test-${{ github.run_number }}
+          name: "EcolePlus — essai téléphone n° ${{ github.run_number }} (${{ github.ref_name }})"
+          prerelease: true
+          files: ecoleplus/ecoleplus-test.apk
+          body: |
+            APK d'essai, relié au serveur de TEST (données fictives uniquement).
+            Installation : ouvrir ce lien sur le téléphone, télécharger ecoleplus-test.apk,
+            autoriser l'installation, puis suivre ecoleplus/docs/TESTS_PHASE_N.md.

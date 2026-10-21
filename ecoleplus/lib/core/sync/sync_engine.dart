@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
+import 'package:ecoleplus/core/app_info.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/sync/local_store.dart';
 import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/core/sync/synced_tables.dart';
+import 'package:path/path.dart' as p;
 
-enum SyncPhase { idle, running, offline, sessionExpired, error }
+enum SyncPhase { idle, running, offline, sessionExpired, revoked, error }
 
 class SyncState {
   const new({required this.phase, this.lastSuccess, this.error});
@@ -26,7 +28,18 @@ class SyncEngine {
     this.batchSize = 100,
     this.pageSize = 500,
     this.overlap = const Duration(minutes: 2),
+    this.mediaDir,
+    this.onRevoked,
   });
+
+  /// Dossier local des images (téléchargées sur un nouveau téléphone).
+  final Directory? mediaDir;
+
+  /// Appelé quand le directeur a déconnecté ce téléphone.
+  final Future<void> Function()? onRevoked;
+
+  /// Fichiers rattachés à des lignes : (table, colonne, compartiment).
+  static const fileColumns = [('admin_headers', 'emblem_path', 'ecole-medias')];
 
   final LocalStore store;
   final SyncRemote remote;
@@ -62,9 +75,12 @@ class SyncEngine {
     );
     try {
       store.clock.calibrate(await remote.serverNow());
+      await _heartbeat(); // un téléphone déconnecté n'envoie rien
       await _push();
       await _pull();
       await _uploadFiles();
+      await _downloadFiles();
+      await _heartbeat();
       final done = SyncState(
         phase: SyncPhase.idle,
         lastSuccess: DateTime.now(),
@@ -86,6 +102,9 @@ class SyncEngine {
           error: e,
         ),
       );
+    } on DeviceRevoked catch (e) {
+      _emit(SyncState(phase: SyncPhase.revoked, error: e));
+      await onRevoked?.call();
     } on SessionExpired catch (e) {
       _emit(
         SyncState(
@@ -104,6 +123,17 @@ class SyncEngine {
       );
     }
     return _current;
+  }
+
+  Future<void> _heartbeat() async {
+    final session = await db.select(db.localSession).getSingleOrNull();
+    if (session == null) return;
+    final revoked = await remote.heartbeat(
+      session.deviceId,
+      await store.pendingCount(),
+      appVersion,
+    );
+    if (revoked) throw const DeviceRevoked();
   }
 
   // ------------------------------- Envoi -------------------------------
@@ -256,6 +286,38 @@ class SyncEngine {
         f.contentType,
       );
       await (db.delete(db.fileUploads)..where((u) => u.id.equals(f.id))).go();
+    }
+  }
+
+  /// Images présentes sur le serveur mais pas sur ce téléphone (nouveau
+  /// téléphone, autre appareil) : téléchargées automatiquement.
+  Future<void> _downloadFiles() async {
+    final dir = mediaDir;
+    if (dir == null) return;
+    final pendingUploads = {
+      for (final u in await db.select(db.fileUploads).get()) u.objectPath,
+    };
+    for (final (table, column, bucket) in fileColumns) {
+      final rows = await db
+          .customSelect(
+            'SELECT DISTINCT "$column" AS path FROM "$table" '
+            'WHERE "$column" IS NOT NULL',
+          )
+          .get();
+      for (final r in rows) {
+        final path = r.read<String>('path');
+        final file = File(p.join(dir.path, path));
+        if (file.existsSync() || pendingUploads.contains(path)) continue;
+        try {
+          final bytes = await remote.download(bucket, path);
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(bytes, flush: true);
+        } on RemoteUnavailable {
+          rethrow;
+        } on Object {
+          // Pas encore envoyé par l'autre téléphone : réessayé plus tard.
+        }
+      }
     }
   }
 

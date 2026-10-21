@@ -174,7 +174,7 @@ begin
         v_status := 'deja_recu';
         v_new := v_old;
       elsif (v_old ->> 'updated_at')::timestamptz > (v_row ->> 'updated_at')::timestamptz then
-        perform app.log_conflict((v_old ->> 'school_id')::uuid, v_cfg.table_name, (v_old ->> 'id')::uuid, v_old, v_row);
+        perform app.log_conflict(coalesce((v_old ->> 'school_id')::uuid, (v_old ->> 'id')::uuid), v_cfg.table_name, (v_old ->> 'id')::uuid, v_old, v_row);
         v_status := 'ignore_plus_ancien';
         v_new := v_old;
       else
@@ -186,7 +186,7 @@ begin
           raise exception 'Modification refusée.' using errcode = '42501';
         end if;
         if (v_old ->> 'updated_by') is distinct from auth.uid()::text then
-          perform app.log_conflict((v_old ->> 'school_id')::uuid, v_cfg.table_name, (v_old ->> 'id')::uuid, v_new, v_old);
+          perform app.log_conflict(coalesce((v_old ->> 'school_id')::uuid, (v_old ->> 'id')::uuid), v_cfg.table_name, (v_old ->> 'id')::uuid, v_new, v_old);
         end if;
         v_status := 'ok';
       end if;

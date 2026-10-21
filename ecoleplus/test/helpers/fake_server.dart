@@ -9,6 +9,8 @@ class FakeServer {
   final Map<String, Map<String, Map<String, dynamic>>> tables = {};
   final List<Map<String, dynamic>> conflicts = [];
   final Map<String, Uint8List> files = {};
+  final Set<String> revokedDevices = {};
+  final Map<String, int> reportedPending = {};
   DateTime now = DateTime.utc(2026, 10, 21, 8);
   int _tick = 0;
   int pushCalls = 0;
@@ -145,5 +147,24 @@ class FakeRemote implements SyncRemote {
   ) async {
     _check();
     server.files['$bucket/$path'] = bytes;
+  }
+
+  @override
+  Future<Uint8List> download(String bucket, String path) async {
+    _check();
+    final f = server.files['$bucket/$path'];
+    if (f == null) throw StateError('absent');
+    return f;
+  }
+
+  @override
+  Future<bool> heartbeat(
+    String deviceId,
+    int pending,
+    String appVersion,
+  ) async {
+    _check();
+    server.reportedPending[deviceId] = pending;
+    return server.revokedDevices.contains(deviceId);
   }
 }

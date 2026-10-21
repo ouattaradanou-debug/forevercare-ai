@@ -8,6 +8,9 @@ import 'package:ecoleplus/core/clock.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
+import 'package:ecoleplus/features/lock/data/biometric_gate.dart';
+import 'package:ecoleplus/features/lock/data/lock_service.dart';
+import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -128,6 +131,11 @@ class AppHarness {
 
   Future<void> pump(WidgetTester tester) async {
     await initializeDateFormatting('fr');
+    // Écran haut (densité 2) : tout l’accueil visible sans défiler.
+    tester.view
+      ..physicalSize = const Size(720, 2600)
+      ..devicePixelRatio = 2;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -137,6 +145,10 @@ class AppHarness {
           mediaDirProvider.overrideWithValue(mediaDir),
           clockProvider.overrideWithValue(Clock()),
           syncSchedulerProvider.overrideWithValue(null),
+          lockServiceProvider.overrideWithValue(
+            LockService(db, iterations: 50),
+          ),
+          biometricGateProvider.overrideWithValue(NoBiometricGate()),
         ],
         child: const EcolePlusApp(),
       ),
@@ -155,7 +167,11 @@ class AppHarness {
     }
   }
 
-  Future<void> login(WidgetTester tester, String login) async {
+  Future<void> login(
+    WidgetTester tester,
+    String login, {
+    bool creerCode = true,
+  }) async {
     await tester.tap(find.text('Se connecter'));
     await settle(tester);
     await tester.enterText(find.byKey(const Key('login')), login);
@@ -165,6 +181,27 @@ class AppHarness {
     );
     await tester.tap(find.widgetWithText(FilledButton, 'Se connecter'));
     await settle(tester);
+    if (creerCode && find.text('Code de verrouillage').evaluate().isNotEmpty) {
+      await taperCode(tester, '4071');
+      await taperCode(tester, '4071');
+    }
+  }
+
+  /// Tape un code sur le clavier à gros chiffres puis « OK ».
+  static Future<void> taperCode(WidgetTester tester, String code) async {
+    for (final c in code.split('')) {
+      await tester.tap(find.byKey(Key('pin-$c')));
+      await tester.pump();
+    }
+    await tester.tap(find.byKey(const Key('pin-ok')));
+    await settle(tester);
+  }
+
+  /// Ferme puis rouvre l'application (même base locale).
+  Future<void> relancer(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
+    await pump(tester);
   }
 
   Future<void> dispose(WidgetTester tester) async {

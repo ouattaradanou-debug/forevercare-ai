@@ -47,3 +47,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Thème AppCompat requis par la boîte de dialogue d'empreinte (local_auth).
+    implementation("androidx.appcompat:appcompat:1.7.0")
+}

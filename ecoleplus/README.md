@@ -30,3 +30,5 @@ Tout vérifier d'un coup : `tools/check.sh`.
 * `docs/HYPOTHESES_TERRAIN.md` — hypothèses à valider
 * `docs/EVOLUTIONS.md` — décisions et ajouts proposés
 * `docs/TESTS_PHASE_0.md`, `docs/TESTS_PHASE_1.md` — procédures de test manuel
+* `docs/GUIDE_TEST_TELEPHONE.md` — tester sur un vrai téléphone après chaque phase
+* `docs/SAUVEGARDE_SERVEUR.md` — sauvegarde chiffrée du serveur et restauration

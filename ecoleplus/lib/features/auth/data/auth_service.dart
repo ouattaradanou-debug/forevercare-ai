@@ -205,10 +205,82 @@ class AuthService {
     if (userId != null) await _openSession(userId, email);
   }
 
+  /// Le directeur a déconnecté ce téléphone (perte, vol) : les données de
+  /// l'école sont effacées, le téléphone reçoit une nouvelle identité.
+  Future<void> handleRevoked() => effacerTelephoneDeconnecte(db, api);
+
+  /// Message à montrer une fois sur l'écran d'accueil (puis effacé).
+  Future<String?> takeNotice() async {
+    final row = await db.select(db.deviceIdentity).getSingleOrNull();
+    if (row?.notice == null) return null;
+    await db
+        .update(db.deviceIdentity)
+        .write(const DeviceIdentityCompanion(notice: Value(null)));
+    return row!.notice;
+  }
+
+  /// Mot de passe oublié par question secrète (en ligne).
+  Future<String> recoveryQuestion(String identifiant) {
+    final email = identifiantVersEmail(identifiant);
+    if (email == null) {
+      throw const UserMessage('Identifiant non reconnu.');
+    }
+    return api.recoveryQuestion(email);
+  }
+
+  Future<void> recoverWithAnswer(
+    String identifiant,
+    String answer,
+    String newPassword,
+  ) async {
+    if (newPassword.length < 8) {
+      throw const UserMessage(
+        'Choisissez un mot de passe d’au moins 8 caractères.',
+      );
+    }
+    final email = identifiantVersEmail(identifiant)!;
+    await api.recoverWithAnswer(email, answer, newPassword);
+    await login(identifiant, newPassword);
+  }
+
+  /// Code oublié : la personne se reconnecte avec son mot de passe (en
+  /// ligne) ; ses données et ses éléments non envoyés sont conservés.
+  Future<void> reconnectSameUser(String password) async {
+    final s = await session();
+    if (s == null) throw const UserMessage('Aucune session.');
+    final userId = await api.signIn(s.login, password);
+    if (userId != s.userId) {
+      throw const UserMessage('Ce mot de passe n’est pas celui de ce compte.');
+    }
+  }
+
   /// Déconnexion : efface les données de l'école de ce téléphone.
   /// L'écran prévient avant si des éléments ne sont pas encore envoyés.
   Future<void> logout() async {
     await api.signOut();
     await db.clearAll();
   }
+}
+
+/// Le directeur a déconnecté ce téléphone (perte, vol) : les données de
+/// l'école sont effacées et le téléphone reçoit une nouvelle identité.
+/// Fonction autonome : appelée par le moteur de synchronisation.
+Future<void> effacerTelephoneDeconnecte(AppDatabase db, AuthApi api) async {
+  // L'avis est écrit AVANT l'effacement : l'écran d'accueil qui s'affiche
+  // juste après doit pouvoir le lire.
+  await db
+      .into(db.deviceIdentity)
+      .insertOnConflictUpdate(
+        DeviceIdentityCompanion.insert(
+          id: const Value(1),
+          deviceId: const Uuid().v4(),
+          notice: const Value(
+            'Ce téléphone a été déconnecté par le directeur. Les données '
+            'de l’école ont été retirées. Reconnectez-vous si c’est votre '
+            'téléphone.',
+          ),
+        ),
+      );
+  await api.signOut();
+  await db.clearAll();
 }

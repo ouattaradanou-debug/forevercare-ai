@@ -226,4 +226,25 @@ void main() {
       );
     },
   );
+
+  test('téléphone déconnecté par le directeur : rien n’est envoyé, '
+      'l’application est prévenue', () async {
+    await a.store.save('school_years', annee('y1', '2026-2027'));
+    server.revokedDevices.add('d'); // identité du téléphone de test
+    final state = await a.engine.syncNow();
+    expect(state.phase, SyncPhase.revoked);
+    expect(server.table('school_years'), isEmpty);
+  });
+
+  test(
+    'le serveur connaît le nombre d’éléments en attente du téléphone',
+    () async {
+      a.online = true;
+      server.rejectWith = (t, r) => null;
+      a.remote.dropPushResults = true;
+      await a.store.save('school_years', annee('y1', '2026-2027'));
+      await a.engine.syncNow();
+      expect(server.reportedPending['d'], 1);
+    },
+  );
 }

@@ -1,6 +1,6 @@
 # Tests de la phase 1 — procédure pour un testeur non technique
 
-Durée : 45 minutes. Il faut l'ordinateur où le projet est installé (README.md), Android Studio avec un émulateur, et le serveur local démarré.
+Durée : 1 heure. **Sur un vrai téléphone** : installez l'APK d'essai (voir `GUIDE_TEST_TELEPHONE.md`) et sautez l'étape 0. Sur ordinateur : il faut le projet installé (README.md), Android Studio avec un émulateur, et le serveur local démarré.
 
 ## 0. Préparer
 1. Dans le dossier `ecoleplus`, tapez : `npx supabase start`, puis `npx supabase db reset`.
@@ -12,12 +12,13 @@ Comptes de test (mot de passe `motdepasse-test`) : `directeur@ecole-test.local`,
 
 ## 1. Première connexion du directeur
 1. Touchez « Se connecter », tapez `directeur@ecole-test.local` et le mot de passe.
-2. ✅ « Bonjour Directeur Test », cinq gros boutons, bandeau « Tout est synchronisé ».
+2. ✅ L'application demande de choisir un **code**. Essayez `1234` : ✅ refusé (« trop facile »). Choisissez un autre code, tapez-le deux fois.
+3. ✅ « Bonjour Directeur Test », six gros boutons, bandeau « Tout est synchronisé », et une carte « Choisissez une question secrète ».
 
 ## 2. Mode avion (le plus important)
 1. Activez le mode avion de l'émulateur.
 2. « Mon école » → changez la commune. ✅ Le bandeau affiche « 1 élément en attente — envoi au retour du réseau ». Aucun message d'erreur, rien ne bloque.
-3. Fermez complètement l'application et rouvrez-la (toujours en mode avion). ✅ Elle s'ouvre directement sur l'accueil ; la commune modifiée est toujours là.
+3. Fermez complètement l'application et rouvrez-la (toujours en mode avion). ✅ Elle demande votre code (pas de réseau nécessaire), puis affiche l'accueil ; la commune modifiée est toujours là.
 4. Désactivez le mode avion. ✅ En quelques secondes : « Tout est synchronisé ».
 
 ## 3. Années scolaires et en-têtes
@@ -51,3 +52,33 @@ Comptes de test (mot de passe `motdepasse-test`) : `directeur@ecole-test.local`,
 ## 9. Création d'une nouvelle école
 1. Se déconnecter → « Créer mon école ». Remplissez le début du formulaire, quittez l'écran puis revenez. ✅ Ce que vous aviez tapé est toujours là (sauf le mot de passe).
 2. Terminez avec une adresse e-mail neuve. ✅ Accueil de la nouvelle école ; « Options » : tout est désactivé.
+
+## 10. Code de verrouillage et empreinte
+1. Rouvrez l'application, tapez un mauvais code 5 fois. ✅ « Trop d'erreurs. Réessayez dans … ».
+2. « Code oublié ? » → tapez votre mot de passe (avec Internet). ✅ Nouveau code à choisir ; vos données sont toujours là.
+3. Mettez l'application en arrière-plan plus de 2 minutes, revenez. ✅ Le code est redemandé.
+4. **Sur un téléphone avec capteur** : « Mon compte » (ou Sécurité → Mon compte) → activez « Ouvrir avec mon empreinte ». Rouvrez. ✅ L'empreinte suffit. *(Non testable sur l'ordinateur de développement.)*
+
+## 11. Question secrète
+1. Connecté comme enseignant (`enseignant1@ecole-test.local`) : « Mon compte » → « Choisir ma question secrète » → une question, une réponse (deux fois) → « Enregistrer ».
+2. Déconnectez-vous. « Se connecter » → « Mot de passe oublié ? » → identifiant → « Répondre à ma question secrète ».
+3. Mauvaise réponse : ✅ « Réponse incorrecte ». Bonne réponse (même en majuscules) + nouveau mot de passe : ✅ vous êtes connecté.
+4. Connectez-vous comme directeur : ✅ carte « 1 événement de sécurité à voir » ; le journal indique « … a changé son mot de passe grâce à sa question secrète ».
+
+## 12. Changement de téléphone (le plus important pour vous)
+1. Sur le téléphone A (directeur) : modifiez la commune, ajoutez une image d'en-tête ; attendez « Tout est synchronisé ».
+2. Sur un **autre** téléphone B (ou après avoir désinstallé puis réinstallé l'application) : connectez-vous avec le même compte.
+3. ✅ Toutes les informations de l'école sont là, **image d'en-tête comprise**.
+
+## 13. Téléphone perdu ou volé
+1. Connectez l'enseignant sur le téléphone B. Sur le téléphone A (directeur) : « Sécurité » → « Téléphones de l'école ». ✅ Le téléphone de l'enseignant apparaît, avec sa dernière synchronisation et ses éléments non envoyés.
+2. « Déconnecter ce téléphone » → lisez l'avertissement → confirmez.
+3. Sur le téléphone B, touchez le bandeau puis « Synchroniser maintenant ». ✅ Les données de l'école disparaissent ; message « Ce téléphone a été déconnecté par le directeur ».
+4. L'enseignant se reconnecte avec son mot de passe : ✅ il retrouve ses données.
+
+## 14. Journal d'activité
+1. Directeur → « Sécurité » → « Journal d'activité ». ✅ Phrases simples : qui a modifié quoi, quand ; connexions des nouveaux téléphones ; téléphone déconnecté.
+
+## 15. Alerte de synchronisation (conditionnelle)
+1. En mode avion, modifiez une information et ne vous reconnectez pas pendant 3 jours. ✅ Carte « … ne sont pas encore envoyés » sur l'accueil.
+2. Sans rien en attente, aucune alerte avant 30 jours sans réseau. *(Vérifié par les tests automatiques ; sur téléphone, avancer la date du téléphone permet de le constater.)*

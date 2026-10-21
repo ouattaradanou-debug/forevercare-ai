@@ -53,3 +53,4 @@ app.*.map.json
 !.env.example
 supabase/.branches
 supabase/.temp
+sauvegardes/

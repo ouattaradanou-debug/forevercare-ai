@@ -207,6 +207,8 @@ void main() {
     );
     await tester.tap(find.widgetWithText(FilledButton, 'Créer mon école'));
     await AppHarness.settle(tester);
+    await AppHarness.taperCode(tester, '4071');
+    await AppHarness.taperCode(tester, '4071');
     expect(find.text('Bonjour Directrice Neuve'), findsOneWidget);
     expect(find.text('École Neuve'), findsOneWidget);
     await h.dispose(tester);

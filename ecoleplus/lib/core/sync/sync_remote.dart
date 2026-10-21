@@ -13,6 +13,11 @@ class SessionExpired implements Exception {
   const new();
 }
 
+/// Ce téléphone a été déconnecté par le directeur (perte, vol).
+class DeviceRevoked implements Exception {
+  const new();
+}
+
 class PushChange {
   const new({required this.changeId, required this.table, required this.row});
   final int changeId;
@@ -82,4 +87,9 @@ abstract interface class SyncRemote {
     Uint8List bytes,
     String contentType,
   );
+
+  Future<Uint8List> download(String bucket, String path);
+
+  /// Signale l'état du téléphone ; renvoie vrai s'il a été déconnecté.
+  Future<bool> heartbeat(String deviceId, int pending, String appVersion);
 }

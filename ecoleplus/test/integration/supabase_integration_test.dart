@@ -5,7 +5,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:ecoleplus/core/clock.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
@@ -63,11 +63,17 @@ class ToggleRemote implements SyncRemote {
   @override
   Future<void> upload(String b, String p, Uint8List d, String c) =>
       _go(() => inner.upload(b, p, d, c));
+  @override
+  Future<Uint8List> download(String b, String p) =>
+      _go(() => inner.download(b, p));
+  @override
+  Future<bool> heartbeat(String d, int n, String v) =>
+      _go(() => inner.heartbeat(d, n, v));
 }
 
 /// Un téléphone réel (client Supabase propre, base locale en mémoire).
 class Phone {
-  new() {
+  new({this.mediaDir}) {
     client = SupabaseClient(
       url!,
       anonKey,
@@ -79,11 +85,18 @@ class Phone {
     db = AppDatabase(NativeDatabase.memory());
     store = LocalStore(db, Clock());
     remote = ToggleRemote(SupabaseSyncRemote(client));
-    engine = SyncEngine(store: store, remote: remote);
     api = SupabaseAuthApi(client);
+    engine = SyncEngine(
+      store: store,
+      remote: remote,
+      mediaDir: mediaDir,
+      onRevoked: () => effacerTelephoneDeconnecte(db, api),
+    );
     auth = AuthService(api: api, store: store, engine: engine);
-    repo = SchoolRepository(store);
+    repo = SchoolRepository(store, mediaDir: mediaDir);
   }
+
+  final Directory? mediaDir;
 
   late final SupabaseClient client;
   late final AppDatabase db;
@@ -103,8 +116,12 @@ class Phone {
   }
 }
 
-Future<Phone> connecte(String login, [String password = motDePasse]) async {
-  final p = Phone();
+Future<Phone> connecte(
+  String login, [
+  String password = motDePasse,
+  Directory? mediaDir,
+]) async {
+  final p = Phone(mediaDir: mediaDir);
   final r = await p.auth.login(login, password);
   expect(r, isA<LoggedIn>());
   expect(
@@ -118,6 +135,7 @@ Future<Phone> connecte(String login, [String password = motDePasse]) async {
 void main() {
   final skip = url == null ? 'SUPABASE_URL non défini (serveur local)' : null;
   setUpAll(() => driftRuntimeOptions.dontWarnAboutMultipleDatabases = true);
+  group('A6 et A5', mainA6);
 
   test('deux téléphones du directeur en mode avion : dernière modification '
       'gagne, trace côté serveur, aucun doublon', () async {
@@ -316,6 +334,114 @@ void main() {
     },
     skip: skip,
   );
+}
+
+void mainA6() {
+  final skip = url == null ? 'SUPABASE_URL non défini (serveur local)' : null;
+
+  test('nouveau téléphone du directeur : il retrouve toutes les données, '
+      'y compris l’image d’en-tête', () async {
+    final dirA = Directory.systemTemp.createTempSync('telA');
+    final dirB = Directory.systemTemp.createTempSync('telB');
+    final a = await connecte('directeur@ecole-test.local', motDePasse, dirA);
+    final annee =
+        (await a.db.select(a.db.schools).getSingle()).currentSchoolYearId!;
+    final entete = await (a.db.select(
+      a.db.adminHeaders,
+    )..where((h) => h.schoolYearId.equals(annee))).getSingle();
+    final image = File('${dirA.path}/embleme.png')
+      ..writeAsBytesSync(List.generate(2000, (i) => i % 256));
+    await a.repo.setEmblem(entete, image);
+    await a.repo.updateSchool(ecoleTest, {'commune': 'Commune du téléphone A'});
+    await a.engine.syncNow();
+    expect(await a.db.select(a.db.fileUploads).get(), isEmpty);
+
+    // L'ancien téléphone est perdu : on se connecte sur un téléphone neuf.
+    final b = await connecte('directeur@ecole-test.local', motDePasse, dirB);
+    expect(
+      (await b.store.read('schools', {'id': ecoleTest}))!['commune'],
+      'Commune du téléphone A',
+    );
+    expect(await b.db.select(b.db.schoolYears).get(), isNotEmpty);
+    expect(
+      await b.db.select(b.db.memberships).get(),
+      hasLength(greaterThan(3)),
+    );
+    final copie = File('${dirB.path}/$ecoleTest/entetes/${entete.id}.png');
+    expect(copie.existsSync(), isTrue, reason: 'image téléchargée');
+    expect(copie.readAsBytesSync(), image.readAsBytesSync());
+    await a.close();
+    await b.close();
+  }, skip: skip);
+
+  test('téléphone perdu : le directeur le déconnecte, ses données sont '
+      'effacées au retour du réseau', () async {
+    final t = await connecte('enseignant2@ecole-test.local');
+    final idPerdu = (await t.auth.session())!.deviceId;
+    expect(await t.db.select(t.db.schools).get(), hasLength(1));
+
+    final d = await connecte('directeur@ecole-test.local');
+    await d.engine.syncNow();
+    expect(
+      await d.store.read('devices', {'id': idPerdu}),
+      isNotNull,
+      reason: 'le directeur voit le téléphone',
+    );
+    await d.api.revokeDevice(idPerdu);
+
+    final etat = await t.engine.syncNow();
+    expect(etat.phase, SyncPhase.revoked);
+    expect(await t.db.select(t.db.schools).get(), isEmpty);
+    expect(await t.db.select(t.db.localSession).get(), isEmpty);
+    final identite = await t.db.select(t.db.deviceIdentity).getSingle();
+    expect(identite.deviceId, isNot(idPerdu));
+    expect(identite.notice, contains('déconnecté par le directeur'));
+
+    // La personne se reconnecte (nouveau téléphone ou téléphone retrouvé).
+    final r = await t.auth.login('enseignant2@ecole-test.local', motDePasse);
+    expect(r, isA<LoggedIn>());
+    expect(await t.db.select(t.db.schools).get(), hasLength(1));
+    await d.engine.syncNow();
+    final journal = await d.db.select(d.db.auditLog).get();
+    expect(journal.map((j) => j.action), contains('deconnexion_telephone'));
+    await t.close();
+    await d.close();
+  }, skip: skip);
+
+  test('question secrète : mot de passe changé sans le directeur, qui en est '
+      'informé dans son journal', () async {
+    final s = await connecte('secretaire@ecole-test.local');
+    expect(await s.api.hasRecoveryQuestion(), isFalse);
+    await s.api.setRecoveryQuestion('Mon premier élève ?', 'Éléonore');
+    expect(await s.api.hasRecoveryQuestion(), isTrue);
+    await s.close();
+
+    final nouveau = Phone();
+    expect(
+      await nouveau.auth.recoveryQuestion('secretaire@ecole-test.local'),
+      'Mon premier élève ?',
+    );
+    await expectLater(
+      nouveau.auth.recoverWithAnswer(
+        'secretaire@ecole-test.local',
+        'mauvaise',
+        'nouveau-mdp-9',
+      ),
+      throwsA(isA<UserMessage>()),
+    );
+    await nouveau.auth.recoverWithAnswer(
+      'secretaire@ecole-test.local',
+      ' ELEONORE ',
+      'nouveau-mdp-9',
+    );
+    expect((await nouveau.auth.session())!.role, 'delegue');
+    await nouveau.close();
+
+    final d = await connecte('directeur@ecole-test.local');
+    final journal = await d.db.select(d.db.auditLog).get();
+    expect(journal.map((j) => j.action), contains('recuperation_mot_de_passe'));
+    await d.close();
+  }, skip: skip);
 }
 
 /// Lit le code à 6 chiffres dans la boîte de test locale (Mailpit).

@@ -104,6 +104,37 @@ CREATE TABLE delegate_permissions (
   synced_at TEXT
 ) AS DelegatePermissionRow;
 
+-- Téléphones de l'école (lecture seule ; le directeur les voit tous).
+CREATE TABLE devices (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  user_id TEXT,
+  label TEXT NOT NULL,
+  series_code TEXT NOT NULL,
+  last_seen_at TEXT,
+  last_sync_at TEXT,
+  pending_count INTEGER NOT NULL DEFAULT 0,
+  app_version TEXT,
+  revoked_at TEXT,
+  created_at TEXT,
+  updated_at TEXT,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS DeviceRow;
+
+-- Journal d'activité (lecture seule, directeur uniquement).
+CREATE TABLE audit_log (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  occurred_at TEXT NOT NULL,
+  actor_id TEXT,
+  "action" TEXT NOT NULL,
+  table_name TEXT AS affectedTable,
+  row_id TEXT,
+  details TEXT,
+  synced_at TEXT
+) AS AuditRow;
+
 -- ------------------------- Tables locales ---------------------------
 
 -- File d'envoi : une entrée par ligne modifiée (les modifications successives
@@ -137,7 +168,8 @@ CREATE TABLE local_session (
   device_id TEXT NOT NULL,
   device_series TEXT,
   clock_offset_ms INTEGER NOT NULL DEFAULT 0,
-  last_sync_at TEXT
+  last_sync_at TEXT,
+  journal_seen_at TEXT
 ) AS LocalSessionRow;
 
 -- Brouillons des formulaires (sauvegarde automatique ; jamais de mot de passe).
@@ -161,5 +193,18 @@ CREATE TABLE file_uploads (
 -- Identité de ce téléphone (conservée même quand on change de compte).
 CREATE TABLE device_identity (
   id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
-  device_id TEXT NOT NULL
+  device_id TEXT NOT NULL,
+  -- Message à montrer à l'ouverture (ex. téléphone déconnecté par le directeur).
+  notice TEXT
 ) AS DeviceIdentityRow;
+
+-- Verrouillage de l'application (code PIN, empreinte). Jamais le code en clair.
+CREATE TABLE app_lock (
+  id INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+  pin_hash TEXT NOT NULL,
+  pin_salt TEXT NOT NULL,
+  iterations INTEGER NOT NULL,
+  biometric BOOLEAN NOT NULL DEFAULT FALSE,
+  failed_attempts INTEGER NOT NULL DEFAULT 0,
+  blocked_until TEXT
+) AS AppLockRow;

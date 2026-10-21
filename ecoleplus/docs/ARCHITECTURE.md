@@ -55,7 +55,8 @@ Critères : maintenu (publication récente), compatible Flutter 3.47 / Dart 3.13
 | Recadrage | `image_cropper` | 13.0.0 | 10/2026 | 8 | recadrage guidé du visage (exige Flutter ≥ 3.47) |
 | Compression | `flutter_image_compress` | 2.5.1 | 07/2026 | 8 | compression native (WebP/JPEG) ciblant ≤ 40 Ko |
 | Scan QR (si 12.4 accepté) | `mobile_scanner` | 7.4.2 | 09/2026 | 8 | ⚠️ ajout proposé, voir EVOLUTIONS |
-| Empreinte de fichier | `crypto` | 3.0.7 | 11/2025 | 9 | SHA-256 pour les doublons |
+| Empreinte | `crypto` | 3.0.7 | 11/2025 | 1 | empreinte du code PIN (PBKDF2), plus tard SHA-256 des documents |
+| Empreinte digitale | `local_auth` | 3.0.2 | 07/2026 | 1 | ouverture par empreinte (facultative) |
 | Connectivité | `connectivity_plus` | 7.3.2 | 10/2026 | 1 | déclenche la synchronisation au retour du réseau (jamais bloquant) |
 
 Écartés : `sqflite` (pas de typage ni de flux réactifs), `hive`/`isar` (pas de SQL ni de jointures pour les calculs de classement), Firebase (hors stack).
@@ -103,6 +104,7 @@ La logique métier (moyennes, rang, soldes, numérotation, normalisation des nom
 | `20261021…0200_phase1_rls` | politiques par profil (socle, personnel, classes, élèves, parents, inscriptions), gardes des modules et des niveaux |
 | `20261021…0300_phase1_fonctions_sync` | `create_school`, `register_device`, `server_now`, `sync_push`, `app.sync_tables` |
 | `20261021…0400_phase1_stockage` | compartiment privé `ecole-medias` et ses règles |
+| `20261021…0500_phase1_securite` | suivi et déconnexion des téléphones, journal d'activité automatique, question secrète |
 
 ### 5.1 Conventions communes
 * `id uuid` généré **par l'appareil** ; `school_id` sur chaque ligne (cloisonnement et RLS simples).
@@ -172,6 +174,18 @@ Limites (à valider) : la numérotation des reçus est continue **par série**, 
 * Enseignants et délégués : comptes créés par le directeur (Edge Function `gerer-membres`, sans dépendance externe, clé `service_role` uniquement côté serveur) ; mot de passe provisoire lisible ; réinitialisation par le directeur ; désactivation sans suppression.
 * Chaque téléphone reçoit une identité et une série (A, B…) à la première connexion (`register_device`). Ensuite l'application s'ouvre sans réseau. Changer de compte efface les données locales (avertissement s'il reste des éléments non envoyés).
 * Sauvegarde : copie complète de la base du téléphone (`VACUUM INTO`), partagée par le directeur ; les données envoyées sont en plus sauvegardées par Supabase (sauvegardes quotidiennes du plan Pro ; **aucune sauvegarde automatique sur le plan gratuit**).
+
+## 8 ter. Perte ou changement de téléphone, verrouillage, journal (compléments de la phase 1)
+
+* **Tout ce qui est synchronisé est sur le serveur** : se connecter sur un nouveau téléphone redonne toutes les données auxquelles la personne a droit, **images comprises** (téléchargées automatiquement : `SyncEngine.fileColumns`). Prouvé par test d'intégration.
+* **Signal de synchronisation** (`device_heartbeat`) au début et à la fin de chaque synchronisation : le serveur connaît, pour chaque téléphone, la date de dernière synchronisation et le nombre d'éléments non envoyés (liste « Téléphones de l'école » du directeur).
+* **Téléphone perdu** : `revoke_device` (directeur ou propriétaire) marque le téléphone, ferme toutes les sessions de la personne ; au prochain contact, le téléphone efface les données de l'école et prend une nouvelle identité (avis affiché à l'ouverture). Jetons valables 15 minutes.
+* **Alerte conditionnelle** (`alerteSynchronisation`) : seulement si des données attendent depuis 3 jours (1 jour en composition) ; sinon après 30 jours sans nouvelles.
+* **Verrouillage** : code obligatoire (empreinte PBKDF2-SHA256, 20 000 itérations, calculée hors du fil de l'interface), empreinte digitale en option (`local_auth`), délais croissants après erreurs, reconnexion par mot de passe sans perte de données.
+* **Question secrète** : `app.recovery_secrets` (réponse normalisée puis chiffrée bcrypt, hors API), `recovery_verify` (5 erreurs/heure → blocage), fonction `recuperer-mot-de-passe` (sans connexion préalable), récupération inscrite au journal du directeur.
+* **Journal d'activité** : déclencheur générique `app.audit_row` (création, modification avec colonnes et valeurs, suppression logique) + connexions, déconnexions de téléphones, récupérations ; ajout seul ; synchronisé en lecture seule vers le directeur.
+* **Sauvegarde du serveur** : `tools/sauvegarde_serveur.sh` (données, chiffrement AES-256), quotidienne par GitHub Actions, 30 jours ; restauration testée (`tools/test_restauration.sh`). Voir `docs/SAUVEGARDE_SERVEUR.md`.
+* **Test sur téléphone** : `.github/workflows/ecoleplus-livraison.yml` (serveur de test + APK publié). Voir `docs/GUIDE_TEST_TELEPHONE.md`.
 
 ## 9. Modules optionnels (R11)
 

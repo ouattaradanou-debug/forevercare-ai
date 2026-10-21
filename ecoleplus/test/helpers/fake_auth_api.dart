@@ -117,7 +117,18 @@ class FakeAuthApi implements AuthApi {
     String label,
   ) async {
     _check();
-    return {'id': deviceId, 'series_code': 'A'};
+    final row = {
+      'id': deviceId,
+      'school_id': schoolId,
+      'user_id': _current,
+      'label': label,
+      'series_code': 'A',
+      'pending_count': 0,
+      'last_sync_at': '2026-10-21T08:00:00.000Z',
+      'updated_at': '2026-10-21T08:00:00.000Z',
+    };
+    server.seed('devices', row);
+    return row;
   }
 
   @override
@@ -157,4 +168,50 @@ class FakeAuthApi implements AuthApi {
 
   @override
   Future<void> signOut() async => _current = null;
+
+  final Map<String, (String question, String answer)> questions = {};
+  final revoked = <String>[];
+
+  @override
+  Future<bool> hasRecoveryQuestion() async {
+    _check();
+    return questions.containsKey(_current);
+  }
+
+  @override
+  Future<void> setRecoveryQuestion(String question, String answer) async {
+    _check();
+    questions[_current!] = (question, answer.toLowerCase().trim());
+  }
+
+  String? _idOf(String email) => users[email]?.$2;
+
+  @override
+  Future<String> recoveryQuestion(String email) async {
+    _check();
+    final q = questions[_idOf(email)];
+    if (q == null) throw const UserMessage('Aucune question secrète.');
+    return q.$1;
+  }
+
+  @override
+  Future<void> recoverWithAnswer(
+    String email,
+    String answer,
+    String password,
+  ) async {
+    _check();
+    final q = questions[_idOf(email)];
+    if (q == null || q.$2 != answer.toLowerCase().trim()) {
+      throw const UserMessage('Réponse incorrecte.');
+    }
+    users[email] = (password, users[email]!.$2);
+  }
+
+  @override
+  Future<void> revokeDevice(String deviceId) async {
+    _check();
+    revoked.add(deviceId);
+    server.revokedDevices.add(deviceId);
+  }
 }

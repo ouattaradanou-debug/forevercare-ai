@@ -28,3 +28,9 @@ Toutes sont paramétrables ; aucune n'est présentée comme une règle officiell
 | H22 | En production, confirmation de l'adresse e-mail du directeur à la création du compte (désactivée en local) | Connexion | `config.toml` |
 
 Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, C.E.P., T/S, AV, AA, OD, OG, HTA, D.T.C.P., CEB.
+| H23 | Alerte de synchronisation : données en attente depuis **3 jours** (1 jour en période de composition, branché en phase 3) ; sans données en attente, alerte seulement après **30 jours** sans synchronisation | Accueil, téléphones | `ReglesAlerte` |
+| H24 | Le code est redemandé après **2 minutes** en arrière-plan | Verrouillage | `delaiVerrouillage` |
+| H25 | Le code de verrouillage est **obligatoire** pour tous | Verrouillage | — |
+| H26 | Déconnecter un téléphone ferme **toutes** les sessions de la personne (elle se reconnecte sur son nouveau téléphone) | Téléphones | `revoke_device` |
+| H27 | Jetons de connexion valables 15 minutes : un téléphone déconnecté perd tout accès au plus tard 15 minutes après, et efface ses données dès sa prochaine synchronisation | Sécurité | `jwt_expiry` |
+

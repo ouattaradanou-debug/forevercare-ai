@@ -58,4 +58,6 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
     name: 'delegate_permissions',
     info: db.delegatePermissions,
   ),
+  SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
+  SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];

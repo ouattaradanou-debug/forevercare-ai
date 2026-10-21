@@ -32,6 +32,13 @@ abstract interface class AuthApi {
   Future<void> confirmRecovery(String email, String code, String newPassword);
   Future<Map<String, dynamic>> manageMembers(Map<String, dynamic> body);
   Future<void> signOut();
+
+  // Question secrète (A5) et téléphones (A6).
+  Future<bool> hasRecoveryQuestion();
+  Future<void> setRecoveryQuestion(String question, String answer);
+  Future<String> recoveryQuestion(String email);
+  Future<void> recoverWithAnswer(String email, String answer, String password);
+  Future<void> revokeDevice(String deviceId);
 }
 
 class SupabaseAuthApi implements AuthApi {
@@ -178,4 +185,49 @@ class SupabaseAuthApi implements AuthApi {
       // Hors ligne : la session locale est effacée quand même.
     }
   }
+
+  @override
+  Future<bool> hasRecoveryQuestion() => _guard(
+    () async => await client.rpc<dynamic>('has_recovery_question') == true,
+  );
+
+  @override
+  Future<void> setRecoveryQuestion(String question, String answer) => _guard(
+    () => client.rpc<dynamic>(
+      'set_recovery_question',
+      params: {'p_question': question, 'p_answer': answer},
+    ),
+  );
+
+  Future<Map<String, dynamic>> _recuperation(Map<String, dynamic> body) =>
+      _guard(() async {
+        final r = await client.functions.invoke(
+          'recuperer-mot-de-passe',
+          body: body,
+        );
+        return Map<String, dynamic>.from(r.data as Map);
+      });
+
+  @override
+  Future<String> recoveryQuestion(String email) async =>
+      (await _recuperation({'action': 'question', 'login': email}))['question']
+          as String;
+
+  @override
+  Future<void> recoverWithAnswer(
+    String email,
+    String answer,
+    String password,
+  ) => _recuperation({
+    'action': 'repondre',
+    'login': email,
+    'reponse': answer,
+    'password': password,
+  });
+
+  @override
+  Future<void> revokeDevice(String deviceId) => _guard(
+    () =>
+        client.rpc<dynamic>('revoke_device', params: {'p_device_id': deviceId}),
+  );
 }

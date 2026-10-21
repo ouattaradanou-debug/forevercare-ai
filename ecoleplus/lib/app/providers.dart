@@ -35,6 +35,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
   final engine = SyncEngine(
     store: ref.watch(localStoreProvider),
     remote: ref.watch(syncRemoteProvider),
+    mediaDir: ref.watch(mediaDirProvider),
+    onRevoked: () => effacerTelephoneDeconnecte(
+      ref.read(databaseProvider),
+      ref.read(authApiProvider),
+    ),
   );
   ref.onDispose(engine.dispose);
   return engine;

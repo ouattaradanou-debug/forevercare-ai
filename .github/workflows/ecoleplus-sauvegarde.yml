@@ -1,0 +1,33 @@
+# Sauvegarde quotidienne CHIFFRÉE de toute la base (A6, point 4).
+# Secrets requis : SUPABASE_DB_URL (chaîne de connexion du projet),
+#                  BACKUP_PASSPHRASE (phrase secrète, à garder aussi HORS de GitHub).
+# Conservation : 30 jours. Restauration : ecoleplus/docs/SAUVEGARDE_SERVEUR.md
+name: EcolePlus — sauvegarde du serveur
+
+on:
+  schedule:
+    - cron: '17 1 * * *'   # chaque nuit à 01 h 17 (UTC = heure du Burkina Faso)
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: ecoleplus
+
+jobs:
+  sauvegarde:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+      - name: Sauvegarde chiffrée
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          SUPABASE_CLI: supabase
+        run: tools/sauvegarde_serveur.sh "${{ secrets.SUPABASE_DB_URL }}" sauvegardes
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sauvegarde-${{ github.run_id }}
+          path: ecoleplus/sauvegardes/
+          retention-days: 30

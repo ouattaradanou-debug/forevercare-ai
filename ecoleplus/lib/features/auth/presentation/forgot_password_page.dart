@@ -14,42 +14,46 @@ class ForgotPasswordPage extends ConsumerStatefulWidget {
 class _ForgotState extends ConsumerState<ForgotPasswordPage> {
   final _login = TextEditingController();
   final _code = TextEditingController();
+  final _reponse = TextEditingController();
   final _password = TextEditingController();
   bool _codeSent = false;
+  String? _question;
   bool _busy = false;
 
   @override
   void dispose() {
     _login.dispose();
     _code.dispose();
+    _reponse.dispose();
     _password.dispose();
     super.dispose();
   }
 
-  Future<void> _send() async {
+  Future<void> _run(Future<void> Function() f) async {
     setState(() => _busy = true);
-    final ok = await avecMessage(context, () async {
-      await ref.read(authServiceProvider).sendRecoveryCode(_login.text);
-      return true;
-    });
-    if (mounted) {
-      setState(() {
-        _busy = false;
-        _codeSent = ok ?? false;
-      });
-    }
-  }
-
-  Future<void> _confirm() async {
-    setState(() => _busy = true);
-    await avecMessage(
-      context,
-      () => ref
-          .read(authServiceProvider)
-          .confirmRecovery(_login.text, _code.text, _password.text),
-    );
+    await avecMessage(context, f);
     if (mounted) setState(() => _busy = false);
   }
+
+  Widget _champ(
+    String key,
+    TextEditingController c,
+    String label, {
+    bool cache = false,
+    TextInputType? type,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: TextField(
+      key: Key(key),
+      controller: c,
+      obscureText: cache,
+      keyboardType: type,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -59,55 +63,95 @@ class _ForgotState extends ConsumerState<ForgotPasswordPage> {
         padding: const EdgeInsets.all(24),
         children: [
           const Text(
-            'Si vous vous connectez avec une adresse e-mail, nous vous '
-            'envoyons un code. Avec un numéro de téléphone ou un '
-            'identifiant, c’est votre directeur qui vous donne un nouveau '
-            'mot de passe.',
+            'Deux possibilités : répondre à votre question secrète, ou '
+            '(si vous vous connectez avec une adresse e-mail) recevoir un '
+            'code par e-mail. Sinon, votre directeur peut vous donner un '
+            'nouveau mot de passe. Il faut une connexion Internet.',
           ),
           const SizedBox(height: 16),
-          TextField(
-            key: const Key('login'),
-            controller: _login,
-            enabled: !_codeSent,
-            decoration: const InputDecoration(
-              labelText: 'Numéro de téléphone, e-mail ou identifiant',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (!_codeSent)
+          _champ('login', _login, 'Numéro de téléphone, e-mail ou identifiant'),
+          if (_question == null && !_codeSent) ...[
             BigButton(
-              icon: Icons.mark_email_unread_outlined,
-              label: 'Recevoir un code',
-              onPressed: _busy ? null : _send,
-            )
-          else ...[
-            const Text('Saisissez le code reçu par e-mail :'),
+              icon: Icons.help_outline,
+              label: 'Répondre à ma question secrète',
+              onPressed: _busy
+                  ? null
+                  : () => _run(() async {
+                      final q = await ref
+                          .read(authServiceProvider)
+                          .recoveryQuestion(_login.text);
+                      setState(() => _question = q);
+                    }),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.mark_email_unread_outlined),
+              label: const Text('Recevoir un code par e-mail'),
+              onPressed: _busy
+                  ? null
+                  : () => _run(() async {
+                      await ref
+                          .read(authServiceProvider)
+                          .sendRecoveryCode(_login.text);
+                      setState(() => _codeSent = true);
+                    }),
+            ),
+          ],
+          if (_question != null) ...[
+            Text(_question!, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            TextField(
-              key: const Key('code'),
-              controller: _code,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Code à 6 chiffres',
-                border: OutlineInputBorder(),
-              ),
+            _champ('reponse', _reponse, 'Votre réponse', cache: true),
+            _champ(
+              'new-password',
+              _password,
+              'Nouveau mot de passe (8 caractères au moins)',
+              cache: true,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              key: const Key('new-password'),
-              controller: _password,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Nouveau mot de passe (8 caractères au moins)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
             BigButton(
               icon: Icons.lock_reset,
               label: 'Changer mon mot de passe',
-              onPressed: _busy ? null : _confirm,
+              onPressed: _busy
+                  ? null
+                  : () => _run(
+                      () => ref
+                          .read(authServiceProvider)
+                          .recoverWithAnswer(
+                            _login.text,
+                            _reponse.text,
+                            _password.text,
+                          ),
+                    ),
+            ),
+          ],
+          if (_codeSent) ...[
+            const Text('Saisissez le code reçu par e-mail :'),
+            const SizedBox(height: 8),
+            _champ(
+              'code',
+              _code,
+              'Code à 6 chiffres',
+              type: TextInputType.number,
+            ),
+            _champ(
+              'new-password',
+              _password,
+              'Nouveau mot de passe (8 caractères au moins)',
+              cache: true,
+            ),
+            BigButton(
+              icon: Icons.lock_reset,
+              label: 'Changer mon mot de passe',
+              onPressed: _busy
+                  ? null
+                  : () => _run(
+                      () => ref
+                          .read(authServiceProvider)
+                          .confirmRecovery(
+                            _login.text,
+                            _code.text,
+                            _password.text,
+                          ),
+                    ),
             ),
           ],
         ],
