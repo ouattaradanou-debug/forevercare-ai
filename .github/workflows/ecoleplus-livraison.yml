@@ -16,6 +16,8 @@ on:
         default: false
   push:
     tags: ['phase-*']
+    branches: ['claude/festive-brown-3fmkmm']
+    paths: ['ecoleplus/**', '.github/workflows/ecoleplus-livraison.yml']
 
 permissions:
   contents: write
@@ -32,21 +34,36 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
     steps:
+      - name: Serveur de test configuré ?
+        id: conf
+        run: |
+          if [ -n "$PROJECT_REF" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_DB_PASSWORD" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Serveur de test non configuré : voir ecoleplus/docs/GUIDE_TEST_TELEPHONE.md (étapes A et B)."
+          fi
       - uses: actions/checkout@v4
+        if: steps.conf.outputs.ok == 'true'
       - uses: supabase/setup-cli@v1
+        if: steps.conf.outputs.ok == 'true'
         with:
           version: 2.121.0
       - name: Relier le projet de test
+        if: steps.conf.outputs.ok == 'true'
         run: supabase link --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"
       - name: Remise à zéro avec le jeu « École Test » (sur demande)
-        if: ${{ inputs.reinitialiser }}
+        if: steps.conf.outputs.ok == 'true' && inputs.reinitialiser
         run: supabase db reset --linked --yes
       - name: Appliquer les nouvelles migrations
+        if: steps.conf.outputs.ok == 'true'
         run: supabase db push --linked -p "$SUPABASE_DB_PASSWORD"
       - name: Réglages d'authentification (mot de passe de 8 caractères, modèle d'e-mail)
+        if: steps.conf.outputs.ok == 'true'
         run: supabase config push --project-ref "$PROJECT_REF" --yes
         continue-on-error: true
       - name: Déployer les fonctions serveur
+        if: steps.conf.outputs.ok == 'true'
         run: supabase functions deploy gerer-membres recuperer-mot-de-passe --project-ref "$PROJECT_REF"
 
   apk:
@@ -89,6 +106,7 @@ jobs:
           path: ecoleplus/ecoleplus-test.apk
           retention-days: 30
       - name: Publier dans « Releases »
+        if: vars.SUPABASE_URL != ''
         uses: softprops/action-gh-release@v2
         with:
           tag_name: test-${{ github.run_number }}
