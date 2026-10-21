@@ -36,6 +36,7 @@ jobs:
     steps:
       - name: Serveur de test configuré ?
         id: conf
+        working-directory: .
         run: |
           if [ -n "$PROJECT_REF" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_DB_PASSWORD" ]; then
             echo "ok=true" >> "$GITHUB_OUTPUT"
