@@ -18,7 +18,7 @@ set local role authenticated;
 select set_config('request.jwt.claims',
   '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 
-select is((select count(*)::int from public.grades), 0, 'enseignant : notes fermées jusqu''à la phase 3');
+select is((select count(*)::int from public.grades), 14, 'enseignant : seulement les notes de sa classe (CM1), jamais celles du CM2');
 select is((select count(*)::int from public.documents), 0, 'enseignant : documents fermés jusqu''à la phase 9');
 select is((select count(*)::int from public.payments), 0, 'enseignant : aucune donnée financière lisible');
 select is((select count(*)::int from public.levels), 9, 'le référentiel des niveaux reste lisible');

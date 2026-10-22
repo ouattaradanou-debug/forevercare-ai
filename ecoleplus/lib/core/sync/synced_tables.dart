@@ -35,7 +35,7 @@ class SyncedTable<D extends DataClass> {
   String encodeKey(Map<String, dynamic> row) => jsonEncode(keyOf(row));
 }
 
-/// Tables synchronisées (phases 1 et 2), dans l'ordre des dépendances
+/// Tables synchronisées (phases 1 à 3), dans l'ordre des dépendances
 /// (une école avant ses années, une année avant ses en-têtes…).
 List<SyncedTable> syncedTables(AppDatabase db) => [
   SyncedTable<ModuleCatalogRow>(
@@ -91,6 +91,12 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
   ),
   SyncedTable<GuardianRow>(name: 'guardians', info: db.guardians),
   SyncedTable<EnrollmentRow>(name: 'enrollments', info: db.enrollments),
+  SyncedTable<SubjectRow>(name: 'subjects', info: db.subjects),
+  SyncedTable<MentionScaleRow>(name: 'mention_scales', info: db.mentionScales),
+  SyncedTable<ClassSubjectRow>(name: 'class_subjects', info: db.classSubjects),
+  SyncedTable<AssessmentRow>(name: 'assessments', info: db.assessments),
+  SyncedTable<GradeRow>(name: 'grades', info: db.grades),
+  SyncedTable<AnnualResultRow>(name: 'annual_results', info: db.annualResults),
   SyncedTable<OfficialFormRow>(name: 'official_forms', info: db.officialForms),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),

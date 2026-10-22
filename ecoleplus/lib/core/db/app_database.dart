@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -90,6 +90,20 @@ class AppDatabase extends _$AppDatabase {
         await m.createIndex(enrollmentsStudent);
       }
       if (from < 4) await m.createTable(officialForms);
+      if (from < 5) {
+        // Phase 3 : notes, moyennes et classement.
+        for (final t in <TableInfo<Table, dynamic>>[
+          subjects,
+          classSubjects,
+          assessments,
+          grades,
+          mentionScales,
+          annualResults,
+        ]) {
+          await m.createTable(t);
+        }
+        await m.createIndex(gradesAssessment);
+      }
     },
   );
 

@@ -16809,6 +16809,4227 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
   }
 }
 
+class Subjects extends Table with TableInfo<Subjects, SubjectRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Subjects(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _cycleMeta = const VerificationMeta('cycle');
+  late final GeneratedColumn<String> cycle = GeneratedColumn<String>(
+    'cycle',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'primaire\'',
+    defaultValue: const CustomExpression('\'primaire\''),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _defaultCoefficientMeta =
+      const VerificationMeta('defaultCoefficient');
+  late final GeneratedColumn<double> defaultCoefficient =
+      GeneratedColumn<double>(
+        'default_coefficient',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        $customConstraints: 'NOT NULL DEFAULT 1',
+        defaultValue: const CustomExpression('1'),
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    name,
+    cycle,
+    sortOrder,
+    defaultCoefficient,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'subjects';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SubjectRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('cycle')) {
+      context.handle(
+        _cycleMeta,
+        cycle.isAcceptableOrUnknown(data['cycle']!, _cycleMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('default_coefficient')) {
+      context.handle(
+        _defaultCoefficientMeta,
+        defaultCoefficient.isAcceptableOrUnknown(
+          data['default_coefficient']!,
+          _defaultCoefficientMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SubjectRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SubjectRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      cycle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cycle'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      defaultCoefficient: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}default_coefficient'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  Subjects createAlias(String alias) {
+    return Subjects(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class SubjectRow extends DataClass implements Insertable<SubjectRow> {
+  final String id;
+  final String schoolId;
+  final String name;
+  final String cycle;
+  final int sortOrder;
+  final double defaultCoefficient;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const SubjectRow({
+    required this.id,
+    required this.schoolId,
+    required this.name,
+    required this.cycle,
+    required this.sortOrder,
+    required this.defaultCoefficient,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['name'] = Variable<String>(name);
+    map['cycle'] = Variable<String>(cycle);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['default_coefficient'] = Variable<double>(defaultCoefficient);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  SubjectsCompanion toCompanion(bool nullToAbsent) {
+    return SubjectsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      name: Value(name),
+      cycle: Value(cycle),
+      sortOrder: Value(sortOrder),
+      defaultCoefficient: Value(defaultCoefficient),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory SubjectRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SubjectRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      name: serializer.fromJson<String>(json['name']),
+      cycle: serializer.fromJson<String>(json['cycle']),
+      sortOrder: serializer.fromJson<int>(json['sort_order']),
+      defaultCoefficient: serializer.fromJson<double>(
+        json['default_coefficient'],
+      ),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'name': serializer.toJson<String>(name),
+      'cycle': serializer.toJson<String>(cycle),
+      'sort_order': serializer.toJson<int>(sortOrder),
+      'default_coefficient': serializer.toJson<double>(defaultCoefficient),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  SubjectRow copyWith({
+    String? id,
+    String? schoolId,
+    String? name,
+    String? cycle,
+    int? sortOrder,
+    double? defaultCoefficient,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => SubjectRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    name: name ?? this.name,
+    cycle: cycle ?? this.cycle,
+    sortOrder: sortOrder ?? this.sortOrder,
+    defaultCoefficient: defaultCoefficient ?? this.defaultCoefficient,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  SubjectRow copyWithCompanion(SubjectsCompanion data) {
+    return SubjectRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      name: data.name.present ? data.name.value : this.name,
+      cycle: data.cycle.present ? data.cycle.value : this.cycle,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      defaultCoefficient: data.defaultCoefficient.present
+          ? data.defaultCoefficient.value
+          : this.defaultCoefficient,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SubjectRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('name: $name, ')
+          ..write('cycle: $cycle, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('defaultCoefficient: $defaultCoefficient, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    name,
+    cycle,
+    sortOrder,
+    defaultCoefficient,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SubjectRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.name == this.name &&
+          other.cycle == this.cycle &&
+          other.sortOrder == this.sortOrder &&
+          other.defaultCoefficient == this.defaultCoefficient &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class SubjectsCompanion extends UpdateCompanion<SubjectRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> name;
+  final Value<String> cycle;
+  final Value<int> sortOrder;
+  final Value<double> defaultCoefficient;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const SubjectsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.cycle = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.defaultCoefficient = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SubjectsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String name,
+    this.cycle = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.defaultCoefficient = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       name = Value(name),
+       updatedAt = Value(updatedAt);
+  static Insertable<SubjectRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? name,
+    Expression<String>? cycle,
+    Expression<int>? sortOrder,
+    Expression<double>? defaultCoefficient,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (name != null) 'name': name,
+      if (cycle != null) 'cycle': cycle,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (defaultCoefficient != null) 'default_coefficient': defaultCoefficient,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SubjectsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? name,
+    Value<String>? cycle,
+    Value<int>? sortOrder,
+    Value<double>? defaultCoefficient,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return SubjectsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      name: name ?? this.name,
+      cycle: cycle ?? this.cycle,
+      sortOrder: sortOrder ?? this.sortOrder,
+      defaultCoefficient: defaultCoefficient ?? this.defaultCoefficient,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (cycle.present) {
+      map['cycle'] = Variable<String>(cycle.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (defaultCoefficient.present) {
+      map['default_coefficient'] = Variable<double>(defaultCoefficient.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SubjectsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('name: $name, ')
+          ..write('cycle: $cycle, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('defaultCoefficient: $defaultCoefficient, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class ClassSubjects extends Table
+    with TableInfo<ClassSubjects, ClassSubjectRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  ClassSubjects(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _classIdMeta = const VerificationMeta(
+    'classId',
+  );
+  late final GeneratedColumn<String> classId = GeneratedColumn<String>(
+    'class_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _coefficientMeta = const VerificationMeta(
+    'coefficient',
+  );
+  late final GeneratedColumn<double> coefficient = GeneratedColumn<double>(
+    'coefficient',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 1',
+    defaultValue: const CustomExpression('1'),
+  );
+  static const VerificationMeta _teacherIdMeta = const VerificationMeta(
+    'teacherId',
+  );
+  late final GeneratedColumn<String> teacherId = GeneratedColumn<String>(
+    'teacher_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    classId,
+    subjectId,
+    coefficient,
+    teacherId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'class_subjects';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ClassSubjectRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('class_id')) {
+      context.handle(
+        _classIdMeta,
+        classId.isAcceptableOrUnknown(data['class_id']!, _classIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_classIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('coefficient')) {
+      context.handle(
+        _coefficientMeta,
+        coefficient.isAcceptableOrUnknown(
+          data['coefficient']!,
+          _coefficientMeta,
+        ),
+      );
+    }
+    if (data.containsKey('teacher_id')) {
+      context.handle(
+        _teacherIdMeta,
+        teacherId.isAcceptableOrUnknown(data['teacher_id']!, _teacherIdMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ClassSubjectRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ClassSubjectRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      classId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}class_id'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      )!,
+      coefficient: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}coefficient'],
+      )!,
+      teacherId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}teacher_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  ClassSubjects createAlias(String alias) {
+    return ClassSubjects(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class ClassSubjectRow extends DataClass implements Insertable<ClassSubjectRow> {
+  final String id;
+  final String schoolId;
+  final String classId;
+  final String subjectId;
+  final double coefficient;
+  final String? teacherId;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const ClassSubjectRow({
+    required this.id,
+    required this.schoolId,
+    required this.classId,
+    required this.subjectId,
+    required this.coefficient,
+    this.teacherId,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['class_id'] = Variable<String>(classId);
+    map['subject_id'] = Variable<String>(subjectId);
+    map['coefficient'] = Variable<double>(coefficient);
+    if (!nullToAbsent || teacherId != null) {
+      map['teacher_id'] = Variable<String>(teacherId);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  ClassSubjectsCompanion toCompanion(bool nullToAbsent) {
+    return ClassSubjectsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      classId: Value(classId),
+      subjectId: Value(subjectId),
+      coefficient: Value(coefficient),
+      teacherId: teacherId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(teacherId),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory ClassSubjectRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ClassSubjectRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      classId: serializer.fromJson<String>(json['class_id']),
+      subjectId: serializer.fromJson<String>(json['subject_id']),
+      coefficient: serializer.fromJson<double>(json['coefficient']),
+      teacherId: serializer.fromJson<String?>(json['teacher_id']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'class_id': serializer.toJson<String>(classId),
+      'subject_id': serializer.toJson<String>(subjectId),
+      'coefficient': serializer.toJson<double>(coefficient),
+      'teacher_id': serializer.toJson<String?>(teacherId),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  ClassSubjectRow copyWith({
+    String? id,
+    String? schoolId,
+    String? classId,
+    String? subjectId,
+    double? coefficient,
+    Value<String?> teacherId = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => ClassSubjectRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    classId: classId ?? this.classId,
+    subjectId: subjectId ?? this.subjectId,
+    coefficient: coefficient ?? this.coefficient,
+    teacherId: teacherId.present ? teacherId.value : this.teacherId,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  ClassSubjectRow copyWithCompanion(ClassSubjectsCompanion data) {
+    return ClassSubjectRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      classId: data.classId.present ? data.classId.value : this.classId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      coefficient: data.coefficient.present
+          ? data.coefficient.value
+          : this.coefficient,
+      teacherId: data.teacherId.present ? data.teacherId.value : this.teacherId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ClassSubjectRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('classId: $classId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('coefficient: $coefficient, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    classId,
+    subjectId,
+    coefficient,
+    teacherId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ClassSubjectRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.classId == this.classId &&
+          other.subjectId == this.subjectId &&
+          other.coefficient == this.coefficient &&
+          other.teacherId == this.teacherId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class ClassSubjectsCompanion extends UpdateCompanion<ClassSubjectRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> classId;
+  final Value<String> subjectId;
+  final Value<double> coefficient;
+  final Value<String?> teacherId;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const ClassSubjectsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.classId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.coefficient = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ClassSubjectsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String classId,
+    required String subjectId,
+    this.coefficient = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       classId = Value(classId),
+       subjectId = Value(subjectId),
+       updatedAt = Value(updatedAt);
+  static Insertable<ClassSubjectRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? classId,
+    Expression<String>? subjectId,
+    Expression<double>? coefficient,
+    Expression<String>? teacherId,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (classId != null) 'class_id': classId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (coefficient != null) 'coefficient': coefficient,
+      if (teacherId != null) 'teacher_id': teacherId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ClassSubjectsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? classId,
+    Value<String>? subjectId,
+    Value<double>? coefficient,
+    Value<String?>? teacherId,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return ClassSubjectsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      classId: classId ?? this.classId,
+      subjectId: subjectId ?? this.subjectId,
+      coefficient: coefficient ?? this.coefficient,
+      teacherId: teacherId ?? this.teacherId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (classId.present) {
+      map['class_id'] = Variable<String>(classId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (coefficient.present) {
+      map['coefficient'] = Variable<double>(coefficient.value);
+    }
+    if (teacherId.present) {
+      map['teacher_id'] = Variable<String>(teacherId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ClassSubjectsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('classId: $classId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('coefficient: $coefficient, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class Assessments extends Table with TableInfo<Assessments, AssessmentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Assessments(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _classIdMeta = const VerificationMeta(
+    'classId',
+  );
+  late final GeneratedColumn<String> classId = GeneratedColumn<String>(
+    'class_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'composition\'',
+    defaultValue: const CustomExpression('\'composition\''),
+  );
+  static const VerificationMeta _sequenceMeta = const VerificationMeta(
+    'sequence',
+  );
+  late final GeneratedColumn<int> sequence = GeneratedColumn<int>(
+    'sequence',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 1',
+    defaultValue: const CustomExpression('1'),
+  );
+  static const VerificationMeta _heldOnMeta = const VerificationMeta('heldOn');
+  late final GeneratedColumn<String> heldOn = GeneratedColumn<String>(
+    'held_on',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _maxScoreMeta = const VerificationMeta(
+    'maxScore',
+  );
+  late final GeneratedColumn<double> maxScore = GeneratedColumn<double>(
+    'max_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 10',
+    defaultValue: const CustomExpression('10'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    classId,
+    schoolYearId,
+    label,
+    kind,
+    sequence,
+    heldOn,
+    maxScore,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'assessments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AssessmentRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('class_id')) {
+      context.handle(
+        _classIdMeta,
+        classId.isAcceptableOrUnknown(data['class_id']!, _classIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_classIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('sequence')) {
+      context.handle(
+        _sequenceMeta,
+        sequence.isAcceptableOrUnknown(data['sequence']!, _sequenceMeta),
+      );
+    }
+    if (data.containsKey('held_on')) {
+      context.handle(
+        _heldOnMeta,
+        heldOn.isAcceptableOrUnknown(data['held_on']!, _heldOnMeta),
+      );
+    }
+    if (data.containsKey('max_score')) {
+      context.handle(
+        _maxScoreMeta,
+        maxScore.isAcceptableOrUnknown(data['max_score']!, _maxScoreMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AssessmentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AssessmentRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      classId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}class_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      sequence: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sequence'],
+      )!,
+      heldOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}held_on'],
+      ),
+      maxScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}max_score'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  Assessments createAlias(String alias) {
+    return Assessments(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class AssessmentRow extends DataClass implements Insertable<AssessmentRow> {
+  final String id;
+  final String schoolId;
+  final String classId;
+  final String schoolYearId;
+  final String label;
+  final String kind;
+  final int sequence;
+  final String? heldOn;
+  final double maxScore;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const AssessmentRow({
+    required this.id,
+    required this.schoolId,
+    required this.classId,
+    required this.schoolYearId,
+    required this.label,
+    required this.kind,
+    required this.sequence,
+    this.heldOn,
+    required this.maxScore,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['class_id'] = Variable<String>(classId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    map['label'] = Variable<String>(label);
+    map['kind'] = Variable<String>(kind);
+    map['sequence'] = Variable<int>(sequence);
+    if (!nullToAbsent || heldOn != null) {
+      map['held_on'] = Variable<String>(heldOn);
+    }
+    map['max_score'] = Variable<double>(maxScore);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  AssessmentsCompanion toCompanion(bool nullToAbsent) {
+    return AssessmentsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      classId: Value(classId),
+      schoolYearId: Value(schoolYearId),
+      label: Value(label),
+      kind: Value(kind),
+      sequence: Value(sequence),
+      heldOn: heldOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(heldOn),
+      maxScore: Value(maxScore),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory AssessmentRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AssessmentRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      classId: serializer.fromJson<String>(json['class_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      label: serializer.fromJson<String>(json['label']),
+      kind: serializer.fromJson<String>(json['kind']),
+      sequence: serializer.fromJson<int>(json['sequence']),
+      heldOn: serializer.fromJson<String?>(json['held_on']),
+      maxScore: serializer.fromJson<double>(json['max_score']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'class_id': serializer.toJson<String>(classId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'label': serializer.toJson<String>(label),
+      'kind': serializer.toJson<String>(kind),
+      'sequence': serializer.toJson<int>(sequence),
+      'held_on': serializer.toJson<String?>(heldOn),
+      'max_score': serializer.toJson<double>(maxScore),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  AssessmentRow copyWith({
+    String? id,
+    String? schoolId,
+    String? classId,
+    String? schoolYearId,
+    String? label,
+    String? kind,
+    int? sequence,
+    Value<String?> heldOn = const Value.absent(),
+    double? maxScore,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => AssessmentRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    classId: classId ?? this.classId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    label: label ?? this.label,
+    kind: kind ?? this.kind,
+    sequence: sequence ?? this.sequence,
+    heldOn: heldOn.present ? heldOn.value : this.heldOn,
+    maxScore: maxScore ?? this.maxScore,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  AssessmentRow copyWithCompanion(AssessmentsCompanion data) {
+    return AssessmentRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      classId: data.classId.present ? data.classId.value : this.classId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      label: data.label.present ? data.label.value : this.label,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      sequence: data.sequence.present ? data.sequence.value : this.sequence,
+      heldOn: data.heldOn.present ? data.heldOn.value : this.heldOn,
+      maxScore: data.maxScore.present ? data.maxScore.value : this.maxScore,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssessmentRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('classId: $classId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('label: $label, ')
+          ..write('kind: $kind, ')
+          ..write('sequence: $sequence, ')
+          ..write('heldOn: $heldOn, ')
+          ..write('maxScore: $maxScore, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    classId,
+    schoolYearId,
+    label,
+    kind,
+    sequence,
+    heldOn,
+    maxScore,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AssessmentRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.classId == this.classId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.label == this.label &&
+          other.kind == this.kind &&
+          other.sequence == this.sequence &&
+          other.heldOn == this.heldOn &&
+          other.maxScore == this.maxScore &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class AssessmentsCompanion extends UpdateCompanion<AssessmentRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> classId;
+  final Value<String> schoolYearId;
+  final Value<String> label;
+  final Value<String> kind;
+  final Value<int> sequence;
+  final Value<String?> heldOn;
+  final Value<double> maxScore;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const AssessmentsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.classId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.label = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.sequence = const Value.absent(),
+    this.heldOn = const Value.absent(),
+    this.maxScore = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AssessmentsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String classId,
+    required String schoolYearId,
+    required String label,
+    this.kind = const Value.absent(),
+    this.sequence = const Value.absent(),
+    this.heldOn = const Value.absent(),
+    this.maxScore = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       classId = Value(classId),
+       schoolYearId = Value(schoolYearId),
+       label = Value(label),
+       updatedAt = Value(updatedAt);
+  static Insertable<AssessmentRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? classId,
+    Expression<String>? schoolYearId,
+    Expression<String>? label,
+    Expression<String>? kind,
+    Expression<int>? sequence,
+    Expression<String>? heldOn,
+    Expression<double>? maxScore,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (classId != null) 'class_id': classId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (label != null) 'label': label,
+      if (kind != null) 'kind': kind,
+      if (sequence != null) 'sequence': sequence,
+      if (heldOn != null) 'held_on': heldOn,
+      if (maxScore != null) 'max_score': maxScore,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AssessmentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? classId,
+    Value<String>? schoolYearId,
+    Value<String>? label,
+    Value<String>? kind,
+    Value<int>? sequence,
+    Value<String?>? heldOn,
+    Value<double>? maxScore,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return AssessmentsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      classId: classId ?? this.classId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      label: label ?? this.label,
+      kind: kind ?? this.kind,
+      sequence: sequence ?? this.sequence,
+      heldOn: heldOn ?? this.heldOn,
+      maxScore: maxScore ?? this.maxScore,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (classId.present) {
+      map['class_id'] = Variable<String>(classId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (sequence.present) {
+      map['sequence'] = Variable<int>(sequence.value);
+    }
+    if (heldOn.present) {
+      map['held_on'] = Variable<String>(heldOn.value);
+    }
+    if (maxScore.present) {
+      map['max_score'] = Variable<double>(maxScore.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssessmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('classId: $classId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('label: $label, ')
+          ..write('kind: $kind, ')
+          ..write('sequence: $sequence, ')
+          ..write('heldOn: $heldOn, ')
+          ..write('maxScore: $maxScore, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class Grades extends Table with TableInfo<Grades, GradeRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Grades(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _assessmentIdMeta = const VerificationMeta(
+    'assessmentId',
+  );
+  late final GeneratedColumn<String> assessmentId = GeneratedColumn<String>(
+    'assessment_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _scoreMeta = const VerificationMeta('score');
+  late final GeneratedColumn<double> score = GeneratedColumn<double>(
+    'score',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'note\'',
+    defaultValue: const CustomExpression('\'note\''),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    assessmentId,
+    studentId,
+    subjectId,
+    score,
+    status,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'grades';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GradeRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('assessment_id')) {
+      context.handle(
+        _assessmentIdMeta,
+        assessmentId.isAcceptableOrUnknown(
+          data['assessment_id']!,
+          _assessmentIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_assessmentIdMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_studentIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('score')) {
+      context.handle(
+        _scoreMeta,
+        score.isAcceptableOrUnknown(data['score']!, _scoreMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GradeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GradeRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      assessmentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assessment_id'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      )!,
+      score: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}score'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  Grades createAlias(String alias) {
+    return Grades(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class GradeRow extends DataClass implements Insertable<GradeRow> {
+  final String id;
+  final String schoolId;
+  final String assessmentId;
+  final String studentId;
+  final String subjectId;
+  final double? score;
+  final String status;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const GradeRow({
+    required this.id,
+    required this.schoolId,
+    required this.assessmentId,
+    required this.studentId,
+    required this.subjectId,
+    this.score,
+    required this.status,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['assessment_id'] = Variable<String>(assessmentId);
+    map['student_id'] = Variable<String>(studentId);
+    map['subject_id'] = Variable<String>(subjectId);
+    if (!nullToAbsent || score != null) {
+      map['score'] = Variable<double>(score);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  GradesCompanion toCompanion(bool nullToAbsent) {
+    return GradesCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      assessmentId: Value(assessmentId),
+      studentId: Value(studentId),
+      subjectId: Value(subjectId),
+      score: score == null && nullToAbsent
+          ? const Value.absent()
+          : Value(score),
+      status: Value(status),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory GradeRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GradeRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      assessmentId: serializer.fromJson<String>(json['assessment_id']),
+      studentId: serializer.fromJson<String>(json['student_id']),
+      subjectId: serializer.fromJson<String>(json['subject_id']),
+      score: serializer.fromJson<double?>(json['score']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'assessment_id': serializer.toJson<String>(assessmentId),
+      'student_id': serializer.toJson<String>(studentId),
+      'subject_id': serializer.toJson<String>(subjectId),
+      'score': serializer.toJson<double?>(score),
+      'status': serializer.toJson<String>(status),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  GradeRow copyWith({
+    String? id,
+    String? schoolId,
+    String? assessmentId,
+    String? studentId,
+    String? subjectId,
+    Value<double?> score = const Value.absent(),
+    String? status,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => GradeRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    assessmentId: assessmentId ?? this.assessmentId,
+    studentId: studentId ?? this.studentId,
+    subjectId: subjectId ?? this.subjectId,
+    score: score.present ? score.value : this.score,
+    status: status ?? this.status,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  GradeRow copyWithCompanion(GradesCompanion data) {
+    return GradeRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      assessmentId: data.assessmentId.present
+          ? data.assessmentId.value
+          : this.assessmentId,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      score: data.score.present ? data.score.value : this.score,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GradeRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('assessmentId: $assessmentId, ')
+          ..write('studentId: $studentId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('score: $score, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    assessmentId,
+    studentId,
+    subjectId,
+    score,
+    status,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GradeRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.assessmentId == this.assessmentId &&
+          other.studentId == this.studentId &&
+          other.subjectId == this.subjectId &&
+          other.score == this.score &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class GradesCompanion extends UpdateCompanion<GradeRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> assessmentId;
+  final Value<String> studentId;
+  final Value<String> subjectId;
+  final Value<double?> score;
+  final Value<String> status;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const GradesCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.assessmentId = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.score = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GradesCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String assessmentId,
+    required String studentId,
+    required String subjectId,
+    this.score = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       assessmentId = Value(assessmentId),
+       studentId = Value(studentId),
+       subjectId = Value(subjectId),
+       updatedAt = Value(updatedAt);
+  static Insertable<GradeRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? assessmentId,
+    Expression<String>? studentId,
+    Expression<String>? subjectId,
+    Expression<double>? score,
+    Expression<String>? status,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (assessmentId != null) 'assessment_id': assessmentId,
+      if (studentId != null) 'student_id': studentId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (score != null) 'score': score,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GradesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? assessmentId,
+    Value<String>? studentId,
+    Value<String>? subjectId,
+    Value<double?>? score,
+    Value<String>? status,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return GradesCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      assessmentId: assessmentId ?? this.assessmentId,
+      studentId: studentId ?? this.studentId,
+      subjectId: subjectId ?? this.subjectId,
+      score: score ?? this.score,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (assessmentId.present) {
+      map['assessment_id'] = Variable<String>(assessmentId.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (score.present) {
+      map['score'] = Variable<double>(score.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GradesCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('assessmentId: $assessmentId, ')
+          ..write('studentId: $studentId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('score: $score, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class MentionScales extends Table
+    with TableInfo<MentionScales, MentionScaleRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  MentionScales(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _minAverageMeta = const VerificationMeta(
+    'minAverage',
+  );
+  late final GeneratedColumn<double> minAverage = GeneratedColumn<double>(
+    'min_average',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _maxAverageMeta = const VerificationMeta(
+    'maxAverage',
+  );
+  late final GeneratedColumn<double> maxAverage = GeneratedColumn<double>(
+    'max_average',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    minAverage,
+    maxAverage,
+    label,
+    sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'mention_scales';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MentionScaleRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('min_average')) {
+      context.handle(
+        _minAverageMeta,
+        minAverage.isAcceptableOrUnknown(data['min_average']!, _minAverageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_minAverageMeta);
+    }
+    if (data.containsKey('max_average')) {
+      context.handle(
+        _maxAverageMeta,
+        maxAverage.isAcceptableOrUnknown(data['max_average']!, _maxAverageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_maxAverageMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MentionScaleRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MentionScaleRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      minAverage: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}min_average'],
+      )!,
+      maxAverage: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}max_average'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  MentionScales createAlias(String alias) {
+    return MentionScales(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class MentionScaleRow extends DataClass implements Insertable<MentionScaleRow> {
+  final String id;
+  final String schoolId;
+  final double minAverage;
+  final double maxAverage;
+  final String label;
+  final int sortOrder;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const MentionScaleRow({
+    required this.id,
+    required this.schoolId,
+    required this.minAverage,
+    required this.maxAverage,
+    required this.label,
+    required this.sortOrder,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['min_average'] = Variable<double>(minAverage);
+    map['max_average'] = Variable<double>(maxAverage);
+    map['label'] = Variable<String>(label);
+    map['sort_order'] = Variable<int>(sortOrder);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  MentionScalesCompanion toCompanion(bool nullToAbsent) {
+    return MentionScalesCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      minAverage: Value(minAverage),
+      maxAverage: Value(maxAverage),
+      label: Value(label),
+      sortOrder: Value(sortOrder),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory MentionScaleRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MentionScaleRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      minAverage: serializer.fromJson<double>(json['min_average']),
+      maxAverage: serializer.fromJson<double>(json['max_average']),
+      label: serializer.fromJson<String>(json['label']),
+      sortOrder: serializer.fromJson<int>(json['sort_order']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'min_average': serializer.toJson<double>(minAverage),
+      'max_average': serializer.toJson<double>(maxAverage),
+      'label': serializer.toJson<String>(label),
+      'sort_order': serializer.toJson<int>(sortOrder),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  MentionScaleRow copyWith({
+    String? id,
+    String? schoolId,
+    double? minAverage,
+    double? maxAverage,
+    String? label,
+    int? sortOrder,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => MentionScaleRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    minAverage: minAverage ?? this.minAverage,
+    maxAverage: maxAverage ?? this.maxAverage,
+    label: label ?? this.label,
+    sortOrder: sortOrder ?? this.sortOrder,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  MentionScaleRow copyWithCompanion(MentionScalesCompanion data) {
+    return MentionScaleRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      minAverage: data.minAverage.present
+          ? data.minAverage.value
+          : this.minAverage,
+      maxAverage: data.maxAverage.present
+          ? data.maxAverage.value
+          : this.maxAverage,
+      label: data.label.present ? data.label.value : this.label,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MentionScaleRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('minAverage: $minAverage, ')
+          ..write('maxAverage: $maxAverage, ')
+          ..write('label: $label, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    minAverage,
+    maxAverage,
+    label,
+    sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MentionScaleRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.minAverage == this.minAverage &&
+          other.maxAverage == this.maxAverage &&
+          other.label == this.label &&
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class MentionScalesCompanion extends UpdateCompanion<MentionScaleRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<double> minAverage;
+  final Value<double> maxAverage;
+  final Value<String> label;
+  final Value<int> sortOrder;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const MentionScalesCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.minAverage = const Value.absent(),
+    this.maxAverage = const Value.absent(),
+    this.label = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MentionScalesCompanion.insert({
+    required String id,
+    required String schoolId,
+    required double minAverage,
+    required double maxAverage,
+    required String label,
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       minAverage = Value(minAverage),
+       maxAverage = Value(maxAverage),
+       label = Value(label),
+       updatedAt = Value(updatedAt);
+  static Insertable<MentionScaleRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<double>? minAverage,
+    Expression<double>? maxAverage,
+    Expression<String>? label,
+    Expression<int>? sortOrder,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (minAverage != null) 'min_average': minAverage,
+      if (maxAverage != null) 'max_average': maxAverage,
+      if (label != null) 'label': label,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MentionScalesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<double>? minAverage,
+    Value<double>? maxAverage,
+    Value<String>? label,
+    Value<int>? sortOrder,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return MentionScalesCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      minAverage: minAverage ?? this.minAverage,
+      maxAverage: maxAverage ?? this.maxAverage,
+      label: label ?? this.label,
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (minAverage.present) {
+      map['min_average'] = Variable<double>(minAverage.value);
+    }
+    if (maxAverage.present) {
+      map['max_average'] = Variable<double>(maxAverage.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MentionScalesCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('minAverage: $minAverage, ')
+          ..write('maxAverage: $maxAverage, ')
+          ..write('label: $label, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class AnnualResults extends Table
+    with TableInfo<AnnualResults, AnnualResultRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  AnnualResults(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _classIdMeta = const VerificationMeta(
+    'classId',
+  );
+  late final GeneratedColumn<String> classId = GeneratedColumn<String>(
+    'class_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _levelCodeMeta = const VerificationMeta(
+    'levelCode',
+  );
+  late final GeneratedColumn<String> levelCode = GeneratedColumn<String>(
+    'level_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _attemptMeta = const VerificationMeta(
+    'attempt',
+  );
+  late final GeneratedColumn<int> attempt = GeneratedColumn<int>(
+    'attempt',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 1',
+    defaultValue: const CustomExpression('1'),
+  );
+  static const VerificationMeta _resultDateMeta = const VerificationMeta(
+    'resultDate',
+  );
+  late final GeneratedColumn<String> resultDate = GeneratedColumn<String>(
+    'result_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _generalAverageMeta = const VerificationMeta(
+    'generalAverage',
+  );
+  late final GeneratedColumn<double> generalAverage = GeneratedColumn<double>(
+    'general_average',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _rankMeta = const VerificationMeta('rank');
+  late final GeneratedColumn<int> rank = GeneratedColumn<int>(
+    'rank',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _rankExAequoMeta = const VerificationMeta(
+    'rankExAequo',
+  );
+  late final GeneratedColumn<bool> rankExAequo = GeneratedColumn<bool>(
+    'rank_ex_aequo',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
+  static const VerificationMeta _classSizeMeta = const VerificationMeta(
+    'classSize',
+  );
+  late final GeneratedColumn<int> classSize = GeneratedColumn<int>(
+    'class_size',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _decisionMeta = const VerificationMeta(
+    'decision',
+  );
+  late final GeneratedColumn<String> decision = GeneratedColumn<String>(
+    'decision',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    studentId,
+    schoolYearId,
+    classId,
+    levelCode,
+    attempt,
+    resultDate,
+    generalAverage,
+    rank,
+    rankExAequo,
+    classSize,
+    decision,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'annual_results';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AnnualResultRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_studentIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('class_id')) {
+      context.handle(
+        _classIdMeta,
+        classId.isAcceptableOrUnknown(data['class_id']!, _classIdMeta),
+      );
+    }
+    if (data.containsKey('level_code')) {
+      context.handle(
+        _levelCodeMeta,
+        levelCode.isAcceptableOrUnknown(data['level_code']!, _levelCodeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_levelCodeMeta);
+    }
+    if (data.containsKey('attempt')) {
+      context.handle(
+        _attemptMeta,
+        attempt.isAcceptableOrUnknown(data['attempt']!, _attemptMeta),
+      );
+    }
+    if (data.containsKey('result_date')) {
+      context.handle(
+        _resultDateMeta,
+        resultDate.isAcceptableOrUnknown(data['result_date']!, _resultDateMeta),
+      );
+    }
+    if (data.containsKey('general_average')) {
+      context.handle(
+        _generalAverageMeta,
+        generalAverage.isAcceptableOrUnknown(
+          data['general_average']!,
+          _generalAverageMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rank')) {
+      context.handle(
+        _rankMeta,
+        rank.isAcceptableOrUnknown(data['rank']!, _rankMeta),
+      );
+    }
+    if (data.containsKey('rank_ex_aequo')) {
+      context.handle(
+        _rankExAequoMeta,
+        rankExAequo.isAcceptableOrUnknown(
+          data['rank_ex_aequo']!,
+          _rankExAequoMeta,
+        ),
+      );
+    }
+    if (data.containsKey('class_size')) {
+      context.handle(
+        _classSizeMeta,
+        classSize.isAcceptableOrUnknown(data['class_size']!, _classSizeMeta),
+      );
+    }
+    if (data.containsKey('decision')) {
+      context.handle(
+        _decisionMeta,
+        decision.isAcceptableOrUnknown(data['decision']!, _decisionMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AnnualResultRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AnnualResultRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      classId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}class_id'],
+      ),
+      levelCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}level_code'],
+      )!,
+      attempt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempt'],
+      )!,
+      resultDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}result_date'],
+      ),
+      generalAverage: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}general_average'],
+      ),
+      rank: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rank'],
+      ),
+      rankExAequo: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}rank_ex_aequo'],
+      )!,
+      classSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}class_size'],
+      ),
+      decision: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}decision'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  AnnualResults createAlias(String alias) {
+    return AnnualResults(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class AnnualResultRow extends DataClass implements Insertable<AnnualResultRow> {
+  final String id;
+  final String schoolId;
+  final String studentId;
+  final String schoolYearId;
+  final String? classId;
+  final String levelCode;
+  final int attempt;
+  final String? resultDate;
+  final double? generalAverage;
+  final int? rank;
+  final bool rankExAequo;
+  final int? classSize;
+  final String? decision;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const AnnualResultRow({
+    required this.id,
+    required this.schoolId,
+    required this.studentId,
+    required this.schoolYearId,
+    this.classId,
+    required this.levelCode,
+    required this.attempt,
+    this.resultDate,
+    this.generalAverage,
+    this.rank,
+    required this.rankExAequo,
+    this.classSize,
+    this.decision,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['student_id'] = Variable<String>(studentId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    if (!nullToAbsent || classId != null) {
+      map['class_id'] = Variable<String>(classId);
+    }
+    map['level_code'] = Variable<String>(levelCode);
+    map['attempt'] = Variable<int>(attempt);
+    if (!nullToAbsent || resultDate != null) {
+      map['result_date'] = Variable<String>(resultDate);
+    }
+    if (!nullToAbsent || generalAverage != null) {
+      map['general_average'] = Variable<double>(generalAverage);
+    }
+    if (!nullToAbsent || rank != null) {
+      map['rank'] = Variable<int>(rank);
+    }
+    map['rank_ex_aequo'] = Variable<bool>(rankExAequo);
+    if (!nullToAbsent || classSize != null) {
+      map['class_size'] = Variable<int>(classSize);
+    }
+    if (!nullToAbsent || decision != null) {
+      map['decision'] = Variable<String>(decision);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  AnnualResultsCompanion toCompanion(bool nullToAbsent) {
+    return AnnualResultsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      studentId: Value(studentId),
+      schoolYearId: Value(schoolYearId),
+      classId: classId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(classId),
+      levelCode: Value(levelCode),
+      attempt: Value(attempt),
+      resultDate: resultDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resultDate),
+      generalAverage: generalAverage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(generalAverage),
+      rank: rank == null && nullToAbsent ? const Value.absent() : Value(rank),
+      rankExAequo: Value(rankExAequo),
+      classSize: classSize == null && nullToAbsent
+          ? const Value.absent()
+          : Value(classSize),
+      decision: decision == null && nullToAbsent
+          ? const Value.absent()
+          : Value(decision),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory AnnualResultRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AnnualResultRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      studentId: serializer.fromJson<String>(json['student_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      classId: serializer.fromJson<String?>(json['class_id']),
+      levelCode: serializer.fromJson<String>(json['level_code']),
+      attempt: serializer.fromJson<int>(json['attempt']),
+      resultDate: serializer.fromJson<String?>(json['result_date']),
+      generalAverage: serializer.fromJson<double?>(json['general_average']),
+      rank: serializer.fromJson<int?>(json['rank']),
+      rankExAequo: serializer.fromJson<bool>(json['rank_ex_aequo']),
+      classSize: serializer.fromJson<int?>(json['class_size']),
+      decision: serializer.fromJson<String?>(json['decision']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'student_id': serializer.toJson<String>(studentId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'class_id': serializer.toJson<String?>(classId),
+      'level_code': serializer.toJson<String>(levelCode),
+      'attempt': serializer.toJson<int>(attempt),
+      'result_date': serializer.toJson<String?>(resultDate),
+      'general_average': serializer.toJson<double?>(generalAverage),
+      'rank': serializer.toJson<int?>(rank),
+      'rank_ex_aequo': serializer.toJson<bool>(rankExAequo),
+      'class_size': serializer.toJson<int?>(classSize),
+      'decision': serializer.toJson<String?>(decision),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  AnnualResultRow copyWith({
+    String? id,
+    String? schoolId,
+    String? studentId,
+    String? schoolYearId,
+    Value<String?> classId = const Value.absent(),
+    String? levelCode,
+    int? attempt,
+    Value<String?> resultDate = const Value.absent(),
+    Value<double?> generalAverage = const Value.absent(),
+    Value<int?> rank = const Value.absent(),
+    bool? rankExAequo,
+    Value<int?> classSize = const Value.absent(),
+    Value<String?> decision = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => AnnualResultRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    studentId: studentId ?? this.studentId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    classId: classId.present ? classId.value : this.classId,
+    levelCode: levelCode ?? this.levelCode,
+    attempt: attempt ?? this.attempt,
+    resultDate: resultDate.present ? resultDate.value : this.resultDate,
+    generalAverage: generalAverage.present
+        ? generalAverage.value
+        : this.generalAverage,
+    rank: rank.present ? rank.value : this.rank,
+    rankExAequo: rankExAequo ?? this.rankExAequo,
+    classSize: classSize.present ? classSize.value : this.classSize,
+    decision: decision.present ? decision.value : this.decision,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  AnnualResultRow copyWithCompanion(AnnualResultsCompanion data) {
+    return AnnualResultRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      classId: data.classId.present ? data.classId.value : this.classId,
+      levelCode: data.levelCode.present ? data.levelCode.value : this.levelCode,
+      attempt: data.attempt.present ? data.attempt.value : this.attempt,
+      resultDate: data.resultDate.present
+          ? data.resultDate.value
+          : this.resultDate,
+      generalAverage: data.generalAverage.present
+          ? data.generalAverage.value
+          : this.generalAverage,
+      rank: data.rank.present ? data.rank.value : this.rank,
+      rankExAequo: data.rankExAequo.present
+          ? data.rankExAequo.value
+          : this.rankExAequo,
+      classSize: data.classSize.present ? data.classSize.value : this.classSize,
+      decision: data.decision.present ? data.decision.value : this.decision,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnnualResultRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('classId: $classId, ')
+          ..write('levelCode: $levelCode, ')
+          ..write('attempt: $attempt, ')
+          ..write('resultDate: $resultDate, ')
+          ..write('generalAverage: $generalAverage, ')
+          ..write('rank: $rank, ')
+          ..write('rankExAequo: $rankExAequo, ')
+          ..write('classSize: $classSize, ')
+          ..write('decision: $decision, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    studentId,
+    schoolYearId,
+    classId,
+    levelCode,
+    attempt,
+    resultDate,
+    generalAverage,
+    rank,
+    rankExAequo,
+    classSize,
+    decision,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AnnualResultRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.studentId == this.studentId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.classId == this.classId &&
+          other.levelCode == this.levelCode &&
+          other.attempt == this.attempt &&
+          other.resultDate == this.resultDate &&
+          other.generalAverage == this.generalAverage &&
+          other.rank == this.rank &&
+          other.rankExAequo == this.rankExAequo &&
+          other.classSize == this.classSize &&
+          other.decision == this.decision &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class AnnualResultsCompanion extends UpdateCompanion<AnnualResultRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> studentId;
+  final Value<String> schoolYearId;
+  final Value<String?> classId;
+  final Value<String> levelCode;
+  final Value<int> attempt;
+  final Value<String?> resultDate;
+  final Value<double?> generalAverage;
+  final Value<int?> rank;
+  final Value<bool> rankExAequo;
+  final Value<int?> classSize;
+  final Value<String?> decision;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const AnnualResultsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.classId = const Value.absent(),
+    this.levelCode = const Value.absent(),
+    this.attempt = const Value.absent(),
+    this.resultDate = const Value.absent(),
+    this.generalAverage = const Value.absent(),
+    this.rank = const Value.absent(),
+    this.rankExAequo = const Value.absent(),
+    this.classSize = const Value.absent(),
+    this.decision = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AnnualResultsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String studentId,
+    required String schoolYearId,
+    this.classId = const Value.absent(),
+    required String levelCode,
+    this.attempt = const Value.absent(),
+    this.resultDate = const Value.absent(),
+    this.generalAverage = const Value.absent(),
+    this.rank = const Value.absent(),
+    this.rankExAequo = const Value.absent(),
+    this.classSize = const Value.absent(),
+    this.decision = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       studentId = Value(studentId),
+       schoolYearId = Value(schoolYearId),
+       levelCode = Value(levelCode),
+       updatedAt = Value(updatedAt);
+  static Insertable<AnnualResultRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? studentId,
+    Expression<String>? schoolYearId,
+    Expression<String>? classId,
+    Expression<String>? levelCode,
+    Expression<int>? attempt,
+    Expression<String>? resultDate,
+    Expression<double>? generalAverage,
+    Expression<int>? rank,
+    Expression<bool>? rankExAequo,
+    Expression<int>? classSize,
+    Expression<String>? decision,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (studentId != null) 'student_id': studentId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (classId != null) 'class_id': classId,
+      if (levelCode != null) 'level_code': levelCode,
+      if (attempt != null) 'attempt': attempt,
+      if (resultDate != null) 'result_date': resultDate,
+      if (generalAverage != null) 'general_average': generalAverage,
+      if (rank != null) 'rank': rank,
+      if (rankExAequo != null) 'rank_ex_aequo': rankExAequo,
+      if (classSize != null) 'class_size': classSize,
+      if (decision != null) 'decision': decision,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AnnualResultsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? studentId,
+    Value<String>? schoolYearId,
+    Value<String?>? classId,
+    Value<String>? levelCode,
+    Value<int>? attempt,
+    Value<String?>? resultDate,
+    Value<double?>? generalAverage,
+    Value<int?>? rank,
+    Value<bool>? rankExAequo,
+    Value<int?>? classSize,
+    Value<String?>? decision,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return AnnualResultsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      studentId: studentId ?? this.studentId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      classId: classId ?? this.classId,
+      levelCode: levelCode ?? this.levelCode,
+      attempt: attempt ?? this.attempt,
+      resultDate: resultDate ?? this.resultDate,
+      generalAverage: generalAverage ?? this.generalAverage,
+      rank: rank ?? this.rank,
+      rankExAequo: rankExAequo ?? this.rankExAequo,
+      classSize: classSize ?? this.classSize,
+      decision: decision ?? this.decision,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (classId.present) {
+      map['class_id'] = Variable<String>(classId.value);
+    }
+    if (levelCode.present) {
+      map['level_code'] = Variable<String>(levelCode.value);
+    }
+    if (attempt.present) {
+      map['attempt'] = Variable<int>(attempt.value);
+    }
+    if (resultDate.present) {
+      map['result_date'] = Variable<String>(resultDate.value);
+    }
+    if (generalAverage.present) {
+      map['general_average'] = Variable<double>(generalAverage.value);
+    }
+    if (rank.present) {
+      map['rank'] = Variable<int>(rank.value);
+    }
+    if (rankExAequo.present) {
+      map['rank_ex_aequo'] = Variable<bool>(rankExAequo.value);
+    }
+    if (classSize.present) {
+      map['class_size'] = Variable<int>(classSize.value);
+    }
+    if (decision.present) {
+      map['decision'] = Variable<String>(decision.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnnualResultsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('classId: $classId, ')
+          ..write('levelCode: $levelCode, ')
+          ..write('attempt: $attempt, ')
+          ..write('resultDate: $resultDate, ')
+          ..write('generalAverage: $generalAverage, ')
+          ..write('rank: $rank, ')
+          ..write('rankExAequo: $rankExAequo, ')
+          ..write('classSize: $classSize, ')
+          ..write('decision: $decision, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Outbox extends Table with TableInfo<Outbox, OutboxEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -19810,6 +24031,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Guardians guardians = Guardians(this);
   late final Enrollments enrollments = Enrollments(this);
   late final OfficialForms officialForms = OfficialForms(this);
+  late final Subjects subjects = Subjects(this);
+  late final ClassSubjects classSubjects = ClassSubjects(this);
+  late final Assessments assessments = Assessments(this);
+  late final Grades grades = Grades(this);
+  late final Index gradesAssessment = Index(
+    'grades_assessment',
+    'CREATE INDEX grades_assessment ON grades (assessment_id)',
+  );
+  late final MentionScales mentionScales = MentionScales(this);
+  late final AnnualResults annualResults = AnnualResults(this);
   late final Index enrollmentsClass = Index(
     'enrollments_class',
     'CREATE INDEX enrollments_class ON enrollments (class_id)',
@@ -19852,6 +24083,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     guardians,
     enrollments,
     officialForms,
+    subjects,
+    classSubjects,
+    assessments,
+    grades,
+    gradesAssessment,
+    mentionScales,
+    annualResults,
     enrollmentsClass,
     enrollmentsStudent,
     outbox,
@@ -27759,6 +31997,2024 @@ typedef $OfficialFormsProcessedTableManager =
       OfficialFormRow,
       PrefetchHooks Function()
     >;
+typedef $SubjectsCreateCompanionBuilder = SubjectsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String name,
+  Value<String> cycle,
+  Value<int> sortOrder,
+  Value<double> defaultCoefficient,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $SubjectsUpdateCompanionBuilder = SubjectsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> name,
+  Value<String> cycle,
+  Value<int> sortOrder,
+  Value<double> defaultCoefficient,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $SubjectsFilterComposer extends Composer<_$AppDatabase, Subjects> {
+  $SubjectsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cycle => $composableBuilder(
+    column: $table.cycle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get defaultCoefficient => $composableBuilder(
+    column: $table.defaultCoefficient,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $SubjectsOrderingComposer extends Composer<_$AppDatabase, Subjects> {
+  $SubjectsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cycle => $composableBuilder(
+    column: $table.cycle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get defaultCoefficient => $composableBuilder(
+    column: $table.defaultCoefficient,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $SubjectsAnnotationComposer extends Composer<_$AppDatabase, Subjects> {
+  $SubjectsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get cycle =>
+      $composableBuilder(column: $table.cycle, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<double> get defaultCoefficient => $composableBuilder(
+    column: $table.defaultCoefficient,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $SubjectsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          Subjects,
+          SubjectRow,
+          $SubjectsFilterComposer,
+          $SubjectsOrderingComposer,
+          $SubjectsAnnotationComposer,
+          $SubjectsCreateCompanionBuilder,
+          $SubjectsUpdateCompanionBuilder,
+          (SubjectRow, BaseReferences<_$AppDatabase, Subjects, SubjectRow>),
+          SubjectRow,
+          PrefetchHooks Function()
+        > {
+  $SubjectsTableManager(_$AppDatabase db, Subjects table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $SubjectsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $SubjectsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $SubjectsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> cycle = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<double> defaultCoefficient = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SubjectsCompanion(
+                id: id,
+                schoolId: schoolId,
+                name: name,
+                cycle: cycle,
+                sortOrder: sortOrder,
+                defaultCoefficient: defaultCoefficient,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String name,
+                Value<String> cycle = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<double> defaultCoefficient = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SubjectsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                name: name,
+                cycle: cycle,
+                sortOrder: sortOrder,
+                defaultCoefficient: defaultCoefficient,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<Subjects, SubjectRow>(table),
+                  BaseReferences<_$AppDatabase, Subjects, SubjectRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $SubjectsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      Subjects,
+      SubjectRow,
+      $SubjectsFilterComposer,
+      $SubjectsOrderingComposer,
+      $SubjectsAnnotationComposer,
+      $SubjectsCreateCompanionBuilder,
+      $SubjectsUpdateCompanionBuilder,
+      (SubjectRow, BaseReferences<_$AppDatabase, Subjects, SubjectRow>),
+      SubjectRow,
+      PrefetchHooks Function()
+    >;
+typedef $ClassSubjectsCreateCompanionBuilder = ClassSubjectsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String classId,
+  required String subjectId,
+  Value<double> coefficient,
+  Value<String?> teacherId,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $ClassSubjectsUpdateCompanionBuilder = ClassSubjectsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> classId,
+  Value<String> subjectId,
+  Value<double> coefficient,
+  Value<String?> teacherId,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $ClassSubjectsFilterComposer
+    extends Composer<_$AppDatabase, ClassSubjects> {
+  $ClassSubjectsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get coefficient => $composableBuilder(
+    column: $table.coefficient,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teacherId => $composableBuilder(
+    column: $table.teacherId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $ClassSubjectsOrderingComposer
+    extends Composer<_$AppDatabase, ClassSubjects> {
+  $ClassSubjectsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get coefficient => $composableBuilder(
+    column: $table.coefficient,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teacherId => $composableBuilder(
+    column: $table.teacherId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $ClassSubjectsAnnotationComposer
+    extends Composer<_$AppDatabase, ClassSubjects> {
+  $ClassSubjectsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get classId =>
+      $composableBuilder(column: $table.classId, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<double> get coefficient => $composableBuilder(
+    column: $table.coefficient,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get teacherId =>
+      $composableBuilder(column: $table.teacherId, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $ClassSubjectsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          ClassSubjects,
+          ClassSubjectRow,
+          $ClassSubjectsFilterComposer,
+          $ClassSubjectsOrderingComposer,
+          $ClassSubjectsAnnotationComposer,
+          $ClassSubjectsCreateCompanionBuilder,
+          $ClassSubjectsUpdateCompanionBuilder,
+          (
+            ClassSubjectRow,
+            BaseReferences<_$AppDatabase, ClassSubjects, ClassSubjectRow>,
+          ),
+          ClassSubjectRow,
+          PrefetchHooks Function()
+        > {
+  $ClassSubjectsTableManager(_$AppDatabase db, ClassSubjects table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $ClassSubjectsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $ClassSubjectsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $ClassSubjectsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> classId = const Value.absent(),
+                Value<String> subjectId = const Value.absent(),
+                Value<double> coefficient = const Value.absent(),
+                Value<String?> teacherId = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ClassSubjectsCompanion(
+                id: id,
+                schoolId: schoolId,
+                classId: classId,
+                subjectId: subjectId,
+                coefficient: coefficient,
+                teacherId: teacherId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String classId,
+                required String subjectId,
+                Value<double> coefficient = const Value.absent(),
+                Value<String?> teacherId = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ClassSubjectsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                classId: classId,
+                subjectId: subjectId,
+                coefficient: coefficient,
+                teacherId: teacherId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<ClassSubjects, ClassSubjectRow>(table),
+                  BaseReferences<_$AppDatabase, ClassSubjects, ClassSubjectRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $ClassSubjectsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      ClassSubjects,
+      ClassSubjectRow,
+      $ClassSubjectsFilterComposer,
+      $ClassSubjectsOrderingComposer,
+      $ClassSubjectsAnnotationComposer,
+      $ClassSubjectsCreateCompanionBuilder,
+      $ClassSubjectsUpdateCompanionBuilder,
+      (
+        ClassSubjectRow,
+        BaseReferences<_$AppDatabase, ClassSubjects, ClassSubjectRow>,
+      ),
+      ClassSubjectRow,
+      PrefetchHooks Function()
+    >;
+typedef $AssessmentsCreateCompanionBuilder = AssessmentsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String classId,
+  required String schoolYearId,
+  required String label,
+  Value<String> kind,
+  Value<int> sequence,
+  Value<String?> heldOn,
+  Value<double> maxScore,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $AssessmentsUpdateCompanionBuilder = AssessmentsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> classId,
+  Value<String> schoolYearId,
+  Value<String> label,
+  Value<String> kind,
+  Value<int> sequence,
+  Value<String?> heldOn,
+  Value<double> maxScore,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $AssessmentsFilterComposer extends Composer<_$AppDatabase, Assessments> {
+  $AssessmentsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sequence => $composableBuilder(
+    column: $table.sequence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get heldOn => $composableBuilder(
+    column: $table.heldOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get maxScore => $composableBuilder(
+    column: $table.maxScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $AssessmentsOrderingComposer
+    extends Composer<_$AppDatabase, Assessments> {
+  $AssessmentsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sequence => $composableBuilder(
+    column: $table.sequence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get heldOn => $composableBuilder(
+    column: $table.heldOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get maxScore => $composableBuilder(
+    column: $table.maxScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $AssessmentsAnnotationComposer
+    extends Composer<_$AppDatabase, Assessments> {
+  $AssessmentsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get classId =>
+      $composableBuilder(column: $table.classId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<int> get sequence =>
+      $composableBuilder(column: $table.sequence, builder: (column) => column);
+
+  GeneratedColumn<String> get heldOn =>
+      $composableBuilder(column: $table.heldOn, builder: (column) => column);
+
+  GeneratedColumn<double> get maxScore =>
+      $composableBuilder(column: $table.maxScore, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $AssessmentsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          Assessments,
+          AssessmentRow,
+          $AssessmentsFilterComposer,
+          $AssessmentsOrderingComposer,
+          $AssessmentsAnnotationComposer,
+          $AssessmentsCreateCompanionBuilder,
+          $AssessmentsUpdateCompanionBuilder,
+          (
+            AssessmentRow,
+            BaseReferences<_$AppDatabase, Assessments, AssessmentRow>,
+          ),
+          AssessmentRow,
+          PrefetchHooks Function()
+        > {
+  $AssessmentsTableManager(_$AppDatabase db, Assessments table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $AssessmentsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $AssessmentsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $AssessmentsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> classId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<int> sequence = const Value.absent(),
+                Value<String?> heldOn = const Value.absent(),
+                Value<double> maxScore = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AssessmentsCompanion(
+                id: id,
+                schoolId: schoolId,
+                classId: classId,
+                schoolYearId: schoolYearId,
+                label: label,
+                kind: kind,
+                sequence: sequence,
+                heldOn: heldOn,
+                maxScore: maxScore,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String classId,
+                required String schoolYearId,
+                required String label,
+                Value<String> kind = const Value.absent(),
+                Value<int> sequence = const Value.absent(),
+                Value<String?> heldOn = const Value.absent(),
+                Value<double> maxScore = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AssessmentsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                classId: classId,
+                schoolYearId: schoolYearId,
+                label: label,
+                kind: kind,
+                sequence: sequence,
+                heldOn: heldOn,
+                maxScore: maxScore,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<Assessments, AssessmentRow>(table),
+                  BaseReferences<_$AppDatabase, Assessments, AssessmentRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $AssessmentsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      Assessments,
+      AssessmentRow,
+      $AssessmentsFilterComposer,
+      $AssessmentsOrderingComposer,
+      $AssessmentsAnnotationComposer,
+      $AssessmentsCreateCompanionBuilder,
+      $AssessmentsUpdateCompanionBuilder,
+      (
+        AssessmentRow,
+        BaseReferences<_$AppDatabase, Assessments, AssessmentRow>,
+      ),
+      AssessmentRow,
+      PrefetchHooks Function()
+    >;
+typedef $GradesCreateCompanionBuilder = GradesCompanion Function({
+  required String id,
+  required String schoolId,
+  required String assessmentId,
+  required String studentId,
+  required String subjectId,
+  Value<double?> score,
+  Value<String> status,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $GradesUpdateCompanionBuilder = GradesCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> assessmentId,
+  Value<String> studentId,
+  Value<String> subjectId,
+  Value<double?> score,
+  Value<String> status,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $GradesFilterComposer extends Composer<_$AppDatabase, Grades> {
+  $GradesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get assessmentId => $composableBuilder(
+    column: $table.assessmentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $GradesOrderingComposer extends Composer<_$AppDatabase, Grades> {
+  $GradesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get assessmentId => $composableBuilder(
+    column: $table.assessmentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $GradesAnnotationComposer extends Composer<_$AppDatabase, Grades> {
+  $GradesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get assessmentId => $composableBuilder(
+    column: $table.assessmentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<double> get score =>
+      $composableBuilder(column: $table.score, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $GradesTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          Grades,
+          GradeRow,
+          $GradesFilterComposer,
+          $GradesOrderingComposer,
+          $GradesAnnotationComposer,
+          $GradesCreateCompanionBuilder,
+          $GradesUpdateCompanionBuilder,
+          (GradeRow, BaseReferences<_$AppDatabase, Grades, GradeRow>),
+          GradeRow,
+          PrefetchHooks Function()
+        > {
+  $GradesTableManager(_$AppDatabase db, Grades table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $GradesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $GradesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $GradesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> assessmentId = const Value.absent(),
+                Value<String> studentId = const Value.absent(),
+                Value<String> subjectId = const Value.absent(),
+                Value<double?> score = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GradesCompanion(
+                id: id,
+                schoolId: schoolId,
+                assessmentId: assessmentId,
+                studentId: studentId,
+                subjectId: subjectId,
+                score: score,
+                status: status,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String assessmentId,
+                required String studentId,
+                required String subjectId,
+                Value<double?> score = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GradesCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                assessmentId: assessmentId,
+                studentId: studentId,
+                subjectId: subjectId,
+                score: score,
+                status: status,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<Grades, GradeRow>(table),
+                  BaseReferences<_$AppDatabase, Grades, GradeRow>(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $GradesProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      Grades,
+      GradeRow,
+      $GradesFilterComposer,
+      $GradesOrderingComposer,
+      $GradesAnnotationComposer,
+      $GradesCreateCompanionBuilder,
+      $GradesUpdateCompanionBuilder,
+      (GradeRow, BaseReferences<_$AppDatabase, Grades, GradeRow>),
+      GradeRow,
+      PrefetchHooks Function()
+    >;
+typedef $MentionScalesCreateCompanionBuilder = MentionScalesCompanion Function({
+  required String id,
+  required String schoolId,
+  required double minAverage,
+  required double maxAverage,
+  required String label,
+  Value<int> sortOrder,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $MentionScalesUpdateCompanionBuilder = MentionScalesCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<double> minAverage,
+  Value<double> maxAverage,
+  Value<String> label,
+  Value<int> sortOrder,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $MentionScalesFilterComposer
+    extends Composer<_$AppDatabase, MentionScales> {
+  $MentionScalesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get minAverage => $composableBuilder(
+    column: $table.minAverage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get maxAverage => $composableBuilder(
+    column: $table.maxAverage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $MentionScalesOrderingComposer
+    extends Composer<_$AppDatabase, MentionScales> {
+  $MentionScalesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get minAverage => $composableBuilder(
+    column: $table.minAverage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get maxAverage => $composableBuilder(
+    column: $table.maxAverage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $MentionScalesAnnotationComposer
+    extends Composer<_$AppDatabase, MentionScales> {
+  $MentionScalesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<double> get minAverage => $composableBuilder(
+    column: $table.minAverage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get maxAverage => $composableBuilder(
+    column: $table.maxAverage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $MentionScalesTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          MentionScales,
+          MentionScaleRow,
+          $MentionScalesFilterComposer,
+          $MentionScalesOrderingComposer,
+          $MentionScalesAnnotationComposer,
+          $MentionScalesCreateCompanionBuilder,
+          $MentionScalesUpdateCompanionBuilder,
+          (
+            MentionScaleRow,
+            BaseReferences<_$AppDatabase, MentionScales, MentionScaleRow>,
+          ),
+          MentionScaleRow,
+          PrefetchHooks Function()
+        > {
+  $MentionScalesTableManager(_$AppDatabase db, MentionScales table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $MentionScalesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $MentionScalesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $MentionScalesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<double> minAverage = const Value.absent(),
+                Value<double> maxAverage = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MentionScalesCompanion(
+                id: id,
+                schoolId: schoolId,
+                minAverage: minAverage,
+                maxAverage: maxAverage,
+                label: label,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required double minAverage,
+                required double maxAverage,
+                required String label,
+                Value<int> sortOrder = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MentionScalesCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                minAverage: minAverage,
+                maxAverage: maxAverage,
+                label: label,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<MentionScales, MentionScaleRow>(table),
+                  BaseReferences<_$AppDatabase, MentionScales, MentionScaleRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $MentionScalesProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      MentionScales,
+      MentionScaleRow,
+      $MentionScalesFilterComposer,
+      $MentionScalesOrderingComposer,
+      $MentionScalesAnnotationComposer,
+      $MentionScalesCreateCompanionBuilder,
+      $MentionScalesUpdateCompanionBuilder,
+      (
+        MentionScaleRow,
+        BaseReferences<_$AppDatabase, MentionScales, MentionScaleRow>,
+      ),
+      MentionScaleRow,
+      PrefetchHooks Function()
+    >;
+typedef $AnnualResultsCreateCompanionBuilder = AnnualResultsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String studentId,
+  required String schoolYearId,
+  Value<String?> classId,
+  required String levelCode,
+  Value<int> attempt,
+  Value<String?> resultDate,
+  Value<double?> generalAverage,
+  Value<int?> rank,
+  Value<bool> rankExAequo,
+  Value<int?> classSize,
+  Value<String?> decision,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $AnnualResultsUpdateCompanionBuilder = AnnualResultsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> studentId,
+  Value<String> schoolYearId,
+  Value<String?> classId,
+  Value<String> levelCode,
+  Value<int> attempt,
+  Value<String?> resultDate,
+  Value<double?> generalAverage,
+  Value<int?> rank,
+  Value<bool> rankExAequo,
+  Value<int?> classSize,
+  Value<String?> decision,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $AnnualResultsFilterComposer
+    extends Composer<_$AppDatabase, AnnualResults> {
+  $AnnualResultsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get levelCode => $composableBuilder(
+    column: $table.levelCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attempt => $composableBuilder(
+    column: $table.attempt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resultDate => $composableBuilder(
+    column: $table.resultDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get generalAverage => $composableBuilder(
+    column: $table.generalAverage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rank => $composableBuilder(
+    column: $table.rank,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get rankExAequo => $composableBuilder(
+    column: $table.rankExAequo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get classSize => $composableBuilder(
+    column: $table.classSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get decision => $composableBuilder(
+    column: $table.decision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $AnnualResultsOrderingComposer
+    extends Composer<_$AppDatabase, AnnualResults> {
+  $AnnualResultsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get levelCode => $composableBuilder(
+    column: $table.levelCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attempt => $composableBuilder(
+    column: $table.attempt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resultDate => $composableBuilder(
+    column: $table.resultDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get generalAverage => $composableBuilder(
+    column: $table.generalAverage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rank => $composableBuilder(
+    column: $table.rank,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get rankExAequo => $composableBuilder(
+    column: $table.rankExAequo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get classSize => $composableBuilder(
+    column: $table.classSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get decision => $composableBuilder(
+    column: $table.decision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $AnnualResultsAnnotationComposer
+    extends Composer<_$AppDatabase, AnnualResults> {
+  $AnnualResultsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get classId =>
+      $composableBuilder(column: $table.classId, builder: (column) => column);
+
+  GeneratedColumn<String> get levelCode =>
+      $composableBuilder(column: $table.levelCode, builder: (column) => column);
+
+  GeneratedColumn<int> get attempt =>
+      $composableBuilder(column: $table.attempt, builder: (column) => column);
+
+  GeneratedColumn<String> get resultDate => $composableBuilder(
+    column: $table.resultDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get generalAverage => $composableBuilder(
+    column: $table.generalAverage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get rank =>
+      $composableBuilder(column: $table.rank, builder: (column) => column);
+
+  GeneratedColumn<bool> get rankExAequo => $composableBuilder(
+    column: $table.rankExAequo,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get classSize =>
+      $composableBuilder(column: $table.classSize, builder: (column) => column);
+
+  GeneratedColumn<String> get decision =>
+      $composableBuilder(column: $table.decision, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $AnnualResultsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          AnnualResults,
+          AnnualResultRow,
+          $AnnualResultsFilterComposer,
+          $AnnualResultsOrderingComposer,
+          $AnnualResultsAnnotationComposer,
+          $AnnualResultsCreateCompanionBuilder,
+          $AnnualResultsUpdateCompanionBuilder,
+          (
+            AnnualResultRow,
+            BaseReferences<_$AppDatabase, AnnualResults, AnnualResultRow>,
+          ),
+          AnnualResultRow,
+          PrefetchHooks Function()
+        > {
+  $AnnualResultsTableManager(_$AppDatabase db, AnnualResults table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $AnnualResultsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $AnnualResultsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $AnnualResultsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> studentId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String?> classId = const Value.absent(),
+                Value<String> levelCode = const Value.absent(),
+                Value<int> attempt = const Value.absent(),
+                Value<String?> resultDate = const Value.absent(),
+                Value<double?> generalAverage = const Value.absent(),
+                Value<int?> rank = const Value.absent(),
+                Value<bool> rankExAequo = const Value.absent(),
+                Value<int?> classSize = const Value.absent(),
+                Value<String?> decision = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AnnualResultsCompanion(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                schoolYearId: schoolYearId,
+                classId: classId,
+                levelCode: levelCode,
+                attempt: attempt,
+                resultDate: resultDate,
+                generalAverage: generalAverage,
+                rank: rank,
+                rankExAequo: rankExAequo,
+                classSize: classSize,
+                decision: decision,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String studentId,
+                required String schoolYearId,
+                Value<String?> classId = const Value.absent(),
+                required String levelCode,
+                Value<int> attempt = const Value.absent(),
+                Value<String?> resultDate = const Value.absent(),
+                Value<double?> generalAverage = const Value.absent(),
+                Value<int?> rank = const Value.absent(),
+                Value<bool> rankExAequo = const Value.absent(),
+                Value<int?> classSize = const Value.absent(),
+                Value<String?> decision = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AnnualResultsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                schoolYearId: schoolYearId,
+                classId: classId,
+                levelCode: levelCode,
+                attempt: attempt,
+                resultDate: resultDate,
+                generalAverage: generalAverage,
+                rank: rank,
+                rankExAequo: rankExAequo,
+                classSize: classSize,
+                decision: decision,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<AnnualResults, AnnualResultRow>(table),
+                  BaseReferences<_$AppDatabase, AnnualResults, AnnualResultRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $AnnualResultsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      AnnualResults,
+      AnnualResultRow,
+      $AnnualResultsFilterComposer,
+      $AnnualResultsOrderingComposer,
+      $AnnualResultsAnnotationComposer,
+      $AnnualResultsCreateCompanionBuilder,
+      $AnnualResultsUpdateCompanionBuilder,
+      (
+        AnnualResultRow,
+        BaseReferences<_$AppDatabase, AnnualResults, AnnualResultRow>,
+      ),
+      AnnualResultRow,
+      PrefetchHooks Function()
+    >;
 typedef $OutboxCreateCompanionBuilder = OutboxCompanion Function({
   Value<int> id,
   required String targetTable,
@@ -29382,6 +35638,17 @@ class $AppDatabaseManager {
       $EnrollmentsTableManager(_db, _db.enrollments);
   $OfficialFormsTableManager get officialForms =>
       $OfficialFormsTableManager(_db, _db.officialForms);
+  $SubjectsTableManager get subjects =>
+      $SubjectsTableManager(_db, _db.subjects);
+  $ClassSubjectsTableManager get classSubjects =>
+      $ClassSubjectsTableManager(_db, _db.classSubjects);
+  $AssessmentsTableManager get assessments =>
+      $AssessmentsTableManager(_db, _db.assessments);
+  $GradesTableManager get grades => $GradesTableManager(_db, _db.grades);
+  $MentionScalesTableManager get mentionScales =>
+      $MentionScalesTableManager(_db, _db.mentionScales);
+  $AnnualResultsTableManager get annualResults =>
+      $AnnualResultsTableManager(_db, _db.annualResults);
   $OutboxTableManager get outbox => $OutboxTableManager(_db, _db.outbox);
   $SyncCursorsTableManager get syncCursors =>
       $SyncCursorsTableManager(_db, _db.syncCursors);
