@@ -107,8 +107,13 @@ class AutoSaveField extends StatefulWidget {
   final String? helper;
   final int maxLines;
 
-  /// Bouton à côté du champ (ex. micro de la dictée vocale).
-  final Widget Function(TextEditingController controller)? trailing;
+  /// Bouton à côté du champ (ex. micro de la dictée vocale) : reçoit le
+  /// texte actuel et de quoi le remplacer (enregistré comme une frappe).
+  final Widget Function(
+    String Function() texteActuel,
+    void Function(String texte) inserer,
+  )?
+  trailing;
   final TextInputType? keyboardType;
   final bool enabled;
   final Future<void> Function(String? value) onSave;
@@ -170,7 +175,7 @@ class _AutoSaveFieldState extends State<AutoSaveField> {
               children: [
                 Expanded(child: champ),
                 const SizedBox(width: 8),
-                widget.trailing!(_controller),
+                widget.trailing!(() => _controller.text, inserer),
               ],
             ),
     );

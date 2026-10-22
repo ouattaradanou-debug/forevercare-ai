@@ -280,4 +280,41 @@ void main() {
     );
     await h.dispose(tester);
   });
+
+  testWidgets('dictée : texte reconnu modifiable puis ajouté aux '
+      'observations ; micro absent → message et clavier', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    h.dictee.texte = 'tres bon eleve';
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await tap(tester, find.text('Élèves'));
+    await tap(tester, find.text('TEST Aïcha'));
+    await tap(tester, find.byTooltip('Dicter'));
+    expect(find.textContaining('rien n’est enregistré'), findsOneWidget);
+    await tap(tester, find.text('Continuer'));
+    expect(find.text('tres bon eleve'), findsOneWidget);
+    // Le texte reconnu reste modifiable avant d'être gardé (13.3).
+    await tester.enterText(
+      find.byKey(const Key('texte-dicte')),
+      'Très bonne élève, attentive.',
+    );
+    await tap(tester, find.text('Ajouter au texte'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 900)),
+    );
+    await AppHarness.settle(tester);
+    final eleve = await tester.runAsync(
+      () => (h.db.select(
+        h.db.students,
+      )..where((s) => s.id.equals('e-0'))).getSingle(),
+    );
+    expect(eleve!.observations, 'Très bonne élève, attentive.');
+
+    // Téléphone sans reconnaissance vocale : message clair.
+    h.dictee.micro = false;
+    await tap(tester, find.byTooltip('Dicter'));
+    expect(find.textContaining('Utilisez le clavier'), findsOneWidget);
+    expect(h.dictee.ecoutes, 1);
+    await h.dispose(tester);
+  });
 }

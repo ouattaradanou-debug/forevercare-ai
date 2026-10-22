@@ -1,5 +1,6 @@
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
+import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
@@ -372,7 +373,19 @@ class StudentPage extends ConsumerWidget {
               raceReligion: school?.showRaceReligion ?? false,
             ),
           const SectionTitle('Observations'),
-          texte('Observations', s.observations, 'observations', lignes: 4),
+          if (modifiable)
+            AutoSaveField(
+              key: const Key('observations'),
+              label: 'Observations',
+              initial: s.observations,
+              helper: rappelSanteEleve,
+              maxLines: 4,
+              onSave: (v) => save('observations', v),
+              trailing: (texteActuel, inserer) =>
+                  MicButton(texteActuel: texteActuel, inserer: inserer),
+            )
+          else
+            _Lecture('Observations', s.observations),
           if (modifiable) ...[
             const SizedBox(height: 16),
             if (s.archivedAt == null)

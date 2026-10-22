@@ -7,6 +7,8 @@ import 'package:ecoleplus/app/app.dart';
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/clock.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
+import 'package:ecoleplus/core/dictee/dictee.dart';
+import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
@@ -40,6 +42,9 @@ class AppHarness {
   late final AppDatabase db;
   late final FakeRemote remote;
   late final FakeAuthApi auth;
+
+  /// Dictée simulée (pas de micro dans les tests).
+  final dictee = FakeDictee();
 
   /// PDF « imprimés » ou « partagés » (nom → contenu).
   final Map<String, Uint8List> pdfSortis = {};
@@ -244,6 +249,7 @@ class AppHarness {
             LockService(db, iterations: 50),
           ),
           biometricGateProvider.overrideWithValue(biometrie),
+          dicteeProvider.overrideWithValue(dictee),
           sortiePdfProvider.overrideWithValue(
             SortiePdf(
               imprimer: (pdf, nom) async => pdfSortis[nom] = pdf,
@@ -342,4 +348,27 @@ class AppHarness {
     await db.close();
     await tester.pump(const Duration(seconds: 1));
   }
+}
+
+class FakeDictee implements Dictee {
+  bool micro = true;
+  String texte = '';
+  String? erreur;
+  int ecoutes = 0;
+
+  @override
+  Future<bool> preparer() async => micro;
+
+  @override
+  Future<void> ecouter({
+    required void Function(String texte) surTexte,
+    required void Function(String? erreur) surFin,
+  }) async {
+    ecoutes++;
+    if (texte.isNotEmpty) surTexte(texte);
+    surFin(erreur);
+  }
+
+  @override
+  Future<void> arreter() async {}
 }

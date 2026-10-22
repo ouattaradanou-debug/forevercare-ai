@@ -28,6 +28,7 @@ dependencies:
   pdf: ^3.13.1
   printing: ^5.15.1
   share_plus: ^13.3.1
+  speech_to_text: ^7.5.0
   sqlite3: ^3.7.1
   supabase_flutter: ^2.18.3
   uuid: ^4.6.0
