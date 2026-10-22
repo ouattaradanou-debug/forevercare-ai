@@ -43,6 +43,9 @@ param(
 # pour des erreurs et arrêteraient le script. Chaque commande est vérifiée
 # explicitement (code de retour).
 $ErrorActionPreference = 'Continue'
+# Les réponses de la CLI sont en UTF-8 : sans cette ligne, Windows
+# PowerShell 5.1 les lit avec l'ancienne page de codes (« ├ëcole »).
+try { [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false) } catch { }
 $racine = Split-Path -Parent $PSScriptRoot          # dossier ecoleplus
 Set-Location $racine
 $fichierConfig = Join-Path $racine '.serveur-test.json'

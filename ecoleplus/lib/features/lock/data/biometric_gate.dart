@@ -23,9 +23,7 @@ class LocalAuthGate implements BiometricGate {
   @override
   Future<bool> authentifier() async {
     try {
-      return await _auth.authenticate(
-        localizedReason: 'Ouvrir EcolePlus',
-      );
+      return await _auth.authenticate(localizedReason: 'Ouvrir EcolePlus');
     } on Object {
       return false;
     }

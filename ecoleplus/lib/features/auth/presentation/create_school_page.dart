@@ -140,7 +140,8 @@ class _CreateSchoolState extends ConsumerState<CreateSchoolPage> {
           onChanged: (_) => _saveDraft(),
           decoration: InputDecoration(
             labelText: label,
-            hintText: hint,
+            helperText: hint,
+            helperMaxLines: 2,
             border: const OutlineInputBorder(),
           ),
         ),
@@ -167,7 +168,9 @@ class _CreateSchoolState extends ConsumerState<CreateSchoolPage> {
                 'email',
                 'Votre adresse e-mail *',
                 type: TextInputType.emailAddress,
-                hint: 'Elle sert à récupérer votre mot de passe',
+                hint:
+                    'C’est votre identifiant pour vous connecter (et récupérer '
+                    'votre mot de passe)',
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -187,7 +190,12 @@ class _CreateSchoolState extends ConsumerState<CreateSchoolPage> {
             _field('commune', 'Commune'),
             _field('province', 'Province'),
             _field('region', 'Région'),
-            _field('phone', 'Téléphone de l’école', type: TextInputType.phone),
+            _field(
+              'phone',
+              'Téléphone de l’école',
+              type: TextInputType.phone,
+              hint: 'Pour les fiches de l’école ; ne sert pas à se connecter',
+            ),
             const Text('Type d’école'),
             const SizedBox(height: 8),
             SegmentedButton<String>(

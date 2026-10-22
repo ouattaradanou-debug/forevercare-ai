@@ -29,6 +29,23 @@ void main() {
     await h.dispose(tester);
   });
 
+  testWidgets('numéro inconnu : rappelle que le directeur se connecte avec '
+      'son adresse e-mail', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await tester.tap(find.text('Se connecter'));
+    await AppHarness.settle(tester);
+    await tester.enterText(find.byKey(const Key('login')), '70 56 17 40');
+    await tester.enterText(find.byKey(const Key('password')), '12345678');
+    await tester.tap(find.widgetWithText(FilledButton, 'Se connecter'));
+    await AppHarness.settle(tester);
+    expect(
+      find.textContaining('connectez-vous avec l’adresse e-mail'),
+      findsOneWidget,
+    );
+    await h.dispose(tester);
+  });
+
   testWidgets('première connexion sans Internet : message clair', (
     tester,
   ) async {

@@ -79,7 +79,22 @@ class AuthService {
     if (password.isEmpty) {
       throw const UserMessage('Saisissez votre mot de passe.');
     }
-    final userId = await api.signIn(email, password);
+    final String userId;
+    try {
+      userId = await api.signIn(email, password);
+    } on UserMessage catch (e) {
+      // Erreur fréquente : le directeur tape le téléphone de l'école, alors
+      // que son identifiant est l'adresse e-mail donnée à la création.
+      if (typeIdentifiant(identifiant) == TypeIdentifiant.telephone &&
+          e.message.contains('incorrect')) {
+        throw UserMessage(
+          '${e.message} Directeur : connectez-vous avec l’adresse e-mail '
+          'donnée à la création de l’école (le téléphone de l’école ne sert '
+          'pas d’identifiant).',
+        );
+      }
+      rethrow;
+    }
     return await _openSession(userId, email);
   }
 
