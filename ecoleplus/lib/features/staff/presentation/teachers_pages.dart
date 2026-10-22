@@ -128,6 +128,12 @@ class _TeachersPageState extends ConsumerState<TeachersPage> {
             label: 'Ajouter un enseignant',
             onPressed: () => _ajouter(session.schoolId),
           ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.upload_file),
+            label: const Text('Importer un fichier Excel'),
+            onPressed: () => context.push('/import/enseignants'),
+          ),
           const SizedBox(height: 12),
           TextField(
             key: const Key('recherche'),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
@@ -9,6 +10,7 @@ import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
+import 'package:ecoleplus/features/import/presentation/import_page.dart';
 import 'package:ecoleplus/features/lock/data/biometric_gate.dart';
 import 'package:ecoleplus/features/lock/data/lock_service.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
@@ -37,6 +39,9 @@ class AppHarness {
   late final AppDatabase db;
   late final FakeRemote remote;
   late final FakeAuthApi auth;
+
+  /// Fichier renvoyé par « Choisir le fichier » (import Excel).
+  Uint8List? fichierAImporter;
 
   /// Capteur d'empreinte du téléphone simulé (absent par défaut).
   BiometricGate biometrie = NoBiometricGate();
@@ -235,6 +240,9 @@ class AppHarness {
             LockService(db, iterations: 50),
           ),
           biometricGateProvider.overrideWithValue(biometrie),
+          choisirTableurProvider.overrideWithValue(
+            () async => fichierAImporter,
+          ),
         ],
         child: const EcolePlusApp(),
       ),

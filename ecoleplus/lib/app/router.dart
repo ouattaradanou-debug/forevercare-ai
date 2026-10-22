@@ -6,6 +6,7 @@ import 'package:ecoleplus/features/auth/presentation/welcome_page.dart';
 import 'package:ecoleplus/features/backup/presentation/backup_page.dart';
 import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
 import 'package:ecoleplus/features/home/presentation/home_page.dart';
+import 'package:ecoleplus/features/import/presentation/import_page.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_pages.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
 import 'package:ecoleplus/features/members/presentation/add_member_page.dart';
@@ -131,6 +132,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => ClassPage(s.pathParameters['id']!),
       ),
       GoRoute(path: '/eleves', builder: (_, _) => const StudentsPage()),
+      GoRoute(
+        path: '/import/eleves',
+        builder: (_, _) => const ImportPage(TypeImport.eleves),
+      ),
+      GoRoute(
+        path: '/import/enseignants',
+        builder: (_, _) => const ImportPage(TypeImport.enseignants),
+      ),
       GoRoute(
         path: '/eleves/:id',
         builder: (_, s) => StudentPage(s.pathParameters['id']!),

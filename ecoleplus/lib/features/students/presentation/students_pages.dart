@@ -191,6 +191,12 @@ class _StudentsPageState extends ConsumerState<StudentsPage> {
               label: 'Ajouter un élève',
               onPressed: () => nouvelEleve(context, ref),
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.upload_file),
+              label: const Text('Importer un fichier Excel'),
+              onPressed: () => context.push('/import/eleves'),
+            ),
             const SizedBox(height: 12),
           ],
           TextField(
