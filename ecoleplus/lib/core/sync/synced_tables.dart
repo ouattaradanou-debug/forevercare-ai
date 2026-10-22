@@ -35,7 +35,7 @@ class SyncedTable<D extends DataClass> {
   String encodeKey(Map<String, dynamic> row) => jsonEncode(keyOf(row));
 }
 
-/// Tables synchronisées en phase 1, dans l'ordre des dépendances
+/// Tables synchronisées (phases 1 et 2), dans l'ordre des dépendances
 /// (une école avant ses années, une année avant ses en-têtes…).
 List<SyncedTable> syncedTables(AppDatabase db) => [
   SyncedTable<ModuleCatalogRow>(
@@ -58,6 +58,39 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
     name: 'delegate_permissions',
     info: db.delegatePermissions,
   ),
+  SyncedTable<LevelRow>(
+    name: 'levels',
+    info: db.levels,
+    keyColumns: const ['code'],
+    pushable: false,
+    incremental: false,
+  ),
+  SyncedTable<TeacherRow>(name: 'teachers', info: db.teachers),
+  SyncedTable<TeacherPostingRow>(
+    name: 'teacher_postings',
+    info: db.teacherPostings,
+  ),
+  SyncedTable<TeacherInterruptionRow>(
+    name: 'teacher_interruptions',
+    info: db.teacherInterruptions,
+  ),
+  SyncedTable<TeacherAwardRow>(name: 'teacher_awards', info: db.teacherAwards),
+  SyncedTable<TeacherDiplomaRow>(
+    name: 'teacher_diplomas',
+    info: db.teacherDiplomas,
+  ),
+  SyncedTable<ClassRow>(name: 'classes', info: db.classes),
+  SyncedTable<TeacherAssignmentRow>(
+    name: 'teacher_year_assignments',
+    info: db.teacherYearAssignments,
+  ),
+  SyncedTable<StudentRow>(name: 'students', info: db.students),
+  SyncedTable<StudentRegistryRow>(
+    name: 'student_registry',
+    info: db.studentRegistry,
+  ),
+  SyncedTable<GuardianRow>(name: 'guardians', info: db.guardians),
+  SyncedTable<EnrollmentRow>(name: 'enrollments', info: db.enrollments),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];

@@ -135,6 +135,214 @@ CREATE TABLE audit_log (
   synced_at TEXT
 ) AS AuditRow;
 
+-- ------------------------- Phase 2 : personnel, classes, élèves ----
+
+-- Référentiel des niveaux (lecture seule).
+CREATE TABLE levels (
+  code TEXT NOT NULL PRIMARY KEY,
+  cycle TEXT NOT NULL,
+  label TEXT NOT NULL,
+  sort_order INTEGER NOT NULL
+) AS LevelRow;
+
+-- Fiche enseignant (B1, B3) : directeur et délégué « registres ».
+CREATE TABLE teachers (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  first_names TEXT NOT NULL,
+  sex TEXT,
+  matricule TEXT,
+  phone TEXT,
+  birth_date TEXT,
+  birth_place TEXT,
+  emploi TEXT,
+  categorie TEXT,
+  echelon TEXT,
+  tenure_status TEXT,
+  status TEXT NOT NULL DEFAULT 'actif',
+  commune_nomination_date TEXT,
+  first_teaching_nomination_date TEXT,
+  pupil_school_name TEXT,
+  pupil_school_entry_date TEXT,
+  pupil_school_exit_date TEXT,
+  seniority_general_from TEXT,
+  seniority_emploi_from TEXT,
+  seniority_region_from TEXT,
+  seniority_fonction_from TEXT,
+  commune_cessation_date TEXT,
+  new_post TEXT,
+  observations TEXT,
+  archived_at TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS TeacherRow;
+
+-- B3 col. 8 à 11 : historiques (plusieurs lignes par enseignant).
+CREATE TABLE teacher_postings (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  teacher_id TEXT NOT NULL,
+  commune TEXT NOT NULL,
+  nominated_on TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS TeacherPostingRow;
+
+CREATE TABLE teacher_interruptions (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  teacher_id TEXT NOT NULL,
+  cause TEXT NOT NULL,
+  starts_on TEXT,
+  ends_on TEXT,
+  duration_text TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS TeacherInterruptionRow;
+
+CREATE TABLE teacher_awards (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  teacher_id TEXT NOT NULL,
+  label TEXT NOT NULL,
+  awarded_on TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS TeacherAwardRow;
+
+CREATE TABLE teacher_diplomas (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  teacher_id TEXT NOT NULL,
+  nature TEXT NOT NULL,
+  delivered_on TEXT,
+  is_academic BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS TeacherDiplomaRow;
+
+CREATE TABLE classes (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  level_code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  main_teacher_id TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS ClassRow;
+
+-- B1 « Service/classe tenue » et « Fonction », par année.
+CREATE TABLE teacher_year_assignments (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  teacher_id TEXT NOT NULL,
+  class_id TEXT,
+  service_label TEXT,
+  fonction TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS TeacherAssignmentRow;
+
+-- Fiche élève (lue aussi par l'enseignant de la classe).
+CREATE TABLE students (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  first_names TEXT NOT NULL,
+  sex TEXT,
+  birth_date TEXT,
+  birth_place TEXT,
+  student_code TEXT,
+  registry_number INTEGER,
+  registry_provisional TEXT,
+  domicile TEXT,
+  entry_date TEXT,
+  exit_date TEXT,
+  observations TEXT,
+  photo_path TEXT,
+  photo_updated_at TEXT,
+  archived_at TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS StudentRow;
+
+-- Registre matricule et fiche de scolarité (B2, B4) : jamais l'enseignant.
+CREATE TABLE student_registry (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  origin_school TEXT,
+  destination TEXT,
+  exit_reason TEXT,
+  cep_date TEXT,
+  diplomas TEXT,
+  director_observations TEXT,
+  registry_observations TEXT,
+  race TEXT,
+  religion TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS StudentRegistryRow;
+
+CREATE TABLE guardians (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  relation TEXT NOT NULL,
+  full_name TEXT NOT NULL,
+  profession TEXT,
+  domicile TEXT,
+  address TEXT,
+  phone TEXT,
+  is_lodger BOOLEAN NOT NULL DEFAULT FALSE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS GuardianRow;
+
+CREATE TABLE enrollments (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  class_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  level_code TEXT NOT NULL,
+  starts_on TEXT,
+  ends_on TEXT,
+  end_reason TEXT,
+  is_repeat BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS EnrollmentRow;
+
+CREATE INDEX enrollments_class ON enrollments (class_id);
+CREATE INDEX enrollments_student ON enrollments (student_id);
+
 -- ------------------------- Tables locales ---------------------------
 
 -- File d'envoi : une entrée par ligne modifiée (les modifications successives

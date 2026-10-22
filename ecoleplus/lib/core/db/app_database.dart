@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -67,6 +67,27 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(appLock);
         await m.addColumn(deviceIdentity, deviceIdentity.notice);
         await m.addColumn(localSession, localSession.journalSeenAt);
+      }
+      if (from < 3) {
+        // Phase 2 : personnel, classes, élèves, registres.
+        for (final t in <TableInfo<Table, dynamic>>[
+          levels,
+          teachers,
+          teacherPostings,
+          teacherInterruptions,
+          teacherAwards,
+          teacherDiplomas,
+          classes,
+          teacherYearAssignments,
+          students,
+          studentRegistry,
+          guardians,
+          enrollments,
+        ]) {
+          await m.createTable(t);
+        }
+        await m.createIndex(enrollmentsClass);
+        await m.createIndex(enrollmentsStudent);
       }
     },
   );

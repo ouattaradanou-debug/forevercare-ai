@@ -144,7 +144,8 @@ insert into public.students (id, school_id, last_name, first_names, sex, birth_d
   ('d0000000-0000-4000-8000-000000000012', '10000000-0000-4000-8000-000000000001', 'TEST', 'Moussa',   'M', '2018-11-30', 'Ville Test', '2024-10-01', 'EL-0012', 'Quartier Test');
 
 -- Issa vient d'une autre école (« venant de »)
-update public.students set origin_school = 'École Ancienne Test' where id = 'd0000000-0000-4000-8000-000000000008';
+insert into public.student_registry (id, school_id, origin_school)
+values ('d0000000-0000-4000-8000-000000000008', '10000000-0000-4000-8000-000000000001', 'École Ancienne Test');
 
 insert into public.guardians (school_id, student_id, relation, full_name, profession, domicile, phone, is_lodger)
 select '10000000-0000-4000-8000-000000000001', s.id, 'pere', 'Parent Test de ' || s.first_names,
