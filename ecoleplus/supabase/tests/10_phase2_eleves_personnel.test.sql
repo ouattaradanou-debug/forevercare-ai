@@ -3,7 +3,7 @@
 \set ens1 '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}'
 \set sec  '{"sub":"a0000000-0000-4000-8000-000000000004","role":"authenticated"}'
 begin;
-select plan(20);
+select plan(23);
 
 -- ----------------------- Registres réservés --------------------------
 set local role authenticated;
@@ -82,6 +82,22 @@ select is((select registry_number from public.students where id = 'd0000000-0000
   'reprise du registre papier : le compteur repart après le plus grand numéro');
 select throws_ok($$select app.next_counter('10000000-0000-4000-8000-000000000001', 'registre_matricule')$$,
   '42501', null, 'le compteur ne peut pas être avancé directement');
+
+-- ---------------------- Formulaires officiels -------------------------
+select set_config('request.jwt.claims', :'dir1', true);
+select is((public.sync_push($$[{"change_id": 20, "table": "official_forms", "row": {
+  "id": "f1000000-0000-4000-8000-000000000001", "school_id": "10000000-0000-4000-8000-000000000001",
+  "school_year_id": "20000000-0000-4000-8000-000000002025", "form_code": "B1",
+  "reference_date": "2025-12-31", "signed_place": "Ville Test",
+  "updated_at": "2026-10-01T08:00:00Z"}}]$$::jsonb)) -> 0 ->> 'status', 'ok',
+  'directeur : paramètres de la fiche B1 enregistrés');
+select set_config('request.jwt.claims', :'ens1', true);
+select is((select count(*)::int from public.official_forms), 0, 'enseignant : aucun accès aux formulaires');
+select is((public.sync_push($$[{"change_id": 21, "table": "official_forms", "row": {
+  "id": "f1000000-0000-4000-8000-000000000002", "school_id": "10000000-0000-4000-8000-000000000001",
+  "school_year_id": "20000000-0000-4000-8000-000000002025", "form_code": "B3",
+  "updated_at": "2026-10-01T08:00:00Z"}}]$$::jsonb)) -> 0 ->> 'status', 'rejete',
+  'enseignant : création d''un formulaire refusée');
 
 select * from finish();
 rollback;

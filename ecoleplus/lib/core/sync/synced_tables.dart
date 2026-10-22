@@ -91,6 +91,7 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
   ),
   SyncedTable<GuardianRow>(name: 'guardians', info: db.guardians),
   SyncedTable<EnrollmentRow>(name: 'enrollments', info: db.enrollments),
+  SyncedTable<OfficialFormRow>(name: 'official_forms', info: db.officialForms),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];

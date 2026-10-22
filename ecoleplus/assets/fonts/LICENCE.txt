@@ -1,0 +1,3 @@
+Police Roboto (Google) — Apache License, Version 2.0
+https://www.apache.org/licenses/LICENSE-2.0
+Utilisée dans les PDF officiels (lettres accentuées, apostrophe typographique).

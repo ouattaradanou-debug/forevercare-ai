@@ -15863,6 +15863,952 @@ class EnrollmentsCompanion extends UpdateCompanion<EnrollmentRow> {
   }
 }
 
+class OfficialForms extends Table
+    with TableInfo<OfficialForms, OfficialFormRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  OfficialForms(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _formCodeMeta = const VerificationMeta(
+    'formCode',
+  );
+  late final GeneratedColumn<String> formCode = GeneratedColumn<String>(
+    'form_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'a_completer\'',
+    defaultValue: const CustomExpression('\'a_completer\''),
+  );
+  static const VerificationMeta _referenceDateMeta = const VerificationMeta(
+    'referenceDate',
+  );
+  late final GeneratedColumn<String> referenceDate = GeneratedColumn<String>(
+    'reference_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _registerPeriodFromMeta =
+      const VerificationMeta('registerPeriodFrom');
+  late final GeneratedColumn<String> registerPeriodFrom =
+      GeneratedColumn<String>(
+        'register_period_from',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
+  static const VerificationMeta _registerPeriodToMeta = const VerificationMeta(
+    'registerPeriodTo',
+  );
+  late final GeneratedColumn<String> registerPeriodTo = GeneratedColumn<String>(
+    'register_period_to',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _signedPlaceMeta = const VerificationMeta(
+    'signedPlace',
+  );
+  late final GeneratedColumn<String> signedPlace = GeneratedColumn<String>(
+    'signed_place',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _signedOnMeta = const VerificationMeta(
+    'signedOn',
+  );
+  late final GeneratedColumn<String> signedOn = GeneratedColumn<String>(
+    'signed_on',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _directorNameMeta = const VerificationMeta(
+    'directorName',
+  );
+  late final GeneratedColumn<String> directorName = GeneratedColumn<String>(
+    'director_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    schoolYearId,
+    formCode,
+    studentId,
+    status,
+    referenceDate,
+    registerPeriodFrom,
+    registerPeriodTo,
+    signedPlace,
+    signedOn,
+    directorName,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'official_forms';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OfficialFormRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('form_code')) {
+      context.handle(
+        _formCodeMeta,
+        formCode.isAcceptableOrUnknown(data['form_code']!, _formCodeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_formCodeMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('reference_date')) {
+      context.handle(
+        _referenceDateMeta,
+        referenceDate.isAcceptableOrUnknown(
+          data['reference_date']!,
+          _referenceDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('register_period_from')) {
+      context.handle(
+        _registerPeriodFromMeta,
+        registerPeriodFrom.isAcceptableOrUnknown(
+          data['register_period_from']!,
+          _registerPeriodFromMeta,
+        ),
+      );
+    }
+    if (data.containsKey('register_period_to')) {
+      context.handle(
+        _registerPeriodToMeta,
+        registerPeriodTo.isAcceptableOrUnknown(
+          data['register_period_to']!,
+          _registerPeriodToMeta,
+        ),
+      );
+    }
+    if (data.containsKey('signed_place')) {
+      context.handle(
+        _signedPlaceMeta,
+        signedPlace.isAcceptableOrUnknown(
+          data['signed_place']!,
+          _signedPlaceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('signed_on')) {
+      context.handle(
+        _signedOnMeta,
+        signedOn.isAcceptableOrUnknown(data['signed_on']!, _signedOnMeta),
+      );
+    }
+    if (data.containsKey('director_name')) {
+      context.handle(
+        _directorNameMeta,
+        directorName.isAcceptableOrUnknown(
+          data['director_name']!,
+          _directorNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OfficialFormRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OfficialFormRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      formCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}form_code'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      referenceDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_date'],
+      ),
+      registerPeriodFrom: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_period_from'],
+      ),
+      registerPeriodTo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_period_to'],
+      ),
+      signedPlace: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}signed_place'],
+      ),
+      signedOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}signed_on'],
+      ),
+      directorName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}director_name'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  OfficialForms createAlias(String alias) {
+    return OfficialForms(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
+  final String id;
+  final String schoolId;
+  final String schoolYearId;
+  final String formCode;
+  final String? studentId;
+  final String status;
+  final String? referenceDate;
+  final String? registerPeriodFrom;
+  final String? registerPeriodTo;
+  final String? signedPlace;
+  final String? signedOn;
+  final String? directorName;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const OfficialFormRow({
+    required this.id,
+    required this.schoolId,
+    required this.schoolYearId,
+    required this.formCode,
+    this.studentId,
+    required this.status,
+    this.referenceDate,
+    this.registerPeriodFrom,
+    this.registerPeriodTo,
+    this.signedPlace,
+    this.signedOn,
+    this.directorName,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    map['form_code'] = Variable<String>(formCode);
+    if (!nullToAbsent || studentId != null) {
+      map['student_id'] = Variable<String>(studentId);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || referenceDate != null) {
+      map['reference_date'] = Variable<String>(referenceDate);
+    }
+    if (!nullToAbsent || registerPeriodFrom != null) {
+      map['register_period_from'] = Variable<String>(registerPeriodFrom);
+    }
+    if (!nullToAbsent || registerPeriodTo != null) {
+      map['register_period_to'] = Variable<String>(registerPeriodTo);
+    }
+    if (!nullToAbsent || signedPlace != null) {
+      map['signed_place'] = Variable<String>(signedPlace);
+    }
+    if (!nullToAbsent || signedOn != null) {
+      map['signed_on'] = Variable<String>(signedOn);
+    }
+    if (!nullToAbsent || directorName != null) {
+      map['director_name'] = Variable<String>(directorName);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  OfficialFormsCompanion toCompanion(bool nullToAbsent) {
+    return OfficialFormsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      schoolYearId: Value(schoolYearId),
+      formCode: Value(formCode),
+      studentId: studentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(studentId),
+      status: Value(status),
+      referenceDate: referenceDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceDate),
+      registerPeriodFrom: registerPeriodFrom == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registerPeriodFrom),
+      registerPeriodTo: registerPeriodTo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registerPeriodTo),
+      signedPlace: signedPlace == null && nullToAbsent
+          ? const Value.absent()
+          : Value(signedPlace),
+      signedOn: signedOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(signedOn),
+      directorName: directorName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(directorName),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory OfficialFormRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OfficialFormRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      formCode: serializer.fromJson<String>(json['form_code']),
+      studentId: serializer.fromJson<String?>(json['student_id']),
+      status: serializer.fromJson<String>(json['status']),
+      referenceDate: serializer.fromJson<String?>(json['reference_date']),
+      registerPeriodFrom: serializer.fromJson<String?>(
+        json['register_period_from'],
+      ),
+      registerPeriodTo: serializer.fromJson<String?>(
+        json['register_period_to'],
+      ),
+      signedPlace: serializer.fromJson<String?>(json['signed_place']),
+      signedOn: serializer.fromJson<String?>(json['signed_on']),
+      directorName: serializer.fromJson<String?>(json['director_name']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'form_code': serializer.toJson<String>(formCode),
+      'student_id': serializer.toJson<String?>(studentId),
+      'status': serializer.toJson<String>(status),
+      'reference_date': serializer.toJson<String?>(referenceDate),
+      'register_period_from': serializer.toJson<String?>(registerPeriodFrom),
+      'register_period_to': serializer.toJson<String?>(registerPeriodTo),
+      'signed_place': serializer.toJson<String?>(signedPlace),
+      'signed_on': serializer.toJson<String?>(signedOn),
+      'director_name': serializer.toJson<String?>(directorName),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  OfficialFormRow copyWith({
+    String? id,
+    String? schoolId,
+    String? schoolYearId,
+    String? formCode,
+    Value<String?> studentId = const Value.absent(),
+    String? status,
+    Value<String?> referenceDate = const Value.absent(),
+    Value<String?> registerPeriodFrom = const Value.absent(),
+    Value<String?> registerPeriodTo = const Value.absent(),
+    Value<String?> signedPlace = const Value.absent(),
+    Value<String?> signedOn = const Value.absent(),
+    Value<String?> directorName = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => OfficialFormRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    formCode: formCode ?? this.formCode,
+    studentId: studentId.present ? studentId.value : this.studentId,
+    status: status ?? this.status,
+    referenceDate: referenceDate.present
+        ? referenceDate.value
+        : this.referenceDate,
+    registerPeriodFrom: registerPeriodFrom.present
+        ? registerPeriodFrom.value
+        : this.registerPeriodFrom,
+    registerPeriodTo: registerPeriodTo.present
+        ? registerPeriodTo.value
+        : this.registerPeriodTo,
+    signedPlace: signedPlace.present ? signedPlace.value : this.signedPlace,
+    signedOn: signedOn.present ? signedOn.value : this.signedOn,
+    directorName: directorName.present ? directorName.value : this.directorName,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  OfficialFormRow copyWithCompanion(OfficialFormsCompanion data) {
+    return OfficialFormRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      formCode: data.formCode.present ? data.formCode.value : this.formCode,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      status: data.status.present ? data.status.value : this.status,
+      referenceDate: data.referenceDate.present
+          ? data.referenceDate.value
+          : this.referenceDate,
+      registerPeriodFrom: data.registerPeriodFrom.present
+          ? data.registerPeriodFrom.value
+          : this.registerPeriodFrom,
+      registerPeriodTo: data.registerPeriodTo.present
+          ? data.registerPeriodTo.value
+          : this.registerPeriodTo,
+      signedPlace: data.signedPlace.present
+          ? data.signedPlace.value
+          : this.signedPlace,
+      signedOn: data.signedOn.present ? data.signedOn.value : this.signedOn,
+      directorName: data.directorName.present
+          ? data.directorName.value
+          : this.directorName,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OfficialFormRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('formCode: $formCode, ')
+          ..write('studentId: $studentId, ')
+          ..write('status: $status, ')
+          ..write('referenceDate: $referenceDate, ')
+          ..write('registerPeriodFrom: $registerPeriodFrom, ')
+          ..write('registerPeriodTo: $registerPeriodTo, ')
+          ..write('signedPlace: $signedPlace, ')
+          ..write('signedOn: $signedOn, ')
+          ..write('directorName: $directorName, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    schoolYearId,
+    formCode,
+    studentId,
+    status,
+    referenceDate,
+    registerPeriodFrom,
+    registerPeriodTo,
+    signedPlace,
+    signedOn,
+    directorName,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OfficialFormRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.formCode == this.formCode &&
+          other.studentId == this.studentId &&
+          other.status == this.status &&
+          other.referenceDate == this.referenceDate &&
+          other.registerPeriodFrom == this.registerPeriodFrom &&
+          other.registerPeriodTo == this.registerPeriodTo &&
+          other.signedPlace == this.signedPlace &&
+          other.signedOn == this.signedOn &&
+          other.directorName == this.directorName &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> schoolYearId;
+  final Value<String> formCode;
+  final Value<String?> studentId;
+  final Value<String> status;
+  final Value<String?> referenceDate;
+  final Value<String?> registerPeriodFrom;
+  final Value<String?> registerPeriodTo;
+  final Value<String?> signedPlace;
+  final Value<String?> signedOn;
+  final Value<String?> directorName;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const OfficialFormsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.formCode = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.referenceDate = const Value.absent(),
+    this.registerPeriodFrom = const Value.absent(),
+    this.registerPeriodTo = const Value.absent(),
+    this.signedPlace = const Value.absent(),
+    this.signedOn = const Value.absent(),
+    this.directorName = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OfficialFormsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String schoolYearId,
+    required String formCode,
+    this.studentId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.referenceDate = const Value.absent(),
+    this.registerPeriodFrom = const Value.absent(),
+    this.registerPeriodTo = const Value.absent(),
+    this.signedPlace = const Value.absent(),
+    this.signedOn = const Value.absent(),
+    this.directorName = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       schoolYearId = Value(schoolYearId),
+       formCode = Value(formCode),
+       updatedAt = Value(updatedAt);
+  static Insertable<OfficialFormRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? schoolYearId,
+    Expression<String>? formCode,
+    Expression<String>? studentId,
+    Expression<String>? status,
+    Expression<String>? referenceDate,
+    Expression<String>? registerPeriodFrom,
+    Expression<String>? registerPeriodTo,
+    Expression<String>? signedPlace,
+    Expression<String>? signedOn,
+    Expression<String>? directorName,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (formCode != null) 'form_code': formCode,
+      if (studentId != null) 'student_id': studentId,
+      if (status != null) 'status': status,
+      if (referenceDate != null) 'reference_date': referenceDate,
+      if (registerPeriodFrom != null)
+        'register_period_from': registerPeriodFrom,
+      if (registerPeriodTo != null) 'register_period_to': registerPeriodTo,
+      if (signedPlace != null) 'signed_place': signedPlace,
+      if (signedOn != null) 'signed_on': signedOn,
+      if (directorName != null) 'director_name': directorName,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OfficialFormsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? schoolYearId,
+    Value<String>? formCode,
+    Value<String?>? studentId,
+    Value<String>? status,
+    Value<String?>? referenceDate,
+    Value<String?>? registerPeriodFrom,
+    Value<String?>? registerPeriodTo,
+    Value<String?>? signedPlace,
+    Value<String?>? signedOn,
+    Value<String?>? directorName,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return OfficialFormsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      formCode: formCode ?? this.formCode,
+      studentId: studentId ?? this.studentId,
+      status: status ?? this.status,
+      referenceDate: referenceDate ?? this.referenceDate,
+      registerPeriodFrom: registerPeriodFrom ?? this.registerPeriodFrom,
+      registerPeriodTo: registerPeriodTo ?? this.registerPeriodTo,
+      signedPlace: signedPlace ?? this.signedPlace,
+      signedOn: signedOn ?? this.signedOn,
+      directorName: directorName ?? this.directorName,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (formCode.present) {
+      map['form_code'] = Variable<String>(formCode.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (referenceDate.present) {
+      map['reference_date'] = Variable<String>(referenceDate.value);
+    }
+    if (registerPeriodFrom.present) {
+      map['register_period_from'] = Variable<String>(registerPeriodFrom.value);
+    }
+    if (registerPeriodTo.present) {
+      map['register_period_to'] = Variable<String>(registerPeriodTo.value);
+    }
+    if (signedPlace.present) {
+      map['signed_place'] = Variable<String>(signedPlace.value);
+    }
+    if (signedOn.present) {
+      map['signed_on'] = Variable<String>(signedOn.value);
+    }
+    if (directorName.present) {
+      map['director_name'] = Variable<String>(directorName.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OfficialFormsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('formCode: $formCode, ')
+          ..write('studentId: $studentId, ')
+          ..write('status: $status, ')
+          ..write('referenceDate: $referenceDate, ')
+          ..write('registerPeriodFrom: $registerPeriodFrom, ')
+          ..write('registerPeriodTo: $registerPeriodTo, ')
+          ..write('signedPlace: $signedPlace, ')
+          ..write('signedOn: $signedOn, ')
+          ..write('directorName: $directorName, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Outbox extends Table with TableInfo<Outbox, OutboxEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -18863,6 +19809,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final StudentRegistry studentRegistry = StudentRegistry(this);
   late final Guardians guardians = Guardians(this);
   late final Enrollments enrollments = Enrollments(this);
+  late final OfficialForms officialForms = OfficialForms(this);
   late final Index enrollmentsClass = Index(
     'enrollments_class',
     'CREATE INDEX enrollments_class ON enrollments (class_id)',
@@ -18904,6 +19851,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     studentRegistry,
     guardians,
     enrollments,
+    officialForms,
     enrollmentsClass,
     enrollmentsStudent,
     outbox,
@@ -26383,6 +27331,434 @@ typedef $EnrollmentsProcessedTableManager =
       EnrollmentRow,
       PrefetchHooks Function()
     >;
+typedef $OfficialFormsCreateCompanionBuilder = OfficialFormsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String schoolYearId,
+  required String formCode,
+  Value<String?> studentId,
+  Value<String> status,
+  Value<String?> referenceDate,
+  Value<String?> registerPeriodFrom,
+  Value<String?> registerPeriodTo,
+  Value<String?> signedPlace,
+  Value<String?> signedOn,
+  Value<String?> directorName,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $OfficialFormsUpdateCompanionBuilder = OfficialFormsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> schoolYearId,
+  Value<String> formCode,
+  Value<String?> studentId,
+  Value<String> status,
+  Value<String?> referenceDate,
+  Value<String?> registerPeriodFrom,
+  Value<String?> registerPeriodTo,
+  Value<String?> signedPlace,
+  Value<String?> signedOn,
+  Value<String?> directorName,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $OfficialFormsFilterComposer
+    extends Composer<_$AppDatabase, OfficialForms> {
+  $OfficialFormsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get formCode => $composableBuilder(
+    column: $table.formCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceDate => $composableBuilder(
+    column: $table.referenceDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get registerPeriodFrom => $composableBuilder(
+    column: $table.registerPeriodFrom,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get registerPeriodTo => $composableBuilder(
+    column: $table.registerPeriodTo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get signedPlace => $composableBuilder(
+    column: $table.signedPlace,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get signedOn => $composableBuilder(
+    column: $table.signedOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get directorName => $composableBuilder(
+    column: $table.directorName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $OfficialFormsOrderingComposer
+    extends Composer<_$AppDatabase, OfficialForms> {
+  $OfficialFormsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get formCode => $composableBuilder(
+    column: $table.formCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceDate => $composableBuilder(
+    column: $table.referenceDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get registerPeriodFrom => $composableBuilder(
+    column: $table.registerPeriodFrom,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get registerPeriodTo => $composableBuilder(
+    column: $table.registerPeriodTo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get signedPlace => $composableBuilder(
+    column: $table.signedPlace,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get signedOn => $composableBuilder(
+    column: $table.signedOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get directorName => $composableBuilder(
+    column: $table.directorName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $OfficialFormsAnnotationComposer
+    extends Composer<_$AppDatabase, OfficialForms> {
+  $OfficialFormsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get formCode =>
+      $composableBuilder(column: $table.formCode, builder: (column) => column);
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get referenceDate => $composableBuilder(
+    column: $table.referenceDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get registerPeriodFrom => $composableBuilder(
+    column: $table.registerPeriodFrom,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get registerPeriodTo => $composableBuilder(
+    column: $table.registerPeriodTo,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get signedPlace => $composableBuilder(
+    column: $table.signedPlace,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get signedOn =>
+      $composableBuilder(column: $table.signedOn, builder: (column) => column);
+
+  GeneratedColumn<String> get directorName => $composableBuilder(
+    column: $table.directorName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $OfficialFormsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          OfficialForms,
+          OfficialFormRow,
+          $OfficialFormsFilterComposer,
+          $OfficialFormsOrderingComposer,
+          $OfficialFormsAnnotationComposer,
+          $OfficialFormsCreateCompanionBuilder,
+          $OfficialFormsUpdateCompanionBuilder,
+          (
+            OfficialFormRow,
+            BaseReferences<_$AppDatabase, OfficialForms, OfficialFormRow>,
+          ),
+          OfficialFormRow,
+          PrefetchHooks Function()
+        > {
+  $OfficialFormsTableManager(_$AppDatabase db, OfficialForms table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $OfficialFormsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $OfficialFormsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $OfficialFormsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String> formCode = const Value.absent(),
+                Value<String?> studentId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> referenceDate = const Value.absent(),
+                Value<String?> registerPeriodFrom = const Value.absent(),
+                Value<String?> registerPeriodTo = const Value.absent(),
+                Value<String?> signedPlace = const Value.absent(),
+                Value<String?> signedOn = const Value.absent(),
+                Value<String?> directorName = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OfficialFormsCompanion(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                formCode: formCode,
+                studentId: studentId,
+                status: status,
+                referenceDate: referenceDate,
+                registerPeriodFrom: registerPeriodFrom,
+                registerPeriodTo: registerPeriodTo,
+                signedPlace: signedPlace,
+                signedOn: signedOn,
+                directorName: directorName,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String schoolYearId,
+                required String formCode,
+                Value<String?> studentId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> referenceDate = const Value.absent(),
+                Value<String?> registerPeriodFrom = const Value.absent(),
+                Value<String?> registerPeriodTo = const Value.absent(),
+                Value<String?> signedPlace = const Value.absent(),
+                Value<String?> signedOn = const Value.absent(),
+                Value<String?> directorName = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OfficialFormsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                formCode: formCode,
+                studentId: studentId,
+                status: status,
+                referenceDate: referenceDate,
+                registerPeriodFrom: registerPeriodFrom,
+                registerPeriodTo: registerPeriodTo,
+                signedPlace: signedPlace,
+                signedOn: signedOn,
+                directorName: directorName,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<OfficialForms, OfficialFormRow>(table),
+                  BaseReferences<_$AppDatabase, OfficialForms, OfficialFormRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $OfficialFormsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      OfficialForms,
+      OfficialFormRow,
+      $OfficialFormsFilterComposer,
+      $OfficialFormsOrderingComposer,
+      $OfficialFormsAnnotationComposer,
+      $OfficialFormsCreateCompanionBuilder,
+      $OfficialFormsUpdateCompanionBuilder,
+      (
+        OfficialFormRow,
+        BaseReferences<_$AppDatabase, OfficialForms, OfficialFormRow>,
+      ),
+      OfficialFormRow,
+      PrefetchHooks Function()
+    >;
 typedef $OutboxCreateCompanionBuilder = OutboxCompanion Function({
   Value<int> id,
   required String targetTable,
@@ -28004,6 +29380,8 @@ class $AppDatabaseManager {
       $GuardiansTableManager(_db, _db.guardians);
   $EnrollmentsTableManager get enrollments =>
       $EnrollmentsTableManager(_db, _db.enrollments);
+  $OfficialFormsTableManager get officialForms =>
+      $OfficialFormsTableManager(_db, _db.officialForms);
   $OutboxTableManager get outbox => $OutboxTableManager(_db, _db.outbox);
   $SyncCursorsTableManager get syncCursors =>
       $SyncCursorsTableManager(_db, _db.syncCursors);

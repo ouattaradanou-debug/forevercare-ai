@@ -10,6 +10,7 @@ import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
+import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
 import 'package:ecoleplus/features/import/presentation/import_page.dart';
 import 'package:ecoleplus/features/lock/data/biometric_gate.dart';
 import 'package:ecoleplus/features/lock/data/lock_service.dart';
@@ -39,6 +40,9 @@ class AppHarness {
   late final AppDatabase db;
   late final FakeRemote remote;
   late final FakeAuthApi auth;
+
+  /// PDF « imprimés » ou « partagés » (nom → contenu).
+  final Map<String, Uint8List> pdfSortis = {};
 
   /// Fichier renvoyé par « Choisir le fichier » (import Excel).
   Uint8List? fichierAImporter;
@@ -240,6 +244,12 @@ class AppHarness {
             LockService(db, iterations: 50),
           ),
           biometricGateProvider.overrideWithValue(biometrie),
+          sortiePdfProvider.overrideWithValue(
+            SortiePdf(
+              imprimer: (pdf, nom) async => pdfSortis[nom] = pdf,
+              partager: (pdf, nom) async => pdfSortis['partage:$nom'] = pdf,
+            ),
+          ),
           choisirTableurProvider.overrideWithValue(
             () async => fichierAImporter,
           ),

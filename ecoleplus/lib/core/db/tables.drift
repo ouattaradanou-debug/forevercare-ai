@@ -340,6 +340,26 @@ CREATE TABLE enrollments (
   synced_at TEXT
 ) AS EnrollmentRow;
 
+-- Formulaires officiels : paramètres d'impression et état (17.3).
+CREATE TABLE official_forms (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  form_code TEXT NOT NULL,
+  student_id TEXT,
+  status TEXT NOT NULL DEFAULT 'a_completer',
+  reference_date TEXT,
+  register_period_from TEXT,
+  register_period_to TEXT,
+  signed_place TEXT,
+  signed_on TEXT,
+  director_name TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS OfficialFormRow;
+
 CREATE INDEX enrollments_class ON enrollments (class_id);
 CREATE INDEX enrollments_student ON enrollments (student_id);
 

@@ -25,6 +25,8 @@ dependencies:
   local_auth: ^3.0.2
   path: ^1.9.1
   path_provider: ^2.1.6
+  pdf: ^3.13.1
+  printing: ^5.15.1
   share_plus: ^13.3.1
   sqlite3: ^3.7.1
   supabase_flutter: ^2.18.3
@@ -40,6 +42,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    # Police des PDF officiels (accents, « ’ ») ; licence Apache 2.0.
+    - assets/fonts/Roboto-Regular.ttf
+    - assets/fonts/Roboto-Bold.ttf
+    - assets/fonts/Roboto-Italic.ttf
 
 # Base du téléphone chiffrée (A10) : SQLite3MultipleCiphers à la place de
 # SQLite (même API ; pas d'OpenSSL, contrairement à SQLCipher).

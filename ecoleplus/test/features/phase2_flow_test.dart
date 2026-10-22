@@ -245,4 +245,39 @@ void main() {
     expect(find.textContaining('Rien à importer'), findsOneWidget);
     await h.dispose(tester);
   });
+
+  testWidgets('registres : ce qui manque, réglages, impression du registre '
+      'matricule (B2) et état « Imprimé »', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await tap(tester, find.text('Registres et formulaires'));
+    expect(find.text('Registre matricule des élèves'), findsOneWidget);
+    await tap(tester, find.text('Registre matricule des élèves'));
+    expect(find.text('• 4 élève(s) sans date de naissance'), findsOneWidget);
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Fait à'),
+      'Ville Test',
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 900)),
+    );
+    await AppHarness.settle(tester);
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Aperçu et impression'));
+      await Future<void>.delayed(const Duration(seconds: 2));
+    });
+    await AppHarness.settle(tester);
+    final pdf = h.pdfSortis['B2_2025-2026.pdf'];
+    expect(pdf, isNotNull);
+    expect(String.fromCharCodes(pdf!.take(5)), '%PDF-');
+    final f = await tester.runAsync(
+      () => h.db.select(h.db.officialForms).getSingle(),
+    );
+    expect(
+      (f!.formCode, f.status, f.signedPlace),
+      ('B2', 'imprime', 'Ville Test'),
+    );
+    await h.dispose(tester);
+  });
 }
