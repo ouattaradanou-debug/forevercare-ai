@@ -25,6 +25,8 @@
 | A10 | ⚠️ Ajout proposé (phase 1) | Chiffrement de la base locale du téléphone (SQLCipher) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite (phase 2) | 2 |
 | A11 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | Le directeur peut **aussi se connecter avec son numéro de téléphone** (son e-mail reste valable) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite | 1 |
 | A12 | ⚠️ Ajout proposé (phase 2) | **Modèle Excel à télécharger** depuis l'écran d'import (colonnes déjà titrées, une ligne d'exemple) — fiche ci-dessous | En attente — recommandation : maintenant (phase 2) | 2 |
+| A13 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Micro sur tous les champs de saisie** (et pas seulement les observations), pour le directeur et l'enseignant — fiche ci-dessous | En attente de validation — recommandation : maintenant | 2 |
+| A14 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Dates saisies en chiffres « jj/mm/aaaa »** au lieu du calendrier — fiche ci-dessous | En attente de validation — recommandation : maintenant | 2 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -116,4 +118,19 @@
 * **Impact** : aucune table ; écriture d'un .xlsx minimal (même technique que la lecture) ; partage par `share_plus` (déjà présent) ; hors ligne : oui.
 * **Effort** : S. **Risques** : aucun sur les données.
 * **Recommandation** : maintenant (phase 2), si vous le souhaitez ; sinon la liste des colonnes affichée à l'écran et les fichiers d'exemple suffisent pour le test.
+
+## Fiche d'impact A13 — Micro sur tous les champs de saisie
+* **Description** : le bouton micro (déjà présent sur « Observations ») est ajouté à **tous les champs de texte** des fiches : élève, parents, enseignant, historiques, classe, école, en-têtes, formulaires, recherche. Même fonctionnement : le texte reconnu s'affiche, reste modifiable, puis remplace ou complète le champ ; aucun son conservé ; clavier toujours disponible.
+* **Champs particuliers** : *nombres et numéros* (téléphone, matricule, identifiant) : les chiffres dictés (« soixante-dix, cinquante-six… ») sont convertis en chiffres ; *dates* : une date dictée (« vingt-deux octobre deux mille onze ») est convertie en 22/10/2011 ; *noms propres* : la reconnaissance se trompe souvent sur les noms burkinabè (ex. « Savadogo », « Ouédraogo ») — on corrige au clavier dans la petite fenêtre avant de valider.
+* **Valeur** : saisie plus rapide pour qui écrit peu sur téléphone. **Profils** : directeur, délégués, enseignant (sur les champs qu'il a le droit de modifier).
+* **Impact** : aucune table ; un réglage du champ de saisie commun ; conversion des nombres et dates dictés en français (code testé) ; permission micro déjà demandée ; hors ligne : selon le pack de langue française du téléphone.
+* **Effort** : S à M. **Risques** : qualité de reconnaissance variable (bruit, accents) → texte toujours vérifié avant validation ; écran un peu plus chargé (une petite icône par champ).
+* **Recommandation** : maintenant.
+
+## Fiche d'impact A14 — Dates en chiffres « jj/mm/aaaa »
+* **Description** : toutes les dates (naissance, entrée, sortie, nominations, anciennetés, « Fait le »…) se tapent au **clavier numérique**, les barres « / » se placent toutes seules (`22102011` → `22/10/2011`). Le calendrier n'est plus ouvert d'office (un petit bouton calendrier reste disponible). Date impossible (31/02, 2099…) refusée avec un message clair.
+* **Valeur** : bien plus rapide pour une date de naissance ancienne (le calendrier oblige à remonter les années). **Profils** : tous.
+* **Impact** : aucune table (stockage inchangé) ; un seul composant de date à modifier ; tests de saisie.
+* **Effort** : S. **Risques** : aucun sur les données.
+* **Recommandation** : maintenant.
 
