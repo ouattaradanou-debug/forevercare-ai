@@ -15,16 +15,16 @@
 | P6 | Annexe C | Finances, Cartes, Bibliothèque IA activables par école | Reportée (V2) | — |
 | P7 | Annexe C | Transfert sécurisé du dossier d'un élève muté | Reportée (V2) — recommandation initiale : V3 | — |
 | A1 | ⚠️ Ajout proposé (phase 0) | Vérification de la carte scolaire par scan du QR code (12.4) — ne remplace pas la création des cartes | Reportée (V2), décision du 21/10/2026 | — |
-| A2 | ➕ Ajout demandé (21/10/2026) | Carte créée automatiquement depuis la fiche élève et sa photo ; photo **prise par la caméra OU importée** (galerie, fichier, photo scannée, photo d'identité papier photographiée puis recadrée) — fiche ci-dessous | En attente de validation (rapport phase 1) — recommandation : maintenant | 8 |
+| A2 | ➕ Ajout demandé (21/10/2026) | Carte créée automatiquement depuis la fiche élève et sa photo ; photo **prise par la caméra OU importée** (galerie, fichier, photo scannée, photo d'identité papier photographiée puis recadrée) — fiche ci-dessous | **Acceptée** (22/10/2026) — à construire | 8 |
 | A3 | ⚠️ Ajout proposé (phase 1) | Récupération du mot de passe par SMS — fiche ci-dessous | Remplacée par A5 (décision du 21/10/2026) | — |
 | A5 | ➕ Ajout demandé (21/10/2026) | Mot de passe oublié par **question secrète** — fiche ci-dessous | **Acceptée** avec protections (21/10/2026) — construite | 1 |
 | A6 | ➕ Ajout demandé (21/10/2026) | Toutes les données de l'école enregistrées et **récupérables en cas de perte ou de changement de téléphone** (directeur et enseignant) — fiche ci-dessous | **Acceptée** : images sur nouveau téléphone, déconnexion d'un téléphone perdu, alerte (rendue **conditionnelle** à la demande du porteur), sauvegarde du serveur — construite | 1 |
 | A7 | ➕ Ajout demandé (21/10/2026) | **Tester sur un vrai téléphone après chaque phase** (APK installable) — fiche ci-dessous | **Acceptée** : Supabase gratuit + GitHub — construite ; reste à saisir les secrets (porteur) | 1, puis chaque phase |
-| A8 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Verrouillage par code PIN ou empreinte** à l'ouverture — fiche ci-dessous | Construite — à confirmer dans le rapport | 1 |
-| A9 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Journal d'activité** : connexions et actions, qui a fait quoi — fiche ci-dessous | Construite — à confirmer dans le rapport | 1 |
-| A10 | ⚠️ Ajout proposé (phase 1) | Chiffrement de la base locale du téléphone (SQLCipher) — fiche ci-dessous | En attente — recommandation : avant la phase 2 | 2 |
+| A8 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Verrouillage par code PIN ou empreinte** à l'ouverture — fiche ci-dessous | **Confirmée** (22/10/2026) — construite ; au choix code OU empreinte | 1 |
+| A9 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Journal d'activité** : connexions et actions, qui a fait quoi — fiche ci-dessous | **Confirmée** (22/10/2026) — construite | 1 |
+| A10 | ⚠️ Ajout proposé (phase 1) | Chiffrement de la base locale du téléphone (SQLCipher) — fiche ci-dessous | **Acceptée** (22/10/2026) — début de la phase 2 | 2 |
 | A11 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | Le directeur peut **aussi se connecter avec son numéro de téléphone** (son e-mail reste valable) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite | 1 |
-| A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | En attente — recommandation : maintenant (début de phase 2) ; la sauvegarde du **serveur**, elle, est déjà chiffrée | 2 |
+| A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
 * **Description** : depuis la fiche élève, deux boutons : « Prendre une photo » (caméra) et « Importer une photo » (galerie du téléphone ou fichier : photo envoyée par un parent, photo scannée, photo d'identité papier photographiée). Dans les deux cas, le même cadre de recadrage du visage, puis la même compression. La carte est ensuite générée automatiquement à partir de la fiche élève (nom, prénom, classe, année, identifiant, école) et de cette photo — ce qui était déjà prévu en 12.2-12.3 ; l'ajout porte sur l'import.
