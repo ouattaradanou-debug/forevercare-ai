@@ -113,7 +113,7 @@ une composition et choisissez une matière.
 
 ## Tests automatiques (pour information)
 ```
-flutter test                        # application (122 tests)
+flutter test                        # application (121 tests)
 supabase test db                    # base de données, droits (211 vérifications)
 SUPABASE_URL=… SUPABASE_ANON_KEY=… flutter test test/integration   # 14 tests
 ```
