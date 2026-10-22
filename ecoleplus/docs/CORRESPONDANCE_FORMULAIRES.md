@@ -3,6 +3,8 @@
 Légende : `table.colonne` ; **calculé** = obtenu à l'impression à partir des champs cités ; **fixe** = texte imprimé du modèle (à reprendre mot pour mot depuis le scan) ; **à confirmer** = libellé ou interprétation à valider avec le directeur.
 Pour tous les formulaires : « Fait à … » → `official_forms.signed_place` ; « le … » → `official_forms.signed_on` ; nom du directeur → `official_forms.director_name` (prérempli depuis `schools.director_name`) ; signature → `schools.director_signature_path` ; cachet → `schools.stamp_path` ; année scolaire → `school_years.label` ; versions imprimées → `form_versions` ; état → `official_forms.status`.
 
+**Phase 2** : les champs propres aux registres et à la fiche de scolarité (C.E.P., venant de, allant à, motif, diplômes, observations, race, religion) sont dans `student_registry` (même identifiant que l'élève), table que l'enseignant ne peut jamais lire.
+
 **Contrôle : 0 colonne sans champ** (le script de vérification est le tableau lui-même ; chaque ligne cite une colonne existante du schéma).
 
 ## B1 — Fiche de renseignement du personnel par école (A4 paysage)
@@ -45,9 +47,9 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | 4 Noms et prénoms des parents ou tuteurs | `guardians.full_name` (relations `pere`, `mere`, `tuteur`, ordre `sort_order`) |
 | 5 Profession et domicile des parents ou tuteurs | `guardians.profession` + `guardians.domicile` |
 | 6 Date de l'entrée à l'école | `students.entry_date` |
-| 7 Date de l'obtention du C.E.P. | `students.cep_date` |
+| 7 Date de l'obtention du C.E.P. | `student_registry.cep_date` |
 | 8 Date de sortie définitive de l'école | `students.exit_date` |
-| 9 Observations | `students.registry_observations` (+ rappel imprimé du modèle : **fixe**, libellé exact à reprendre du scan) ; école d'origine préremplie depuis `students.origin_school` |
+| 9 Observations | `student_registry.registry_observations` (+ rappel imprimé du modèle : **fixe**, libellé exact à reprendre du scan) ; école d'origine préremplie depuis `student_registry.origin_school` |
 
 ## B3 — Registre du personnel enseignant (A4 paysage, double page)
 
@@ -82,19 +84,19 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | Fils ou fille de / Profession | `guardians` (`relation = 'pere'`) `.full_name` / `.profession` |
 | et de / Profession | `guardians` (`relation = 'mere'`) `.full_name` / `.profession` |
 | Domicilié à | `students.domicile` |
-| Race (facultatif, masqué par défaut) | `students.race` (imprimé seulement si `schools.show_race_religion`) |
-| Religion (facultatif, masqué par défaut) | `students.religion` (idem) |
+| Race (facultatif, masqué par défaut) | `student_registry.race` (imprimé seulement si `schools.show_race_religion`) |
+| Religion (facultatif, masqué par défaut) | `student_registry.religion` (idem) |
 | N° Mle | `students.registry_number` (équivalence avec B2 **à confirmer**) |
 | École | `admin_headers.school_label` (défaut `schools.name`) |
 | Nom et adresse du logeur (Père ou Tuteur) | `guardians` (`is_lodger = true`) `.full_name` + `.address` |
-| Entré le / Venant de | `students.entry_date` / `students.origin_school` |
-| Sorti le / allant à / Motif du départ | `students.exit_date` / `students.destination` / `students.exit_reason` |
+| Entré le / Venant de | `students.entry_date` / `student_registry.origin_school` |
+| Sorti le / allant à / Motif du départ | `students.exit_date` / `student_registry.destination` / `student_registry.exit_reason` |
 | Cours suivis : colonnes C.P.1 … C.M.2 (2 sous-colonnes = redoublement, **à confirmer**) | `annual_results.level_code` + `annual_results.attempt` |
 | ligne Date | `annual_results.result_date` |
 | ligne Moyenne générale | `annual_results.general_average` |
 | ligne Classement (1) | **calculé** : `annual_results.rank` + « e/ » + `annual_results.class_size` (ex. « 7e/39 » ; mention ex-aequo selon `rank_ex_aequo`, à confirmer) |
-| Diplômes obtenus et date d'obtention | `students.diplomas` (+ `students.cep_date`) |
-| Observations du Directeur | `students.director_observations` |
+| Diplômes obtenus et date d'obtention | `student_registry.diplomas` (+ `student_registry.cep_date`) |
+| Observations du Directeur | `student_registry.director_observations` |
 | Signature du Directeur | `schools.director_signature_path` / `official_forms.director_name` |
 | Blocs de suite : N° Mle / École / Logeur | `scolarity_followups.registry_number` / `.school_name` / `.lodger_name_address` |
 | Entré le / Venant de | `scolarity_followups.entered_on` / `.came_from` |

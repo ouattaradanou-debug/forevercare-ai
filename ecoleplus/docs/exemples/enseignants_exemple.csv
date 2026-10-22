@@ -1,0 +1,4 @@
+﻿Matricule;Nom;Prénoms;Sexe;Date de naissance;Lieu de naissance;Emploi;Catégorie;Échelon;T/S;Classe tenue;Fonction;Téléphone
+MAT-EX-001;EXEMPLE;Awa;F;14/03/1985;Ville Test;Instituteur certifié (exemple);B;3;T;CE1 A;Adjoint;
+MAT-EX-002;ESSAI;Ousmane;H;02/11/1990;Village Test;Instituteur adjoint (exemple);C;1;S;;Adjoint;
+MAT-EX-001;DOUBLON;Matricule;F;01/01/1980;;;;;T;;;

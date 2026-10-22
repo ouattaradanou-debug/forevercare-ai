@@ -22,13 +22,13 @@ Comptes de test (mot de passe `motdepasse-test`) : `directeur@ecole-test.local`,
 4. Désactivez le mode avion. ✅ En quelques secondes : « Tout est synchronisé ».
 
 ## 3. Années scolaires et en-têtes
-1. « Années scolaires » → « Préparer l'année 2026-2027 ». ✅ Message : en-têtes recopiés.
+1. « Mon école » → « Années scolaires » (en bas de l'écran) → « Préparer l'année 2026-2027 ». ✅ Message : en-têtes recopiés.
 2. Touchez 2026-2027, changez la région. Revenez, touchez 2025-2026. ✅ La région de 2025-2026 n'a pas changé (chaque année garde ses en-têtes).
 3. « Passer à l'année 2026-2027 » → confirmez. ✅ 2026-2027 « Année en cours », 2025-2026 « Archivée — consultable » : on peut encore l'ouvrir.
 4. Dans les en-têtes, « Choisir une image » → une image PNG ou JPEG. ✅ L'image s'affiche.
 
 ## 4. Options de l'école
-1. « Options de l'école » → activez la cantine, puis désactivez-la. ✅ Avant de désactiver, la liste de ce qui sera masqué et « Vos données sont conservées ».
+1. « Mon école » → « Options de l'école » → activez la cantine, puis désactivez-la. ✅ Avant de désactiver, la liste de ce qui sera masqué et « Vos données sont conservées ».
 2. Essayez de décocher « Primaire ». ✅ Refus expliqué : au moins un niveau.
 3. Activez le dossier médico-scolaire. ✅ Avertissement « Données de santé » avant l'activation (vous pouvez annuler).
 
@@ -47,7 +47,7 @@ Comptes de test (mot de passe `motdepasse-test`) : `directeur@ecole-test.local`,
 3. Avec un numéro de téléphone : ✅ message « demandez à votre directeur ».
 
 ## 8. Sauvegarde
-1. Directeur → « Sauvegarde » → « Créer une sauvegarde ». ✅ Le téléphone propose d'envoyer le fichier `ecoleplus-sauvegarde-AAAA-MM-JJ_HHhMM.sqlite`.
+1. Directeur → « Mon école » → « Sauvegarde » → « Créer une sauvegarde ». ✅ Le téléphone propose d'envoyer le fichier `ecoleplus-sauvegarde-AAAA-MM-JJ_HHhMM.sqlite`.
 
 ## 9. Création d'une nouvelle école
 1. Se déconnecter → « Créer mon école ». Remplissez le début du formulaire, quittez l'écran puis revenez. ✅ Ce que vous aviez tapé est toujours là (sauf le mot de passe).
