@@ -24,6 +24,7 @@
 | A9 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Journal d'activité** : connexions et actions, qui a fait quoi — fiche ci-dessous | **Confirmée** (22/10/2026) — construite | 1 |
 | A10 | ⚠️ Ajout proposé (phase 1) | Chiffrement de la base locale du téléphone (SQLCipher) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite (phase 2) | 2 |
 | A11 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | Le directeur peut **aussi se connecter avec son numéro de téléphone** (son e-mail reste valable) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite | 1 |
+| A12 | ⚠️ Ajout proposé (phase 2) | **Modèle Excel à télécharger** depuis l'écran d'import (colonnes déjà titrées, une ligne d'exemple) — fiche ci-dessous | En attente — recommandation : maintenant (phase 2) | 2 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -108,3 +109,11 @@
 * **Alternative écartée** : remplacer l'e-mail du directeur par son numéro → on perdrait la récupération du mot de passe par e-mail.
 * **Recommandation** : **maintenant** (dans la phase 1, avant le rapport), car c'est le premier obstacle rencontré au test sur téléphone.
 * **Décision** : acceptée le 22/10/2026, construite : migration `20261022000100_a11_connexion_telephone.sql`, fonction `connexion-telephone`, champ à la création de l'école, « Mon compte » → « Mon numéro pour me connecter ». Tests : 17 pgTAP, 2 Flutter, 1 intégration.
+
+## Fiche d'impact A12 — Modèle Excel à télécharger
+* **Description** : sur l'écran « Importer un fichier Excel », un bouton « Recevoir un modèle à remplir » crée un fichier .xlsx avec les titres de colonnes reconnus (et la liste des classes de l'année pour les élèves), à partager par WhatsApp ou e-mail vers un ordinateur.
+* **Valeur** : évite les erreurs de titres de colonnes ; le secrétariat remplit le modèle sur ordinateur. **Profils** : directeur, délégués « élèves » ou « registres ».
+* **Impact** : aucune table ; écriture d'un .xlsx minimal (même technique que la lecture) ; partage par `share_plus` (déjà présent) ; hors ligne : oui.
+* **Effort** : S. **Risques** : aucun sur les données.
+* **Recommandation** : maintenant (phase 2), si vous le souhaitez ; sinon la liste des colonnes affichée à l'écran et les fichiers d'exemple suffisent pour le test.
+

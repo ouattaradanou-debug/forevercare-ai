@@ -226,3 +226,12 @@ Appels uniquement depuis une Edge Function (fournisseur et modèle par variables
 * Sauvegarde du téléphone (`VACUUM INTO`) : la copie est déchiffrée pour rester lisible sur un autre téléphone ; sa protection par un code est l'évolution A4 (V2).
 * `android:allowBackup="false"` : pas de copie automatique des données dans le cloud de Google.
 
+## Phase 2 — élèves, classes, enseignants, registres
+* **Registre séparé de la fiche élève** : la RLS de Postgres agit par ligne, pas par colonne. L'enseignant doit lire la fiche des élèves de sa classe, mais jamais le registre matricule ni la fiche de scolarité (17.7). Les champs propres à B2/B4 (C.E.P., venant de, allant à, motif, diplômes, observations, race, religion) sont donc dans `student_registry` (même identifiant que l'élève), lisible avec le droit « registres » ou « formulaires » uniquement.
+* **Numéro d'ordre (B2)** : attribué par le serveur (`app.assign_registry_number`, fonction privilégiée ; le compteur n'est pas accessible autrement) ; hors ligne, numéro provisoire `P-<série>-<n>` ; un renvoi sans numéro ne l'efface pas ; un numéro attribué ne peut plus changer ; jamais réutilisé (archivage = suppression logique) ; reprise d'un registre papier : un numéro saisi fait avancer le compteur.
+* **Historiques B3** (communes, interruptions, récompenses, titres) : une ligne par élément, même droits que la fiche.
+* **Import** (`lib/core/import`) : lecteur .xlsx minimal (zip + XML, paquets `archive` et `xml`, les paquets « Excel » publiés datant de 2024 et entrant en conflit de versions) et .csv (« ; » ou « , », guillemets, BOM, Windows-1252). Colonnes reconnues par leurs intitulés usuels ; lignes vides ignorées ; doublons écartés (fichier et école) ; erreurs expliquées par numéro de ligne ; enregistrement en une transaction locale puis synchronisation.
+* **Formulaires** : `official_forms` (un par année et par formulaire, identifiant déterministe UUID v5 pour que deux téléphones hors ligne ne créent pas deux lignes) ; données préparées dans l'ordre exact des colonnes de l'ANNEXE B (`lignesB1/B2/B3`, testées) ; PDF `pdf` + `printing`, police Roboto embarquée (accents, « ’ ») ; B3 en double page avec hauteur de ligne commune aux deux pages.
+* **Dictée** : `speech_to_text` (reconnaissance native, `fr_FR`) derrière l'interface `Dictee` (remplaçable, testée avec une dictée simulée) ; permission `RECORD_AUDIO` demandée seulement sur action explicite, après explication.
+* **Accueil** : 8 boutons au plus ; selon le profil et les droits délégués (« élèves », « registres »).
+
