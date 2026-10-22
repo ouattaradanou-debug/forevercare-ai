@@ -66,14 +66,20 @@ void main() {
     await h.login(tester, 'directeur@ecole-test.local');
     expect(find.text('Bonjour Directeur Test'), findsOneWidget);
     for (final b in [
+      'Élèves',
+      'Classes',
+      'Enseignants',
+      'Registres et formulaires',
       'Mon école',
-      'Années scolaires',
       'Personnes et droits',
-      'Options de l’école',
-      'Sauvegarde',
+      'Sécurité',
     ]) {
       expect(find.text(b), findsOneWidget);
     }
+    // Années, options et sauvegarde sont dans « Mon école » (8 boutons au
+    // plus sur l'accueil).
+    await AppHarness.ouvrirDansMonEcole(tester, 'Sauvegarde');
+    expect(find.text('Sauvegarde'), findsWidgets);
     expect(find.text('Tout est synchronisé'), findsOneWidget);
     await h.dispose(tester);
   });
@@ -123,8 +129,7 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tester.tap(find.text('Options de l’école'));
-    await AppHarness.settle(tester);
+    await AppHarness.ouvrirDansMonEcole(tester, 'Options de l’école');
 
     await tester.tap(find.byKey(const Key('module-cantine')));
     await AppHarness.settle(tester);
@@ -168,8 +173,7 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tester.tap(find.text('Années scolaires'));
-    await AppHarness.settle(tester);
+    await AppHarness.ouvrirDansMonEcole(tester, 'Années scolaires');
     await tester.tap(find.text('Préparer l’année 2026-2027'));
     await AppHarness.settle(tester);
     await tester.tap(find.text('Passer à l’année 2026-2027'));

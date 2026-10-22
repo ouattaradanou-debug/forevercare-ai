@@ -1,4 +1,5 @@
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:flutter/material.dart';
@@ -89,6 +90,24 @@ class SchoolPage extends ConsumerWidget {
                 repo.updateSchool(school.id, {'school_type': s.first}),
           ),
           const SizedBox(height: 24),
+          BigButton(
+            icon: Icons.calendar_month,
+            label: 'Années scolaires',
+            onPressed: () => context.push('/annees'),
+          ),
+          const SizedBox(height: 12),
+          BigButton(
+            icon: Icons.tune,
+            label: 'Options de l’école',
+            onPressed: () => context.push('/options'),
+          ),
+          const SizedBox(height: 12),
+          BigButton(
+            icon: Icons.save_alt,
+            label: 'Sauvegarde',
+            onPressed: () => context.push('/sauvegarde'),
+          ),
+          const SizedBox(height: 12),
           if (school.currentSchoolYearId != null)
             OutlinedButton.icon(
               icon: const Icon(Icons.article_outlined),

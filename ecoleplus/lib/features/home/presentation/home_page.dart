@@ -6,6 +6,7 @@ import 'package:ecoleplus/features/options/domain/module_rules.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/security/domain/journal.dart';
 import 'package:ecoleplus/features/security/presentation/security_providers.dart';
+import 'package:ecoleplus/features/staff/presentation/staff_providers.dart';
 import 'package:ecoleplus/features/sync/domain/sync_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,16 +35,11 @@ class HomePage extends ConsumerWidget {
           const _Alertes(),
           const SizedBox(height: 8),
           if (isDirector) ...[
+            ..._boutonsEcole(context, tousLesDroits, enseignant: false),
             BigButton(
               icon: Icons.account_balance,
               label: 'Mon école',
               onPressed: () => context.push('/ecole'),
-            ),
-            const SizedBox(height: 12),
-            BigButton(
-              icon: Icons.calendar_month,
-              label: 'Années scolaires',
-              onPressed: () => context.push('/annees'),
             ),
             const SizedBox(height: 12),
             BigButton(
@@ -53,23 +49,16 @@ class HomePage extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             BigButton(
-              icon: Icons.tune,
-              label: 'Options de l’école',
-              onPressed: () => context.push('/options'),
-            ),
-            const SizedBox(height: 12),
-            BigButton(
               icon: Icons.shield_outlined,
               label: 'Sécurité',
               onPressed: () => context.push('/securite'),
             ),
-            const SizedBox(height: 12),
-            BigButton(
-              icon: Icons.save_alt,
-              label: 'Sauvegarde',
-              onPressed: () => context.push('/sauvegarde'),
-            ),
           ] else ...[
+            ..._boutonsEcole(
+              context,
+              ref.watch(mesDroitsProvider),
+              enseignant: session.role == 'enseignant',
+            ),
             BigButton(
               icon: Icons.person,
               label: 'Mon compte',
@@ -140,14 +129,46 @@ class _NonDirectorHome extends ConsumerWidget {
               const SizedBox(height: 8),
             ],
             const Text(
-              'Les fonctions de votre classe et de vos droits arriveront '
-              'dans les prochaines versions de l’application.',
+              'Les autres fonctions (notes, bulletins…) arriveront dans les '
+              'prochaines versions de l’application.',
             ),
           ],
         ),
       ),
     );
   }
+}
+
+/// Boutons des élèves, classes, enseignants et registres selon les droits.
+List<Widget> _boutonsEcole(
+  BuildContext context,
+  Set<String> droits, {
+  required bool enseignant,
+}) {
+  final eleves = droits.contains('eleves') || droits.contains('registres');
+  final registres = droits.contains('registres');
+  Widget bouton(IconData icon, String label, String route) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: BigButton(
+      icon: icon,
+      label: label,
+      onPressed: () => context.push(route),
+    ),
+  );
+  return [
+    if (enseignant) ...[
+      bouton(Icons.school, 'Mes élèves', '/eleves'),
+      bouton(Icons.class_, 'Ma classe', '/classes'),
+    ],
+    if (eleves) ...[
+      bouton(Icons.school, 'Élèves', '/eleves'),
+      bouton(Icons.class_, 'Classes', '/classes'),
+    ],
+    if (registres) ...[
+      bouton(Icons.badge, 'Enseignants', '/enseignants'),
+      bouton(Icons.menu_book, 'Registres et formulaires', '/registres'),
+    ],
+  ];
 }
 
 String _libelles(Set<String> droits) =>

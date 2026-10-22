@@ -14,6 +14,7 @@ class FakeServer {
   DateTime now = DateTime.utc(2026, 10, 21, 8);
   int _tick = 0;
   int pushCalls = 0;
+  int registryCounter = 0;
 
   /// Renvoie un code d'erreur SQL pour refuser un changement, sinon null.
   String? Function(String table, Map<String, dynamic> row)? rejectWith;
@@ -21,6 +22,7 @@ class FakeServer {
   static List<String> keyColumns(String table) => switch (table) {
     'school_modules' => const ['school_id', 'module_key'],
     'modules_catalog' => const ['key'],
+    'levels' => const ['code'],
     _ => const ['id'],
   };
 
@@ -51,6 +53,10 @@ class FakeServer {
       final old = t[k];
       if (old == null) {
         t[k] = {...c.row, 'synced_at': _stamp()};
+        // Numéro d'ordre du registre matricule attribué par le serveur.
+        if (c.table == 'students' && t[k]!['registry_number'] == null) {
+          t[k]!['registry_number'] = ++registryCounter;
+        }
         out.add(PushResult(changeId: c.changeId, status: 'ok', row: t[k]));
       } else if (DateTime.parse(old['updated_at'] as String)
           .isAfter(DateTime.parse(c.row['updated_at'] as String))) {
@@ -63,7 +69,13 @@ class FakeServer {
           ),
         );
       } else {
-        t[k] = {...old, ...c.row, 'synced_at': _stamp()};
+        t[k] = {
+          ...old,
+          ...c.row,
+          'registry_number':
+              ?(c.row['registry_number'] ?? old['registry_number']),
+          'synced_at': _stamp(),
+        };
         conflicts.add({'winner': t[k], 'loser': old});
         out.add(PushResult(changeId: c.changeId, status: 'ok', row: t[k]));
       }

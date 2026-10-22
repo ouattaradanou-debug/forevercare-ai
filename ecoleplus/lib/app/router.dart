@@ -4,6 +4,7 @@ import 'package:ecoleplus/features/auth/presentation/forgot_password_page.dart';
 import 'package:ecoleplus/features/auth/presentation/login_page.dart';
 import 'package:ecoleplus/features/auth/presentation/welcome_page.dart';
 import 'package:ecoleplus/features/backup/presentation/backup_page.dart';
+import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
 import 'package:ecoleplus/features/home/presentation/home_page.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_pages.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
@@ -15,6 +16,8 @@ import 'package:ecoleplus/features/school/presentation/school_page.dart';
 import 'package:ecoleplus/features/school/presentation/years_page.dart';
 import 'package:ecoleplus/features/security/presentation/account_pages.dart';
 import 'package:ecoleplus/features/security/presentation/security_pages.dart';
+import 'package:ecoleplus/features/staff/presentation/teachers_pages.dart';
+import 'package:ecoleplus/features/students/presentation/students_pages.dart';
 import 'package:ecoleplus/features/sync/presentation/sync_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -121,6 +124,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const LoginPhonePage(),
       ),
       GoRoute(path: '/securite', builder: (_, _) => const SecurityPage()),
+      GoRoute(path: '/enseignants', builder: (_, _) => const TeachersPage()),
+      GoRoute(path: '/classes', builder: (_, _) => const ClassesPage()),
+      GoRoute(
+        path: '/classes/:id',
+        builder: (_, s) => ClassPage(s.pathParameters['id']!),
+      ),
+      GoRoute(path: '/eleves', builder: (_, _) => const StudentsPage()),
+      GoRoute(
+        path: '/eleves/:id',
+        builder: (_, s) => StudentPage(s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/enseignants/:id',
+        builder: (_, s) => TeacherPage(s.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/securite/telephones',
         builder: (_, _) => const DevicesPage(),

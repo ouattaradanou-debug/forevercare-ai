@@ -7,6 +7,7 @@ import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/clock.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/sync/sync_remote.dart';
+import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/lock/data/biometric_gate.dart';
 import 'package:ecoleplus/features/lock/data/lock_service.dart';
@@ -115,6 +116,88 @@ class AppHarness {
         'active': true,
         'updated_at': ts,
       });
+    // Phase 2 : niveaux, un enseignant, deux classes, quatre élèves.
+    const niveaux = [
+      'PS',
+      'MS',
+      'GS',
+      'CP1',
+      'CP2',
+      'CE1',
+      'CE2',
+      'CM1',
+      'CM2',
+    ];
+    for (final (i, n) in niveaux.indexed) {
+      server.seed('levels', {
+        'code': n,
+        'cycle': i < 3 ? 'maternelle' : 'primaire',
+        'label': switch (n) {
+          'PS' => 'Petite section',
+          'MS' => 'Moyenne section',
+          'GS' => 'Grande section',
+          _ => n,
+        },
+        'sort_order': i + 1,
+      });
+    }
+    server
+      ..seed('teachers', {
+        'id': 't-un',
+        'school_id': ecoleId,
+        'last_name': 'ENSEIGNANT',
+        'first_names': 'Un',
+        'sex': 'F',
+        'status': 'actif',
+        'seniority_general_from': '2008-10-01',
+        'updated_at': ts,
+      })
+      ..seed('classes', {
+        'id': 'c-cm1',
+        'school_id': ecoleId,
+        'school_year_id': anneeId,
+        'level_code': 'CM1',
+        'name': 'CM1 A',
+        'main_teacher_id': 't-un',
+        'updated_at': ts,
+      })
+      ..seed('classes', {
+        'id': 'c-ce1',
+        'school_id': ecoleId,
+        'school_year_id': anneeId,
+        'level_code': 'CE1',
+        'name': 'CE1 A',
+        'updated_at': ts,
+      });
+    for (final (i, (prenom, sexe, classe)) in [
+      ('Aïcha', 'F', 'c-cm1'),
+      ('Boukary', 'M', 'c-cm1'),
+      ('Clarisse', 'F', 'c-cm1'),
+      ('Daouda', 'M', 'c-ce1'),
+    ].indexed) {
+      server
+        ..seed('students', {
+          'id': 'e-$i',
+          'school_id': ecoleId,
+          'last_name': 'TEST',
+          'first_names': prenom,
+          'sex': sexe,
+          'registry_number': i + 1,
+          'updated_at': ts,
+        })
+        ..seed('enrollments', {
+          'id': 'i-$i',
+          'school_id': ecoleId,
+          'student_id': 'e-$i',
+          'class_id': classe,
+          'school_year_id': anneeId,
+          'level_code': classe == 'c-cm1' ? 'CM1' : 'CE1',
+          'starts_on': '2025-10-01',
+          'is_repeat': false,
+          'updated_at': ts,
+        });
+    }
+    server.registryCounter = 4;
     for (final k in ['maternelle', 'cantine', 'medico_scolaire']) {
       server.seed('school_modules', {
         'school_id': ecoleId,
@@ -197,6 +280,33 @@ class AppHarness {
       await tester.pump();
     }
     await tester.tap(find.byKey(const Key('pin-ok')));
+    await settle(tester);
+  }
+
+  /// Lance une synchronisation (bandeau → « Synchroniser maintenant ») puis
+  /// revient à l'écran précédent.
+  Future<void> synchroniser(WidgetTester tester) async {
+    await tester.tap(find.byType(SyncBanner).first);
+    await settle(tester);
+    await tester.tap(find.text('Synchroniser maintenant'));
+    await settle(tester);
+    await tester.tap(find.byTooltip('Retour').first);
+    await settle(tester);
+  }
+
+  /// Ouvre un écran rangé dans « Mon école » (années, options, sauvegarde).
+  static Future<void> ouvrirDansMonEcole(
+    WidgetTester tester,
+    String bouton,
+  ) async {
+    await tester.tap(find.text('Mon école'));
+    await settle(tester);
+    await tester.scrollUntilVisible(
+      find.text(bouton),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text(bouton));
     await settle(tester);
   }
 

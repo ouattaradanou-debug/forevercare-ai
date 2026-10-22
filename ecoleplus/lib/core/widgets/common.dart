@@ -91,14 +91,24 @@ class AutoSaveField extends StatefulWidget {
     required this.initial,
     required this.onSave,
     this.hint,
+    this.helper,
     this.keyboardType,
     this.enabled = true,
+    this.maxLines = 1,
+    this.trailing,
     super.key,
   });
 
   final String label;
   final String? initial;
   final String? hint;
+
+  /// Rappel affiché sous le champ (ex. « pas d'informations médicales »).
+  final String? helper;
+  final int maxLines;
+
+  /// Bouton à côté du champ (ex. micro de la dictée vocale).
+  final Widget Function(TextEditingController controller)? trailing;
   final TextInputType? keyboardType;
   final bool enabled;
   final Future<void> Function(String? value) onSave;
@@ -130,23 +140,47 @@ class _AutoSaveFieldState extends State<AutoSaveField> {
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 16),
-    child: TextField(
+  Widget build(BuildContext context) {
+    final champ = TextField(
       controller: _controller,
       enabled: widget.enabled,
-      keyboardType: widget.keyboardType,
+      keyboardType: widget.maxLines > 1
+          ? TextInputType.multiline
+          : widget.keyboardType,
+      maxLines: widget.maxLines,
+      minLines: 1,
       onChanged: _changed,
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
+        helperText: widget.helper,
+        helperMaxLines: 3,
         border: const OutlineInputBorder(),
         suffixIcon: _saved
             ? const Icon(Icons.check, semanticLabel: 'Enregistré')
             : null,
       ),
-    ),
-  );
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: widget.trailing == null
+          ? champ
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: champ),
+                const SizedBox(width: 8),
+                widget.trailing!(_controller),
+              ],
+            ),
+    );
+  }
+
+  /// Texte inséré par un autre moyen (dictée) : enregistré comme une frappe.
+  void inserer(String texte) {
+    _controller.text = texte;
+    _changed(texte);
+  }
 }
 
 class SectionTitle extends StatelessWidget {
