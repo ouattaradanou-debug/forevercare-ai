@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/sync/sync_engine.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:flutter/material.dart';
@@ -95,7 +96,8 @@ class AutoSaveField extends StatefulWidget {
     this.keyboardType,
     this.enabled = true,
     this.maxLines = 1,
-    this.trailing,
+    this.micro = true,
+    this.dictee,
     this.verifier,
     super.key,
   });
@@ -112,13 +114,12 @@ class AutoSaveField extends StatefulWidget {
   final String? helper;
   final int maxLines;
 
-  /// Bouton à côté du champ (ex. micro de la dictée vocale) : reçoit le
-  /// texte actuel et de quoi le remplacer (enregistré comme une frappe).
-  final Widget Function(
-    String Function() texteActuel,
-    void Function(String texte) inserer,
-  )?
-  trailing;
+  /// Micro dans le champ (A13) : dicter au lieu de taper.
+  final bool micro;
+
+  /// Ce que l'on dicte ; par défaut un numéro pour un champ téléphone,
+  /// sinon du texte.
+  final TypeDictee? dictee;
   final TextInputType? keyboardType;
   final bool enabled;
   final Future<void> Function(String? value) onSave;
@@ -194,23 +195,33 @@ class _AutoSaveFieldState extends State<AutoSaveField> {
         errorText: _erreur,
         errorMaxLines: 3,
         border: const OutlineInputBorder(),
-        suffixIcon: _saved
-            ? const Icon(Icons.check, semanticLabel: 'Enregistré')
-            : null,
+        suffixIcon: _suffixe(),
       ),
     );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: widget.trailing == null
-          ? champ
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: champ),
-                const SizedBox(width: 8),
-                widget.trailing!(() => _controller.text, inserer),
-              ],
-            ),
+    return Padding(padding: const EdgeInsets.only(bottom: 16), child: champ);
+  }
+
+  Widget? _suffixe() {
+    final coche = _saved
+        ? const Icon(Icons.check, semanticLabel: 'Enregistré')
+        : null;
+    if (!widget.micro || !widget.enabled) return coche;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ?coche,
+        MicButton(
+          compact: true,
+          ajouter: widget.maxLines > 1,
+          type:
+              widget.dictee ??
+              (widget.keyboardType == TextInputType.phone
+                  ? TypeDictee.numero
+                  : TypeDictee.texte),
+          texteActuel: () => _controller.text,
+          inserer: inserer,
+        ),
+      ],
     );
   }
 

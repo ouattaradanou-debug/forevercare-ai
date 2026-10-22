@@ -1,5 +1,6 @@
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
+import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/classes/data/classes_repository.dart';
@@ -64,12 +65,10 @@ class ClassesPage extends ConsumerWidget {
                   nom.text = '${n.label} A';
                 }),
               ),
-              TextField(
+              TexteDictable(
                 key: const Key('nom-classe'),
                 controller: nom,
-                decoration: const InputDecoration(
-                  labelText: 'Nom de la classe (ex. CM1 A)',
-                ),
+                label: 'Nom de la classe (ex. CM1 A)',
               ),
             ],
           ),

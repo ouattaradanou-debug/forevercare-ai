@@ -1,4 +1,5 @@
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/lock/data/lock_service.dart';
@@ -136,13 +137,11 @@ class _RecoveryState extends ConsumerState<RecoveryQuestionPage> {
             onTap: () => setState(() => _question.text = s),
           ),
         const SizedBox(height: 8),
-        TextField(
+        TexteDictable(
           key: const Key('question'),
           controller: _question,
-          decoration: const InputDecoration(
-            labelText: 'Ma question (ou écrivez la vôtre)',
-            border: OutlineInputBorder(),
-          ),
+          label: 'Ma question (ou écrivez la vôtre)',
+          border: true,
         ),
         const SizedBox(height: 16),
         TextField(
@@ -245,15 +244,12 @@ class _LoginPhoneState extends ConsumerState<LoginPhonePage> {
         if (!_charge)
           const Center(child: CircularProgressIndicator())
         else ...[
-          TextField(
+          TexteDictable(
             key: const Key('numero'),
             controller: _numero,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Mon numéro (8 chiffres)',
-              hintText: '70 12 34 56',
-              border: OutlineInputBorder(),
-            ),
+            type: TypeDictee.numero,
+            label: 'Mon numéro (8 chiffres)',
+            border: true,
           ),
           const SizedBox(height: 16),
           BigButton(

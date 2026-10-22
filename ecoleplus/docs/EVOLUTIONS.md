@@ -25,8 +25,8 @@
 | A10 | ⚠️ Ajout proposé (phase 1) | Chiffrement de la base locale du téléphone (SQLCipher) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite (phase 2) | 2 |
 | A11 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | Le directeur peut **aussi se connecter avec son numéro de téléphone** (son e-mail reste valable) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite | 1 |
 | A12 | ⚠️ Ajout proposé (phase 2) | **Modèle Excel à télécharger** depuis l'écran d'import (colonnes déjà titrées, une ligne d'exemple) — fiche ci-dessous | En attente — recommandation : maintenant (phase 2) | 2 |
-| A13 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Micro sur tous les champs de saisie** (et pas seulement les observations), pour le directeur et l'enseignant — fiche ci-dessous | En attente de validation — recommandation : maintenant | 2 |
-| A14 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Dates saisies en chiffres « jj/mm/aaaa »** au lieu du calendrier — fiche ci-dessous | En attente de validation — recommandation : maintenant | 2 |
+| A13 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Micro sur tous les champs de saisie** (et pas seulement les observations), pour le directeur et l'enseignant — fiche ci-dessous | **Acceptée** (22/10/2026), tous les champs — construite ; jamais sur les mots de passe, codes et réponses secrètes | 2 |
+| A14 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Dates saisies en chiffres « jj/mm/aaaa »** au lieu du calendrier — fiche ci-dessous | **Acceptée** (22/10/2026), avec un petit bouton calendrier — construite | 2 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import

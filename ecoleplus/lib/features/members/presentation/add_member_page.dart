@@ -1,4 +1,5 @@
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/auth/domain/identifiant.dart';
@@ -86,13 +87,11 @@ class _AddMemberState extends ConsumerState<AddMemberPage> {
         children: [
           const Text('Cette action a besoin d’Internet.'),
           const SizedBox(height: 16),
-          TextField(
+          TexteDictable(
             key: const Key('name'),
             controller: _name,
-            decoration: const InputDecoration(
-              labelText: 'Nom et prénom',
-              border: OutlineInputBorder(),
-            ),
+            label: 'Nom et prénom',
+            border: true,
           ),
           const SizedBox(height: 16),
           const Text('Profil'),
@@ -123,6 +122,12 @@ class _AddMemberState extends ConsumerState<AddMemberPage> {
                   ? 'Identifiant non valide'
                   : 'Se connectera avec : ${identifiantAffichable(apercu)}',
               border: const OutlineInputBorder(),
+              suffixIcon: MicButton(
+                compact: true,
+                type: TypeDictee.numero,
+                texteActuel: () => _login.text,
+                inserer: (t) => setState(() => _login.text = t),
+              ),
             ),
           ),
           const SizedBox(height: 16),

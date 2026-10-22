@@ -1,5 +1,6 @@
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
+import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
@@ -32,7 +33,15 @@ class TeachersPage extends ConsumerStatefulWidget {
 }
 
 class _TeachersPageState extends ConsumerState<TeachersPage> {
+  final _rechercheCtrl = TextEditingController();
   String _recherche = '';
+
+  @override
+  void dispose() {
+    _rechercheCtrl.dispose();
+    super.dispose();
+  }
+
   bool _partis = false;
 
   Future<void> _ajouter(String schoolId) async {
@@ -45,17 +54,17 @@ class _TeachersPageState extends ConsumerState<TeachersPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
+            TexteDictable(
               key: const Key('nouveau-nom'),
               controller: nom,
               textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(labelText: 'Nom *'),
+              label: 'Nom *',
             ),
-            TextField(
+            TexteDictable(
               key: const Key('nouveau-prenoms'),
               controller: prenoms,
               textCapitalization: TextCapitalization.words,
-              decoration: const InputDecoration(labelText: 'Prénoms *'),
+              label: 'Prénoms *',
             ),
           ],
         ),
@@ -135,13 +144,12 @@ class _TeachersPageState extends ConsumerState<TeachersPage> {
             onPressed: () => context.push('/import/enseignants'),
           ),
           const SizedBox(height: 12),
-          TextField(
+          TexteDictable(
             key: const Key('recherche'),
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.search),
-              labelText: 'Rechercher (nom, matricule, téléphone)',
-              border: OutlineInputBorder(),
-            ),
+            controller: _rechercheCtrl,
+            prefixIcon: const Icon(Icons.search),
+            label: 'Rechercher (nom, matricule, téléphone)',
+            border: true,
             onChanged: (v) => setState(() => _recherche = v),
           ),
           if (partis > 0)
@@ -528,18 +536,16 @@ class _HistoriqueSection extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
+                TexteDictable(
                   key: const Key('historique-texte'),
                   controller: texte,
-                  decoration: InputDecoration(
-                    labelText: switch (historique) {
-                      Historique.communes => 'Commune *',
-                      Historique.interruptions => 'Cause *',
-                      Historique.recompenses => 'Récompense *',
-                      Historique.diplomes => 'Diplôme ou titre *',
-                    },
-                    helperText: rappel,
-                  ),
+                  label: switch (historique) {
+                    Historique.communes => 'Commune *',
+                    Historique.interruptions => 'Cause *',
+                    Historique.recompenses => 'Récompense *',
+                    Historique.diplomes => 'Diplôme ou titre *',
+                  },
+                  helper: rappel,
                 ),
                 const SizedBox(height: 12),
                 AutoSaveDateField(
@@ -558,11 +564,9 @@ class _HistoriqueSection extends ConsumerWidget {
                     initial: fin,
                     onSave: (v) async => setState(() => fin = v),
                   ),
-                  TextField(
+                  TexteDictable(
                     controller: duree,
-                    decoration: const InputDecoration(
-                      labelText: 'Durée (si pas de dates précises)',
-                    ),
+                    label: 'Durée (si pas de dates précises)',
                   ),
                 ],
                 if (historique == Historique.diplomes)

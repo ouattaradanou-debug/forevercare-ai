@@ -285,11 +285,15 @@ void main() {
       'observations ; micro absent → message et clavier', (tester) async {
     final h = AppHarness()..seedEcoleTest();
     h.dictee.texte = 'tres bon eleve';
+    final micObservations = find.descendant(
+      of: find.byKey(const Key('observations')),
+      matching: find.byTooltip('Dicter'),
+    );
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
     await tap(tester, find.text('Élèves'));
     await tap(tester, find.text('TEST Aïcha'));
-    await tap(tester, find.byTooltip('Dicter'));
+    await tap(tester, micObservations);
     expect(find.textContaining('rien n’est enregistré'), findsOneWidget);
     await tap(tester, find.text('Continuer'));
     expect(find.text('tres bon eleve'), findsOneWidget);
@@ -312,7 +316,7 @@ void main() {
 
     // Téléphone sans reconnaissance vocale : message clair.
     h.dictee.micro = false;
-    await tap(tester, find.byTooltip('Dicter'));
+    await tap(tester, micObservations);
     expect(find.textContaining('Utilisez le clavier'), findsOneWidget);
     expect(h.dictee.ecoutes, 1);
     await h.dispose(tester);
@@ -408,6 +412,62 @@ void main() {
     );
     expect(eleve!.studentCode, 'EL-1', reason: 'rien n’est enregistré');
     expect(await tester.runAsync(h.db.select(h.db.outbox).get), isEmpty);
+    await h.dispose(tester);
+  });
+
+  testWidgets('A14 : date tapée en chiffres (barres automatiques), date '
+      'impossible refusée ; A13 : date et téléphone dictés', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await tap(tester, find.text('Élèves'));
+    await tap(tester, find.text('TEST Aïcha'));
+    final naissance = find.widgetWithText(TextField, 'Né(e) le');
+    await voir(tester, naissance);
+    await tester.enterText(naissance, '31022017');
+    await tester.pump();
+    expect(find.text('31/02/2017'), findsOneWidget, reason: 'barres placées');
+    expect(find.textContaining('Date impossible'), findsOneWidget);
+    await tester.enterText(naissance, '22102011');
+    await AppHarness.settle(tester);
+    expect(find.text('22/10/2011'), findsOneWidget);
+    Future<String?> naissanceEnBase() async => (await tester.runAsync(
+      () => (h.db.select(
+        h.db.students,
+      )..where((s) => s.id.equals('e-0'))).getSingle(),
+    ))!.birthDate;
+    expect(await naissanceEnBase(), '2011-10-22');
+
+    // Date dictée.
+    h.dictee.texte = 'premier mars deux mille dix-sept';
+    await tap(
+      tester,
+      find.descendant(of: naissance, matching: find.byTooltip('Dicter')),
+    );
+    if (find.text('Continuer').evaluate().isNotEmpty) {
+      await tap(tester, find.text('Continuer'));
+    }
+    expect(find.text('01/03/2017'), findsWidgets);
+    await tap(tester, find.text('Ajouter au texte'));
+    expect(await naissanceEnBase(), '2017-03-01');
+
+    // Téléphone d'un parent dicté deux chiffres par deux chiffres.
+    h.dictee.texte = 'soixante-dix cinquante-six dix-sept quarante';
+    await tap(tester, find.text('Ajouter un parent ou tuteur'));
+    await tester.enterText(find.byKey(const Key('parent-nom')), 'Parent Un');
+    await tap(
+      tester,
+      find.descendant(
+        of: find.widgetWithText(TextField, 'Téléphone'),
+        matching: find.byTooltip('Dicter'),
+      ),
+    );
+    await tap(tester, find.text('Ajouter au texte'));
+    await tap(tester, find.text('Enregistrer'));
+    final parent = await tester.runAsync(
+      () => h.db.select(h.db.guardians).getSingle(),
+    );
+    expect(parent!.phone, '70561740');
     await h.dispose(tester);
   });
 }

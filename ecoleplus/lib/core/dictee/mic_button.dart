@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ecoleplus/core/dictee/dictee.dart';
+import 'package:ecoleplus/core/dictee/nombres_dictes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,13 +10,39 @@ final dicteeProvider = Provider<Dictee>((ref) => DicteeNative());
 /// Vrai une fois l'explication du micro montrée (une fois par lancement).
 bool _expliquee = false;
 
-/// Bouton micro d'un champ de texte : le texte dicté s'affiche, reste
-/// modifiable, puis s'ajoute au champ. Le clavier reste toujours disponible.
+/// Ce que l'on dicte : du texte libre, un numéro (téléphone, matricule)
+/// ou une date (convertie en « jj/mm/aaaa »).
+enum TypeDictee { texte, numero, date }
+
+String? convertirDictee(TypeDictee type, String texte) => switch (type) {
+  TypeDictee.texte => texte,
+  TypeDictee.numero => numeroDicte(texte),
+  TypeDictee.date => dateDictee(texte),
+};
+
+/// Bouton micro d'un champ : le texte dicté s'affiche, reste modifiable,
+/// puis remplace (ou complète, pour les longs textes) le champ. Le clavier
+/// reste toujours disponible.
 class MicButton extends ConsumerWidget {
-  const new({required this.texteActuel, required this.inserer, super.key});
+  const new({
+    required this.texteActuel,
+    required this.inserer,
+    this.type = TypeDictee.texte,
+    this.ajouter = false,
+    this.compact = false,
+    super.key,
+  });
 
   final String Function() texteActuel;
   final void Function(String texte) inserer;
+  final TypeDictee type;
+
+  /// Vrai : le texte dicté s'ajoute à la fin (observations) ; faux : il
+  /// remplace le contenu du champ.
+  final bool ajouter;
+
+  /// Petite icône placée dans le champ.
+  final bool compact;
 
   Future<void> _dicter(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -61,25 +88,87 @@ class MicButton extends ConsumerWidget {
     final texte = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      builder: (c) => _FeuilleDictee(dictee: dictee),
+      builder: (c) => _FeuilleDictee(dictee: dictee, type: type),
     );
     if (texte == null || texte.trim().isEmpty) return;
     final avant = texteActuel().trimRight();
-    inserer(avant.isEmpty ? texte.trim() : '$avant ${texte.trim()}');
+    inserer(
+      ajouter && avant.isNotEmpty ? '$avant ${texte.trim()}' : texte.trim(),
+    );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => IconButton.filledTonal(
-    tooltip: 'Dicter',
-    iconSize: 28,
-    icon: const Icon(Icons.mic),
-    onPressed: () => _dicter(context, ref),
+  Widget build(BuildContext context, WidgetRef ref) => compact
+      ? IconButton(
+          tooltip: 'Dicter',
+          icon: const Icon(Icons.mic_none),
+          onPressed: () => _dicter(context, ref),
+        )
+      : IconButton.filledTonal(
+          tooltip: 'Dicter',
+          iconSize: 28,
+          icon: const Icon(Icons.mic),
+          onPressed: () => _dicter(context, ref),
+        );
+}
+
+/// Champ de texte simple (fenêtres d'ajout) avec le micro dans le champ.
+/// Jamais pour un mot de passe ou une réponse secrète.
+class TexteDictable extends StatelessWidget {
+  const new({
+    required this.controller,
+    required this.label,
+    this.type = TypeDictee.texte,
+    this.helper,
+    this.keyboardType,
+    this.textCapitalization = TextCapitalization.none,
+    this.onChanged,
+    this.prefixIcon,
+    this.border = false,
+    super.key,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final TypeDictee type;
+  final String? helper;
+  final TextInputType? keyboardType;
+  final TextCapitalization textCapitalization;
+  final ValueChanged<String>? onChanged;
+  final Widget? prefixIcon;
+  final bool border;
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    controller: controller,
+    keyboardType:
+        keyboardType ??
+        (type == TypeDictee.numero ? TextInputType.phone : null),
+    textCapitalization: textCapitalization,
+    onChanged: onChanged,
+    decoration: InputDecoration(
+      labelText: label,
+      helperText: helper,
+      helperMaxLines: 3,
+      prefixIcon: prefixIcon,
+      border: border ? const OutlineInputBorder() : null,
+      suffixIcon: MicButton(
+        compact: true,
+        type: type,
+        texteActuel: () => controller.text,
+        inserer: (t) {
+          controller.text = t;
+          onChanged?.call(t);
+        },
+      ),
+    ),
   );
 }
 
 class _FeuilleDictee extends StatefulWidget {
-  const new({required this.dictee});
+  const new({required this.dictee, required this.type});
   final Dictee dictee;
+  final TypeDictee type;
 
   @override
   State<_FeuilleDictee> createState() => _FeuilleDicteeState();
@@ -96,7 +185,9 @@ class _FeuilleDicteeState extends State<_FeuilleDictee> {
     unawaited(
       widget.dictee.ecouter(
         surTexte: (t) {
-          if (mounted) setState(() => _texte.text = t);
+          if (mounted) {
+            setState(() => _texte.text = convertirDictee(widget.type, t) ?? t);
+          }
         },
         surFin: (e) {
           if (mounted) {
@@ -139,7 +230,16 @@ class _FeuilleDicteeState extends State<_FeuilleDictee> {
             Expanded(
               child: Text(
                 _ecoute
-                    ? 'Parlez… (le texte s’affiche ci-dessous)'
+                    ? switch (widget.type) {
+                        TypeDictee.date =>
+                          'Dites la date (ex. « vingt-deux octobre deux '
+                              'mille onze »)…',
+                        TypeDictee.numero =>
+                          'Dites le numéro, chiffre par chiffre ou deux par '
+                              'deux…',
+                        TypeDictee.texte =>
+                          'Parlez… (le texte s’affiche ci-dessous)',
+                      }
                     : 'Vérifiez et corrigez le texte si besoin.',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
@@ -159,9 +259,14 @@ class _FeuilleDicteeState extends State<_FeuilleDictee> {
           controller: _texte,
           maxLines: 5,
           minLines: 2,
-          decoration: const InputDecoration(
-            labelText: 'Texte reconnu',
-            border: OutlineInputBorder(),
+          keyboardType: widget.type == TypeDictee.texte
+              ? TextInputType.multiline
+              : TextInputType.phone,
+          decoration: InputDecoration(
+            labelText: widget.type == TypeDictee.date
+                ? 'Date reconnue (jj/mm/aaaa)'
+                : 'Texte reconnu',
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),

@@ -134,7 +134,20 @@ dans Excel ; un fichier .xlsx fonctionne de la même façon.
 4. Notez la qualité de la reconnaissance (accents, bruit) : elle sera reportée
    dans le rapport.
 
-## 8. Droits
+## 8. Micro partout et dates en chiffres (A13, A14)
+1. Sur une fiche (élève, enseignant, parent, classe…), chaque champ a un petit
+   micro 🎤. Touchez-le, dictez, vérifiez, « Ajouter au texte ». ✅ Le texte
+   remplace le contenu du champ (il s'ajoute à la fin pour les observations).
+   Les champs de mot de passe, de code et de réponse secrète n'ont **pas** de
+   micro.
+2. Téléphone d'un parent : dites « soixante-dix, cinquante-six, dix-sept,
+   quarante ». ✅ « 70561740 ».
+3. Date de naissance : tapez `22102011` au clavier. ✅ « 22/10/2011 » s'affiche
+   (les barres se placent seules). Tapez `31022017`. ✅ « Date impossible ».
+4. Micro de la date : dites « premier mars deux mille dix-sept ». ✅ 01/03/2017.
+5. Le petit bouton calendrier ouvre toujours le calendrier.
+
+## 9. Droits
 1. Connectez-vous comme **enseignant** (`enseignant1@ecole-test.local`).
    ✅ « Mes élèves » et « Ma classe » : seulement les élèves de sa classe,
    en lecture seule ; aucune section « Scolarité/registre », aucun bouton

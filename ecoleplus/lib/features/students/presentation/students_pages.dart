@@ -44,17 +44,17 @@ Future<void> nouvelEleve(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              TexteDictable(
                 key: const Key('eleve-nom'),
                 controller: nom,
                 textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(labelText: 'Nom *'),
+                label: 'Nom *',
               ),
-              TextField(
+              TexteDictable(
                 key: const Key('eleve-prenoms'),
                 controller: prenoms,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Prénoms *'),
+                label: 'Prénoms *',
               ),
               const SizedBox(height: 12),
               ChoiceField(
@@ -147,7 +147,15 @@ class StudentsPage extends ConsumerStatefulWidget {
 }
 
 class _StudentsPageState extends ConsumerState<StudentsPage> {
+  final _rechercheCtrl = TextEditingController();
   String _recherche = '';
+
+  @override
+  void dispose() {
+    _rechercheCtrl.dispose();
+    super.dispose();
+  }
+
   String? _classe;
   bool _sortis = false;
 
@@ -200,13 +208,12 @@ class _StudentsPageState extends ConsumerState<StudentsPage> {
             ),
             const SizedBox(height: 12),
           ],
-          TextField(
+          TexteDictable(
             key: const Key('recherche'),
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.search),
-              labelText: 'Rechercher (nom, identifiant, numéro)',
-              border: OutlineInputBorder(),
-            ),
+            controller: _rechercheCtrl,
+            prefixIcon: const Icon(Icons.search),
+            label: 'Rechercher (nom, identifiant, numéro)',
+            border: true,
             onChanged: (v) => setState(() => _recherche = v),
           ),
           const SizedBox(height: 8),
@@ -393,8 +400,6 @@ class StudentPage extends ConsumerWidget {
               helper: rappelSanteEleve,
               maxLines: 4,
               onSave: (v) => save('observations', v),
-              trailing: (texteActuel, inserer) =>
-                  MicButton(texteActuel: texteActuel, inserer: inserer),
             )
           else
             _Lecture('Observations', s.observations),
@@ -449,16 +454,8 @@ class StudentPage extends ConsumerWidget {
                   },
                 ),
                 if (registre) ...[
-                  TextField(
-                    controller: allant,
-                    decoration: const InputDecoration(labelText: 'Allant à'),
-                  ),
-                  TextField(
-                    controller: motif,
-                    decoration: const InputDecoration(
-                      labelText: 'Motif du départ',
-                    ),
-                  ),
+                  TexteDictable(controller: allant, label: 'Allant à'),
+                  TexteDictable(controller: motif, label: 'Motif du départ'),
                 ],
               ],
             ),
@@ -597,25 +594,17 @@ class _Parents extends ConsumerWidget {
                   options: _relations,
                   onChanged: (v) => setState(() => relation = v ?? relation),
                 ),
-                TextField(
+                TexteDictable(
                   key: const Key('parent-nom'),
                   controller: nom,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom et prénoms *',
-                  ),
+                  label: 'Nom et prénoms *',
                 ),
-                TextField(
-                  controller: profession,
-                  decoration: const InputDecoration(labelText: 'Profession'),
-                ),
-                TextField(
-                  controller: domicile,
-                  decoration: const InputDecoration(labelText: 'Domicile'),
-                ),
-                TextField(
+                TexteDictable(controller: profession, label: 'Profession'),
+                TexteDictable(controller: domicile, label: 'Domicile'),
+                TexteDictable(
                   controller: tel,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: 'Téléphone'),
+                  type: TypeDictee.numero,
+                  label: 'Téléphone',
                 ),
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
@@ -624,11 +613,9 @@ class _Parents extends ConsumerWidget {
                   onChanged: (v) => setState(() => logeur = v ?? false),
                 ),
                 if (logeur)
-                  TextField(
+                  TexteDictable(
                     controller: adresse,
-                    decoration: const InputDecoration(
-                      labelText: 'Adresse du logeur',
-                    ),
+                    label: 'Adresse du logeur',
                   ),
               ],
             ),

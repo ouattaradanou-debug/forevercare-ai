@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/drafts/draft_store.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
@@ -145,6 +146,17 @@ class _CreateSchoolState extends ConsumerState<CreateSchoolPage> {
             helperText: hint,
             helperMaxLines: 2,
             border: const OutlineInputBorder(),
+            suffixIcon: MicButton(
+              compact: true,
+              type: type == TextInputType.phone
+                  ? TypeDictee.numero
+                  : TypeDictee.texte,
+              texteActuel: () => _c[f]!.text,
+              inserer: (t) {
+                _c[f]!.text = t;
+                _saveDraft();
+              },
+            ),
           ),
         ),
       );

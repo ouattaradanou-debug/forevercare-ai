@@ -44,3 +44,6 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H35 | Hors ligne, un élève reçoit un numéro **provisoire** (`P-A-0001`) ; le numéro d'ordre définitif est attribué par le serveur dans l'ordre d'**arrivée** des synchronisations (pas forcément l'ordre d'inscription entre deux téléphones hors ligne) | B2 | `assign_registry_number` |
 | H36 | Import : un élève est un doublon s'il a les mêmes nom, prénoms et date de naissance qu'un élève existant ; un enseignant, le même matricule (sinon mêmes nom, prénoms, naissance) | Import | `cleEleve`, `cleEnseignant` |
 | H37 | Dictée : reconnaissance native du téléphone en français (`fr_FR` si disponible) ; qualité avec les accents d'Afrique de l'Ouest et le bruit de classe **à mesurer sur le terrain** | Dictée | `DicteeNative` |
+| H38 | Pas de micro sur les mots de passe, codes et réponses secrètes : la reconnaissance vocale du téléphone peut passer par Internet, et on peut être entendu | Dictée | — |
+| H39 | Nombres dictés : un numéro de téléphone se dit chiffre par chiffre ou deux par deux (« soixante-dix, cinquante-six… ») ; une date se dit « vingt-deux octobre deux mille onze » | Dictée | `numeroDicte`, `dateDictee` |
+

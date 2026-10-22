@@ -1,9 +1,16 @@
+import 'dart:async';
+
+import 'package:ecoleplus/core/dictee/mic_button.dart';
+import 'package:ecoleplus/core/dictee/nombres_dictes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-/// Date affichée « 14/03/2017 », enregistrée « 2017-03-14 » (comme le
-/// serveur). Toucher le champ ouvre le calendrier ; la croix l'efface.
-class AutoSaveDateField extends StatelessWidget {
+/// Date tapée en chiffres « jj/mm/aaaa » (A14) : clavier numérique, barres
+/// placées automatiquement (22102011 → 22/10/2011), date impossible refusée
+/// avec un message. Un petit bouton ouvre le calendrier, un autre la dictée.
+/// Enregistrée « 2011-10-22 » (comme le serveur).
+class AutoSaveDateField extends StatefulWidget {
   const new({
     required this.label,
     required this.initial,
@@ -34,43 +41,150 @@ class AutoSaveDateField extends StatelessWidget {
         '${deux(d.day)}';
   }
 
-  Future<void> _choisir(BuildContext context) async {
-    final actuelle = initial == null ? null : DateTime.tryParse(initial!);
+  /// « 22/10/2011 » → « 2011-10-22 » ; null si la date n'existe pas.
+  static String? isoDepuis(String jjmmaaaa) {
+    final m = RegExp(r'^(\d{2})/(\d{2})/(\d{4})$').firstMatch(jjmmaaaa);
+    if (m == null) return null;
+    final j = int.parse(m[1]!);
+    final mo = int.parse(m[2]!);
+    final a = int.parse(m[3]!);
+    final d = DateTime.utc(a, mo, j);
+    if (d.day != j || d.month != mo || a < 1900 || a > 2100) return null;
+    return iso(d);
+  }
+
+  @override
+  State<AutoSaveDateField> createState() => _AutoSaveDateFieldState();
+}
+
+class _AutoSaveDateFieldState extends State<AutoSaveDateField> {
+  late final _controller = TextEditingController(
+    text: AutoSaveDateField.afficher(widget.initial) ?? '',
+  );
+  final _focus = FocusNode();
+  String? _erreur;
+  bool _saved = false;
+
+  @override
+  void didUpdateWidget(AutoSaveDateField old) {
+    super.didUpdateWidget(old);
+    final affichee = AutoSaveDateField.afficher(widget.initial) ?? '';
+    if (widget.initial != old.initial &&
+        !_focus.hasFocus &&
+        _controller.text != affichee) {
+      _controller.text = affichee;
+    }
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _valider(String texte) async {
+    setState(() {
+      _erreur = null;
+      _saved = false;
+    });
+    if (texte.isEmpty) {
+      await widget.onSave(null);
+      return;
+    }
+    if (texte.length < 10) return; // saisie en cours
+    final iso = AutoSaveDateField.isoDepuis(texte);
+    if (iso == null) {
+      setState(
+        () => _erreur =
+            'Date impossible : vérifiez le jour, le mois et '
+            'l’année (jj/mm/aaaa).',
+      );
+      return;
+    }
+    await widget.onSave(iso);
+    if (mounted) setState(() => _saved = true);
+  }
+
+  Future<void> _calendrier() async {
+    final actuelle = widget.initial == null
+        ? null
+        : DateTime.tryParse(widget.initial!);
     final d = await showDatePicker(
       context: context,
       locale: const Locale('fr'),
       initialDate: actuelle ?? DateTime.now(),
-      firstDate: first ?? DateTime(1940),
-      lastDate: last ?? DateTime(DateTime.now().year + 5),
-      helpText: label,
+      firstDate: widget.first ?? DateTime(1940),
+      lastDate: widget.last ?? DateTime(DateTime.now().year + 5),
+      helpText: widget.label,
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
     );
-    if (d != null) await onSave(iso(d));
+    if (d == null) return;
+    _controller.text = AutoSaveDateField._affichage.format(d);
+    await _valider(_controller.text);
   }
 
   @override
-  Widget build(BuildContext context) {
-    final texte = afficher(initial);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: InkWell(
-        onTap: () => _choisir(context),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: label,
-            helperText: helper,
-            helperMaxLines: 3,
-            border: const OutlineInputBorder(),
-            suffixIcon: texte == null
-                ? const Icon(Icons.calendar_today)
-                : IconButton(
-                    tooltip: 'Effacer la date',
-                    icon: const Icon(Icons.clear),
-                    onPressed: () => onSave(null),
-                  ),
-          ),
-          child: Text(texte ?? 'Toucher pour choisir'),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: TextField(
+      controller: _controller,
+      focusNode: _focus,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FormatDate()],
+      onChanged: _valider,
+      decoration: InputDecoration(
+        labelText: widget.label,
+        hintText: 'jj/mm/aaaa',
+        helperText: widget.helper,
+        helperMaxLines: 3,
+        errorText: _erreur,
+        errorMaxLines: 3,
+        border: const OutlineInputBorder(),
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_saved) const Icon(Icons.check, semanticLabel: 'Enregistré'),
+            MicButton(
+              compact: true,
+              type: TypeDictee.date,
+              texteActuel: () => _controller.text,
+              inserer: (t) {
+                _controller.text = dateDictee(t) ?? t;
+                unawaited(_valider(_controller.text));
+              },
+            ),
+            IconButton(
+              tooltip: 'Calendrier',
+              icon: const Icon(Icons.calendar_today_outlined),
+              onPressed: _calendrier,
+            ),
+          ],
         ),
       ),
+    ),
+  );
+}
+
+/// Ne garde que les chiffres et place les barres : « 22102011 » →
+/// « 22/10/2011 ».
+class FormatDate extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    var chiffres = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (chiffres.length > 8) chiffres = chiffres.substring(0, 8);
+    final b = StringBuffer();
+    for (var i = 0; i < chiffres.length; i++) {
+      if (i == 2 || i == 4) b.write('/');
+      b.write(chiffres[i]);
+    }
+    final texte = b.toString();
+    return TextEditingValue(
+      text: texte,
+      selection: TextSelection.collapsed(offset: texte.length),
     );
   }
 }
