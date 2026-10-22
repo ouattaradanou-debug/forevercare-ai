@@ -23,7 +23,7 @@ git clone -b claude/festive-brown-3fmkmm https://github.com/ouattaradanou-debug/
 3. La 1re fois, une page Supabase s'ouvre dans le navigateur : connectez-vous avec votre compte (celui d'Atelier Plus) et autorisez. Le script crée alors un projet **séparé** `ecoleplus-test` (Atelier Plus n'est pas touché), installe « École Test », puis l'application sur le portable (10 à 15 minutes la première fois).
 4. EcolePlus s'ouvre sur le portable. Dans PowerShell, tapez `q` pour terminer : l'application reste installée.
 
-Options : `-Reinitialiser` remet le serveur de test à zéro avec « École Test » ; `-SansInstallation` met seulement le serveur à jour. ; `-RemettreMotsDePasse` remet le mot de passe `motdepasse-test` sur les comptes fictifs (`directeur@ecole-test.local`, `enseignant1@…`, `secretaire@…`), par exemple après un essai de « mot de passe oublié » ou de question secrète.
+Options : `-Reinitialiser` remet le serveur de test à zéro avec « École Test » ; `-SansInstallation` met seulement le serveur à jour. ; `-RemettreMotsDePasse` remet le mot de passe `motdepasse-test` sur les comptes fictifs (`directeur@ecole-test.local`, `enseignant1@…`, `secretaire@…`), par exemple après un essai de « mot de passe oublié » ou de question secrète. ; `-ListerComptes` affiche les comptes du serveur de test (identifiant, nom, profil, école, dernière connexion ; jamais les mots de passe).
 
 À savoir : l'offre gratuite de Supabase autorise **2 projets actifs**. Si vous en avez déjà deux (Atelier Plus + un autre), mettez-en un en pause sur supabase.com avant. Le mot de passe du serveur de test est gardé dans `ecoleplus\.serveur-test.json`, sur votre PC uniquement (jamais envoyé sur GitHub).
 

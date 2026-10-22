@@ -18,6 +18,7 @@
   powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1 -Reinitialiser
   powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1 -ChangerDeCompte
   powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1 -RemettreMotsDePasse
+  powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1 -ListerComptes
 #>
 param(
   # Remet le serveur de test à zéro avec « École Test » (efface vos essais).
@@ -30,6 +31,9 @@ param(
   # Remet le mot de passe des comptes de test (@ecole-test.local,
   # @ecole-temoin.local) à « motdepasse-test », sans rien effacer d'autre.
   [switch]$RemettreMotsDePasse,
+  # Affiche les comptes du serveur de test (sans les mots de passe), pour
+  # comprendre un refus de connexion.
+  [switch]$ListerComptes,
   # Région du serveur (Paris par défaut, la plus proche du Burkina Faso).
   [string]$Region = 'eu-west-3'
 )
@@ -251,6 +255,27 @@ if ($Reinitialiser) {
   Remove-Item -Force -ErrorAction SilentlyContinue $tmp
 }
 Ok 'tables à jour'
+if ($ListerComptes) {
+  $fichierComptes = Join-Path ([System.IO.Path]::GetTempPath()) 'ecoleplus-comptes.sql'
+  [System.IO.File]::WriteAllText($fichierComptes, (
+    "select regexp_replace(u.email, '^226(\d{8})@tel\.ecoleplus\.invalid$', '\1') as identifiant,`n" +
+    "  coalesce(m.display_name, '(aucune école)') as nom, coalesce(m.role, '') as profil,`n" +
+    "  coalesce(s.name, '') as ecole,`n" +
+    "  case when m.id is null then '' when m.deleted_at is not null or not m.active then 'non' else 'oui' end as actif,`n" +
+    "  to_char(u.created_at, 'DD/MM HH24:MI') as cree_le,`n" +
+    "  coalesce(to_char(u.last_sign_in_at, 'DD/MM HH24:MI'), 'jamais') as derniere_connexion,`n" +
+    "  case when u.banned_until > now() then 'BLOQUÉ' else '' end as bloque`n" +
+    "from auth.users u left join public.memberships m on m.user_id = u.id`n" +
+    "left join public.schools s on s.id = m.school_id order by u.created_at;"),
+    (New-Object System.Text.UTF8Encoding($false)))
+  try { $comptes = @(SupabaseJson @('db', 'query', '--linked', '-f', $fichierComptes)) }
+  catch { ArretAvecReponse 'Liste des comptes impossible.' }
+  finally { Remove-Item -Force -ErrorAction SilentlyContinue $fichierComptes }
+  Write-Host ''
+  $comptes | Format-Table identifiant, nom, profil, ecole, actif, cree_le, derniere_connexion, bloque -AutoSize | Out-String -Width 220 | Write-Host
+  Write-Host '    (heures UTC = heure de Ouagadougou ; mots de passe jamais affichés)'
+  exit 0
+}
 if ($RemettreMotsDePasse) {
   # Seulement les comptes FICTIFS du jeu d'essai ; les comptes créés pendant
   # vos essais (numéros de téléphone...) ne sont pas touchés.
