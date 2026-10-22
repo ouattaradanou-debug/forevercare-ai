@@ -23,7 +23,7 @@
 | A8 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Verrouillage par code PIN ou empreinte** à l'ouverture — fiche ci-dessous | Construite — à confirmer dans le rapport | 1 |
 | A9 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Journal d'activité** : connexions et actions, qui a fait quoi — fiche ci-dessous | Construite — à confirmer dans le rapport | 1 |
 | A10 | ⚠️ Ajout proposé (phase 1) | Chiffrement de la base locale du téléphone (SQLCipher) — fiche ci-dessous | En attente — recommandation : avant la phase 2 | 2 |
-| A11 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | Le directeur peut **aussi se connecter avec son numéro de téléphone** (son e-mail reste valable) — fiche ci-dessous | En attente de validation — recommandation : maintenant (phase 1) | 1 |
+| A11 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | Le directeur peut **aussi se connecter avec son numéro de téléphone** (son e-mail reste valable) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite | 1 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | En attente — recommandation : maintenant (début de phase 2) ; la sauvegarde du **serveur**, elle, est déjà chiffrée | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -107,4 +107,4 @@
 * **Risques** : (a) le numéro n'est pas vérifié par SMS : quelqu'un pourrait enregistrer le numéro d'un autre, qui ne pourrait alors plus l'utiliser comme identifiant → message clair « numéro déjà utilisé : contactez le directeur » et possibilité pour le directeur de le libérer ; (b) changement de numéro → modifiable dans « Mon compte » ; (c) un essai de plus côté serveur uniquement quand le premier échoue (aucun ralentissement pour les enseignants).
 * **Alternative écartée** : remplacer l'e-mail du directeur par son numéro → on perdrait la récupération du mot de passe par e-mail.
 * **Recommandation** : **maintenant** (dans la phase 1, avant le rapport), car c'est le premier obstacle rencontré au test sur téléphone.
-
+* **Décision** : acceptée le 22/10/2026, construite : migration `20261022000100_a11_connexion_telephone.sql`, fonction `connexion-telephone`, champ à la création de l'école, « Mon compte » → « Mon numéro pour me connecter ». Tests : 17 pgTAP, 2 Flutter, 1 intégration.

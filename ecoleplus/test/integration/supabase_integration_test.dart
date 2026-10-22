@@ -230,9 +230,13 @@ void main() {
     final d2 = await connecte('directeur@ecole-temoin.local');
     final ecoles = await d2.db.select(d2.db.schools).get();
     expect(ecoles.map((e) => e.name), ['École Témoin']);
+    // Uniquement les comptes de l'École Témoin (un autre test peut y avoir
+    // ajouté un enseignant).
+    final membres = await d2.db.select(d2.db.memberships).get();
+    expect(membres.map((m) => m.displayName), contains('Directeur Témoin'));
     expect(
-      (await d2.db.select(d2.db.memberships).get()).map((m) => m.displayName),
-      ['Directeur Témoin'],
+      membres.map((m) => m.schoolId).toSet(),
+      {'10000000-0000-4000-8000-000000000002'},
     );
     expect(await d2.db.select(d2.db.adminHeaders).get(), isEmpty);
     await d2.close();
@@ -441,6 +445,60 @@ void mainA6() {
     final journal = await d.db.select(d.db.auditLog).get();
     expect(journal.map((j) => j.action), contains('recuperation_mot_de_passe'));
     await d.close();
+  }, skip: skip);
+
+  test('A11 : le directeur enregistre son numéro, puis se connecte avec ; '
+      'un mauvais mot de passe ne révèle rien', () async {
+    final d = await connecte('directeur@ecole-temoin.local');
+    final members = MembersService(d.api, d.store);
+    await members.create(
+      schoolId: '10000000-0000-4000-8000-000000000002',
+      displayName: 'Enseignant Témoin',
+      role: 'enseignant',
+      login: '70561748',
+      password: 'provisoire-1',
+    );
+    await expectLater(
+      d.auth.setLoginPhone('70 56 17 48'),
+      throwsA(isA<UserMessage>()),
+      reason: 'numéro déjà identifiant d’un enseignant',
+    );
+    await d.auth.setLoginPhone('70 56 17 49');
+    expect(await d.auth.loginPhone(), '22670561749');
+    await expectLater(
+      members.create(
+        schoolId: '10000000-0000-4000-8000-000000000002',
+        displayName: 'Autre',
+        role: 'enseignant',
+        login: '70561749',
+        password: 'provisoire-1',
+      ),
+      throwsA(isA<UserMessage>()),
+      reason: 'numéro déjà pris par le directeur',
+    );
+    await d.close();
+
+    final faux = Phone();
+    await expectLater(
+      faux.auth.login('70561749', 'pas-le-bon-mdp'),
+      throwsA(
+        isA<UserMessage>().having(
+          (e) => e.message,
+          'message',
+          allOf(contains('incorrect'), isNot(contains('temoin'))),
+        ),
+      ),
+    );
+    await faux.close();
+
+    final p = await connecte('+226 70 56 17 49');
+    expect((await p.auth.session())!.login, 'directeur@ecole-temoin.local');
+    expect((await p.auth.session())!.role, 'directeur');
+    final journal = await p.db.select(p.db.auditLog).get();
+    expect(journal.map((j) => j.action), contains('connexion_par_numero'));
+    await p.auth.setLoginPhone('');
+    expect(await p.auth.loginPhone(), isNull);
+    await p.close();
   }, skip: skip);
 }
 

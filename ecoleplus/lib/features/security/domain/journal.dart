@@ -70,6 +70,13 @@ EvenementJournal decrireEvenement({
         phrase: '$acteur a déconnecté le téléphone « ${d['telephone']} »',
         securite: true,
       );
+    case 'connexion_par_numero':
+      return EvenementJournal(
+        phrase:
+            '${d['personne'] ?? acteur} s’est connecté avec son numéro de '
+            'téléphone',
+        securite: false,
+      );
     case 'recuperation_mot_de_passe':
       return EvenementJournal(
         phrase:

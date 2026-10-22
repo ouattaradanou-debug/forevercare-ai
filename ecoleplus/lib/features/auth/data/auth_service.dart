@@ -27,6 +27,7 @@ class NewSchool {
     this.region,
     this.schoolType = 'publique',
     this.phone,
+    this.loginPhone,
     this.managesPrimary = true,
     this.managesPreschool = false,
   });
@@ -41,6 +42,9 @@ class NewSchool {
   final String? region;
   final String schoolType;
   final String? phone;
+
+  /// Numéro du directeur pour se connecter (facultatif, A11).
+  final String? loginPhone;
   final bool managesPrimary;
   final bool managesPreschool;
 }
@@ -79,23 +83,29 @@ class AuthService {
     if (password.isEmpty) {
       throw const UserMessage('Saisissez votre mot de passe.');
     }
-    final String userId;
+    String userId;
+    var compte = email;
     try {
       userId = await api.signIn(email, password);
     } on UserMessage catch (e) {
-      // Erreur fréquente : le directeur tape le téléphone de l'école, alors
-      // que son identifiant est l'adresse e-mail donnée à la création.
-      if (typeIdentifiant(identifiant) == TypeIdentifiant.telephone &&
-          e.message.contains('incorrect')) {
+      if (typeIdentifiant(identifiant) != TypeIdentifiant.telephone ||
+          !e.message.contains('incorrect')) {
+        rethrow;
+      }
+      // Pas un compte « numéro » : peut-être le numéro choisi par un
+      // directeur pour se connecter (A11).
+      final trouve = await api.emailForPhone(email.split('@').first, password);
+      if (trouve == null) {
         throw UserMessage(
-          '${e.message} Directeur : connectez-vous avec l’adresse e-mail '
-          'donnée à la création de l’école (le téléphone de l’école ne sert '
-          'pas d’identifiant).',
+          '${e.message} Directeur : si votre numéro n’est pas encore '
+          'enregistré, connectez-vous avec votre adresse e-mail puis '
+          'ajoutez-le dans « Mon compte ».',
         );
       }
-      rethrow;
+      compte = trouve;
+      userId = await api.signIn(compte, password);
     }
-    return await _openSession(userId, email);
+    return await _openSession(userId, compte);
   }
 
   Future<LoginOutcome> _openSession(String userId, String email) async {
@@ -172,7 +182,9 @@ class AuthService {
         'Choisissez un mot de passe d’au moins 8 caractères.',
       );
     }
+    final telephone = numeroDeConnexion(s.loginPhone);
     final userId = api.currentUserId ?? await api.signUp(email, s.password);
+    if (telephone != null) await api.setLoginPhone(telephone);
     await api.createSchool({
       'school_id': _uuid.v4(),
       'school_year_id': _uuid.v4(),
@@ -269,6 +281,12 @@ class AuthService {
     }
   }
 
+  Future<String?> loginPhone() => api.loginPhone();
+
+  /// Enregistre (ou retire, si vide) le numéro de connexion du compte.
+  Future<void> setLoginPhone(String saisie) =>
+      api.setLoginPhone(numeroDeConnexion(saisie));
+
   /// Déconnexion : efface les données de l'école de ce téléphone.
   /// L'écran prévient avant si des éléments ne sont pas encore envoyés.
   Future<void> logout() async {
@@ -298,4 +316,15 @@ Future<void> effacerTelephoneDeconnecte(AppDatabase db, AuthApi api) async {
       );
   await api.signOut();
   await db.clearAll();
+}
+
+/// Numéro saisi → 226XXXXXXXX ; null si vide. Message clair si invalide.
+String? numeroDeConnexion(String? saisie) {
+  if (saisie == null || saisie.trim().isEmpty) return null;
+  if (typeIdentifiant(saisie) != TypeIdentifiant.telephone) {
+    throw const UserMessage(
+      'Numéro de téléphone invalide : 8 chiffres (ex. 70 12 34 56).',
+    );
+  }
+  return identifiantVersEmail(saisie)!.split('@').first;
 }

@@ -423,3 +423,6 @@ enabled = true
 # Mot de passe oublié par question secrète : appelée AVANT toute connexion.
 [functions.recuperer-mot-de-passe]
 verify_jwt = false
+
+[functions.connexion-telephone]
+verify_jwt = false

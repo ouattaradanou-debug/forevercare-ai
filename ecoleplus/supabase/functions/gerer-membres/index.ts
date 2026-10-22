@@ -75,6 +75,14 @@ Deno.serve(async (req) => {
           "ou un identifiant de 3 à 40 lettres ou chiffres.",
       });
     }
+    if (email.endsWith("@tel.ecoleplus.invalid")) {
+      // Numéro déjà choisi par un directeur pour se connecter (A11).
+      const pris = await api("POST", "/rest/v1/rpc/login_phone_taken", { p_phone: email.split("@")[0] });
+      if (!pris.ok) return reponse(502, { erreur: "Serveur indisponible. Réessayez." });
+      if (pris.data === true) {
+        return reponse(409, { erreur: "Cet identifiant est déjà utilisé. Choisissez-en un autre." });
+      }
+    }
     const motDePasse = String(p.password ?? "");
     if (motDePasse.length < 8) return reponse(400, { erreur: "Le mot de passe doit contenir au moins 8 caractères." });
     const droits = Array.isArray(p.permissions) ? p.permissions.map(String) : [];

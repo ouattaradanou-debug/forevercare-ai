@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   EcolePlus : prépare le serveur de test et installe l'application sur le
   portable branché en USB. Une seule commande, à relancer après chaque phase.
@@ -288,6 +288,7 @@ if ($RemettreMotsDePasse) {
     "  banned_until = null, updated_at = now()`n" +
     "  where email like '%@ecole-test.local' or email like '%@ecole-temoin.local';`n" +
     "delete from app.recovery_attempts;`n" +
+    "do `$`$ begin if to_regclass('app.login_phone_attempts') is not null then delete from app.login_phone_attempts; end if; end `$`$;`n" +
     "select count(*)::int as comptes from auth.users`n" +
     "  where email like '%@ecole-test.local' or email like '%@ecole-temoin.local';"),
     (New-Object System.Text.UTF8Encoding($false)))
@@ -318,7 +319,7 @@ try {
 }
 catch { Write-Host '    (réglages de connexion non appliqués : sans gravité pour l''essai)' -ForegroundColor Yellow }
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $dossierReglages
-Supabase @('functions', 'deploy', 'gerer-membres', 'recuperer-mot-de-passe', '--project-ref', $config.ref, '--use-api')
+Supabase @('functions', 'deploy', 'gerer-membres', 'recuperer-mot-de-passe', 'connexion-telephone', '--project-ref', $config.ref, '--use-api')
 Ok 'fonctions serveur déployées'
 
 # Fin de ligne Unix et sans BOM : sinon la clé lue par Flutter serait altérée.

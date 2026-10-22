@@ -109,6 +109,63 @@ void main() {
     await h.dispose(tester);
   });
 
+  testWidgets('A11 : le directeur ajoute son numéro dans « Mon compte » puis '
+      'se connecte avec', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await tester.tap(find.text('Sécurité'));
+    await AppHarness.settle(tester);
+    await tester.tap(find.text('Mon compte'));
+    await AppHarness.settle(tester);
+    await tester.tap(find.text('Mon numéro pour me connecter'));
+    await AppHarness.settle(tester);
+    // Numéro déjà identifiant d'un enseignant : refusé.
+    await tester.enterText(find.byKey(const Key('numero')), '70 11 22 33');
+    await tester.tap(find.text('Enregistrer'));
+    await AppHarness.settle(tester);
+    expect(find.textContaining('déjà utilisé'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('numero')), '70 56 17 40');
+    await tester.tap(find.text('Enregistrer'));
+    await AppHarness.settle(tester);
+    expect(h.auth.loginPhones['22670561740'], 'u-dir');
+
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.byTooltip('Retour').first);
+      await AppHarness.settle(tester);
+    }
+    await tester.scrollUntilVisible(find.text('Se déconnecter'), 200);
+    await tester.tap(find.text('Se déconnecter'));
+    await AppHarness.settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Se déconnecter'));
+    await AppHarness.settle(tester);
+
+    // Mauvais mot de passe : refus, sans révéler l'e-mail.
+    await tester.tap(find.text('Se connecter'));
+    await AppHarness.settle(tester);
+    await tester.enterText(find.byKey(const Key('login')), '70561740');
+    await tester.enterText(find.byKey(const Key('password')), 'faux-mdp-1');
+    await tester.tap(find.widgetWithText(FilledButton, 'Se connecter'));
+    await AppHarness.settle(tester);
+    expect(find.textContaining('incorrect'), findsOneWidget);
+    expect(find.textContaining('ecole-test.local'), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const Key('password')),
+      'motdepasse-test',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Se connecter'));
+    await AppHarness.settle(tester);
+    await AppHarness.taperCode(tester, '4071');
+    await AppHarness.taperCode(tester, '4071');
+    expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+    final session = await tester.runAsync(
+      () => h.db.select(h.db.localSession).getSingle(),
+    );
+    expect(session!.login, 'directeur@ecole-test.local');
+    await h.dispose(tester);
+  });
+
   testWidgets('directeur : déconnecter le téléphone perdu d’un enseignant ; '
       'le journal le montre', (tester) async {
     final h = AppHarness()..seedEcoleTest();

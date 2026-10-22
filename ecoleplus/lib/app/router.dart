@@ -116,6 +116,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/compte/question',
         builder: (_, _) => const RecoveryQuestionPage(),
       ),
+      GoRoute(
+        path: '/compte/numero',
+        builder: (_, _) => const LoginPhonePage(),
+      ),
       GoRoute(path: '/securite', builder: (_, _) => const SecurityPage()),
       GoRoute(
         path: '/securite/telephones',

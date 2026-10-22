@@ -40,7 +40,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Se connecter'));
     await AppHarness.settle(tester);
     expect(
-      find.textContaining('connectez-vous avec l’adresse e-mail'),
+      find.textContaining('connectez-vous avec votre adresse e-mail'),
       findsOneWidget,
     );
     await h.dispose(tester);
@@ -205,7 +205,11 @@ void main() {
       find.byKey(const Key('email')),
       'directrice@neuve.bf',
     );
-    await tester.enterText(find.byKey(const Key('password')), 'motdepasse');
+    await tester.enterText(find.byKey(const Key('login_phone')), '70 56 17 40');
+    await tester.enterText(
+      find.byKey(const Key('password')),
+      'motdepasse-test',
+    );
     await AppHarness.settle(tester);
     final draft = await tester.runAsync(
       () => h.db.select(h.db.drafts).getSingle(),
@@ -222,12 +226,26 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.ensureVisible(
+      find.widgetWithText(FilledButton, 'Créer mon école'),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Créer mon école'));
     await AppHarness.settle(tester);
     await AppHarness.taperCode(tester, '4071');
     await AppHarness.taperCode(tester, '4071');
     expect(find.text('Bonjour Directrice Neuve'), findsOneWidget);
     expect(find.text('École Neuve'), findsOneWidget);
+    expect(h.auth.loginPhones['22670561740'], isNotNull);
+
+    // A11 : déconnexion, puis connexion avec le numéro du directeur.
+    await tester.scrollUntilVisible(find.text('Se déconnecter'), 200);
+    await tester.tap(find.text('Se déconnecter'));
+    await AppHarness.settle(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Se déconnecter'));
+    await AppHarness.settle(tester);
+    await h.login(tester, '70 56 17 40');
+    expect(find.text('Bonjour Directrice Neuve'), findsOneWidget);
     await h.dispose(tester);
   });
 }

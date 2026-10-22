@@ -22,6 +22,7 @@ class _CreateSchoolState extends ConsumerState<CreateSchoolPage> {
   static const _fields = [
     'director_name',
     'email',
+    'login_phone',
     'school_name',
     'commune',
     'province',
@@ -116,6 +117,7 @@ class _CreateSchoolState extends ConsumerState<CreateSchoolPage> {
               province: _v('province'),
               region: _v('region'),
               phone: _v('phone'),
+              loginPhone: _v('login_phone'),
               schoolType: _type,
               managesPrimary: _primary,
               managesPreschool: _preschool,
@@ -171,6 +173,12 @@ class _CreateSchoolState extends ConsumerState<CreateSchoolPage> {
                 hint:
                     'C’est votre identifiant pour vous connecter (et récupérer '
                     'votre mot de passe)',
+              ),
+              _field(
+                'login_phone',
+                'Votre numéro de téléphone (facultatif)',
+                type: TextInputType.phone,
+                hint: 'Pour vous connecter avec votre numéro OU votre e-mail',
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),

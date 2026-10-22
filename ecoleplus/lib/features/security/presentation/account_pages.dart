@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Mon compte : ouverture (code ou empreinte), question secrète.
+/// Mon compte : ouverture (code ou empreinte), numéro de connexion,
+/// question secrète.
 class AccountPage extends ConsumerWidget {
   const new({super.key});
 
@@ -16,6 +17,7 @@ class AccountPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lock = ref.watch(appLockProvider).value;
     final question = ref.watch(hasRecoveryQuestionProvider).value;
+    final session = ref.watch(sessionProvider).value;
     return EcoleScaffold(
       title: 'Mon compte',
       body: ListView(
@@ -34,6 +36,14 @@ class AccountPage extends ConsumerWidget {
                 ? 'Aujourd’hui : avec votre empreinte.'
                 : 'Aujourd’hui : avec votre code.',
           ),
+          if (!(session?.login.endsWith('@tel.ecoleplus.invalid') ?? true)) ...[
+            const SizedBox(height: 12),
+            BigButton(
+              icon: Icons.phone_android,
+              label: 'Mon numéro pour me connecter',
+              onPressed: () => context.push('/compte/numero'),
+            ),
+          ],
           const SizedBox(height: 12),
           BigButton(
             icon: Icons.help_outline,
@@ -160,6 +170,103 @@ class _RecoveryState extends ConsumerState<RecoveryQuestionPage> {
           label: 'Enregistrer',
           onPressed: _enregistrer,
         ),
+      ],
+    ),
+  );
+}
+
+/// Numéro de téléphone pour se connecter, en plus de l'e-mail (A11).
+class LoginPhonePage extends ConsumerStatefulWidget {
+  const new({super.key});
+
+  @override
+  ConsumerState<LoginPhonePage> createState() => _LoginPhoneState();
+}
+
+class _LoginPhoneState extends ConsumerState<LoginPhonePage> {
+  final _numero = TextEditingController();
+  bool _charge = false;
+  String? _actuel;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final actuel = await avecMessage(
+        context,
+        () => ref.read(authServiceProvider).loginPhone(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _charge = true;
+        _actuel = actuel;
+        if (actuel != null) _numero.text = actuel.substring(3);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _numero.dispose();
+    super.dispose();
+  }
+
+  Future<void> _enregistrer(String saisie) async {
+    final ok = await avecMessage(context, () async {
+      await ref.read(authServiceProvider).setLoginPhone(saisie);
+      return true;
+    });
+    if ((ok ?? false) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            saisie.trim().isEmpty
+                ? 'Numéro retiré : connectez-vous avec votre e-mail.'
+                : 'Numéro enregistré : vous pouvez vous connecter avec.',
+          ),
+        ),
+      );
+      context.pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => EcoleScaffold(
+    title: 'Mon numéro',
+    body: ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        const Text(
+          'Avec ce numéro, vous pourrez vous connecter sans taper votre '
+          'e-mail, avec le même mot de passe. L’e-mail reste valable et sert '
+          'à récupérer le mot de passe. Cette action a besoin d’Internet.',
+        ),
+        const SizedBox(height: 16),
+        if (!_charge)
+          const Center(child: CircularProgressIndicator())
+        else ...[
+          TextField(
+            key: const Key('numero'),
+            controller: _numero,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              labelText: 'Mon numéro (8 chiffres)',
+              hintText: '70 12 34 56',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          BigButton(
+            icon: Icons.save,
+            label: 'Enregistrer',
+            onPressed: () => _enregistrer(_numero.text),
+          ),
+          if (_actuel != null)
+            TextButton(
+              onPressed: () => _enregistrer(''),
+              child: const Text('Ne plus me connecter avec un numéro'),
+            ),
+        ],
       ],
     ),
   );

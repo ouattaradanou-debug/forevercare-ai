@@ -84,3 +84,11 @@ Comptes de test (mot de passe `motdepasse-test`) : `directeur@ecole-test.local`,
 ## 15. Alerte de synchronisation (conditionnelle)
 1. En mode avion, modifiez une information et ne vous reconnectez pas pendant 3 jours. ✅ Carte « … ne sont pas encore envoyés » sur l'accueil.
 2. Sans rien en attente, aucune alerte avant 30 jours sans réseau. *(Vérifié par les tests automatiques ; sur téléphone, avancer la date du téléphone permet de le constater.)*
+
+## 12. Connexion du directeur avec son numéro (A11)
+1. Connecté comme directeur : Sécurité → Mon compte → « Mon numéro pour me connecter » → votre numéro → « Enregistrer ». ✅ « Numéro enregistré ».
+2. Essayez le numéro d'un enseignant déjà créé. ✅ « Ce numéro est déjà utilisé… ».
+3. Déconnectez-vous. « Se connecter » avec **le numéro** et un mauvais mot de passe. ✅ Refus, sans afficher votre e-mail.
+4. Même numéro, bon mot de passe. ✅ Connexion. Le journal d'activité indique « … s'est connecté avec son numéro de téléphone ».
+5. Création d'une nouvelle école : le champ « Votre numéro de téléphone (facultatif) » permet de se connecter ensuite avec ce numéro.
+

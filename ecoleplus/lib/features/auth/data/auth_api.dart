@@ -39,6 +39,15 @@ abstract interface class AuthApi {
   Future<String> recoveryQuestion(String email);
   Future<void> recoverWithAnswer(String email, String answer, String password);
   Future<void> revokeDevice(String deviceId);
+
+  // Connexion par le numéro d'un compte à e-mail (A11). Numéros au format
+  // 226XXXXXXXX.
+  Future<String?> loginPhone();
+  Future<void> setLoginPhone(String? phone);
+
+  /// E-mail du compte si ce numéro ET ce mot de passe correspondent, sinon
+  /// null.
+  Future<String?> emailForPhone(String phone, String password);
 }
 
 class SupabaseAuthApi implements AuthApi {
@@ -230,4 +239,30 @@ class SupabaseAuthApi implements AuthApi {
     () =>
         client.rpc<dynamic>('revoke_device', params: {'p_device_id': deviceId}),
   );
+
+  @override
+  Future<String?> loginPhone() => _guard(
+    () async => await client.rpc<dynamic>('get_login_phone') as String?,
+  );
+
+  @override
+  Future<void> setLoginPhone(String? phone) => _guard(
+    () => client.rpc<dynamic>('set_login_phone', params: {'p_phone': phone}),
+  );
+
+  @override
+  Future<String?> emailForPhone(String phone, String password) =>
+      _guard(() async {
+        try {
+          final r = await client.functions.invoke(
+            'connexion-telephone',
+            body: {'telephone': phone, 'password': password},
+          );
+          return (r.data as Map)['email'] as String?;
+        } on FunctionException catch (e) {
+          // Refus « numéro ou mot de passe » : pas une panne.
+          if (e.status == 401) return null;
+          rethrow;
+        }
+      });
 }

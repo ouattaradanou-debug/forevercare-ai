@@ -208,6 +208,42 @@ class FakeAuthApi implements AuthApi {
     users[email] = (password, users[email]!.$2);
   }
 
+  /// Numéros de connexion des comptes à e-mail (A11) : numéro → id.
+  final Map<String, String> loginPhones = {};
+
+  @override
+  Future<String?> loginPhone() async {
+    _check();
+    for (final e in loginPhones.entries) {
+      if (e.value == _current) return e.key;
+    }
+    return null;
+  }
+
+  @override
+  Future<void> setLoginPhone(String? phone) async {
+    _check();
+    loginPhones.removeWhere((_, id) => id == _current);
+    if (phone == null) return;
+    if (users.containsKey('$phone@tel.ecoleplus.invalid') ||
+        loginPhones.containsKey(phone)) {
+      throw const UserMessage(
+        'Ce numéro est déjà utilisé pour se connecter à un autre compte.',
+      );
+    }
+    loginPhones[phone] = _current!;
+  }
+
+  @override
+  Future<String?> emailForPhone(String phone, String password) async {
+    _check();
+    final id = loginPhones[phone];
+    for (final e in users.entries) {
+      if (e.value.$2 == id && e.value.$1 == password) return e.key;
+    }
+    return null;
+  }
+
   @override
   Future<void> revokeDevice(String deviceId) async {
     _check();
