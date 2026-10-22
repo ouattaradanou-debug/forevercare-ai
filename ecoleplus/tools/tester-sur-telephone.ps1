@@ -17,6 +17,7 @@
   powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1
   powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1 -Reinitialiser
   powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1 -ChangerDeCompte
+  powershell -ExecutionPolicy Bypass -File tools\tester-sur-telephone.ps1 -RemettreMotsDePasse
 #>
 param(
   # Remet le serveur de test à zéro avec « École Test » (efface vos essais).
@@ -26,6 +27,9 @@ param(
   # Se déconnecter du compte Supabase actuel pour en utiliser un autre
   # (ex. un compte réservé à EcolePlus). Ne touche à aucun projet existant.
   [switch]$ChangerDeCompte,
+  # Remet le mot de passe des comptes de test (@ecole-test.local,
+  # @ecole-temoin.local) à « motdepasse-test », sans rien effacer d'autre.
+  [switch]$RemettreMotsDePasse,
   # Région du serveur (Paris par défaut, la plus proche du Burkina Faso).
   [string]$Region = 'eu-west-3'
 )
@@ -247,6 +251,25 @@ if ($Reinitialiser) {
   Remove-Item -Force -ErrorAction SilentlyContinue $tmp
 }
 Ok 'tables à jour'
+if ($RemettreMotsDePasse) {
+  # Seulement les comptes FICTIFS du jeu d'essai ; les comptes créés pendant
+  # vos essais (numéros de téléphone...) ne sont pas touchés.
+  $fichierMdp = Join-Path ([System.IO.Path]::GetTempPath()) 'ecoleplus-mdp.sql'
+  [System.IO.File]::WriteAllText($fichierMdp, (
+    "update auth.users set encrypted_password = extensions.crypt('motdepasse-test', extensions.gen_salt('bf')),`n" +
+    "  banned_until = null, updated_at = now()`n" +
+    "  where email like '%@ecole-test.local' or email like '%@ecole-temoin.local';`n" +
+    "delete from app.recovery_attempts;`n" +
+    "select count(*)::int as comptes from auth.users`n" +
+    "  where email like '%@ecole-test.local' or email like '%@ecole-temoin.local';"),
+    (New-Object System.Text.UTF8Encoding($false)))
+  try { $r = @(SupabaseJson @('db', 'query', '--linked', '-f', $fichierMdp)) }
+  catch { ArretAvecReponse 'Les mots de passe n''ont pas pu être remis.' }
+  finally { Remove-Item -Force -ErrorAction SilentlyContinue $fichierMdp }
+  Ok "mot de passe « motdepasse-test » remis sur $(Champ $r[0] @('comptes')) compte(s) de test"
+  Write-Host '    Exemple : directeur@ecole-test.local / motdepasse-test'
+  exit 0
+}
 # Réglages de connexion (mot de passe de 8 caractères, durée de session...).
 # L'offre gratuite refuse de modifier le modèle d'e-mail : on envoie alors
 # une copie des réglages sans ce modèle (inutile ici, la récupération du mot
