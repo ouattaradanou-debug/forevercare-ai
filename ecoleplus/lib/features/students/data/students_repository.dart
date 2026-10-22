@@ -169,6 +169,28 @@ class StudentsRepository {
     });
   }
 
+  /// Message si l'identifiant est déjà celui d'un autre élève (il doit être
+  /// unique dans l'école), sinon null.
+  Future<String?> identifiantPris(
+    String schoolId,
+    String studentId,
+    String? code,
+  ) async {
+    if (code == null) return null;
+    final autre =
+        await (db.select(db.students)..where(
+              (s) =>
+                  s.schoolId.equals(schoolId) &
+                  s.studentCode.equals(code) &
+                  s.id.equals(studentId).not(),
+            ))
+            .getSingleOrNull();
+    return autre == null
+        ? null
+        : 'Identifiant déjà utilisé par ${autre.lastName} ${autre.firstNames}. '
+              'Choisissez-en un autre.';
+  }
+
   Future<void> modifier(String id, Map<String, Object?> fields) =>
       store.save('students', {'id': id, ...fields});
 

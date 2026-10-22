@@ -53,6 +53,27 @@ class StaffRepository {
     return id;
   }
 
+  /// Message si le matricule est déjà celui d'un autre enseignant.
+  Future<String?> matriculePris(
+    String schoolId,
+    String teacherId,
+    String? matricule,
+  ) async {
+    if (matricule == null) return null;
+    final autre =
+        await (db.select(db.teachers)..where(
+              (t) =>
+                  t.schoolId.equals(schoolId) &
+                  t.matricule.equals(matricule) &
+                  t.deletedAt.isNull() &
+                  t.id.equals(teacherId).not(),
+            ))
+            .getSingleOrNull();
+    return autre == null
+        ? null
+        : 'Matricule déjà utilisé par ${autre.lastName} ${autre.firstNames}.';
+  }
+
   Future<void> updateTeacher(String id, Map<String, Object?> fields) =>
       store.save('teachers', {'id': id, ...fields});
 

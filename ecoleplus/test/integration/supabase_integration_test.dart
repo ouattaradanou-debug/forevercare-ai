@@ -559,6 +559,52 @@ void mainA6() {
     await a.close();
     await b.close();
   }, skip: skip);
+
+  test(
+    'identifiant d’élève en double (deux téléphones) : refus expliqué, '
+    'avec l’élève concerné ; la fiche reprend la valeur du serveur',
+    () async {
+      final a = await connecte('directeur@ecole-test.local');
+      final repo = StudentsRepository(a.store);
+      final eleves =
+          await (a.db.select(a.db.students)
+                ..where((s) => s.schoolId.equals(ecoleTest))
+                ..orderBy([(s) => OrderingTerm.asc(s.registryNumber)]))
+              .get();
+      final premier = eleves[0];
+      final second = eleves[1];
+      // Saisie faite ailleurs (sans la vérification de l'écran).
+      await repo.modifier(second.id, {'student_code': premier.studentCode});
+      await a.engine.syncNow();
+      final refus = await (a.db.select(
+        a.db.outbox,
+      )..where((o) => o.status.equals('refuse'))).getSingle();
+      expect(
+        refus.message,
+        'Élève ${second.lastName} ${second.firstNames} — Modification '
+        'refusée : cet identifiant d’élève est déjà utilisé par un autre '
+        'élève. Choisissez-en un autre sur la fiche.',
+      );
+      final apres = await (a.db.select(
+        a.db.students,
+      )..where((s) => s.id.equals(second.id))).getSingle();
+      expect(apres.studentCode, second.studentCode);
+      // Les autres modifications de la fiche passent normalement.
+      await (a.db.delete(
+        a.db.outbox,
+      )..where((o) => o.status.equals('refuse'))).go();
+      await repo.modifier(second.id, {'birth_place': 'Dapelogo'});
+      await a.engine.syncNow();
+      expect(
+        await (a.db.select(
+          a.db.outbox,
+        )..where((o) => o.status.equals('refuse'))).get(),
+        isEmpty,
+      );
+      await a.close();
+    },
+    skip: skip,
+  );
 }
 
 /// Lit le code à 6 chiffres dans la boîte de test locale (Mailpit).

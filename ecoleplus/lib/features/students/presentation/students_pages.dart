@@ -355,7 +355,17 @@ class StudentPage extends ConsumerWidget {
             }),
           date('Né(e) le', s.birthDate, 'birth_date'),
           texte('À (lieu de naissance)', s.birthPlace, 'birth_place'),
-          texte('Identifiant de l’élève', s.studentCode, 'student_code'),
+          if (modifiable)
+            AutoSaveField(
+              key: const Key('identifiant-eleve'),
+              label: 'Identifiant de l’élève',
+              initial: s.studentCode,
+              helper: 'Unique dans l’école (sert aux cartes scolaires).',
+              verifier: (v) => repo.identifiantPris(s.schoolId, s.id, v),
+              onSave: (v) => save('student_code', v),
+            )
+          else
+            _Lecture('Identifiant de l’élève', s.studentCode),
           texte('Domicilié à', s.domicile, 'domicile'),
           const SectionTitle('Classe'),
           if (modifiable && yearId != null)

@@ -262,6 +262,7 @@ class TeacherPage extends ConsumerWidget {
           AutoSaveField(
             label: 'Matricule',
             initial: t.matricule,
+            verifier: (v) => repo.matriculePris(t.schoolId, t.id, v),
             onSave: (v) => save('matricule', v),
           ),
           AutoSaveField(

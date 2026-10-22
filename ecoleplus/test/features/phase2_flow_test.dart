@@ -377,4 +377,37 @@ void main() {
     expect(d!.single.nature, 'CEAP');
     await h.dispose(tester);
   });
+
+  testWidgets('identifiant déjà utilisé par un autre élève : refusé dès la '
+      'saisie, avec le nom de l’élève concerné', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await tap(tester, find.text('Élèves'));
+    await tap(tester, find.text('TEST Aïcha'));
+    await voir(tester, find.byKey(const Key('identifiant-eleve')));
+    await tester.enterText(
+      find.descendant(
+        of: find.byKey(const Key('identifiant-eleve')),
+        matching: find.byType(TextField),
+      ),
+      'EL-2',
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 900)),
+    );
+    await AppHarness.settle(tester);
+    expect(
+      find.textContaining('Identifiant déjà utilisé par TEST Boukary'),
+      findsOneWidget,
+    );
+    final eleve = await tester.runAsync(
+      () => (h.db.select(
+        h.db.students,
+      )..where((s) => s.id.equals('e-0'))).getSingle(),
+    );
+    expect(eleve!.studentCode, 'EL-1', reason: 'rien n’est enregistré');
+    expect(await tester.runAsync(h.db.select(h.db.outbox).get), isEmpty);
+    await h.dispose(tester);
+  });
 }

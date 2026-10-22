@@ -178,10 +178,15 @@ class SyncEngine {
       final changedMeanwhile =
           current != null && current.revision != entry.revision;
       if (r.status == 'rejete') {
+        final fiche = await _quelleFiche(t, entry);
         await (db.update(db.outbox)..where((o) => o.id.equals(entry.id))).write(
           OutboxCompanion(
             status: const Value('refuse'),
-            message: Value(_friendlyRejection(r)),
+            message: Value(
+              fiche == null
+                  ? _friendlyRejection(r)
+                  : '$fiche — ${_friendlyRejection(r)}',
+            ),
           ),
         );
         await _restoreServerVersion(t, entry);
@@ -215,9 +220,46 @@ class SyncEngine {
     'P0002' =>
       "Modification refusée : la date et l'heure du téléphone sont fausses.",
     'P0001' => r.message ?? 'Modification refusée par une règle de l’école.',
-    '23505' => 'Modification refusée : cet élément existe déjà.',
+    '23505' => _doublon(r.message),
     _ => 'Modification refusée par le serveur.',
   };
+
+  /// « Élève TEST Aïcha », « Enseignant … » : pour savoir quelle fiche
+  /// corriger (lu sur le téléphone avant de reprendre la version du serveur).
+  Future<String?> _quelleFiche(SyncedTable t, OutboxEntry entry) async {
+    final key = Map<String, Object?>.from(jsonDecode(entry.rowKey) as Map);
+    final ligne = await store.read(t.name, key);
+    final nom = ligne == null
+        ? null
+        : '${ligne['last_name'] ?? ''} ${ligne['first_names'] ?? ''}'.trim();
+    return switch (t.name) {
+      'students' when nom != null && nom.isNotEmpty => 'Élève $nom',
+      'teachers' when nom != null && nom.isNotEmpty => 'Enseignant $nom',
+      'classes' when ligne?['name'] != null => 'Classe ${ligne!['name']}',
+      _ => null,
+    };
+  }
+
+  /// Valeur déjà utilisée ailleurs : dire laquelle, en français simple.
+  static String _doublon(String? message) {
+    final m = message ?? '';
+    if (m.contains('students_code_uq')) {
+      return 'Modification refusée : cet identifiant d’élève est déjà utilisé '
+          'par un autre élève. Choisissez-en un autre sur la fiche.';
+    }
+    if (m.contains('teachers_matricule_uq')) {
+      return 'Modification refusée : ce matricule est déjà celui d’un autre '
+          'enseignant.';
+    }
+    if (m.contains('registry_number')) {
+      return 'Modification refusée : ce numéro d’ordre du registre est déjà '
+          'attribué à un autre élève.';
+    }
+    if (m.contains('classes_school_year_id_name')) {
+      return 'Modification refusée : une classe porte déjà ce nom cette année.';
+    }
+    return 'Modification refusée : cet élément existe déjà.';
+  }
 
   // --------------------------- Téléchargement --------------------------
   Future<void> _pull() async {

@@ -96,10 +96,15 @@ class AutoSaveField extends StatefulWidget {
     this.enabled = true,
     this.maxLines = 1,
     this.trailing,
+    this.verifier,
     super.key,
   });
 
   final String label;
+
+  /// Vérification avant enregistrement (ex. identifiant déjà utilisé) :
+  /// renvoie un message pour refuser la valeur, sinon null.
+  final Future<String?> Function(String? value)? verifier;
   final String? initial;
   final String? hint;
 
@@ -124,22 +129,47 @@ class AutoSaveField extends StatefulWidget {
 
 class _AutoSaveFieldState extends State<AutoSaveField> {
   late final _controller = TextEditingController(text: widget.initial ?? '');
+  final _focus = FocusNode();
   Timer? _timer;
   bool _saved = false;
+  String? _erreur;
 
   void _changed(String v) {
     _timer?.cancel();
-    setState(() => _saved = false);
+    setState(() {
+      _saved = false;
+      _erreur = null;
+    });
     _timer = Timer(const Duration(milliseconds: 700), () async {
       final value = v.trim().isEmpty ? null : v.trim();
+      final refus = await widget.verifier?.call(value);
+      if (refus != null) {
+        if (mounted) setState(() => _erreur = refus);
+        return;
+      }
       await widget.onSave(value);
       if (mounted) setState(() => _saved = true);
     });
   }
 
+  /// La valeur enregistrée a changé ailleurs (synchronisation, refus du
+  /// serveur) : on l'affiche, sauf pendant que la personne écrit.
+  @override
+  void didUpdateWidget(AutoSaveField old) {
+    super.didUpdateWidget(old);
+    if (widget.initial != old.initial &&
+        !_focus.hasFocus &&
+        (_timer == null || !_timer!.isActive) &&
+        _controller.text != (widget.initial ?? '')) {
+      _controller.text = widget.initial ?? '';
+      _saved = false;
+    }
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
+    _focus.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -148,6 +178,7 @@ class _AutoSaveFieldState extends State<AutoSaveField> {
   Widget build(BuildContext context) {
     final champ = TextField(
       controller: _controller,
+      focusNode: _focus,
       enabled: widget.enabled,
       keyboardType: widget.maxLines > 1
           ? TextInputType.multiline
@@ -160,6 +191,8 @@ class _AutoSaveFieldState extends State<AutoSaveField> {
         hintText: widget.hint,
         helperText: widget.helper,
         helperMaxLines: 3,
+        errorText: _erreur,
+        errorMaxLines: 3,
         border: const OutlineInputBorder(),
         suffixIcon: _saved
             ? const Icon(Icons.check, semanticLabel: 'Enregistré')

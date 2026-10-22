@@ -197,6 +197,7 @@ class AppHarness {
           'first_names': prenom,
           'sex': sexe,
           'registry_number': i + 1,
+          'student_code': 'EL-${i + 1}',
           'updated_at': ts,
         })
         ..seed('enrollments', {
