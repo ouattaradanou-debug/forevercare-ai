@@ -321,7 +321,9 @@ class StudentPage extends ConsumerWidget {
           const SizedBox(height: 8),
           if (modifiable)
             const Text(
-              'Tout est enregistré automatiquement, même sans Internet.',
+              'Pour modifier ou compléter la fiche, touchez un champ et '
+              'changez-le : c’est enregistré tout seul (✓), même sans '
+              'Internet.',
             ),
           const SectionTitle('Identité'),
           if (modifiable) ...[
@@ -680,21 +682,31 @@ class _Parents extends ConsumerWidget {
             ),
             onTap: modifiable ? () => _editer(context, ref, g) : null,
             trailing: modifiable
-                ? IconButton(
-                    tooltip: 'Retirer',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () async {
-                      if (await confirmer(
-                        context,
-                        titre: 'Retirer ce parent ?',
-                        message: g.fullName,
-                        bouton: 'Retirer',
-                      )) {
-                        await ref
-                            .read(studentsRepositoryProvider)
-                            .retirerParent(g.id);
-                      }
-                    },
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Modifier',
+                        icon: const Icon(Icons.edit_outlined),
+                        onPressed: () => _editer(context, ref, g),
+                      ),
+                      IconButton(
+                        tooltip: 'Retirer',
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () async {
+                          if (await confirmer(
+                            context,
+                            titre: 'Retirer ce parent ?',
+                            message: g.fullName,
+                            bouton: 'Retirer',
+                          )) {
+                            await ref
+                                .read(studentsRepositoryProvider)
+                                .retirerParent(g.id);
+                          }
+                        },
+                      ),
+                    ],
                   )
                 : null,
           ),

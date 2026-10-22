@@ -37,11 +37,15 @@ Toutes les données sont fictives. ✅ = ce que vous devez constater.
 4. Section « Scolarité » (directeur) : « Venant de », « Date du C.E.P. »,
    observations du registre. ✅ Rappel « N'indiquez pas d'informations
    médicales ». Les champs « Race » et « Religion » n'apparaissent pas.
-5. « Classe cette année » → changez de classe → « Changer ». ✅ L'ancienne
+5. **Modifier une fiche déjà enregistrée** : revenez à la liste, rouvrez la
+   fiche, changez ou complétez un champ (ex. lieu de naissance). ✅ Une coche
+   ✓ apparaît : c'est enregistré. Le crayon ✏️ à côté d'un parent (ou d'une
+   ligne d'historique sur la fiche enseignant) permet de le corriger.
+6. « Classe cette année » → changez de classe → « Changer ». ✅ L'ancienne
    classe reste écrite dans l'historique (« du … au … (changement de classe) »).
-6. Recherche : tapez une partie du nom, sans accent (ex. « aicha »). ✅ L'élève
+7. Recherche : tapez une partie du nom, sans accent (ex. « aicha »). ✅ L'élève
    est trouvé. Filtrez par classe avec les pastilles.
-7. « Sortie définitive de l'école » → date, « Allant à », motif → « Confirmer ».
+8. « Sortie définitive de l'école » → date, « Allant à », motif → « Confirmer ».
    ✅ L'élève disparaît des listes ; « Afficher aussi les élèves sortis » le
    montre. Rien n'est supprimé.
 

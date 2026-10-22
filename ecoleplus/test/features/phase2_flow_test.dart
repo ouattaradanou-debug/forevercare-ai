@@ -317,4 +317,64 @@ void main() {
     expect(h.dictee.ecoutes, 1);
     await h.dispose(tester);
   });
+
+  testWidgets('fiche déjà enregistrée : on la rouvre, on complète, on '
+      'modifie un parent et une ligne d’historique', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await tap(tester, find.text('Élèves'));
+    await tap(tester, find.text('TEST Aïcha'));
+    expect(find.textContaining('Pour modifier ou compléter'), findsOneWidget);
+    await voir(tester, find.widgetWithText(TextField, 'À (lieu de naissance)'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'À (lieu de naissance)'),
+      'Ville Test',
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 900)),
+    );
+    await AppHarness.settle(tester);
+
+    // Parent ajouté puis corrigé avec le crayon.
+    await tap(tester, find.text('Ajouter un parent ou tuteur'));
+    await tester.enterText(find.byKey(const Key('parent-nom')), 'Parent Un');
+    await tap(tester, find.text('Enregistrer'));
+    await tap(tester, find.byTooltip('Modifier').first);
+    await tester.enterText(
+      find.byKey(const Key('parent-nom')),
+      'Parent Corrigé',
+    );
+    await tap(tester, find.text('Enregistrer'));
+
+    final eleve = await tester.runAsync(
+      () => (h.db.select(
+        h.db.students,
+      )..where((s) => s.id.equals('e-0'))).getSingle(),
+    );
+    expect(eleve!.birthPlace, 'Ville Test');
+    final parents = await tester.runAsync(
+      () => h.db.select(h.db.guardians).get(),
+    );
+    expect(parents!.single.fullName, 'Parent Corrigé');
+
+    // Fiche enseignant : une ligne d'historique modifiée.
+    await tester.tap(find.byTooltip('Retour').first);
+    await AppHarness.settle(tester);
+    await tester.tap(find.byTooltip('Retour').first);
+    await AppHarness.settle(tester);
+    await tap(tester, find.text('Enseignants'));
+    await tap(tester, find.text('ENSEIGNANT Un'));
+    await tap(tester, find.byKey(const Key('ajouter-diplomes')));
+    await tester.enterText(find.byKey(const Key('historique-texte')), 'CAP');
+    await tap(tester, find.text('Enregistrer'));
+    await tap(tester, find.byTooltip('Modifier').last);
+    await tester.enterText(find.byKey(const Key('historique-texte')), 'CEAP');
+    await tap(tester, find.text('Enregistrer'));
+    final d = await tester.runAsync(
+      () => h.db.select(h.db.teacherDiplomas).get(),
+    );
+    expect(d!.single.nature, 'CEAP');
+    await h.dispose(tester);
+  });
 }

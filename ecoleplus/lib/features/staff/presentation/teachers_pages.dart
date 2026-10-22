@@ -233,7 +233,9 @@ class TeacherPage extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           const Text(
-            'Tout est enregistré automatiquement, même sans Internet.',
+            'Pour modifier ou compléter la fiche, touchez un champ et '
+            'changez-le : c’est enregistré tout seul (✓), même sans '
+            'Internet.',
           ),
           const SizedBox(height: 16),
           const SectionTitle('Identité'),
@@ -642,21 +644,34 @@ class _HistoriqueSection extends ConsumerWidget {
                     ].whereType<String>().join(' · '),
                   ),
                   onTap: () => _editer(context, ref, l),
-                  trailing: IconButton(
-                    tooltip: 'Retirer',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () async {
-                      if (await confirmer(
-                        context,
-                        titre: 'Retirer cette ligne ?',
-                        message: l[colTexte] as String? ?? '',
-                        bouton: 'Retirer',
-                      )) {
-                        await ref
-                            .read(staffRepositoryProvider)
-                            .removeHistorique(historique, l['id'] as String);
-                      }
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Modifier',
+                        icon: const Icon(Icons.edit_outlined),
+                        onPressed: () => _editer(context, ref, l),
+                      ),
+                      IconButton(
+                        tooltip: 'Retirer',
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () async {
+                          if (await confirmer(
+                            context,
+                            titre: 'Retirer cette ligne ?',
+                            message: l[colTexte] as String? ?? '',
+                            bouton: 'Retirer',
+                          )) {
+                            await ref
+                                .read(staffRepositoryProvider)
+                                .removeHistorique(
+                                  historique,
+                                  l['id'] as String,
+                                );
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
               TextButton.icon(
