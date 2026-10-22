@@ -23,6 +23,10 @@ final supabaseClientProvider = Provider<SupabaseClient>(
   (ref) => throw UnimplementedError('supabaseClientProvider'),
 );
 final mediaDirProvider = Provider<Directory?>((ref) => null);
+
+/// Clé de la base chiffrée du téléphone (A10) ; null dans les tests (base
+/// en mémoire, non chiffrée).
+final cleBaseProvider = Provider<String?>((ref) => null);
 final clockProvider = Provider<Clock>((ref) => Clock());
 
 final localStoreProvider = Provider<LocalStore>(

@@ -22,7 +22,7 @@
 | A7 | ➕ Ajout demandé (21/10/2026) | **Tester sur un vrai téléphone après chaque phase** (APK installable) — fiche ci-dessous | **Acceptée** : Supabase gratuit + GitHub — construite ; reste à saisir les secrets (porteur) | 1, puis chaque phase |
 | A8 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Verrouillage par code PIN ou empreinte** à l'ouverture — fiche ci-dessous | **Confirmée** (22/10/2026) — construite ; au choix code OU empreinte | 1 |
 | A9 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Journal d'activité** : connexions et actions, qui a fait quoi — fiche ci-dessous | **Confirmée** (22/10/2026) — construite | 1 |
-| A10 | ⚠️ Ajout proposé (phase 1) | Chiffrement de la base locale du téléphone (SQLCipher) — fiche ci-dessous | **Acceptée** (22/10/2026) — début de la phase 2 | 2 |
+| A10 | ⚠️ Ajout proposé (phase 1) | Chiffrement de la base locale du téléphone (SQLCipher) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite (phase 2) | 2 |
 | A11 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | Le directeur peut **aussi se connecter avec son numéro de téléphone** (son e-mail reste valable) — fiche ci-dessous | **Acceptée** (22/10/2026) — construite | 1 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 

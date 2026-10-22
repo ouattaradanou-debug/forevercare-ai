@@ -18,12 +18,14 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.4.3
+  flutter_secure_storage: ^11.2.0
   go_router: ^18.1.0
   intl: ^0.20.3
   local_auth: ^3.0.2
   path: ^1.9.1
   path_provider: ^2.1.6
   share_plus: ^13.3.1
+  sqlite3: ^3.7.1
   supabase_flutter: ^2.18.3
   uuid: ^4.6.0
 
@@ -36,3 +38,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+# Base du téléphone chiffrée (A10) : SQLite3MultipleCiphers à la place de
+# SQLite (même API ; pas d'OpenSSL, contrairement à SQLCipher).
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc

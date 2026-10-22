@@ -1,16 +1,21 @@
 import 'dart:io';
 
 import 'package:ecoleplus/core/db/app_database.dart';
+import 'package:ecoleplus/core/db/chiffrement_base.dart';
 import 'package:path/path.dart' as p;
 
 /// Sauvegarde : copie complète de la base du téléphone (y compris les
 /// éléments pas encore envoyés) dans un seul fichier à garder en lieu sûr.
 /// Les données envoyées au serveur sont en plus sauvegardées par Supabase.
 class BackupService {
-  new(this.db, this.directory);
+  new(this.db, this.directory, {this.cle});
 
   final AppDatabase db;
   final Directory directory;
+
+  /// Clé de la base du téléphone : la copie est déchiffrée pour rester
+  /// lisible sur un autre téléphone (voir A4).
+  final String? cle;
 
   Future<File> createBackup(DateTime now) async {
     final stamp =
@@ -22,6 +27,7 @@ class BackupService {
     );
     if (file.existsSync()) file.deleteSync();
     await db.customStatement('VACUUM INTO ?', [file.path]);
+    if (cle case final cle?) dechiffrerCopie(file.path, cle);
     return file;
   }
 

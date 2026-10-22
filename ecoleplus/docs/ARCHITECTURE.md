@@ -41,6 +41,8 @@ Critères : maintenu (publication récente), compatible Flutter 3.47 / Dart 3.13
 | Navigation | `go_router` | 18.1.x | 10/2026 | 0 | imposé (R2), prêt pour le web |
 | Lints stricts | `very_good_analysis` | 11.0.0 | 09/2026 | 0 | règles strictes + `strict-casts/inference/raw-types` |
 | Base locale | `drift`, `drift_flutter`, `drift_dev` | 2.35.x / 0.3.1 | 10/2026 | 1 | SQL typé, migrations, flux réactifs, fonctionne aussi sur le web (WASM) |
+| Base chiffrée (A10) | `sqlite3` (option `source: sqlite3mc` = SQLite3MultipleCiphers) | 3.7.x | 2026 | 2 | même API que SQLite ; chiffrement ChaCha20-Poly1305 ; sans OpenSSL (plus léger que SQLCipher) ; licence MIT |
+| Coffre de la clé (A10) | `flutter_secure_storage` | 11.2.x | 2026 | 2 | clé de la base gardée par Android Keystore, jamais envoyée au serveur |
 | Backend | `supabase_flutter` | 2.18.3 | 10/2026 | 1 | client officiel (auth, RPC, storage) |
 | Identifiants | `uuid` | 4.6.0 | 07/2026 | 1 | UUID v4/v7 générés hors ligne |
 | Formats FR | `intl` | 0.20.3 | 06/2026 | 1 | dates, nombres « 14,5 », FCFA |
@@ -216,3 +218,11 @@ Appels uniquement depuis une Edge Function (fournisseur et modèle par variables
 * Tests d'intégration (`test/integration/`) contre le serveur local complet (authentification, API, fonctions, Mailpit).
 * `.github/workflows/ecoleplus.yml` : trois tâches (Flutter, base, intégration) à chaque push touchant `ecoleplus/`.
 * Script local : `tools/check.sh`.
+
+## Base du téléphone chiffrée (A10, phase 2)
+* Fichier `ecoleplus.sqlite` chiffré par SQLite3MultipleCiphers ; clé aléatoire de 256 bits créée au premier lancement et gardée dans le coffre d'Android (`flutter_secure_storage`, Keystore).
+* Base en clair d'une version précédente : chiffrée sur place au démarrage (`PRAGMA hexrekey`), sans perte.
+* Clé perdue (téléphone réinitialisé) : base illisible, donc effacée ; les données reviennent du serveur à la connexion (seuls les éléments non envoyés seraient perdus).
+* Sauvegarde du téléphone (`VACUUM INTO`) : la copie est déchiffrée pour rester lisible sur un autre téléphone ; sa protection par un code est l'évolution A4 (V2).
+* `android:allowBackup="false"` : pas de copie automatique des données dans le cloud de Google.
+

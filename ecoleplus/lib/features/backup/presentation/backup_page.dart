@@ -26,6 +26,7 @@ class _BackupState extends ConsumerState<BackupPage> {
     final file = await BackupService(
       ref.read(databaseProvider),
       dir,
+      cle: ref.read(cleBaseProvider),
     ).createBackup(DateTime.now());
     setState(() => _last = file);
     await SharePlus.instance.share(

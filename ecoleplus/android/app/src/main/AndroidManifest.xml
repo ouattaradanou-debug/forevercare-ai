@@ -4,7 +4,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <!-- Ouverture de l'application par empreinte (facultative). -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- A10 : pas de copie automatique dans le cloud de Google (données
+         d'élèves ; la clé de la base, gardée par le Keystore, ne serait de
+         toute façon pas copiée). La sauvegarde passe par le serveur. -->
     <application
+        android:allowBackup="false"
+        android:fullBackupContent="false"
         android:label="EcolePlus"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
