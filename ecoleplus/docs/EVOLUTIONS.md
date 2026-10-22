@@ -23,6 +23,7 @@
 | A8 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Verrouillage par code PIN ou empreinte** à l'ouverture — fiche ci-dessous | Construite — à confirmer dans le rapport | 1 |
 | A9 | ➕ Ajout demandé (21/10/2026, réponse A6) | **Journal d'activité** : connexions et actions, qui a fait quoi — fiche ci-dessous | Construite — à confirmer dans le rapport | 1 |
 | A10 | ⚠️ Ajout proposé (phase 1) | Chiffrement de la base locale du téléphone (SQLCipher) — fiche ci-dessous | En attente — recommandation : avant la phase 2 | 2 |
+| A11 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | Le directeur peut **aussi se connecter avec son numéro de téléphone** (son e-mail reste valable) — fiche ci-dessous | En attente de validation — recommandation : maintenant (phase 1) | 1 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | En attente — recommandation : maintenant (début de phase 2) ; la sauvegarde du **serveur**, elle, est déjà chiffrée | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -92,3 +93,18 @@
 * **Valeur** : un voleur qui extrait la mémoire du téléphone (manipulation technique) ne lit rien ; complète le code PIN (A8), qui ne protège que l'écran.
 * **Impact** : paquet `sqlcipher_flutter_libs` à la place de `sqlite3` ; + ~3 à 4 Mo d'APK (à mesurer) ; migration de la base existante ; aucune table nouvelle. **Effort** : M. **Risques** : poids, légère lenteur sur téléphone d'entrée de gamme, clé perdue si le téléphone est réinitialisé (les données restent sur le serveur).
 * **Recommandation** : avant la phase 2 (arrivée des données d'élèves).
+
+## Fiche d'impact A11 — Connexion du directeur par son numéro de téléphone
+* **Constat (test du 21-22/10/2026)** : le directeur a créé son école avec son e-mail, puis a tenté de se connecter avec un numéro de téléphone : refus. Au Burkina Faso, le numéro est l'identifiant naturel ; l'e-mail est moins utilisé au quotidien.
+* **Description** : à la création de l'école (et dans « Mon compte »), un champ facultatif « Votre numéro de téléphone (pour vous connecter) ». Ensuite, à l'écran de connexion, le directeur tape **son numéro OU son e-mail**, avec le même mot de passe. L'e-mail reste obligatoire à la création : il sert à récupérer le mot de passe par code.
+* **Valeur** : connexion plus simple ; même geste que les enseignants, qui se connectent déjà avec leur numéro. **Profils** : directeur (et tout compte qui a un e-mail : délégué, enseignant).
+* **Fonctionnement prévu** — sans SMS, sans révéler d'informations à un inconnu :
+  1. table serveur `app.login_phones` (numéro normalisé 226XXXXXXXX → compte), **un numéro = un seul compte** dans toute l'application ; refus si le numéro sert déjà d'identifiant à un autre compte (y compris un enseignant) ;
+  2. à la connexion avec un numéro, l'application essaie d'abord le compte « numéro » habituel (enseignants) ; en cas de refus, elle demande à une fonction serveur `connexion-telephone` si ce numéro **et ce mot de passe** correspondent à un compte ; seulement dans ce cas, le serveur répond par l'e-mail du compte et l'application se connecte avec. **Un inconnu qui n'a pas le mot de passe n'apprend rien**, pas même si le numéro existe ;
+  3. 5 essais ratés en une heure sur un numéro → blocage temporaire (comme la question secrète) ; chaque connexion par numéro est notée dans le journal d'activité du directeur.
+* **Impact** — tables : `app.login_phones` (hors API, accès service uniquement), réutilisation de `app.recovery_attempts` pour les essais ; fonctions SQL `set_login_phone` (par le titulaire du compte) et `login_lookup` (service uniquement) ; serveur : une fonction `connexion-telephone` (en ligne) ; écrans : un champ dans « Créer mon école » et dans « Mon compte » ; hors ligne : aucun changement (la 1re connexion sur un téléphone demande déjà Internet ; ensuite, code ou empreinte) ; tests : pgTAP (numéro unique, mot de passe faux, blocage), Flutter (connexion par numéro), intégration (serveur local).
+* **Effort** : S à M (environ une demi-journée).
+* **Risques** : (a) le numéro n'est pas vérifié par SMS : quelqu'un pourrait enregistrer le numéro d'un autre, qui ne pourrait alors plus l'utiliser comme identifiant → message clair « numéro déjà utilisé : contactez le directeur » et possibilité pour le directeur de le libérer ; (b) changement de numéro → modifiable dans « Mon compte » ; (c) un essai de plus côté serveur uniquement quand le premier échoue (aucun ralentissement pour les enseignants).
+* **Alternative écartée** : remplacer l'e-mail du directeur par son numéro → on perdrait la récupération du mot de passe par e-mail.
+* **Recommandation** : **maintenant** (dans la phase 1, avant le rapport), car c'est le premier obstacle rencontré au test sur téléphone.
+
