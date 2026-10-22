@@ -17,6 +17,7 @@ import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/auth/data/auth_service.dart';
 import 'package:ecoleplus/features/auth/data/members_service.dart';
 import 'package:ecoleplus/features/school/data/school_repository.dart';
+import 'package:ecoleplus/features/students/data/students_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -498,6 +499,65 @@ void mainA6() {
     await p.auth.setLoginPhone('');
     expect(await p.auth.loginPhone(), isNull);
     await p.close();
+  }, skip: skip);
+
+  test('phase 2 : deux téléphones hors ligne inscrivent chacun un élève ; '
+      'numéros d’ordre uniques et à la suite ; l’enseignant ne reçoit '
+      'jamais le registre', () async {
+    final a = await connecte('directeur@ecole-test.local');
+    final b = await connecte('directeur@ecole-test.local');
+    a.online = false;
+    b.online = false;
+    final repoA = StudentsRepository(a.store);
+    final repoB = StudentsRepository(b.store);
+    final classe = await (a.db.select(
+      a.db.classes,
+    )..where((c) => c.name.equals('CE1 A'))).getSingle();
+    final idA = await repoA.creer(
+      schoolId: ecoleTest,
+      lastName: 'hors ligne',
+      firstNames: 'Téléphone A',
+      classe: classe,
+    );
+    final idB = await repoB.creer(
+      schoolId: ecoleTest,
+      lastName: 'hors ligne',
+      firstNames: 'Téléphone B',
+      classe: classe,
+    );
+    await repoA.modifierRegistre(idA, ecoleTest, {
+      'origin_school': 'École Lointaine',
+    });
+    final provisoire = await (a.db.select(
+      a.db.students,
+    )..where((s) => s.id.equals(idA))).getSingle();
+    expect(provisoire.registryNumber, isNull);
+    expect(provisoire.registryProvisional, startsWith('P-'));
+
+    a.online = true;
+    b.online = true;
+    await a.engine.syncNow();
+    await b.engine.syncNow();
+    await a.engine.syncNow();
+    final numeros = [
+      for (final id in [idA, idB])
+        (await (a.db.select(
+          a.db.students,
+        )..where((s) => s.id.equals(id))).getSingle()).registryNumber,
+    ];
+    expect(numeros.whereType<int>().length, 2);
+    expect(numeros.toSet().length, 2, reason: 'jamais le même numéro');
+    expect((numeros[0]! - numeros[1]!).abs(), 1, reason: 'à la suite');
+
+    // L'enseignante du CM1 ne reçoit ni le registre ni les élèves du CE1.
+    final e = await connecte('enseignant1@ecole-test.local');
+    expect(await e.db.select(e.db.studentRegistry).get(), isEmpty);
+    final siens = await e.db.select(e.db.students).get();
+    expect(siens.map((s) => s.id), isNot(contains(idA)));
+    expect(await e.db.select(e.db.officialForms).get(), isEmpty);
+    await e.close();
+    await a.close();
+    await b.close();
   }, skip: skip);
 }
 
