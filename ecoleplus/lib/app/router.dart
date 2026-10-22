@@ -6,6 +6,9 @@ import 'package:ecoleplus/features/auth/presentation/welcome_page.dart';
 import 'package:ecoleplus/features/backup/presentation/backup_page.dart';
 import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
+import 'package:ecoleplus/features/grades/presentation/classement_page.dart';
+import 'package:ecoleplus/features/grades/presentation/grades_pages.dart';
+import 'package:ecoleplus/features/grades/presentation/saisie_vocale_page.dart';
 import 'package:ecoleplus/features/home/presentation/home_page.dart';
 import 'package:ecoleplus/features/import/presentation/import_page.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_pages.dart';
@@ -41,6 +44,7 @@ const _directorRoutes = {
   '/options',
   '/sauvegarde',
   '/securite',
+  '/mentions',
 };
 
 const _lockRoutes = {'/verrouille', '/verrouille/mot-de-passe'};
@@ -161,6 +165,35 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/securite/journal',
         builder: (_, _) => const JournalPage(),
+      ),
+      GoRoute(path: '/notes', builder: (_, _) => const NotesPage()),
+      GoRoute(path: '/mentions', builder: (_, _) => const MentionsPage()),
+      GoRoute(
+        path: '/notes/:classId',
+        builder: (_, s) => ClasseNotesPage(s.pathParameters['classId']!),
+      ),
+      GoRoute(
+        path: '/notes/:classId/matieres',
+        builder: (_, s) => MatieresClassePage(s.pathParameters['classId']!),
+      ),
+      GoRoute(
+        path: '/notes/:classId/classement',
+        builder: (_, s) => ClassementPage(s.pathParameters['classId']!),
+      ),
+      GoRoute(
+        path: '/notes/:classId/saisie/:assessmentId',
+        builder: (_, s) => SaisieNotesPage(
+          s.pathParameters['classId']!,
+          s.pathParameters['assessmentId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/notes/:classId/vocal/:assessmentId/:subjectId',
+        builder: (_, s) => SaisieVocalePage(
+          s.pathParameters['classId']!,
+          s.pathParameters['assessmentId']!,
+          s.pathParameters['subjectId']!,
+        ),
       ),
     ],
   );

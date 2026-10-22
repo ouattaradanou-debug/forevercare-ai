@@ -13,6 +13,7 @@ import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
+import 'package:ecoleplus/features/grades/presentation/classement_page.dart';
 import 'package:ecoleplus/features/import/presentation/import_page.dart';
 import 'package:ecoleplus/features/lock/data/biometric_gate.dart';
 import 'package:ecoleplus/features/lock/data/lock_service.dart';
@@ -48,6 +49,9 @@ class AppHarness {
 
   /// PDF « imprimés » ou « partagés » (nom → contenu).
   final Map<String, Uint8List> pdfSortis = {};
+
+  /// Fichiers envoyés (Excel) : nom → contenu.
+  final Map<String, Uint8List> fichiersSortis = {};
 
   /// Fichier renvoyé par « Choisir le fichier » (import Excel).
   Uint8List? fichierAImporter;
@@ -257,6 +261,9 @@ class AppHarness {
               partager: (pdf, nom) async => pdfSortis['partage:$nom'] = pdf,
             ),
           ),
+          sortieFichierProvider.overrideWithValue(
+            (octets, nom, type) async => fichiersSortis[nom] = octets,
+          ),
           choisirTableurProvider.overrideWithValue(
             () async => fichierAImporter,
           ),
@@ -317,6 +324,16 @@ class AppHarness {
     await settle(tester);
     await tester.tap(find.byTooltip('Retour').first);
     await settle(tester);
+  }
+
+  /// Touche un bouton de l'accueil, en faisant défiler si besoin.
+  static Future<void> toucher(WidgetTester tester, String bouton) async {
+    await tester.scrollUntilVisible(
+      find.text(bouton),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text(bouton));
   }
 
   /// Ouvre un écran rangé dans « Mon école » (années, options, sauvegarde).

@@ -114,9 +114,9 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tester.tap(find.text('Sécurité'));
+    await AppHarness.toucher(tester, 'Sécurité');
     await AppHarness.settle(tester);
-    await tester.tap(find.text('Mon compte'));
+    await AppHarness.toucher(tester, 'Mon compte');
     await AppHarness.settle(tester);
     await tester.tap(find.text('Mon numéro pour me connecter'));
     await AppHarness.settle(tester);
@@ -193,7 +193,7 @@ void main() {
     await h.login(tester, 'directeur@ecole-test.local');
     expect(find.text('1 événement de sécurité à voir'), findsOneWidget);
 
-    await tester.tap(find.text('Sécurité'));
+    await AppHarness.toucher(tester, 'Sécurité');
     await AppHarness.settle(tester);
     await tester.tap(find.text('Téléphones de l’école'));
     await AppHarness.settle(tester);
@@ -256,7 +256,7 @@ void main() {
       find.textContaining('Choisissez une question secrète'),
       findsOneWidget,
     );
-    await tester.tap(find.text('Mon compte'));
+    await AppHarness.toucher(tester, 'Mon compte');
     await AppHarness.settle(tester);
     await tester.tap(find.text('Choisir ma question secrète'));
     await AppHarness.settle(tester);

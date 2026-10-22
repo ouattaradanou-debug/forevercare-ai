@@ -147,6 +147,7 @@ List<Widget> _boutonsEcole(
 }) {
   final eleves = droits.contains('eleves') || droits.contains('registres');
   final registres = droits.contains('registres');
+  final notes = enseignant || registres || droits.contains('formulaires');
   Widget bouton(IconData icon, String label, String route) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
     child: BigButton(
@@ -168,6 +169,7 @@ List<Widget> _boutonsEcole(
       bouton(Icons.badge, 'Enseignants', '/enseignants'),
       bouton(Icons.menu_book, 'Registres et formulaires', '/registres'),
     ],
+    if (notes) bouton(Icons.grading, 'Notes et classement', '/notes'),
   ];
 }
 
