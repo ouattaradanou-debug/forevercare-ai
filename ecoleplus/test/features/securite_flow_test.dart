@@ -332,4 +332,38 @@ void main() {
     );
     await h.dispose(tester);
   });
+
+  testWidgets('période de composition : des notes non envoyées depuis 2 '
+      'jours suffisent pour l’alerte (1 jour au lieu de 3)', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    h.online = false;
+    Future<void> enAttente(String table) => tester.runAsync(
+      () => h.db
+          .into(h.db.outbox)
+          .insert(
+            OutboxCompanion.insert(
+              targetTable: table,
+              rowKey: '{"id":"x-$table"}',
+              payload: '{"id":"x-$table"}',
+              createdAt: DateTime.now()
+                  .toUtc()
+                  .subtract(const Duration(days: 2))
+                  .toIso8601String(),
+              attempts: const Value(0),
+            ),
+          ),
+    );
+    await enAttente('schools');
+    await AppHarness.settle(tester);
+    expect(find.textContaining('ne sont pas encore envoyés'), findsNothing);
+    await enAttente('grades');
+    await AppHarness.settle(tester);
+    expect(
+      find.textContaining('2 éléments saisis depuis 2 jours'),
+      findsOneWidget,
+    );
+    await h.dispose(tester);
+  });
 }

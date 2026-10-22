@@ -53,3 +53,49 @@ final hasRecoveryQuestionProvider = FutureProvider<bool?>((ref) async {
     return null;
   }
 });
+
+/// Période de composition (H23) : une composition datée des 7 derniers jours
+/// ou des 3 prochains, ou des notes pas encore envoyées. L'alerte de
+/// synchronisation se déclenche alors après 1 jour au lieu de 3.
+final periodeCompositionProvider = StreamProvider<bool>((ref) {
+  final db = ref.watch(databaseProvider);
+  final auj = DateTime.now();
+  String jour(DateTime d) => d.toIso8601String().substring(0, 10);
+  final du = jour(auj.subtract(const Duration(days: 7)));
+  final au = jour(auj.add(const Duration(days: 3)));
+  final compositions = db.assessments.id.count();
+  final notes = db.outbox.id.count();
+  Future<bool> calculer() async {
+    final c =
+        await (db.selectOnly(db.assessments)
+              ..addColumns([compositions])
+              ..where(
+                db.assessments.deletedAt.isNull() &
+                    db.assessments.heldOn.isBetweenValues(du, au),
+              ))
+            .map((r) => r.read(compositions) ?? 0)
+            .getSingle();
+    if (c > 0) return true;
+    final n =
+        await (db.selectOnly(db.outbox)
+              ..addColumns([notes])
+              ..where(
+                db.outbox.status.equals('en_attente') &
+                    db.outbox.targetTable.equals('grades'),
+              ))
+            .map((r) => r.read(notes) ?? 0)
+            .getSingle();
+    return n > 0;
+  }
+
+  Stream<bool> suivre() async* {
+    yield await calculer();
+    await for (final _ in db.tableUpdates(
+      TableUpdateQuery.onAllTables([db.assessments, db.outbox]),
+    )) {
+      yield await calculer();
+    }
+  }
+
+  return suivre();
+});

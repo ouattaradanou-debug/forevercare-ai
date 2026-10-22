@@ -46,4 +46,10 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H37 | Dictée : reconnaissance native du téléphone en français (`fr_FR` si disponible) ; qualité avec les accents d'Afrique de l'Ouest et le bruit de classe **à mesurer sur le terrain** | Dictée | `DicteeNative` |
 | H38 | Pas de micro sur les mots de passe, codes et réponses secrètes : la reconnaissance vocale du téléphone peut passer par Internet, et on peut être entendu | Dictée | — |
 | H39 | Nombres dictés : un numéro de téléphone se dit chiffre par chiffre ou deux par deux (« soixante-dix, cinquante-six… ») ; une date se dit « vingt-deux octobre deux mille onze » | Dictée | `numeroDicte`, `dateDictee` |
-
+| H40 | Arrondi au **centième, à chaque étape** : moyenne de chaque matière arrondie, puis moyenne générale = Σ(moyenne × coef) / Σ coef arrondie (arrondi au plus proche, 6,125 → 6,13) | Notes | `divArrondi` |
+| H41 | Élève **absent** à une matière : la matière ne compte pas pour lui (réglage de l'école `absent_rule` = « non compté ») ; autre réglage possible : l'absence vaut 0. **À confirmer avec un directeur (E3)** | Notes | `schools.absent_rule` |
+| H42 | Effectif du classement (« 7e/39 ») = élèves **inscrits dans la classe**, y compris ceux sans note (« Non classé ») | Classement | `Statistiques.effectif` |
+| H43 | Aucune mention n'est imposée : chaque école définit les siennes (de … à … → libellé) | Classement | `mention_scales` |
+| H44 | Cumul de l'année : une note sur un autre barème est ramenée au barème de l'école (12/20 → 6/10) avant la moyenne | Notes | `calculerClassement` |
+| H45 | Moyenne de la classe = moyenne des moyennes générales des élèves classés | Classement | `Statistiques.moyenneClasse` |
+| H46 | Période de composition (alerte de synchronisation à 1 jour) : une composition datée des 7 derniers jours ou des 3 prochains, ou des notes pas encore envoyées | Accueil | `periodeCompositionProvider` |

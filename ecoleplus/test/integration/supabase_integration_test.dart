@@ -16,6 +16,8 @@ import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/auth/data/auth_service.dart';
 import 'package:ecoleplus/features/auth/data/members_service.dart';
+import 'package:ecoleplus/features/grades/data/grades_repository.dart';
+import 'package:ecoleplus/features/grades/domain/calculs.dart';
 import 'package:ecoleplus/features/school/data/school_repository.dart';
 import 'package:ecoleplus/features/students/data/students_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -605,6 +607,133 @@ void mainA6() {
     },
     skip: skip,
   );
+
+  test('phase 3 : le cas calculé à la main du jeu de test (CM1, '
+      'composition 1) ; l’enseignante note sa classe et seulement elle ; '
+      'note hors barème refusée par le serveur ; résultats annuels', () async {
+    const cm1 = 'c0000000-0000-4000-8000-000000000002';
+    const cm2Compo = 'f0000000-0000-4000-8000-000000000002';
+    const cm2Eleve = 'd0000000-0000-4000-8000-000000000006';
+    final dir = await connecte('directeur@ecole-test.local');
+    final repo = GradesRepository(dir.store);
+    var d = (await repo.chargerDonnees(cm1))!;
+    var c = d.classement(compositionId: 'f0000000-0000-4000-8000-000000000001');
+    String ligne(Resultat r) =>
+        '${r.eleve.nom} ${r.rangTexte} ${centiemesTexte(r.moyenne)} '
+        '${centiemesTexte(r.total)}';
+    // Histoire sans note ignorée ; Dessin à coefficient 0 sans effet ;
+    // absence de Daouda en Calcul non comptée (règle par défaut).
+    expect(c.resultats.map(ligne), [
+      'TEST Aïcha 1re 7 21',
+      'TEST Boukary 2e ex-aequo 6 18',
+      'TEST Clarisse 2e ex-aequo 6 18',
+      'TEST Daouda 4e 5,5 11',
+    ]);
+    expect(c.statistiques.moyenneClasse, 613); // (7+6+6+5,5)/4 = 6,125
+
+    // L'enseignante du CM1 corrige une note de sa classe : acceptée.
+    final ens = await connecte('enseignant1@ecole-test.local');
+    final repoE = GradesRepository(ens.store);
+    final dE = (await repoE.chargerDonnees(cm1))!;
+    final compo = dE.compositions.single;
+    final clarisse = dE.eleves.firstWhere((e) => e.firstNames == 'Clarisse');
+    final calcul = dE.matieres.firstWhere((m) => m.matiere.name == 'Calcul');
+    await repoE.enregistrerNote(
+      composition: compo,
+      studentId: clarisse.id,
+      subjectId: calcul.matiere.id,
+      centiemes: 800,
+    );
+    // Une note du CM2 (pas sa classe), écrite sans passer par l'écran.
+    await ens.store.save('grades', {
+      'id': GradesRepository.idNote(cm2Compo, cm2Eleve, calcul.matiere.id),
+      'school_id': ecoleTest,
+      'assessment_id': cm2Compo,
+      'student_id': cm2Eleve,
+      'subject_id': calcul.matiere.id,
+      'score': 10,
+      'status': 'note',
+    });
+    // Une note hors barème (12 sur 10), écrite sans passer par l'écran.
+    await ens.store.save('grades', {
+      'id': GradesRepository.idNote(compo.id, clarisse.id, 'hors'),
+      'school_id': ecoleTest,
+      'assessment_id': compo.id,
+      'student_id': clarisse.id,
+      'subject_id': dE.matieres
+          .firstWhere((m) => m.matiere.name == 'Lecture')
+          .matiere
+          .id,
+      'score': 12,
+      'status': 'note',
+    });
+    await ens.engine.syncNow();
+    final refus = await (ens.db.select(
+      ens.db.outbox,
+    )..where((o) => o.status.equals('refuse'))).get();
+    expect(refus, hasLength(2), reason: refus.map((r) => r.message).join());
+    expect(
+      refus.map((r) => r.message).join(' | '),
+      contains('Note hors barème : 12 sur 10.'),
+    );
+
+    // Le directeur reçoit la correction : Clarisse passe 1re ex-aequo.
+    await dir.engine.syncNow();
+    d = (await repo.chargerDonnees(cm1))!;
+    c = d.classement(compositionId: compo.id);
+    expect(c.resultats.map(ligne).take(2), [
+      'TEST Aïcha 1re ex-aequo 7 21',
+      'TEST Clarisse 1re ex-aequo 7 21',
+    ]);
+
+    // Coefficient d'une matière créée ailleurs (jeu de test) : modifié,
+    // sans doublon.
+    await repo.definirCoefficient(d.classe, calcul.matiere.id, 2);
+    await dir.engine.syncNow();
+    expect(
+      await (dir.db.select(
+        dir.db.outbox,
+      )..where((o) => o.status.equals('refuse'))).get(),
+      isEmpty,
+    );
+    d = (await repo.chargerDonnees(cm1))!;
+    expect(
+      d.matieres.firstWhere((m) => m.matiere.name == 'Calcul').lien.coefficient,
+      2,
+    );
+
+    // Résultats annuels gardés (directeur).
+    final n = await repo.enregistrerResultatsAnnuels(
+      d,
+      d.classement(),
+      date: '2026-06-30',
+    );
+    expect(n, 4);
+    await dir.engine.syncNow();
+    final serveur = await dir.client
+        .from('annual_results')
+        .select('student_id, general_average, rank, rank_ex_aequo, class_size')
+        .eq('class_id', cm1);
+    expect(serveur, hasLength(4));
+    final aicha = serveur.firstWhere(
+      (r) => r['student_id'] == 'd0000000-0000-4000-8000-000000000001',
+    );
+    // Avec Calcul coefficient 2 : Aïcha (8+14+6)/4 = 7 ; Clarisse
+    // (7+16+6)/4 = 7,25 → Clarisse 1re, Aïcha 2e.
+    expect(aicha['rank'], 2);
+    expect(aicha['general_average'], 7);
+    expect(aicha['class_size'], 4);
+    await ens.engine.syncNow();
+    expect(
+      await (ens.db.select(
+        ens.db.annualResults,
+      )..where((r) => r.classId.equals(cm1))).get(),
+      hasLength(4),
+      reason: 'l’enseignante lit les résultats de ses élèves',
+    );
+    await ens.close();
+    await dir.close();
+  }, skip: skip);
 }
 
 /// Lit le code à 6 chiffres dans la boîte de test locale (Mailpit).

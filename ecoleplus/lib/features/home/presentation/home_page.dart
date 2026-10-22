@@ -185,6 +185,7 @@ class _Alertes extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionProvider).value;
     final pending = ref.watch(pendingInfoProvider).value;
+    final composition = ref.watch(periodeCompositionProvider).value ?? false;
     final journal = ref.watch(journalProvider).value ?? const [];
     final question = ref.watch(hasRecoveryQuestionProvider).value;
     if (session == null) return const SizedBox.shrink();
@@ -197,6 +198,7 @@ class _Alertes extends ConsumerWidget {
                 ? null
                 : DateTime.parse(session.lastSyncAt!),
             maintenant: DateTime.now().toUtc(),
+            periodeComposition: composition,
           );
     final vu = session.journalSeenAt;
     final securite = session.role == 'directeur'

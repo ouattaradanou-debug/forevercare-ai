@@ -156,12 +156,21 @@ class GradesRepository {
     ClassRow classe,
     String subjectId,
     double coefficient,
-  ) {
+  ) async {
     if (coefficient < 0) {
       throw const UserMessage('Le coefficient ne peut pas être négatif.');
     }
-    return store.save('class_subjects', {
-      'id': idMatiereClasse(classe.id, subjectId),
+    // Lien déjà connu (même créé ailleurs) : il est mis à jour.
+    final existe =
+        await (db.select(db.classSubjects)
+              ..where(
+                (l) =>
+                    l.classId.equals(classe.id) & l.subjectId.equals(subjectId),
+              )
+              ..limit(1))
+            .getSingleOrNull();
+    await store.save('class_subjects', {
+      'id': existe?.id ?? idMatiereClasse(classe.id, subjectId),
       'school_id': classe.schoolId,
       'class_id': classe.id,
       'subject_id': subjectId,
@@ -239,12 +248,23 @@ class GradesRepository {
       );
     }
     final efface = statut == StatutNote.note && centiemes == null;
-    final id = idNote(composition.id, studentId, subjectId);
+    // Une note déjà connue (même créée ailleurs, avec un autre identifiant)
+    // est corrigée ; sinon identifiant fixe : deux téléphones qui saisissent
+    // la même note la corrigent au lieu de la doubler.
+    final existe =
+        await (db.select(db.grades)
+              ..where(
+                (g) =>
+                    g.assessmentId.equals(composition.id) &
+                    g.studentId.equals(studentId) &
+                    g.subjectId.equals(subjectId),
+              )
+              ..orderBy([(g) => OrderingTerm.asc(g.deletedAt.isNotNull())])
+              ..limit(1))
+            .getSingleOrNull();
+    final id = existe?.id ?? idNote(composition.id, studentId, subjectId);
     if (efface) {
       // Rien à effacer si aucune note n'a encore été enregistrée.
-      final existe = await (db.select(
-        db.grades,
-      )..where((g) => g.id.equals(id))).getSingleOrNull();
       if (existe == null || existe.deletedAt != null) return;
       await store.save('grades', {
         'id': id,
@@ -278,8 +298,17 @@ class GradesRepository {
     required String date,
   }) async {
     for (final r in cumul.resultats) {
+      final existe =
+          await (db.select(db.annualResults)
+                ..where(
+                  (a) =>
+                      a.studentId.equals(r.eleve.id) &
+                      a.schoolYearId.equals(d.classe.schoolYearId),
+                )
+                ..limit(1))
+              .getSingleOrNull();
       await store.save('annual_results', {
-        'id': idResultatAnnuel(r.eleve.id, d.classe.schoolYearId),
+        'id': existe?.id ?? idResultatAnnuel(r.eleve.id, d.classe.schoolYearId),
         'school_id': d.classe.schoolId,
         'student_id': r.eleve.id,
         'school_year_id': d.classe.schoolYearId,

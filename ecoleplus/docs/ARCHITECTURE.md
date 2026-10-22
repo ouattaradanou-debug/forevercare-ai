@@ -139,6 +139,8 @@ La logique métier (moyennes, rang, soldes, numérotation, normalisation des nom
 | Fusion par clé métier | `attendance` (élève + date), `meal_checks` (élève + jour), `meal_services` (jour + classe), `grades` (composition + élève + matière), `school_modules` (école + module) | identifiant **déterministe** calculé à partir de la clé métier (UUID v5) ou clé composée déclarée dans `app.sync_tables` : deux téléphones produisent la même ligne, la règle précédente s'applique |
 | Ajout seul | `payments`, `payment_allocations`, `expenses`, `stock_movements`, journaux | `insert … on conflict (id) do nothing` : un renvoi ne crée jamais de doublon, rien n'est écrasé |
 
+Une ligne déjà connue du téléphone pour la même clé métier (par exemple une note créée ailleurs, avec un autre identifiant) est **corrigée** avec son identifiant au lieu d'en créer une seconde : `grades`, `class_subjects`, `annual_results` (phase 3).
+
 **Téléchargement (pull)** : par table, via l'API REST (donc la RLS), lignes dont (`synced_at`, clé) > curseur, pages de 500, fenêtre de recouvrement de 2 minutes (application idempotente). Une ligne ayant une modification locale non envoyée n'est pas écrasée. Les tables de référence sans `synced_at` (`modules_catalog`) sont rechargées entièrement. Les valeurs attribuées par le serveur (numéro d'ordre du registre) reviennent ainsi sur l'appareil.
 
 **Horloges** : à chaque synchronisation, l'écart avec l'heure du serveur est mesuré (`Clock.calibrate`) et mémorisé ; les écritures suivantes sont horodatées avec l'heure corrigée (testé). Le serveur refuse une date plus de 10 minutes dans le futur.
