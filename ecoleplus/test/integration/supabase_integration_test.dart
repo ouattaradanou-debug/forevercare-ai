@@ -234,10 +234,9 @@ void main() {
     // ajouté un enseignant).
     final membres = await d2.db.select(d2.db.memberships).get();
     expect(membres.map((m) => m.displayName), contains('Directeur Témoin'));
-    expect(
-      membres.map((m) => m.schoolId).toSet(),
-      {'10000000-0000-4000-8000-000000000002'},
-    );
+    expect(membres.map((m) => m.schoolId).toSet(), {
+      '10000000-0000-4000-8000-000000000002',
+    });
     expect(await d2.db.select(d2.db.adminHeaders).get(), isEmpty);
     await d2.close();
   }, skip: skip);
