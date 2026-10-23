@@ -27,6 +27,7 @@
 | A12 | ⚠️ Ajout proposé (phase 2) | **Modèle Excel à télécharger** depuis l'écran d'import (colonnes déjà titrées, une ligne d'exemple) — fiche ci-dessous | En attente — recommandation : maintenant (phase 2) | 2 |
 | A13 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Micro sur tous les champs de saisie** (et pas seulement les observations), pour le directeur et l'enseignant — fiche ci-dessous | **Acceptée** (22/10/2026), tous les champs — construite ; jamais sur les mots de passe, codes et réponses secrètes | 2 |
 | A14 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Dates saisies en chiffres « jj/mm/aaaa »** au lieu du calendrier — fiche ci-dessous | **Acceptée** (22/10/2026), avec un petit bouton calendrier — construite | 2 |
+| A15 | ➕ Ajout demandé (23/10/2026) | **Calcul des moyennes selon le type d'école** (publique / privée, choisi dans « Mon école ») : 3 trimestres ; publique = 1 composition par matière ; privée = évaluation + composition par matière ; moyenne annuelle = moyenne des 3 trimestres — fiche ci-dessous | **Acceptée** (23/10/2026) : coefficients gardés (1 par défaut) ; en privé, si une seule des deux notes existe, **elle constitue la moyenne de la matière** et la moyenne du trimestre est calculée ; construite (23/10/2026) | 3 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -133,4 +134,24 @@
 * **Impact** : aucune table (stockage inchangé) ; un seul composant de date à modifier ; tests de saisie.
 * **Effort** : S. **Risques** : aucun sur les données.
 * **Recommandation** : maintenant.
+
+## Fiche d'impact A15 — Moyennes selon le type d'école (publique / privée)
+* **Description** : le type d'école choisi dans « Mon école » décide seul de la méthode, sans réglage à refaire à chaque trimestre.
+  * **Publique** : 3 trimestres ; une **composition** par trimestre. Moyenne du trimestre = somme des notes ÷ nombre de matières notées (exemple : (8 + 7 + 9 + 6) ÷ 4 = 7,5).
+  * **Privée** : 3 trimestres ; pour chaque matière une **évaluation** et une **composition**, saisies séparément. Moyenne de la matière = (évaluation + composition) ÷ 2 ; moyenne du trimestre = somme des moyennes des matières ÷ nombre de matières (exemple : 7, 8 et 9 → 8). Si l'une des deux notes manque, **la note présente constitue la moyenne de la matière** (décision du 23/10/2026) ; la note manquante n'est jamais comptée comme un 0 et la matière est signalée « une seule note ».
+  * **Les deux** : moyenne annuelle = (T1 + T2 + T3) ÷ 3, calculée seulement quand les 3 moyennes de trimestre existent (exemple : (7,5 + 8 + 9) ÷ 3 = 8,17). Une note non saisie n'est jamais un zéro ; un 0 saisi est un vrai 0. Calcul exact, arrondi à 2 décimales seulement à l'affichage.
+  * Changer le type d'école ne supprime aucune note : on passe de publique à privée → les compositions déjà saisies restent, les évaluations manquantes sont signalées ; de privée à publique → les évaluations restent enregistrées mais ne comptent plus.
+* **Ce qui existe déjà et sera réutilisé** (aucun doublon) :
+  * `schools.school_type` (« publique » / « privee »), déjà modifiable dans « Mon école » ;
+  * `assessments.kind` (« composition » / « evaluation ») et `assessments.sequence`, qui servira de **numéro de trimestre** (1, 2, 3) ;
+  * les tables `grades`, `class_subjects`, `annual_results`, `report_cards` (bulletins), le moteur de calcul `calculs.dart`, les écrans de saisie (clavier, voix), le classement et ses exports PDF / Excel.
+* **Impact** :
+  * base : **aucune nouvelle table** ; une petite migration qui empêche deux « Composition du 2e trimestre » pour la même classe (index unique classe + trimestre + type) ; aucune donnée existante modifiée ;
+  * calcul : moyennes de trimestre et annuelle selon le type d'école, matière « incomplète » (privé), calcul exact et arrondi à l'affichage — **remplace l'hypothèse H40** (arrondi à chaque étape) ;
+  * écrans : « Nouvelle composition » devient le choix du **trimestre** (privé : l'évaluation et la composition sont créées ensemble) ; en privé, chaque élève a deux cases (Éval. / Compo.) ; le classement propose T1, T2, T3 et « Année » à la place du « Cumul » ; les résultats annuels et les exports suivent ; la saisie vocale demande la note d'évaluation puis celle de composition ;
+  * bulletins (phase 4) : ils liront directement ces moyennes ;
+  * tests : les deux exemples ci-dessus, notes manquantes, notes à 0, note modifiée, trimestre manquant, changement de type d'école.
+* **Valeur** : élevée — c'est la méthode réellement appliquée dans les écoles ; sans elle, les moyennes affichées seraient fausses pour les écoles privées. **Profils** : directeur, enseignant.
+* **Effort** : M (environ une journée de travail, tests compris). **Risques** : faibles sur les données (rien n'est supprimé) ; les résultats annuels déjà « gardés » devront être regardés à nouveau.
+* **Recommandation** : maintenant, avant le GO de la phase 3, puisque cela change les calculs de cette phase.
 

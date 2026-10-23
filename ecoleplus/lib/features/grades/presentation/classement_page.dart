@@ -56,28 +56,26 @@ class ClassementPage extends ConsumerStatefulWidget {
 }
 
 class _ClassementState extends ConsumerState<ClassementPage> {
-  /// null : cumul de l'année.
-  String? _composition;
+  /// 1, 2, 3 : trimestre ; 4 : l'année. null : dernier trimestre noté.
+  int? _periode;
   bool _occupe = false;
 
-  List<Matiere> _matieres(DonneesClasse d) => [
-    for (final m in d.matieres)
-      Matiere(m.matiere.id, m.matiere.name, (m.lien.coefficient * 100).round()),
-  ];
+  static const _annee = 4;
 
-  String _periode(DonneesClasse d) => _composition == null
-      ? 'Cumul de l’année'
-      : d.compositions.firstWhere((c) => c.id == _composition).label;
+  String _periodeTexte(int p) => p == _annee ? 'Année' : trimestreTexte(p);
 
-  String _nomFichier(DonneesClasse d, String ext) {
-    final base = 'Classement_${d.classe.name}_${_periode(d)}'.replaceAll(
+  List<(String, String)> _colonnes(DonneesClasse d, int p) =>
+      p == _annee ? colonnesAnnee : colonnesMatieres(d.matieresCalcul);
+
+  String _nomFichier(DonneesClasse d, int p, String ext) {
+    final base = 'Classement_${d.classe.name}_${_periodeTexte(p)}'.replaceAll(
       RegExp(r'[^\p{L}\p{N}\-]+', unicode: true),
       '_',
     );
     return '$base.$ext';
   }
 
-  Future<void> _pdf(DonneesClasse d, Classement c) async {
+  Future<void> _pdf(DonneesClasse d, int p, Classement c) async {
     setState(() => _occupe = true);
     await avecMessage(context, () async {
       final annee = ref
@@ -90,20 +88,20 @@ class _ClassementState extends ConsumerState<ClassementPage> {
         ecole: d.ecole.name,
         classe: d.classe.name,
         annee: annee?.label ?? '',
-        periode: _periode(d),
-        tableau: tableauClassement(c, _matieres(d)),
+        periode: _periodeTexte(p),
+        tableau: tableauClassement(c, _colonnes(d, p), avecTotal: p != _annee),
         statistiques: statistiquesTexte(c.statistiques),
       );
-      await ref.read(sortiePdfProvider).imprimer(pdf, _nomFichier(d, 'pdf'));
+      await ref.read(sortiePdfProvider).imprimer(pdf, _nomFichier(d, p, 'pdf'));
       return true;
     });
     if (mounted) setState(() => _occupe = false);
   }
 
-  Future<void> _excel(DonneesClasse d, Classement c) async {
+  Future<void> _excel(DonneesClasse d, int p, Classement c) async {
     setState(() => _occupe = true);
     await avecMessage(context, () async {
-      final t = tableauClassement(c, _matieres(d));
+      final t = tableauClassement(c, _colonnes(d, p), avecTotal: p != _annee);
       final octets = ecrireXlsx('Classement', [
         t.entete,
         ...t.lignes,
@@ -112,7 +110,7 @@ class _ClassementState extends ConsumerState<ClassementPage> {
       ]);
       await ref.read(sortieFichierProvider)(
         octets,
-        _nomFichier(d, 'xlsx'),
+        _nomFichier(d, p, 'xlsx'),
         typeXlsx,
       );
       return true;
@@ -171,21 +169,26 @@ class _ClassementState extends ConsumerState<ClassementPage> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    if (_composition != null &&
-        !d.compositions.any((c) => c.id == _composition)) {
-      _composition = null;
-    }
-    final c = d.classement(compositionId: _composition);
+    // Par défaut : le dernier trimestre qui a des notes.
+    final p = _periode ??= () {
+      for (final t in const [3, 2, 1]) {
+        final ids = {for (final e in d.epreuvesTrimestre(t)) e.id};
+        if (d.notes.any((g) => ids.contains(g.assessmentId))) return t;
+      }
+      return 1;
+    }();
+    final annee = p == _annee;
+    final c = annee ? d.annee() : d.trimestre(p);
     final s = c.statistiques;
-    final matieres = _matieres(d);
     final directeur = session?.role == 'directeur';
-    final annuels = _composition == null && directeur
+    final annuels = annee && directeur
         ? ref.watch(resultatsAnnuelsProvider(widget.classId)).value
         : null;
     final dejaGardes = annuels
         ?.map((a) => a.resultDate)
         .nonNulls
         .fold<String?>(null, (a, b) => a == null || b.compareTo(a) > 0 ? b : a);
+    final colonnes = _colonnes(d, p);
     return EcoleScaffold(
       title: 'Classement — ${d.classe.name}',
       body: ListView(
@@ -196,18 +199,13 @@ class _ClassementState extends ConsumerState<ClassementPage> {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final a in d.compositions)
+              for (final t in const [1, 2, 3, _annee])
                 ChoiceChip(
-                  label: Text(a.label),
-                  selected: _composition == a.id,
-                  onSelected: (_) => setState(() => _composition = a.id),
+                  key: Key('periode-$t'),
+                  label: Text(_periodeTexte(t)),
+                  selected: p == t,
+                  onSelected: (_) => setState(() => _periode = t),
                 ),
-              ChoiceChip(
-                key: const Key('cumul'),
-                label: const Text('Cumul de l’année'),
-                selected: _composition == null,
-                onSelected: (_) => setState(() => _composition = null),
-              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -217,6 +215,11 @@ class _ClassementState extends ConsumerState<ClassementPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (annee)
+                    const Text(
+                      'Moyenne annuelle = (1er + 2e + 3e trimestre) ÷ 3, '
+                      'seulement pour les élèves qui ont les trois.',
+                    ),
                   for (final l in statistiquesTexte(s)) Text(l),
                   if (d.matieres.isEmpty)
                     const Text(
@@ -236,17 +239,17 @@ class _ClassementState extends ConsumerState<ClassementPage> {
                 key: const Key('export-pdf'),
                 icon: const Icon(Icons.picture_as_pdf),
                 label: const Text('PDF'),
-                onPressed: _occupe ? null : () => _pdf(d, c),
+                onPressed: _occupe ? null : () => _pdf(d, p, c),
               ),
               OutlinedButton.icon(
                 key: const Key('export-excel'),
                 icon: const Icon(Icons.table_view),
                 label: const Text('Excel'),
-                onPressed: _occupe ? null : () => _excel(d, c),
+                onPressed: _occupe ? null : () => _excel(d, p, c),
               ),
             ],
           ),
-          if (_composition == null && directeur) ...[
+          if (annee && directeur) ...[
             const SizedBox(height: 8),
             FilledButton.tonalIcon(
               key: const Key('garder-annuel'),
@@ -272,20 +275,16 @@ class _ClassementState extends ConsumerState<ClassementPage> {
                   ),
                 ),
                 title: Text(r.eleve.nom),
-                subtitle: Text(
-                  r.moyenne == null
-                      ? 'Aucune note comptée'
-                      : 'Moyenne ${centiemesTexte(r.moyenne)} · total '
-                            '${centiemesTexte(r.total)}'
-                            '${r.mention == null ? '' : ' · ${r.mention}'}',
-                ),
+                subtitle: Text(_sousTitre(r, annee)),
                 children: [
-                  for (final m in matieres)
+                  for (final (id, titre) in colonnes)
                     ListTile(
                       dense: true,
-                      title: Text(m.nom),
-                      subtitle: Text('coef. ${centiemesTexte(m.coefficient)}'),
-                      trailing: Text(centiemesTexte(r.moyennesMatieres[m.id])),
+                      title: Text(titre),
+                      subtitle: r.uneSeuleNote.contains(id)
+                          ? const Text('Une seule note')
+                          : null,
+                      trailing: Text(centiemesTexte(r.moyennesMatieres[id])),
                     ),
                 ],
               ),
@@ -293,5 +292,21 @@ class _ClassementState extends ConsumerState<ClassementPage> {
         ],
       ),
     );
+  }
+
+  static String _sousTitre(Resultat r, bool annee) {
+    final mention = r.mention == null ? '' : ' · ${r.mention}';
+    if (annee) {
+      return r.moyenne == null
+          ? 'Il manque la moyenne d’un trimestre'
+          : 'Moyenne annuelle ${centiemesTexte(r.moyenne)}$mention';
+    }
+    final seule = r.uneSeuleNote.isEmpty
+        ? ''
+        : ' · ${r.uneSeuleNote.length} matière(s) avec une seule note';
+    return r.moyenne == null
+        ? 'Aucune note comptée'
+        : 'Moyenne ${centiemesTexte(r.moyenne)} · total '
+              '${centiemesTexte(r.total)}$mention$seule';
   }
 }

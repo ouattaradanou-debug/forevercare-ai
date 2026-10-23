@@ -5,7 +5,6 @@ import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
-import 'package:ecoleplus/core/widgets/form_fields.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/grades/data/grades_repository.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
@@ -86,85 +85,10 @@ class NotesPage extends ConsumerWidget {
   }
 }
 
-/// Une classe : ses compositions, la saisie, le classement, les matières.
+/// Une classe : les trois trimestres, le classement, les matières.
 class ClasseNotesPage extends ConsumerWidget {
   const new(this.classId, {super.key});
   final String classId;
-
-  Future<void> _nouvelle(
-    BuildContext context,
-    WidgetRef ref,
-    DonneesClasse d,
-  ) async {
-    final libelle = TextEditingController(
-      text: 'Composition ${d.compositions.length + 1}',
-    );
-    final bareme = TextEditingController(
-      text: nombreTexte(d.ecole.gradingScale),
-    );
-    String? date;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => StatefulBuilder(
-        builder: (c, setState) => AlertDialog(
-          title: const Text('Nouvelle composition'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TexteDictable(
-                  key: const Key('composition-libelle'),
-                  controller: libelle,
-                  label: 'Nom (ex. Composition 1, Devoir)',
-                ),
-                TexteDictable(
-                  key: const Key('composition-bareme'),
-                  controller: bareme,
-                  type: TypeDictee.numero,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  label: 'Noté sur (barème)',
-                ),
-                const SizedBox(height: 12),
-                AutoSaveDateField(
-                  label: 'Date (facultatif)',
-                  initial: date,
-                  onSave: (v) async => setState(() => date = v),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(c, false),
-              child: const Text('Annuler'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(c, true),
-              child: const Text('Créer'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (!(ok ?? false) || !context.mounted) return;
-    final b = nombreDepuis(bareme.text);
-    final id = await avecMessage(context, () async {
-      if (b == null) throw const UserMessage('Barème illisible (ex. 10).');
-      return await ref
-          .read(gradesRepositoryProvider)
-          .creerComposition(
-            d.classe,
-            libelle: libelle.text,
-            bareme: b,
-            date: date,
-          );
-    });
-    if (id != null && context.mounted) {
-      await context.push('/notes/$classId/saisie/$id');
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -177,7 +101,13 @@ class ClasseNotesPage extends ConsumerWidget {
       );
     }
     final directeur = session.role == 'directeur';
-    final attendues = d.eleves.length * d.matieres.length;
+    final parEpreuve = typesEpreuves(d.type).length;
+    final attendues = d.eleves.length * d.matieres.length * parEpreuve;
+    int saisies(int t) {
+      final ids = {for (final e in d.epreuvesTrimestre(t)) e.id};
+      return d.notes.where((g) => ids.contains(g.assessmentId)).length;
+    }
+
     return EcoleScaffold(
       title: 'Notes — ${d.classe.name}',
       body: ListView(
@@ -191,6 +121,14 @@ class ClasseNotesPage extends ConsumerWidget {
                   : 'Le directeur doit d’abord choisir les matières de la '
                         'classe.',
             ),
+          Text(
+            d.type == TypeEcole.privee
+                ? 'École privée : chaque trimestre, une évaluation et une '
+                      'composition par matière.'
+                : 'École publique : chaque trimestre, une composition par '
+                      'matière.',
+          ),
+          const SizedBox(height: 12),
           if (directeur) ...[
             OutlinedButton.icon(
               icon: const Icon(Icons.tune),
@@ -204,25 +142,17 @@ class ClasseNotesPage extends ConsumerWidget {
             label: 'Classement',
             onPressed: () => context.push('/notes/$classId/classement'),
           ),
-          const SectionTitle('Compositions'),
-          for (final c in d.compositions)
+          const SectionTitle('Saisie des notes'),
+          for (final t in const [1, 2, 3])
             Card(
               child: ListTile(
-                title: Text(c.label),
-                subtitle: Text(
-                  'Sur ${nombreTexte(c.maxScore)} · '
-                  '${d.notes.where((g) => g.assessmentId == c.id).length}'
-                  '/$attendues notes saisies',
-                ),
+                key: Key('trimestre-$t'),
+                title: Text(trimestreTexte(t)),
+                subtitle: Text('${saisies(t)}/$attendues notes saisies'),
                 trailing: const Icon(Icons.edit_note),
-                onTap: () => context.push('/notes/$classId/saisie/${c.id}'),
+                enabled: d.matieres.isNotEmpty,
+                onTap: () => context.push('/notes/$classId/trimestre/$t'),
               ),
-            ),
-          if (d.matieres.isNotEmpty)
-            OutlinedButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text('Nouvelle composition'),
-              onPressed: () => _nouvelle(context, ref, d),
             ),
         ],
       ),
@@ -230,12 +160,14 @@ class ClasseNotesPage extends ConsumerWidget {
   }
 }
 
-/// Saisie : composition → matière → une ligne par élève. Le clavier
-/// numérique passe à l'élève suivant ; chaque note est enregistrée seule.
+/// Saisie d'un trimestre : matière → une ligne par élève, avec une case
+/// (école publique : composition) ou deux (école privée : évaluation et
+/// composition). Le clavier « Suivant » passe à la case suivante ; chaque
+/// note est enregistrée seule.
 class SaisieNotesPage extends ConsumerStatefulWidget {
-  const new(this.classId, this.assessmentId, {super.key});
+  const new(this.classId, this.trimestre, {super.key});
   final String classId;
-  final String assessmentId;
+  final int trimestre;
 
   @override
   ConsumerState<SaisieNotesPage> createState() => _SaisieState();
@@ -243,34 +175,50 @@ class SaisieNotesPage extends ConsumerStatefulWidget {
 
 class _SaisieState extends ConsumerState<SaisieNotesPage> {
   String? _matiere;
+  bool _preparation = false;
+
+  /// Crée les épreuves du trimestre la première fois.
+  void _preparer(DonneesClasse d) {
+    if (_preparation) return;
+    _preparation = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await avecMessage(
+        context,
+        () => ref
+            .read(gradesRepositoryProvider)
+            .preparerTrimestre(d, widget.trimestre),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final d = ref.watch(donneesClasseProvider(widget.classId)).value;
-    final compo = d?.compositions
-        .where((c) => c.id == widget.assessmentId)
-        .firstOrNull;
-    if (d == null || compo == null) {
-      return const EcoleScaffold(
-        title: 'Saisie des notes',
-        body: Center(child: CircularProgressIndicator()),
+    final titre = trimestreTexte(widget.trimestre);
+    final epreuves = d?.epreuvesTrimestre(widget.trimestre) ?? const [];
+    if (d == null || epreuves.length < typesEpreuves(d.type).length) {
+      if (d != null) _preparer(d);
+      return EcoleScaffold(
+        title: titre,
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
     final matiereId = _matiere ?? d.matieres.firstOrNull?.matiere.id;
-    final notes = {
-      for (final g in d.notes)
-        if (g.assessmentId == compo.id && g.subjectId == matiereId)
-          g.studentId: g,
+    final deux = epreuves.length > 1;
+    final resultats = {
+      for (final r in d.trimestre(widget.trimestre).resultats) r.eleve.id: r,
     };
-    final (meilleure, minimale) = matiereId == null
-        ? (null, null)
-        : extremesMatiere(
-            [for (final g in d.notes) DonneesClasse.noteDe(g)],
-            matiereId,
-            compo.id,
-          );
+    GradeRow? noteDe(AssessmentRow e, String eleve) => d.notes
+        .where(
+          (g) =>
+              g.assessmentId == e.id &&
+              g.studentId == eleve &&
+              g.subjectId == matiereId,
+        )
+        .firstOrNull;
     return EcoleScaffold(
-      title: '${compo.label} — ${d.classe.name}',
+      title: '$titre — ${d.classe.name}',
       body: ListView(
         key: const Key('saisie-notes'),
         padding: const EdgeInsets.all(16),
@@ -288,40 +236,101 @@ class _SaisieState extends ConsumerState<SaisieNotesPage> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            'Notes sur ${nombreTexte(compo.maxScore)} · '
-            '${notes.length}/${d.eleves.length} saisies'
-            '${meilleure == null ? '' : ' · meilleure '
-                      '${centiemesTexte(meilleure)}, plus faible '
-                      '${centiemesTexte(minimale)}'}',
-          ),
+          if (matiereId != null)
+            for (final e in epreuves)
+              Text(_resume(d, e, matiereId), key: Key('resume-${e.kind}')),
           const SizedBox(height: 8),
           if (matiereId != null && d.eleves.isNotEmpty)
             BigButton(
               icon: Icons.mic,
               label: 'Saisie vocale guidée',
               onPressed: () => context.push(
-                '/notes/${widget.classId}/vocal/${compo.id}/$matiereId',
+                '/notes/${widget.classId}/vocal/${widget.trimestre}/'
+                '$matiereId',
               ),
             ),
           const SizedBox(height: 12),
           if (matiereId != null)
             for (final (i, s) in d.eleves.indexed)
-              ChampNote(
-                key: ValueKey('note-${s.id}-$matiereId'),
-                eleve: s,
-                composition: compo,
-                matiereId: matiereId,
-                note: notes[s.id],
-                dernier: i == d.eleves.length - 1,
-              ),
+              if (!deux)
+                ChampNote(
+                  key: ValueKey('note-${s.id}-$matiereId-${epreuves[0].id}'),
+                  eleve: s,
+                  composition: epreuves[0],
+                  matiereId: matiereId,
+                  note: noteDe(epreuves[0], s.id),
+                  dernier: i == d.eleves.length - 1,
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${s.lastName} ${s.firstNames}',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final (j, e) in epreuves.indexed)
+                            Expanded(
+                              child: ChampNote(
+                                key: ValueKey(
+                                  'note-${s.id}-$matiereId-${e.id}',
+                                ),
+                                eleve: s,
+                                composition: e,
+                                matiereId: matiereId,
+                                note: noteDe(e, s.id),
+                                avecNom: false,
+                                dernier:
+                                    i == d.eleves.length - 1 &&
+                                    j == epreuves.length - 1,
+                              ),
+                            ),
+                        ],
+                      ),
+                      Text(
+                        _moyenneMatiere(resultats[s.id], matiereId),
+                        key: Key('moyenne-${s.id}'),
+                      ),
+                    ],
+                  ),
+                ),
         ],
       ),
     );
   }
+
+  static String _resume(DonneesClasse d, AssessmentRow e, String matiereId) {
+    final saisies = d.notes
+        .where((g) => g.assessmentId == e.id && g.subjectId == matiereId)
+        .length;
+    final (meilleure, minimale) = extremesMatiere(
+      [for (final g in d.notes) DonneesClasse.noteDe(g)],
+      matiereId,
+      e.id,
+    );
+    final extremes = meilleure == null
+        ? ''
+        : ' · meilleure ${centiemesTexte(meilleure)}, plus faible '
+              '${centiemesTexte(minimale)}';
+    return '${epreuveTexte(e.kind)} sur ${nombreTexte(e.maxScore)} · '
+        '$saisies/${d.eleves.length} saisies$extremes';
+  }
+
+  static String _moyenneMatiere(Resultat? r, String matiereId) {
+    final m = r?.moyennesMatieres[matiereId];
+    if (m == null) return 'Moyenne de la matière : —';
+    return 'Moyenne de la matière : ${centiemesTexte(m)}'
+        '${r!.uneSeuleNote.contains(matiereId) ? ' (une seule note)' : ''}';
+  }
 }
 
-/// Une ligne de saisie : nom de l'élève, note, bouton « Abs ».
+/// Une case de saisie : nom de l'élève (sauf en école privée, où il est
+/// au-dessus des deux cases), note, bouton « Abs. ».
 class ChampNote extends ConsumerStatefulWidget {
   const new({
     required this.eleve,
@@ -329,6 +338,7 @@ class ChampNote extends ConsumerStatefulWidget {
     required this.matiereId,
     required this.note,
     required this.dernier,
+    this.avecNom = true,
     super.key,
   });
   final StudentRow eleve;
@@ -336,6 +346,7 @@ class ChampNote extends ConsumerStatefulWidget {
   final String matiereId;
   final GradeRow? note;
   final bool dernier;
+  final bool avecNom;
 
   @override
   ConsumerState<ChampNote> createState() => _ChampNoteState();
@@ -404,25 +415,29 @@ class _ChampNoteState extends ConsumerState<ChampNote> {
   @override
   Widget build(BuildContext context) {
     final absent = widget.note?.status == 'absent';
+    // Clés : « note-<élève> » (composition), « eval-<élève> » (évaluation).
+    final prefixe = widget.composition.kind == 'evaluation' ? 'eval' : 'note';
+    final eval = widget.composition.kind == 'evaluation';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 8, right: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 3,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: Text(
-                '${widget.eleve.lastName} ${widget.eleve.firstNames}',
-                style: Theme.of(context).textTheme.titleMedium,
+          if (widget.avecNom)
+            Expanded(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 14),
+                child: Text(
+                  '${widget.eleve.lastName} ${widget.eleve.firstNames}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
             ),
-          ),
           Expanded(
             flex: 2,
             child: TextField(
-              key: Key('note-${widget.eleve.id}'),
+              key: Key('$prefixe-${widget.eleve.id}'),
               controller: _ctrl,
               focusNode: _focus,
               enabled: !absent,
@@ -447,6 +462,7 @@ class _ChampNoteState extends ConsumerState<ChampNote> {
                 unawaited(_enregistrer(v));
               },
               decoration: InputDecoration(
+                labelText: widget.avecNom ? null : (eval ? 'Éval.' : 'Compo.'),
                 hintText: absent
                     ? 'Abs.'
                     : '/${nombreTexte(widget.composition.maxScore)}',
@@ -462,7 +478,9 @@ class _ChampNoteState extends ConsumerState<ChampNote> {
           // à la note de l'élève suivant.
           ExcludeFocus(
             child: FilterChip(
-              key: Key('abs-${widget.eleve.id}'),
+              key: Key(
+                eval ? 'abs-eval-${widget.eleve.id}' : 'abs-${widget.eleve.id}',
+              ),
               label: const Text('Abs.'),
               selected: absent,
               onSelected: (on) {

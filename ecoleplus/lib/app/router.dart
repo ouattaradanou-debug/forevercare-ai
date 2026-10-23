@@ -181,17 +181,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => ClassementPage(s.pathParameters['classId']!),
       ),
       GoRoute(
-        path: '/notes/:classId/saisie/:assessmentId',
+        path: '/notes/:classId/trimestre/:t',
         builder: (_, s) => SaisieNotesPage(
           s.pathParameters['classId']!,
-          s.pathParameters['assessmentId']!,
+          int.tryParse(s.pathParameters['t']!) ?? 1,
         ),
       ),
       GoRoute(
-        path: '/notes/:classId/vocal/:assessmentId/:subjectId',
+        path: '/notes/:classId/vocal/:t/:subjectId',
         builder: (_, s) => SaisieVocalePage(
           s.pathParameters['classId']!,
-          s.pathParameters['assessmentId']!,
+          int.tryParse(s.pathParameters['t']!) ?? 1,
           s.pathParameters['subjectId']!,
         ),
       ),

@@ -47,13 +47,13 @@ Future<void> note(WidgetTester tester, String eleve, String valeur) async {
   await AppHarness.settle(tester);
 }
 
+/// Ouvre la saisie du trimestre [t] depuis la page de la classe.
+Future<void> trimestre(WidgetTester tester, int t) =>
+    tap(tester, find.byKey(Key('trimestre-$t')));
+
 /// Directeur : classe CM1 A avec Calcul (coef 3), Français (coef 2) et
-/// Dessin (coef 0), puis une composition sur [bareme].
-Future<void> preparerClasse(
-  WidgetTester tester,
-  AppHarness h, {
-  String bareme = '10',
-}) async {
+/// Dessin (coef 0), puis la saisie du 1er trimestre.
+Future<void> preparerClasse(WidgetTester tester, AppHarness h) async {
   await h.pump(tester);
   await h.login(tester, 'directeur@ecole-test.local');
   await AppHarness.toucher(tester, 'Notes et classement');
@@ -65,17 +65,15 @@ Future<void> preparerClasse(
   await ajouterMatiere(tester, 'Dessin', '0');
   expect(find.text('Calcul'), findsOneWidget);
   await retour(tester);
-  await tap(tester, find.text('Nouvelle composition'));
-  await tester.enterText(find.byKey(const Key('composition-bareme')), bareme);
-  await tester.tap(find.widgetWithText(FilledButton, 'Créer'));
-  await AppHarness.settle(tester);
+  await trimestre(tester, 1);
   expect(find.byKey(const Key('saisie-notes')), findsOneWidget);
 }
 
 void main() {
-  testWidgets('cas calculé à la main : moyennes, total, rang ex-aequo, '
-      'coefficient 0, hors barème, recalcul après correction, exports et '
-      'résultats annuels', (tester) async {
+  testWidgets('école publique, cas calculé à la main : moyennes, total, '
+      'rang ex-aequo, coefficient 0, hors barème, recalcul après '
+      'correction, exports, moyenne annuelle des 3 trimestres et résultats '
+      'annuels', (tester) async {
     final h = AppHarness()..seedEcoleTest();
     await preparerClasse(tester, h);
 
@@ -123,13 +121,13 @@ void main() {
       await Future<void>.delayed(const Duration(seconds: 2));
     });
     await AppHarness.settle(tester);
-    expect(h.pdfSortis.keys, contains('Classement_CM1_A_Cumul_de_l_année.pdf'));
+    expect(h.pdfSortis.keys, contains('Classement_CM1_A_1er_trimestre.pdf'));
     final sortie = Platform.environment['PDF_SORTIE'];
     if (sortie != null) {
       File(sortie).writeAsBytesSync(h.pdfSortis.values.first);
     }
     await tap(tester, find.byKey(const Key('export-excel')));
-    final xlsx = h.fichiersSortis['Classement_CM1_A_Cumul_de_l_année.xlsx']!;
+    final xlsx = h.fichiersSortis['Classement_CM1_A_1er_trimestre.xlsx']!;
     final lignes = lireTableur(xlsx);
     expect(lignes.first, [
       'Rang',
@@ -143,23 +141,13 @@ void main() {
     ]);
     expect(lignes[1], ['1re', 'TEST Aïcha', '9', '1', '6', '39', '7.8']);
 
-    // Résultats de l'année gardés pour la fiche de scolarité.
-    await tap(tester, find.byKey(const Key('garder-annuel')));
-    await tester.tap(find.widgetWithText(FilledButton, 'Garder'));
-    await AppHarness.settle(tester);
-    final annuels = await h.db.select(h.db.annualResults).get();
-    expect(annuels, hasLength(3));
-    final aicha = annuels.firstWhere((a) => a.studentId == 'e-0');
-    expect(aicha.generalAverage, 7.8);
-    expect(aicha.rank, 1);
-    expect(aicha.classSize, 3);
-    final clarisse = annuels.firstWhere((a) => a.studentId == 'e-2');
-    expect(clarisse.rank, 2);
-    expect(clarisse.rankExAequo, isTrue);
+    // Année : il manque les 2e et 3e trimestres → pas de moyenne annuelle.
+    await tap(tester, find.byKey(const Key('periode-4')));
+    expect(find.text('Il manque la moyenne d’un trimestre'), findsNWidgets(3));
 
     // Correction d'une note : le classement est recalculé aussitôt.
     await retour(tester);
-    await tap(tester, find.text('Composition 1'));
+    await trimestre(tester, 1);
     await note(tester, 'e-2', '8');
     await retour(tester);
     await tap(tester, find.text('Classement'));
@@ -167,6 +155,40 @@ void main() {
     // Boukary passe 3e (et non 2e).
     expect(find.text('1re ex-aequo/3'), findsNWidgets(2));
     expect(find.text('3e/3'), findsOneWidget);
+    await retour(tester);
+
+    // 2e et 3e trimestres : Calcul seulement (Aïcha 6, Boukary 9,
+    // Clarisse 7) ; la moyenne du trimestre est alors la note de Calcul.
+    for (final t in const [2, 3]) {
+      await trimestre(tester, t);
+      await note(tester, 'e-0', '6');
+      await note(tester, 'e-1', '9');
+      await note(tester, 'e-2', '7');
+      await retour(tester);
+    }
+    await tap(tester, find.text('Classement'));
+    await tap(tester, find.byKey(const Key('periode-4')));
+    // Boukary : (7,2 + 9 + 9) ÷ 3 = 8,4 ; Clarisse : (7,8 + 7 + 7) ÷ 3 =
+    // 7,266… → 7,27 ; Aïcha : (7,8 + 6 + 6) ÷ 3 = 6,6.
+    expect(find.text('Moyenne annuelle 8,4'), findsOneWidget);
+    expect(find.text('Moyenne annuelle 7,27'), findsOneWidget);
+    expect(find.text('Moyenne annuelle 6,6'), findsOneWidget);
+    expect(find.text('1er/3'), findsOneWidget);
+    // (8,4 + 7,266… + 6,6) ÷ 3 = 7,422… → 7,42.
+    expect(find.text('Moyenne de la classe : 7,42'), findsOneWidget);
+
+    // Résultats de l'année gardés pour la fiche de scolarité.
+    await tap(tester, find.byKey(const Key('garder-annuel')));
+    await tester.tap(find.widgetWithText(FilledButton, 'Garder'));
+    await AppHarness.settle(tester);
+    final annuels = await h.db.select(h.db.annualResults).get();
+    expect(annuels, hasLength(3));
+    final boukary = annuels.firstWhere((a) => a.studentId == 'e-1');
+    expect(boukary.generalAverage, 8.4);
+    expect(boukary.rank, 1);
+    expect(boukary.classSize, 3);
+    final clarisse = annuels.firstWhere((a) => a.studentId == 'e-2');
+    expect((clarisse.generalAverage, clarisse.rank), (7.27, 2));
 
     // Le serveur reçoit les notes.
     await h.synchroniser(tester);
@@ -174,17 +196,25 @@ void main() {
       (h.server.tables['grades'] ?? {}).values.where(
         (g) => g['deleted_at'] == null,
       ),
-      hasLength(7),
+      hasLength(13),
     );
     await h.dispose(tester);
   });
 
-  testWidgets('saisie vocale guidée : « quinze » compris « cinq » est vu '
-      'avant d’être gardé ; hors barème refusé ; absent', (tester) async {
+  testWidgets('école privée (sur 20) : évaluation et composition, saisie '
+      'vocale guidée (« quinze » compris « cinq » vu avant d’être gardé, '
+      'hors barème refusé, absent), une seule note = moyenne de la '
+      'matière', (tester) async {
     final h = AppHarness()..seedEcoleTest();
-    await preparerClasse(tester, h, bareme: '20');
+    h.server.tables['schools']![ecoleId]!
+      ..['school_type'] = 'privee'
+      ..['grading_scale'] = 20;
+    await preparerClasse(tester, h);
+    expect(find.text('Éval.'), findsWidgets);
+    expect(find.text('Compo.'), findsWidgets);
     await tap(tester, find.text('Saisie vocale guidée'));
     expect(find.text('TEST Aïcha'), findsOneWidget);
+    expect(find.text('Note d’évaluation'), findsOneWidget);
 
     // Le maître dit « quinze », le téléphone comprend « cinq ».
     h.dictee.texte = 'cinq';
@@ -195,7 +225,6 @@ void main() {
     );
     expect(await h.db.select(h.db.grades).get(), isEmpty);
     await tap(tester, find.byKey(const Key('vocal-recommencer')));
-
     h.dictee.texte = 'quinze';
     await tap(tester, find.byKey(const Key('vocal-parler')));
     expect(
@@ -203,12 +232,10 @@ void main() {
       '15',
     );
     await tap(tester, find.byKey(const Key('vocal-confirmer')));
-    var notes = await h.db.select(h.db.grades).get();
-    expect(notes.single.score, 15);
-    expect(notes.single.studentId, 'e-0');
 
-    // Élève suivant ; note hors barème refusée.
-    expect(find.text('TEST Boukary'), findsOneWidget);
+    // Même élève, note de composition ; hors barème refusé.
+    expect(find.text('TEST Aïcha'), findsOneWidget);
+    expect(find.text('Note de composition'), findsOneWidget);
     h.dictee.texte = 'vingt-cinq';
     await tap(tester, find.byKey(const Key('vocal-parler')));
     expect(
@@ -220,8 +247,8 @@ void main() {
     await tap(tester, find.byKey(const Key('vocal-parler')));
     await tap(tester, find.byKey(const Key('vocal-confirmer')));
 
-    // Clavier toujours disponible ; puis « absent ».
-    expect(find.text('TEST Clarisse'), findsOneWidget);
+    // Élève suivant : « absente » à l'évaluation ; le reste est passé.
+    expect(find.text('TEST Boukary'), findsOneWidget);
     h.dictee.texte = 'absente';
     await tap(tester, find.byKey(const Key('vocal-parler')));
     expect(
@@ -229,11 +256,40 @@ void main() {
       'Absent',
     );
     await tap(tester, find.byKey(const Key('vocal-confirmer')));
+    for (var k = 0; k < 3; k++) {
+      await tap(tester, find.byKey(const Key('vocal-passer')));
+    }
     expect(find.text('Tous les élèves ont été vus.'), findsOneWidget);
-    notes = await h.db.select(h.db.grades).get();
+    final kinds = {
+      for (final a in await h.db.select(h.db.assessments).get()) a.id: a.kind,
+    };
     expect(
-      {for (final n in notes) n.studentId: (n.score, n.status)},
-      {'e-0': (15.0, 'note'), 'e-1': (14.5, 'note'), 'e-2': (null, 'absent')},
+      {
+        for (final n in await h.db.select(h.db.grades).get())
+          (n.studentId, kinds[n.assessmentId]): (n.score, n.status),
+      },
+      {
+        ('e-0', 'evaluation'): (15.0, 'note'),
+        ('e-0', 'composition'): (14.5, 'note'),
+        ('e-1', 'evaluation'): (null, 'absent'),
+      },
+    );
+
+    // Saisie au clavier : moyenne de la matière (15 + 14,5) ÷ 2 = 14,75 ;
+    // une seule note (composition de Clarisse) = moyenne de la matière.
+    await retour(tester);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('moyenne-e-0'))).data,
+      'Moyenne de la matière : 14,75',
+    );
+    await note(tester, 'e-2', '12');
+    expect(
+      tester.widget<Text>(find.byKey(const Key('moyenne-e-2'))).data,
+      'Moyenne de la matière : 12 (une seule note)',
+    );
+    expect(
+      tester.widget<Text>(find.byKey(const Key('moyenne-e-1'))).data,
+      'Moyenne de la matière : —',
     );
     await h.dispose(tester);
   });

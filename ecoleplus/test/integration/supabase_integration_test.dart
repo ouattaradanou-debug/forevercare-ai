@@ -617,7 +617,7 @@ void mainA6() {
     final dir = await connecte('directeur@ecole-test.local');
     final repo = GradesRepository(dir.store);
     var d = (await repo.chargerDonnees(cm1))!;
-    var c = d.classement(compositionId: 'f0000000-0000-4000-8000-000000000001');
+    var c = d.trimestre(1); // « Composition 1 » du jeu de test = 1er trimestre
     String ligne(Resultat r) =>
         '${r.eleve.nom} ${r.rangTexte} ${centiemesTexte(r.moyenne)} '
         '${centiemesTexte(r.total)}';
@@ -680,7 +680,7 @@ void mainA6() {
     // Le directeur reçoit la correction : Clarisse passe 1re ex-aequo.
     await dir.engine.syncNow();
     d = (await repo.chargerDonnees(cm1))!;
-    c = d.classement(compositionId: compo.id);
+    c = d.trimestre(1);
     expect(c.resultats.map(ligne).take(2), [
       'TEST Aïcha 1re ex-aequo 7 21',
       'TEST Clarisse 1re ex-aequo 7 21',
@@ -702,10 +702,39 @@ void mainA6() {
       2,
     );
 
-    // Résultats annuels gardés (directeur).
+    // Pas encore de moyenne annuelle : seul le 1er trimestre est noté.
+    expect(d.annee().statistiques.classes, 0);
+
+    // 2e et 3e trimestres saisis par l'enseignante (épreuves créées sur son
+    // téléphone) : Lecture 7 pour tous.
+    final lecture = dE.matieres.firstWhere((m) => m.matiere.name == 'Lecture');
+    for (final t in const [2, 3]) {
+      final dT = (await repoE.chargerDonnees(cm1))!;
+      final epreuves = await repoE.preparerTrimestre(dT, t);
+      for (final e in dT.eleves) {
+        await repoE.enregistrerNote(
+          composition: epreuves.single,
+          studentId: e.id,
+          subjectId: lecture.matiere.id,
+          centiemes: 700,
+        );
+      }
+    }
+    await ens.engine.syncNow();
+    expect(
+      await (ens.db.select(
+        ens.db.outbox,
+      )..where((o) => o.status.equals('refuse'))).get(),
+      hasLength(2),
+      reason: 'seulement les deux refus voulus plus haut',
+    );
+    await dir.engine.syncNow();
+    d = (await repo.chargerDonnees(cm1))!;
+
+    // Résultats annuels gardés (directeur) : (T1 + T2 + T3) ÷ 3.
     final n = await repo.enregistrerResultatsAnnuels(
       d,
-      d.classement(),
+      d.annee(),
       date: '2026-06-30',
     );
     expect(n, 4);
@@ -718,8 +747,9 @@ void mainA6() {
     final aicha = serveur.firstWhere(
       (r) => r['student_id'] == 'd0000000-0000-4000-8000-000000000001',
     );
-    // Avec Calcul coefficient 2 : Aïcha (8+14+6)/4 = 7 ; Clarisse
-    // (7+16+6)/4 = 7,25 → Clarisse 1re, Aïcha 2e.
+    // 1er trimestre avec Calcul coefficient 2 : Aïcha (8+14+6)/4 = 7 ;
+    // Clarisse (7+16+6)/4 = 7,25. Année : Aïcha (7+7+7)/3 = 7 ; Clarisse
+    // (7,25+7+7)/3 = 7,08 → Clarisse 1re, Aïcha 2e.
     expect(aicha['rank'], 2);
     expect(aicha['general_average'], 7);
     expect(aicha['class_size'], 4);

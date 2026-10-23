@@ -5,6 +5,7 @@ import 'package:ecoleplus/core/dictee/dictee.dart';
 import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/features/grades/data/grades_repository.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
 import 'package:ecoleplus/features/grades/domain/note_dictee.dart';
 import 'package:ecoleplus/features/grades/presentation/grades_pages.dart';
@@ -15,10 +16,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Saisie vocale guidée : un élève à la fois, en grand. La note entendue
 /// est affichée et n'est enregistrée qu'après « Confirmer » : un « quinze »
 /// compris « cinq » se voit avant d'être gardé. Le clavier reste disponible.
+/// École privée : pour chaque élève, la note d'évaluation puis celle de
+/// composition.
 class SaisieVocalePage extends ConsumerStatefulWidget {
-  const new(this.classId, this.assessmentId, this.subjectId, {super.key});
+  const new(this.classId, this.trimestre, this.subjectId, {super.key});
   final String classId;
-  final String assessmentId;
+  final int trimestre;
   final String subjectId;
 
   @override
@@ -26,6 +29,7 @@ class SaisieVocalePage extends ConsumerStatefulWidget {
 }
 
 class _SaisieVocaleState extends ConsumerState<SaisieVocalePage> {
+  /// Étape : élève × épreuve (une épreuve en public, deux en privé).
   int? _index;
   bool _ecoute = false;
   String? _entendu;
@@ -130,31 +134,36 @@ class _SaisieVocaleState extends ConsumerState<SaisieVocalePage> {
   @override
   Widget build(BuildContext context) {
     final d = ref.watch(donneesClasseProvider(widget.classId)).value;
-    final compo = d?.compositions
-        .where((c) => c.id == widget.assessmentId)
-        .firstOrNull;
+    final epreuves = d?.epreuvesTrimestre(widget.trimestre) ?? const [];
     final matiere = d?.matieres
         .where((m) => m.matiere.id == widget.subjectId)
         .firstOrNull;
-    if (d == null || compo == null || matiere == null) {
+    if (d == null || epreuves.isEmpty || matiere == null) {
       return const EcoleScaffold(
         title: 'Saisie vocale',
         body: Center(child: CircularProgressIndicator()),
       );
     }
+    final ids = {for (final e in epreuves) e.id};
     final notes = {
       for (final g in d.notes)
-        if (g.assessmentId == compo.id && g.subjectId == widget.subjectId)
-          g.studentId: g,
+        if (ids.contains(g.assessmentId) && g.subjectId == widget.subjectId)
+          (g.studentId, g.assessmentId): g,
     };
-    // Au départ : le premier élève sans note.
+    final etapes = [
+      for (final s in d.eleves)
+        for (final e in epreuves) (s, e),
+    ];
+    // Au départ : la première case sans note.
     final i = _index ??= () {
-      final k = d.eleves.indexWhere((s) => !notes.containsKey(s.id));
+      final k = etapes.indexWhere(
+        (x) => !notes.containsKey((x.$1.id, x.$2.id)),
+      );
       return k < 0 ? 0 : k;
     }();
-    final bareme = (compo.maxScore * 100).round();
-    final titre = '${matiere.matiere.name} — ${compo.label}';
-    if (i >= d.eleves.length) {
+    final titre =
+        '${matiere.matiere.name} — ${trimestreTexte(widget.trimestre)}';
+    if (i >= etapes.length) {
       return EcoleScaffold(
         title: titre,
         body: ListView(
@@ -162,7 +171,7 @@ class _SaisieVocaleState extends ConsumerState<SaisieVocalePage> {
           children: [
             const InfoMessage('Tous les élèves ont été vus.'),
             const SizedBox(height: 16),
-            Text('${notes.length}/${d.eleves.length} notes saisies.'),
+            Text('${notes.length}/${etapes.length} notes saisies.'),
             const SizedBox(height: 16),
             BigButton(
               icon: Icons.replay,
@@ -176,8 +185,10 @@ class _SaisieVocaleState extends ConsumerState<SaisieVocalePage> {
         ),
       );
     }
-    final eleve = d.eleves[i];
-    final actuelle = notes[eleve.id];
+    final (eleve, compo) = etapes[i];
+    final actuelle = notes[(eleve.id, compo.id)];
+    final bareme = (compo.maxScore * 100).round();
+    final numero = i ~/ epreuves.length;
     final grand = Theme.of(context).textTheme;
     final proposee = _proposee;
     return EcoleScaffold(
@@ -187,7 +198,7 @@ class _SaisieVocaleState extends ConsumerState<SaisieVocalePage> {
         padding: const EdgeInsets.all(20),
         children: [
           Text(
-            'Élève ${i + 1} sur ${d.eleves.length} · note sur '
+            'Élève ${numero + 1} sur ${d.eleves.length} · note sur '
             '${centiemesTexte(bareme)}',
           ),
           const SizedBox(height: 8),
@@ -196,6 +207,14 @@ class _SaisieVocaleState extends ConsumerState<SaisieVocalePage> {
             key: const Key('vocal-eleve'),
             style: grand.headlineMedium,
           ),
+          if (epreuves.length > 1)
+            Text(
+              compo.kind == 'evaluation'
+                  ? 'Note d’évaluation'
+                  : 'Note de composition',
+              key: const Key('vocal-epreuve'),
+              style: grand.titleLarge,
+            ),
           if (actuelle != null)
             Text(
               actuelle.status == 'absent'

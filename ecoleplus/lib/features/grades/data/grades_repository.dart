@@ -12,6 +12,18 @@ class MatiereDeClasse {
   final SubjectRow matiere;
 }
 
+/// Épreuves de chaque trimestre selon le type d'école (`assessments.kind`).
+List<String> typesEpreuves(TypeEcole type) => type == TypeEcole.privee
+    ? const ['evaluation', 'composition']
+    : const ['composition'];
+
+/// « 1er trimestre », « 2e trimestre »…
+String trimestreTexte(int t) => t == 1 ? '1er trimestre' : '${t}e trimestre';
+
+/// « Évaluation », « Composition ».
+String epreuveTexte(String kind) =>
+    kind == 'evaluation' ? 'Évaluation' : 'Composition';
+
 /// Tout ce qu'il faut pour classer une classe.
 class DonneesClasse {
   const new({
@@ -35,36 +47,66 @@ class DonneesClasse {
   RegleAbsent get regle =>
       ecole.absentRule == 'zero' ? RegleAbsent.zero : RegleAbsent.nonCompte;
 
-  /// Classement d'une composition, ou cumul si [compositionId] est null.
-  Classement classement({String? compositionId}) => calculerClassement(
-    eleves: [
-      for (final s in eleves)
-        Eleve(s.id, '${s.lastName} ${s.firstNames}', fille: s.sex == 'F'),
-    ],
-    matieres: [
-      for (final m in matieres)
-        Matiere(
-          m.matiere.id,
-          m.matiere.name,
-          (m.lien.coefficient * 100).round(),
-        ),
-    ],
-    compositions: [
-      for (final c in compositions)
-        if (compositionId == null || c.id == compositionId)
-          Composition(c.id, c.label, (c.maxScore * 100).round()),
-    ],
+  /// Méthode de calcul : type d'école choisi dans « Mon école » (A15).
+  TypeEcole get type => TypeEcole.depuis(ecole.schoolType);
+
+  /// Épreuves d'un trimestre selon le type d'école (évaluation puis
+  /// composition en école privée).
+  List<AssessmentRow> epreuvesTrimestre(int t) => [
+    for (final k in typesEpreuves(type))
+      ...compositions.where((c) => c.sequence == t && c.kind == k),
+  ];
+
+  List<Eleve> get _eleves => [
+    for (final s in eleves)
+      Eleve(s.id, '${s.lastName} ${s.firstNames}', fille: s.sex == 'F'),
+  ];
+  List<Matiere> get matieresCalcul => [
+    for (final m in matieres)
+      Matiere(m.matiere.id, m.matiere.name, (m.lien.coefficient * 100).round()),
+  ];
+  List<Composition> get _epreuves => [
+    for (final c in compositions)
+      Composition(
+        c.id,
+        c.label,
+        (c.maxScore * 100).round(),
+        trimestre: c.sequence,
+        type: TypeEpreuve.depuis(c.kind),
+      ),
+  ];
+  List<Mention> get _mentions => [
+    for (final m in mentions)
+      Mention(
+        (m.minAverage * 100).round(),
+        (m.maxAverage * 100).round(),
+        m.label,
+      ),
+  ];
+
+  /// Classement d'un trimestre (1, 2, 3).
+  Classement trimestre(int t) => classementTrimestre(
+    type: type,
+    trimestre: t,
+    eleves: _eleves,
+    matieres: matieresCalcul,
+    compositions: _epreuves,
     notes: [for (final g in notes) noteDe(g)],
     regle: regle,
     echelle: echelle,
-    mentions: [
-      for (final m in mentions)
-        Mention(
-          (m.minAverage * 100).round(),
-          (m.maxAverage * 100).round(),
-          m.label,
-        ),
-    ],
+    mentions: _mentions,
+  );
+
+  /// Classement de l'année : (T1 + T2 + T3) ÷ 3.
+  Classement annee() => classementAnnuel(
+    type: type,
+    eleves: _eleves,
+    matieres: matieresCalcul,
+    compositions: _epreuves,
+    notes: [for (final g in notes) noteDe(g)],
+    regle: regle,
+    echelle: echelle,
+    mentions: _mentions,
   );
 
   static Note noteDe(GradeRow g) => Note(
@@ -192,37 +234,40 @@ class GradesRepository {
             ..orderBy([(a) => OrderingTerm.asc(a.sequence)]))
           .watch();
 
-  Future<String> creerComposition(
-    ClassRow classe, {
-    required String libelle,
-    required double bareme,
-    String? date,
-  }) async {
-    if (bareme <= 0) throw const UserMessage('Le barème doit être positif.');
-    final existantes = await (db.select(
-      db.assessments,
-    )..where((a) => a.classId.equals(classe.id))).get();
-    final nom = libelle.trim();
-    if (existantes.any((a) => a.label == nom && a.deletedAt == null)) {
-      throw UserMessage('« $nom » existe déjà pour cette classe.');
+  /// Épreuves du trimestre [t], créées au besoin (barème de l'école) :
+  /// une composition (école publique), ou une évaluation et une composition
+  /// (école privée). Une épreuve déjà connue (même créée ailleurs) est
+  /// reprise ; sinon identifiant fixe, pour que deux téléphones hors ligne
+  /// ne la créent pas deux fois.
+  Future<List<AssessmentRow>> preparerTrimestre(DonneesClasse d, int t) async {
+    if (t < 1 || t > 3) throw const UserMessage('Trimestre 1, 2 ou 3.');
+    final epreuves = <AssessmentRow>[];
+    for (final kind in typesEpreuves(d.type)) {
+      var e = d.compositions
+          .where((c) => c.sequence == t && c.kind == kind)
+          .firstOrNull;
+      if (e == null) {
+        final id = _id('epreuve:${d.classe.id}:$t:$kind');
+        await store.save('assessments', {
+          'id': id,
+          'school_id': d.classe.schoolId,
+          'class_id': d.classe.id,
+          'school_year_id': d.classe.schoolYearId,
+          'label': '${epreuveTexte(kind)} — ${trimestreTexte(t)}',
+          'kind': kind,
+          'sequence': t,
+          'max_score': d.ecole.gradingScale,
+          'held_on': store.clock.nowIso().substring(0, 10),
+          'deleted_at': null,
+        });
+        e = await (db.select(
+          db.assessments,
+        )..where((a) => a.id.equals(id))).getSingle();
+      }
+      epreuves.add(e);
     }
-    final id = _id('composition:${classe.id}:${nom.toLowerCase()}');
-    await store.save('assessments', {
-      'id': id,
-      'school_id': classe.schoolId,
-      'class_id': classe.id,
-      'school_year_id': classe.schoolYearId,
-      'label': nom,
-      'sequence': existantes.length + 1,
-      'max_score': bareme,
-      'held_on': date,
-      'deleted_at': null,
-    });
-    return id;
+    return epreuves;
   }
-
-  Future<void> modifierComposition(String id, Map<String, Object?> fields) =>
-      store.save('assessments', {'id': id, ...fields});
 
   // -------------------------------- Notes -------------------------------
 
@@ -290,14 +335,18 @@ class GradesRepository {
 
   // -------------------------- Résultats annuels --------------------------
 
-  /// Garde, pour la fiche de scolarité, la moyenne générale annuelle, le rang
-  /// et l'effectif de chaque élève (classement cumulé de l'année).
+  /// Garde, pour la fiche de scolarité, la moyenne annuelle, le rang et
+  /// l'effectif de chaque élève classé (classement de l'année, [cumul]).
   Future<int> enregistrerResultatsAnnuels(
     DonneesClasse d,
     Classement cumul, {
     required String date,
   }) async {
+    var n = 0;
     for (final r in cumul.resultats) {
+      // Sans moyenne annuelle (un trimestre manque) : rien à garder.
+      if (r.moyenne == null) continue;
+      n++;
       final existe =
           await (db.select(db.annualResults)
                 ..where(
@@ -322,7 +371,7 @@ class GradesRepository {
         'deleted_at': null,
       });
     }
-    return cumul.resultats.length;
+    return n;
   }
 
   Stream<List<AnnualResultRow>> watchResultatsAnnuels(String classId) =>
