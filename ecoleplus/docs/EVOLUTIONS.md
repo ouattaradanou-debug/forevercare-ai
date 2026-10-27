@@ -28,6 +28,7 @@
 | A13 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Micro sur tous les champs de saisie** (et pas seulement les observations), pour le directeur et l'enseignant — fiche ci-dessous | **Acceptée** (22/10/2026), tous les champs — construite ; jamais sur les mots de passe, codes et réponses secrètes | 2 |
 | A14 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Dates saisies en chiffres « jj/mm/aaaa »** au lieu du calendrier — fiche ci-dessous | **Acceptée** (22/10/2026), avec un petit bouton calendrier — construite | 2 |
 | A15 | ➕ Ajout demandé (23/10/2026) | **Calcul des moyennes selon le type d'école** (publique / privée, choisi dans « Mon école ») : 3 trimestres ; publique = 1 composition par matière ; privée = évaluation + composition par matière ; moyenne annuelle = moyenne des 3 trimestres — fiche ci-dessous | **Acceptée** (23/10/2026) : coefficients gardés (1 par défaut) ; en privé, si une seule des deux notes existe, **elle constitue la moyenne de la matière** et la moyenne du trimestre est calculée ; construite (23/10/2026) | 3 |
+| A16 | ➕ Ajout demandé (27/10/2026) | **Version ordinateur (Windows)** de l'application, mêmes données et même serveur que le téléphone — fiche ci-dessous | **Acceptée** (27/10/2026) — à construire à la fin ; dès maintenant, pas de choix réservé au téléphone | Fin |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -154,4 +155,17 @@
 * **Valeur** : élevée — c'est la méthode réellement appliquée dans les écoles ; sans elle, les moyennes affichées seraient fausses pour les écoles privées. **Profils** : directeur, enseignant.
 * **Effort** : M (environ une journée de travail, tests compris). **Risques** : faibles sur les données (rien n'est supprimé) ; les résultats annuels déjà « gardés » devront être regardés à nouveau.
 * **Recommandation** : maintenant, avant le GO de la phase 3, puisque cela change les calculs de cette phase.
+
+## Fiche d'impact A16 — Version ordinateur (Windows)
+* **Description** : EcolePlus installable sur un PC Windows, construite à partir du **même code** (Flutter) que l'application du téléphone : mêmes écrans, même serveur, même synchronisation hors ligne. Un installateur est construit par GitHub, comme l'APK.
+* **Valeur** : saisie plus confortable au bureau (grand écran, clavier), impression directe des PDF, imports Excel depuis le PC. **Profils** : surtout le directeur et le secrétariat.
+* **Impact** :
+  * code : aucun doublon ; quelques adaptations d'écran pour un grand écran (largeur limitée, navigation au clavier) ;
+  * à vérifier sous Windows : la dictée vocale (le module actuel n'est peut-être pas disponible sur PC ; le clavier reste toujours possible), l'empreinte (Windows Hello s'il existe, sinon le code), le chiffrement de la base locale, le stockage sûr de la clé ;
+  * construction : une tâche GitHub de plus, sur une machine Windows ;
+  * dès maintenant : chaque nouvelle fonction évite les choix réservés au téléphone.
+* **Effort** : M (à la fin), plus une petite attention à chaque phase. **Risques** : faibles ; la dictée peut être absente sur PC.
+* **Recommandation** : acceptée le 27/10/2026, construite après la dernière phase.
+
+Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 inchangée).
 
