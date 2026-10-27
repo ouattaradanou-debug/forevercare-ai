@@ -23,7 +23,17 @@ class EcoleScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
+    // Titre long (nom de l'école) : sur deux lignes plutôt que coupé.
+    appBar: AppBar(
+      toolbarHeight: title.length > 22 ? 76 : null,
+      title: Text(
+        title,
+        key: const Key('titre-page'),
+        maxLines: 2,
+        softWrap: true,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
     body: SafeArea(
       child: Column(
         children: [
