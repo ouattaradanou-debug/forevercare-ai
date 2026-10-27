@@ -343,6 +343,23 @@ class TeacherPage extends ConsumerWidget {
             'seniority_fonction_from',
             t.seniorityFonctionFrom,
           ),
+          const SectionTitle('Affectation (attestation de prise de service)'),
+          AutoSaveField(
+            key: const Key('decision-affectation'),
+            label: 'N° de la décision d’affectation',
+            initial: t.assignmentDecisionNumber,
+            onSave: (v) => save('assignment_decision_number', v),
+          ),
+          AutoSaveDateField(
+            label: 'Date de la décision',
+            initial: t.assignmentDecisionDate,
+            onSave: (v) => save('assignment_decision_date', v),
+          ),
+          AutoSaveDateField(
+            label: 'A pris service à l’école le',
+            initial: t.serviceStartDate,
+            onSave: (v) => save('service_start_date', v),
+          ),
           const SectionTitle('Registre du personnel (B3)'),
           AutoSaveDateField(
             label: 'Date de la nomination dans la commune',

@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
 
 final formsRepositoryProvider = Provider<FormsRepository>(
@@ -60,55 +59,6 @@ const etats = {
   'imprime': 'Imprimé',
   'signe_archive': 'Signé et archivé',
 };
-
-/// « Mes formulaires de l'année » (17.3) — phase 2 : B1, B2, B3.
-class RegistresPage extends ConsumerWidget {
-  const new({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(sessionProvider).value!;
-    final school = ref.watch(schoolProvider(session.schoolId)).value;
-    final yearId = school?.currentSchoolYearId;
-    if (yearId == null) {
-      return const EcoleScaffold(
-        title: 'Registres et formulaires',
-        body: InfoMessage('Choisissez d’abord l’année scolaire en cours.'),
-      );
-    }
-    return EcoleScaffold(
-      title: 'Registres et formulaires',
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Les formulaires se remplissent tout seuls à partir des fiches des '
-            'élèves et des enseignants. Vérifiez, puis imprimez.',
-          ),
-          const SizedBox(height: 12),
-          for (final MapEntry(key: code, value: titre)
-              in formulairesPhase2.entries)
-            Card(
-              child: ListTile(
-                leading: CircleAvatar(child: Text(code)),
-                title: Text(titre),
-                subtitle: Text(
-                  etats[ref
-                              .watch(formulaireProvider((yearId, code)))
-                              .value
-                              ?.status ??
-                          'a_completer'] ??
-                      '',
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/registres/$code'),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
 
 /// Un formulaire : réglages modifiables avant impression, ce qui manque,
 /// aperçu, impression et partage.

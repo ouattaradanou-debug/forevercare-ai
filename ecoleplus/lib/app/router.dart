@@ -6,6 +6,8 @@ import 'package:ecoleplus/features/auth/presentation/welcome_page.dart';
 import 'package:ecoleplus/features/backup/presentation/backup_page.dart';
 import 'package:ecoleplus/features/bulletins/presentation/bulletins_pages.dart';
 import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
+import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
+import 'package:ecoleplus/features/documents/presentation/documents_pages.dart';
 import 'package:ecoleplus/features/forms/presentation/fiche_scolarite_page.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
 import 'package:ecoleplus/features/grades/presentation/classement_page.dart';
@@ -140,7 +142,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => ClassPage(s.pathParameters['id']!),
       ),
       GoRoute(path: '/eleves', builder: (_, _) => const StudentsPage()),
-      GoRoute(path: '/registres', builder: (_, _) => const RegistresPage()),
+      // Ancienne adresse « Registres et formulaires » : tout est dans
+      // « Documents » (A17).
+      GoRoute(path: '/registres', builder: (_, _) => const DocumentsPage()),
+      GoRoute(path: '/documents', builder: (_, _) => const DocumentsPage()),
+      GoRoute(
+        path: '/documents/choisir/:code',
+        builder: (_, s) => ChoisirPersonnePage(s.pathParameters['code']!),
+      ),
+      GoRoute(
+        path: '/documents/:code/:id',
+        builder: (_, s) => DocumentPage(
+          CodeDocument.depuis(s.pathParameters['code']!) ??
+              CodeDocument.certificatScolarite,
+          s.pathParameters['id']!,
+        ),
+      ),
       GoRoute(
         path: '/registres/:code',
         builder: (_, s) => FormulairePage(s.pathParameters['code']!),

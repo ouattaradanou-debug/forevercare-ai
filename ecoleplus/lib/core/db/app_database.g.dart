@@ -179,6 +179,28 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
         requiredDuringInsert: false,
         $customConstraints: '',
       );
+  static const VerificationMeta _directorCivilityMeta = const VerificationMeta(
+    'directorCivility',
+  );
+  late final GeneratedColumn<String> directorCivility = GeneratedColumn<String>(
+    'director_civility',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _directorGradeMeta = const VerificationMeta(
+    'directorGrade',
+  );
+  late final GeneratedColumn<String> directorGrade = GeneratedColumn<String>(
+    'director_grade',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -241,6 +263,8 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
     showRaceReligion,
     absentRule,
     currentSchoolYearId,
+    directorCivility,
+    directorGrade,
     createdAt,
     updatedAt,
     deletedAt,
@@ -373,6 +397,24 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
         ),
       );
     }
+    if (data.containsKey('director_civility')) {
+      context.handle(
+        _directorCivilityMeta,
+        directorCivility.isAcceptableOrUnknown(
+          data['director_civility']!,
+          _directorCivilityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('director_grade')) {
+      context.handle(
+        _directorGradeMeta,
+        directorGrade.isAcceptableOrUnknown(
+          data['director_grade']!,
+          _directorGradeMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -472,6 +514,14 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
         DriftSqlType.string,
         data['${effectivePrefix}current_school_year_id'],
       ),
+      directorCivility: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}director_civility'],
+      ),
+      directorGrade: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}director_grade'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_at'],
@@ -517,6 +567,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
   final bool showRaceReligion;
   final String absentRule;
   final String? currentSchoolYearId;
+  final String? directorCivility;
+  final String? directorGrade;
   final String? createdAt;
   final String updatedAt;
   final String? deletedAt;
@@ -538,6 +590,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     required this.showRaceReligion,
     required this.absentRule,
     this.currentSchoolYearId,
+    this.directorCivility,
+    this.directorGrade,
     this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -579,6 +633,12 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     map['absent_rule'] = Variable<String>(absentRule);
     if (!nullToAbsent || currentSchoolYearId != null) {
       map['current_school_year_id'] = Variable<String>(currentSchoolYearId);
+    }
+    if (!nullToAbsent || directorCivility != null) {
+      map['director_civility'] = Variable<String>(directorCivility);
+    }
+    if (!nullToAbsent || directorGrade != null) {
+      map['director_grade'] = Variable<String>(directorGrade);
     }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<String>(createdAt);
@@ -629,6 +689,12 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       currentSchoolYearId: currentSchoolYearId == null && nullToAbsent
           ? const Value.absent()
           : Value(currentSchoolYearId),
+      directorCivility: directorCivility == null && nullToAbsent
+          ? const Value.absent()
+          : Value(directorCivility),
+      directorGrade: directorGrade == null && nullToAbsent
+          ? const Value.absent()
+          : Value(directorGrade),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -666,6 +732,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       currentSchoolYearId: serializer.fromJson<String?>(
         json['current_school_year_id'],
       ),
+      directorCivility: serializer.fromJson<String?>(json['director_civility']),
+      directorGrade: serializer.fromJson<String?>(json['director_grade']),
       createdAt: serializer.fromJson<String?>(json['created_at']),
       updatedAt: serializer.fromJson<String>(json['updated_at']),
       deletedAt: serializer.fromJson<String?>(json['deleted_at']),
@@ -692,6 +760,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       'show_race_religion': serializer.toJson<bool>(showRaceReligion),
       'absent_rule': serializer.toJson<String>(absentRule),
       'current_school_year_id': serializer.toJson<String?>(currentSchoolYearId),
+      'director_civility': serializer.toJson<String?>(directorCivility),
+      'director_grade': serializer.toJson<String?>(directorGrade),
       'created_at': serializer.toJson<String?>(createdAt),
       'updated_at': serializer.toJson<String>(updatedAt),
       'deleted_at': serializer.toJson<String?>(deletedAt),
@@ -716,6 +786,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     bool? showRaceReligion,
     String? absentRule,
     Value<String?> currentSchoolYearId = const Value.absent(),
+    Value<String?> directorCivility = const Value.absent(),
+    Value<String?> directorGrade = const Value.absent(),
     Value<String?> createdAt = const Value.absent(),
     String? updatedAt,
     Value<String?> deletedAt = const Value.absent(),
@@ -739,6 +811,12 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     currentSchoolYearId: currentSchoolYearId.present
         ? currentSchoolYearId.value
         : this.currentSchoolYearId,
+    directorCivility: directorCivility.present
+        ? directorCivility.value
+        : this.directorCivility,
+    directorGrade: directorGrade.present
+        ? directorGrade.value
+        : this.directorGrade,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -778,6 +856,12 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       currentSchoolYearId: data.currentSchoolYearId.present
           ? data.currentSchoolYearId.value
           : this.currentSchoolYearId,
+      directorCivility: data.directorCivility.present
+          ? data.directorCivility.value
+          : this.directorCivility,
+      directorGrade: data.directorGrade.present
+          ? data.directorGrade.value
+          : this.directorGrade,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -804,6 +888,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
           ..write('showRaceReligion: $showRaceReligion, ')
           ..write('absentRule: $absentRule, ')
           ..write('currentSchoolYearId: $currentSchoolYearId, ')
+          ..write('directorCivility: $directorCivility, ')
+          ..write('directorGrade: $directorGrade, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -813,7 +899,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     name,
     commune,
@@ -830,11 +916,13 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     showRaceReligion,
     absentRule,
     currentSchoolYearId,
+    directorCivility,
+    directorGrade,
     createdAt,
     updatedAt,
     deletedAt,
     syncedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -855,6 +943,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
           other.showRaceReligion == this.showRaceReligion &&
           other.absentRule == this.absentRule &&
           other.currentSchoolYearId == this.currentSchoolYearId &&
+          other.directorCivility == this.directorCivility &&
+          other.directorGrade == this.directorGrade &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -878,6 +968,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
   final Value<bool> showRaceReligion;
   final Value<String> absentRule;
   final Value<String?> currentSchoolYearId;
+  final Value<String?> directorCivility;
+  final Value<String?> directorGrade;
   final Value<String?> createdAt;
   final Value<String> updatedAt;
   final Value<String?> deletedAt;
@@ -900,6 +992,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     this.showRaceReligion = const Value.absent(),
     this.absentRule = const Value.absent(),
     this.currentSchoolYearId = const Value.absent(),
+    this.directorCivility = const Value.absent(),
+    this.directorGrade = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -923,6 +1017,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     this.showRaceReligion = const Value.absent(),
     this.absentRule = const Value.absent(),
     this.currentSchoolYearId = const Value.absent(),
+    this.directorCivility = const Value.absent(),
+    this.directorGrade = const Value.absent(),
     this.createdAt = const Value.absent(),
     required String updatedAt,
     this.deletedAt = const Value.absent(),
@@ -948,6 +1044,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     Expression<bool>? showRaceReligion,
     Expression<String>? absentRule,
     Expression<String>? currentSchoolYearId,
+    Expression<String>? directorCivility,
+    Expression<String>? directorGrade,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
     Expression<String>? deletedAt,
@@ -972,6 +1070,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
       if (absentRule != null) 'absent_rule': absentRule,
       if (currentSchoolYearId != null)
         'current_school_year_id': currentSchoolYearId,
+      if (directorCivility != null) 'director_civility': directorCivility,
+      if (directorGrade != null) 'director_grade': directorGrade,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -997,6 +1097,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     Value<bool>? showRaceReligion,
     Value<String>? absentRule,
     Value<String?>? currentSchoolYearId,
+    Value<String?>? directorCivility,
+    Value<String?>? directorGrade,
     Value<String?>? createdAt,
     Value<String>? updatedAt,
     Value<String?>? deletedAt,
@@ -1020,6 +1122,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
       showRaceReligion: showRaceReligion ?? this.showRaceReligion,
       absentRule: absentRule ?? this.absentRule,
       currentSchoolYearId: currentSchoolYearId ?? this.currentSchoolYearId,
+      directorCivility: directorCivility ?? this.directorCivility,
+      directorGrade: directorGrade ?? this.directorGrade,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -1081,6 +1185,12 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
         currentSchoolYearId.value,
       );
     }
+    if (directorCivility.present) {
+      map['director_civility'] = Variable<String>(directorCivility.value);
+    }
+    if (directorGrade.present) {
+      map['director_grade'] = Variable<String>(directorGrade.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
     }
@@ -1118,6 +1228,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
           ..write('showRaceReligion: $showRaceReligion, ')
           ..write('absentRule: $absentRule, ')
           ..write('currentSchoolYearId: $currentSchoolYearId, ')
+          ..write('directorCivility: $directorCivility, ')
+          ..write('directorGrade: $directorGrade, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -6844,6 +6956,39 @@ class Teachers extends Table with TableInfo<Teachers, TeacherRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _assignmentDecisionNumberMeta =
+      const VerificationMeta('assignmentDecisionNumber');
+  late final GeneratedColumn<String> assignmentDecisionNumber =
+      GeneratedColumn<String>(
+        'assignment_decision_number',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
+  static const VerificationMeta _assignmentDecisionDateMeta =
+      const VerificationMeta('assignmentDecisionDate');
+  late final GeneratedColumn<String> assignmentDecisionDate =
+      GeneratedColumn<String>(
+        'assignment_decision_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
+  static const VerificationMeta _serviceStartDateMeta = const VerificationMeta(
+    'serviceStartDate',
+  );
+  late final GeneratedColumn<String> serviceStartDate = GeneratedColumn<String>(
+    'service_start_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   static const VerificationMeta _archivedAtMeta = const VerificationMeta(
     'archivedAt',
   );
@@ -6927,6 +7072,9 @@ class Teachers extends Table with TableInfo<Teachers, TeacherRow> {
     communeCessationDate,
     newPost,
     observations,
+    assignmentDecisionNumber,
+    assignmentDecisionDate,
+    serviceStartDate,
     archivedAt,
     createdAt,
     updatedAt,
@@ -7142,6 +7290,33 @@ class Teachers extends Table with TableInfo<Teachers, TeacherRow> {
         ),
       );
     }
+    if (data.containsKey('assignment_decision_number')) {
+      context.handle(
+        _assignmentDecisionNumberMeta,
+        assignmentDecisionNumber.isAcceptableOrUnknown(
+          data['assignment_decision_number']!,
+          _assignmentDecisionNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('assignment_decision_date')) {
+      context.handle(
+        _assignmentDecisionDateMeta,
+        assignmentDecisionDate.isAcceptableOrUnknown(
+          data['assignment_decision_date']!,
+          _assignmentDecisionDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('service_start_date')) {
+      context.handle(
+        _serviceStartDateMeta,
+        serviceStartDate.isAcceptableOrUnknown(
+          data['service_start_date']!,
+          _serviceStartDateMeta,
+        ),
+      );
+    }
     if (data.containsKey('archived_at')) {
       context.handle(
         _archivedAtMeta,
@@ -7287,6 +7462,18 @@ class Teachers extends Table with TableInfo<Teachers, TeacherRow> {
         DriftSqlType.string,
         data['${effectivePrefix}observations'],
       ),
+      assignmentDecisionNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assignment_decision_number'],
+      ),
+      assignmentDecisionDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assignment_decision_date'],
+      ),
+      serviceStartDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}service_start_date'],
+      ),
       archivedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}archived_at'],
@@ -7346,6 +7533,9 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
   final String? communeCessationDate;
   final String? newPost;
   final String? observations;
+  final String? assignmentDecisionNumber;
+  final String? assignmentDecisionDate;
+  final String? serviceStartDate;
   final String? archivedAt;
   final String? createdAt;
   final String updatedAt;
@@ -7378,6 +7568,9 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
     this.communeCessationDate,
     this.newPost,
     this.observations,
+    this.assignmentDecisionNumber,
+    this.assignmentDecisionDate,
+    this.serviceStartDate,
     this.archivedAt,
     this.createdAt,
     required this.updatedAt,
@@ -7456,6 +7649,19 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
     }
     if (!nullToAbsent || observations != null) {
       map['observations'] = Variable<String>(observations);
+    }
+    if (!nullToAbsent || assignmentDecisionNumber != null) {
+      map['assignment_decision_number'] = Variable<String>(
+        assignmentDecisionNumber,
+      );
+    }
+    if (!nullToAbsent || assignmentDecisionDate != null) {
+      map['assignment_decision_date'] = Variable<String>(
+        assignmentDecisionDate,
+      );
+    }
+    if (!nullToAbsent || serviceStartDate != null) {
+      map['service_start_date'] = Variable<String>(serviceStartDate);
     }
     if (!nullToAbsent || archivedAt != null) {
       map['archived_at'] = Variable<String>(archivedAt);
@@ -7542,6 +7748,15 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
       observations: observations == null && nullToAbsent
           ? const Value.absent()
           : Value(observations),
+      assignmentDecisionNumber: assignmentDecisionNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(assignmentDecisionNumber),
+      assignmentDecisionDate: assignmentDecisionDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(assignmentDecisionDate),
+      serviceStartDate: serviceStartDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serviceStartDate),
       archivedAt: archivedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(archivedAt),
@@ -7608,6 +7823,15 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
       ),
       newPost: serializer.fromJson<String?>(json['new_post']),
       observations: serializer.fromJson<String?>(json['observations']),
+      assignmentDecisionNumber: serializer.fromJson<String?>(
+        json['assignment_decision_number'],
+      ),
+      assignmentDecisionDate: serializer.fromJson<String?>(
+        json['assignment_decision_date'],
+      ),
+      serviceStartDate: serializer.fromJson<String?>(
+        json['service_start_date'],
+      ),
       archivedAt: serializer.fromJson<String?>(json['archived_at']),
       createdAt: serializer.fromJson<String?>(json['created_at']),
       updatedAt: serializer.fromJson<String>(json['updated_at']),
@@ -7657,6 +7881,13 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
       ),
       'new_post': serializer.toJson<String?>(newPost),
       'observations': serializer.toJson<String?>(observations),
+      'assignment_decision_number': serializer.toJson<String?>(
+        assignmentDecisionNumber,
+      ),
+      'assignment_decision_date': serializer.toJson<String?>(
+        assignmentDecisionDate,
+      ),
+      'service_start_date': serializer.toJson<String?>(serviceStartDate),
       'archived_at': serializer.toJson<String?>(archivedAt),
       'created_at': serializer.toJson<String?>(createdAt),
       'updated_at': serializer.toJson<String>(updatedAt),
@@ -7692,6 +7923,9 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
     Value<String?> communeCessationDate = const Value.absent(),
     Value<String?> newPost = const Value.absent(),
     Value<String?> observations = const Value.absent(),
+    Value<String?> assignmentDecisionNumber = const Value.absent(),
+    Value<String?> assignmentDecisionDate = const Value.absent(),
+    Value<String?> serviceStartDate = const Value.absent(),
     Value<String?> archivedAt = const Value.absent(),
     Value<String?> createdAt = const Value.absent(),
     String? updatedAt,
@@ -7744,6 +7978,15 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
         : this.communeCessationDate,
     newPost: newPost.present ? newPost.value : this.newPost,
     observations: observations.present ? observations.value : this.observations,
+    assignmentDecisionNumber: assignmentDecisionNumber.present
+        ? assignmentDecisionNumber.value
+        : this.assignmentDecisionNumber,
+    assignmentDecisionDate: assignmentDecisionDate.present
+        ? assignmentDecisionDate.value
+        : this.assignmentDecisionDate,
+    serviceStartDate: serviceStartDate.present
+        ? serviceStartDate.value
+        : this.serviceStartDate,
     archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -7806,6 +8049,15 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
       observations: data.observations.present
           ? data.observations.value
           : this.observations,
+      assignmentDecisionNumber: data.assignmentDecisionNumber.present
+          ? data.assignmentDecisionNumber.value
+          : this.assignmentDecisionNumber,
+      assignmentDecisionDate: data.assignmentDecisionDate.present
+          ? data.assignmentDecisionDate.value
+          : this.assignmentDecisionDate,
+      serviceStartDate: data.serviceStartDate.present
+          ? data.serviceStartDate.value
+          : this.serviceStartDate,
       archivedAt: data.archivedAt.present
           ? data.archivedAt.value
           : this.archivedAt,
@@ -7845,6 +8097,9 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
           ..write('communeCessationDate: $communeCessationDate, ')
           ..write('newPost: $newPost, ')
           ..write('observations: $observations, ')
+          ..write('assignmentDecisionNumber: $assignmentDecisionNumber, ')
+          ..write('assignmentDecisionDate: $assignmentDecisionDate, ')
+          ..write('serviceStartDate: $serviceStartDate, ')
           ..write('archivedAt: $archivedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -7882,6 +8137,9 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
     communeCessationDate,
     newPost,
     observations,
+    assignmentDecisionNumber,
+    assignmentDecisionDate,
+    serviceStartDate,
     archivedAt,
     createdAt,
     updatedAt,
@@ -7919,6 +8177,9 @@ class TeacherRow extends DataClass implements Insertable<TeacherRow> {
           other.communeCessationDate == this.communeCessationDate &&
           other.newPost == this.newPost &&
           other.observations == this.observations &&
+          other.assignmentDecisionNumber == this.assignmentDecisionNumber &&
+          other.assignmentDecisionDate == this.assignmentDecisionDate &&
+          other.serviceStartDate == this.serviceStartDate &&
           other.archivedAt == this.archivedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -7953,6 +8214,9 @@ class TeachersCompanion extends UpdateCompanion<TeacherRow> {
   final Value<String?> communeCessationDate;
   final Value<String?> newPost;
   final Value<String?> observations;
+  final Value<String?> assignmentDecisionNumber;
+  final Value<String?> assignmentDecisionDate;
+  final Value<String?> serviceStartDate;
   final Value<String?> archivedAt;
   final Value<String?> createdAt;
   final Value<String> updatedAt;
@@ -7986,6 +8250,9 @@ class TeachersCompanion extends UpdateCompanion<TeacherRow> {
     this.communeCessationDate = const Value.absent(),
     this.newPost = const Value.absent(),
     this.observations = const Value.absent(),
+    this.assignmentDecisionNumber = const Value.absent(),
+    this.assignmentDecisionDate = const Value.absent(),
+    this.serviceStartDate = const Value.absent(),
     this.archivedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -8020,6 +8287,9 @@ class TeachersCompanion extends UpdateCompanion<TeacherRow> {
     this.communeCessationDate = const Value.absent(),
     this.newPost = const Value.absent(),
     this.observations = const Value.absent(),
+    this.assignmentDecisionNumber = const Value.absent(),
+    this.assignmentDecisionDate = const Value.absent(),
+    this.serviceStartDate = const Value.absent(),
     this.archivedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     required String updatedAt,
@@ -8058,6 +8328,9 @@ class TeachersCompanion extends UpdateCompanion<TeacherRow> {
     Expression<String>? communeCessationDate,
     Expression<String>? newPost,
     Expression<String>? observations,
+    Expression<String>? assignmentDecisionNumber,
+    Expression<String>? assignmentDecisionDate,
+    Expression<String>? serviceStartDate,
     Expression<String>? archivedAt,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
@@ -8101,6 +8374,11 @@ class TeachersCompanion extends UpdateCompanion<TeacherRow> {
         'commune_cessation_date': communeCessationDate,
       if (newPost != null) 'new_post': newPost,
       if (observations != null) 'observations': observations,
+      if (assignmentDecisionNumber != null)
+        'assignment_decision_number': assignmentDecisionNumber,
+      if (assignmentDecisionDate != null)
+        'assignment_decision_date': assignmentDecisionDate,
+      if (serviceStartDate != null) 'service_start_date': serviceStartDate,
       if (archivedAt != null) 'archived_at': archivedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -8137,6 +8415,9 @@ class TeachersCompanion extends UpdateCompanion<TeacherRow> {
     Value<String?>? communeCessationDate,
     Value<String?>? newPost,
     Value<String?>? observations,
+    Value<String?>? assignmentDecisionNumber,
+    Value<String?>? assignmentDecisionDate,
+    Value<String?>? serviceStartDate,
     Value<String?>? archivedAt,
     Value<String?>? createdAt,
     Value<String>? updatedAt,
@@ -8174,6 +8455,11 @@ class TeachersCompanion extends UpdateCompanion<TeacherRow> {
       communeCessationDate: communeCessationDate ?? this.communeCessationDate,
       newPost: newPost ?? this.newPost,
       observations: observations ?? this.observations,
+      assignmentDecisionNumber:
+          assignmentDecisionNumber ?? this.assignmentDecisionNumber,
+      assignmentDecisionDate:
+          assignmentDecisionDate ?? this.assignmentDecisionDate,
+      serviceStartDate: serviceStartDate ?? this.serviceStartDate,
       archivedAt: archivedAt ?? this.archivedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -8282,6 +8568,19 @@ class TeachersCompanion extends UpdateCompanion<TeacherRow> {
     if (observations.present) {
       map['observations'] = Variable<String>(observations.value);
     }
+    if (assignmentDecisionNumber.present) {
+      map['assignment_decision_number'] = Variable<String>(
+        assignmentDecisionNumber.value,
+      );
+    }
+    if (assignmentDecisionDate.present) {
+      map['assignment_decision_date'] = Variable<String>(
+        assignmentDecisionDate.value,
+      );
+    }
+    if (serviceStartDate.present) {
+      map['service_start_date'] = Variable<String>(serviceStartDate.value);
+    }
     if (archivedAt.present) {
       map['archived_at'] = Variable<String>(archivedAt.value);
     }
@@ -8332,6 +8631,9 @@ class TeachersCompanion extends UpdateCompanion<TeacherRow> {
           ..write('communeCessationDate: $communeCessationDate, ')
           ..write('newPost: $newPost, ')
           ..write('observations: $observations, ')
+          ..write('assignmentDecisionNumber: $assignmentDecisionNumber, ')
+          ..write('assignmentDecisionDate: $assignmentDecisionDate, ')
+          ..write('serviceStartDate: $serviceStartDate, ')
           ..write('archivedAt: $archivedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -23117,6 +23419,639 @@ class ScolarityCopyLogCompanion extends UpdateCompanion<ScolarityCopyRow> {
   }
 }
 
+class IssuedDocuments extends Table
+    with TableInfo<IssuedDocuments, IssuedDocumentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  IssuedDocuments(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _docCodeMeta = const VerificationMeta(
+    'docCode',
+  );
+  late final GeneratedColumn<String> docCode = GeneratedColumn<String>(
+    'doc_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _teacherIdMeta = const VerificationMeta(
+    'teacherId',
+  );
+  late final GeneratedColumn<String> teacherId = GeneratedColumn<String>(
+    'teacher_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _generatedByMeta = const VerificationMeta(
+    'generatedBy',
+  );
+  late final GeneratedColumn<String> generatedBy = GeneratedColumn<String>(
+    'generated_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _generatedAtMeta = const VerificationMeta(
+    'generatedAt',
+  );
+  late final GeneratedColumn<String> generatedAt = GeneratedColumn<String>(
+    'generated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    schoolYearId,
+    docCode,
+    studentId,
+    teacherId,
+    generatedBy,
+    generatedAt,
+    updatedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'issued_documents';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IssuedDocumentRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('doc_code')) {
+      context.handle(
+        _docCodeMeta,
+        docCode.isAcceptableOrUnknown(data['doc_code']!, _docCodeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_docCodeMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    }
+    if (data.containsKey('teacher_id')) {
+      context.handle(
+        _teacherIdMeta,
+        teacherId.isAcceptableOrUnknown(data['teacher_id']!, _teacherIdMeta),
+      );
+    }
+    if (data.containsKey('generated_by')) {
+      context.handle(
+        _generatedByMeta,
+        generatedBy.isAcceptableOrUnknown(
+          data['generated_by']!,
+          _generatedByMeta,
+        ),
+      );
+    }
+    if (data.containsKey('generated_at')) {
+      context.handle(
+        _generatedAtMeta,
+        generatedAt.isAcceptableOrUnknown(
+          data['generated_at']!,
+          _generatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  IssuedDocumentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IssuedDocumentRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      ),
+      docCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}doc_code'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      ),
+      teacherId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}teacher_id'],
+      ),
+      generatedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}generated_by'],
+      ),
+      generatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}generated_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  IssuedDocuments createAlias(String alias) {
+    return IssuedDocuments(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class IssuedDocumentRow extends DataClass
+    implements Insertable<IssuedDocumentRow> {
+  final String id;
+  final String schoolId;
+  final String? schoolYearId;
+  final String docCode;
+  final String? studentId;
+  final String? teacherId;
+  final String? generatedBy;
+  final String? generatedAt;
+  final String updatedAt;
+  final String? syncedAt;
+  const IssuedDocumentRow({
+    required this.id,
+    required this.schoolId,
+    this.schoolYearId,
+    required this.docCode,
+    this.studentId,
+    this.teacherId,
+    this.generatedBy,
+    this.generatedAt,
+    required this.updatedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    if (!nullToAbsent || schoolYearId != null) {
+      map['school_year_id'] = Variable<String>(schoolYearId);
+    }
+    map['doc_code'] = Variable<String>(docCode);
+    if (!nullToAbsent || studentId != null) {
+      map['student_id'] = Variable<String>(studentId);
+    }
+    if (!nullToAbsent || teacherId != null) {
+      map['teacher_id'] = Variable<String>(teacherId);
+    }
+    if (!nullToAbsent || generatedBy != null) {
+      map['generated_by'] = Variable<String>(generatedBy);
+    }
+    if (!nullToAbsent || generatedAt != null) {
+      map['generated_at'] = Variable<String>(generatedAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  IssuedDocumentsCompanion toCompanion(bool nullToAbsent) {
+    return IssuedDocumentsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      schoolYearId: schoolYearId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(schoolYearId),
+      docCode: Value(docCode),
+      studentId: studentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(studentId),
+      teacherId: teacherId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(teacherId),
+      generatedBy: generatedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(generatedBy),
+      generatedAt: generatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(generatedAt),
+      updatedAt: Value(updatedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory IssuedDocumentRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IssuedDocumentRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      schoolYearId: serializer.fromJson<String?>(json['school_year_id']),
+      docCode: serializer.fromJson<String>(json['doc_code']),
+      studentId: serializer.fromJson<String?>(json['student_id']),
+      teacherId: serializer.fromJson<String?>(json['teacher_id']),
+      generatedBy: serializer.fromJson<String?>(json['generated_by']),
+      generatedAt: serializer.fromJson<String?>(json['generated_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'school_year_id': serializer.toJson<String?>(schoolYearId),
+      'doc_code': serializer.toJson<String>(docCode),
+      'student_id': serializer.toJson<String?>(studentId),
+      'teacher_id': serializer.toJson<String?>(teacherId),
+      'generated_by': serializer.toJson<String?>(generatedBy),
+      'generated_at': serializer.toJson<String?>(generatedAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  IssuedDocumentRow copyWith({
+    String? id,
+    String? schoolId,
+    Value<String?> schoolYearId = const Value.absent(),
+    String? docCode,
+    Value<String?> studentId = const Value.absent(),
+    Value<String?> teacherId = const Value.absent(),
+    Value<String?> generatedBy = const Value.absent(),
+    Value<String?> generatedAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> syncedAt = const Value.absent(),
+  }) => IssuedDocumentRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    schoolYearId: schoolYearId.present ? schoolYearId.value : this.schoolYearId,
+    docCode: docCode ?? this.docCode,
+    studentId: studentId.present ? studentId.value : this.studentId,
+    teacherId: teacherId.present ? teacherId.value : this.teacherId,
+    generatedBy: generatedBy.present ? generatedBy.value : this.generatedBy,
+    generatedAt: generatedAt.present ? generatedAt.value : this.generatedAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  IssuedDocumentRow copyWithCompanion(IssuedDocumentsCompanion data) {
+    return IssuedDocumentRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      docCode: data.docCode.present ? data.docCode.value : this.docCode,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      teacherId: data.teacherId.present ? data.teacherId.value : this.teacherId,
+      generatedBy: data.generatedBy.present
+          ? data.generatedBy.value
+          : this.generatedBy,
+      generatedAt: data.generatedAt.present
+          ? data.generatedAt.value
+          : this.generatedAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IssuedDocumentRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('docCode: $docCode, ')
+          ..write('studentId: $studentId, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('generatedBy: $generatedBy, ')
+          ..write('generatedAt: $generatedAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    schoolYearId,
+    docCode,
+    studentId,
+    teacherId,
+    generatedBy,
+    generatedAt,
+    updatedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IssuedDocumentRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.docCode == this.docCode &&
+          other.studentId == this.studentId &&
+          other.teacherId == this.teacherId &&
+          other.generatedBy == this.generatedBy &&
+          other.generatedAt == this.generatedAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class IssuedDocumentsCompanion extends UpdateCompanion<IssuedDocumentRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String?> schoolYearId;
+  final Value<String> docCode;
+  final Value<String?> studentId;
+  final Value<String?> teacherId;
+  final Value<String?> generatedBy;
+  final Value<String?> generatedAt;
+  final Value<String> updatedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const IssuedDocumentsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.docCode = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.generatedBy = const Value.absent(),
+    this.generatedAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IssuedDocumentsCompanion.insert({
+    required String id,
+    required String schoolId,
+    this.schoolYearId = const Value.absent(),
+    required String docCode,
+    this.studentId = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.generatedBy = const Value.absent(),
+    this.generatedAt = const Value.absent(),
+    required String updatedAt,
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       docCode = Value(docCode),
+       updatedAt = Value(updatedAt);
+  static Insertable<IssuedDocumentRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? schoolYearId,
+    Expression<String>? docCode,
+    Expression<String>? studentId,
+    Expression<String>? teacherId,
+    Expression<String>? generatedBy,
+    Expression<String>? generatedAt,
+    Expression<String>? updatedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (docCode != null) 'doc_code': docCode,
+      if (studentId != null) 'student_id': studentId,
+      if (teacherId != null) 'teacher_id': teacherId,
+      if (generatedBy != null) 'generated_by': generatedBy,
+      if (generatedAt != null) 'generated_at': generatedAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IssuedDocumentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String?>? schoolYearId,
+    Value<String>? docCode,
+    Value<String?>? studentId,
+    Value<String?>? teacherId,
+    Value<String?>? generatedBy,
+    Value<String?>? generatedAt,
+    Value<String>? updatedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return IssuedDocumentsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      docCode: docCode ?? this.docCode,
+      studentId: studentId ?? this.studentId,
+      teacherId: teacherId ?? this.teacherId,
+      generatedBy: generatedBy ?? this.generatedBy,
+      generatedAt: generatedAt ?? this.generatedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (docCode.present) {
+      map['doc_code'] = Variable<String>(docCode.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (teacherId.present) {
+      map['teacher_id'] = Variable<String>(teacherId.value);
+    }
+    if (generatedBy.present) {
+      map['generated_by'] = Variable<String>(generatedBy.value);
+    }
+    if (generatedAt.present) {
+      map['generated_at'] = Variable<String>(generatedAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IssuedDocumentsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('docCode: $docCode, ')
+          ..write('studentId: $studentId, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('generatedBy: $generatedBy, ')
+          ..write('generatedAt: $generatedAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Outbox extends Table with TableInfo<Outbox, OutboxEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -26135,6 +27070,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'report_cards_class',
     'CREATE INDEX report_cards_class ON report_cards (class_id)',
   );
+  late final IssuedDocuments issuedDocuments = IssuedDocuments(this);
   late final Index enrollmentsClass = Index(
     'enrollments_class',
     'CREATE INDEX enrollments_class ON enrollments (class_id)',
@@ -26188,6 +27124,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     reportCards,
     scolarityCopyLog,
     reportCardsClass,
+    issuedDocuments,
     enrollmentsClass,
     enrollmentsStudent,
     outbox,
@@ -26217,6 +27154,8 @@ typedef $SchoolsCreateCompanionBuilder = SchoolsCompanion Function({
   Value<bool> showRaceReligion,
   Value<String> absentRule,
   Value<String?> currentSchoolYearId,
+  Value<String?> directorCivility,
+  Value<String?> directorGrade,
   Value<String?> createdAt,
   required String updatedAt,
   Value<String?> deletedAt,
@@ -26240,6 +27179,8 @@ typedef $SchoolsUpdateCompanionBuilder = SchoolsCompanion Function({
   Value<bool> showRaceReligion,
   Value<String> absentRule,
   Value<String?> currentSchoolYearId,
+  Value<String?> directorCivility,
+  Value<String?> directorGrade,
   Value<String?> createdAt,
   Value<String> updatedAt,
   Value<String?> deletedAt,
@@ -26332,6 +27273,16 @@ class $SchoolsFilterComposer extends Composer<_$AppDatabase, Schools> {
 
   ColumnFilters<String> get currentSchoolYearId => $composableBuilder(
     column: $table.currentSchoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get directorCivility => $composableBuilder(
+    column: $table.directorCivility,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get directorGrade => $composableBuilder(
+    column: $table.directorGrade,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -26444,6 +27395,16 @@ class $SchoolsOrderingComposer extends Composer<_$AppDatabase, Schools> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get directorCivility => $composableBuilder(
+    column: $table.directorCivility,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get directorGrade => $composableBuilder(
+    column: $table.directorGrade,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -26537,6 +27498,16 @@ class $SchoolsAnnotationComposer extends Composer<_$AppDatabase, Schools> {
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get directorCivility => $composableBuilder(
+    column: $table.directorCivility,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get directorGrade => $composableBuilder(
+    column: $table.directorGrade,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -26594,6 +27565,8 @@ class $SchoolsTableManager
                 Value<bool> showRaceReligion = const Value.absent(),
                 Value<String> absentRule = const Value.absent(),
                 Value<String?> currentSchoolYearId = const Value.absent(),
+                Value<String?> directorCivility = const Value.absent(),
+                Value<String?> directorGrade = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> deletedAt = const Value.absent(),
@@ -26616,6 +27589,8 @@ class $SchoolsTableManager
                 showRaceReligion: showRaceReligion,
                 absentRule: absentRule,
                 currentSchoolYearId: currentSchoolYearId,
+                directorCivility: directorCivility,
+                directorGrade: directorGrade,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -26640,6 +27615,8 @@ class $SchoolsTableManager
                 Value<bool> showRaceReligion = const Value.absent(),
                 Value<String> absentRule = const Value.absent(),
                 Value<String?> currentSchoolYearId = const Value.absent(),
+                Value<String?> directorCivility = const Value.absent(),
+                Value<String?> directorGrade = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 required String updatedAt,
                 Value<String?> deletedAt = const Value.absent(),
@@ -26662,6 +27639,8 @@ class $SchoolsTableManager
                 showRaceReligion: showRaceReligion,
                 absentRule: absentRule,
                 currentSchoolYearId: currentSchoolYearId,
+                directorCivility: directorCivility,
+                directorGrade: directorGrade,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -29404,6 +30383,9 @@ typedef $TeachersCreateCompanionBuilder = TeachersCompanion Function({
   Value<String?> communeCessationDate,
   Value<String?> newPost,
   Value<String?> observations,
+  Value<String?> assignmentDecisionNumber,
+  Value<String?> assignmentDecisionDate,
+  Value<String?> serviceStartDate,
   Value<String?> archivedAt,
   Value<String?> createdAt,
   required String updatedAt,
@@ -29438,6 +30420,9 @@ typedef $TeachersUpdateCompanionBuilder = TeachersCompanion Function({
   Value<String?> communeCessationDate,
   Value<String?> newPost,
   Value<String?> observations,
+  Value<String?> assignmentDecisionNumber,
+  Value<String?> assignmentDecisionDate,
+  Value<String?> serviceStartDate,
   Value<String?> archivedAt,
   Value<String?> createdAt,
   Value<String> updatedAt,
@@ -29581,6 +30566,21 @@ class $TeachersFilterComposer extends Composer<_$AppDatabase, Teachers> {
 
   ColumnFilters<String> get observations => $composableBuilder(
     column: $table.observations,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get assignmentDecisionNumber => $composableBuilder(
+    column: $table.assignmentDecisionNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get assignmentDecisionDate => $composableBuilder(
+    column: $table.assignmentDecisionDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serviceStartDate => $composableBuilder(
+    column: $table.serviceStartDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -29748,6 +30748,21 @@ class $TeachersOrderingComposer extends Composer<_$AppDatabase, Teachers> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get assignmentDecisionNumber => $composableBuilder(
+    column: $table.assignmentDecisionNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get assignmentDecisionDate => $composableBuilder(
+    column: $table.assignmentDecisionDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serviceStartDate => $composableBuilder(
+    column: $table.serviceStartDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get archivedAt => $composableBuilder(
     column: $table.archivedAt,
     builder: (column) => ColumnOrderings(column),
@@ -29888,6 +30903,21 @@ class $TeachersAnnotationComposer extends Composer<_$AppDatabase, Teachers> {
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get assignmentDecisionNumber => $composableBuilder(
+    column: $table.assignmentDecisionNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get assignmentDecisionDate => $composableBuilder(
+    column: $table.assignmentDecisionDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get serviceStartDate => $composableBuilder(
+    column: $table.serviceStartDate,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get archivedAt => $composableBuilder(
     column: $table.archivedAt,
     builder: (column) => column,
@@ -29961,6 +30991,9 @@ class $TeachersTableManager
                 Value<String?> communeCessationDate = const Value.absent(),
                 Value<String?> newPost = const Value.absent(),
                 Value<String?> observations = const Value.absent(),
+                Value<String?> assignmentDecisionNumber = const Value.absent(),
+                Value<String?> assignmentDecisionDate = const Value.absent(),
+                Value<String?> serviceStartDate = const Value.absent(),
                 Value<String?> archivedAt = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
@@ -29994,6 +31027,9 @@ class $TeachersTableManager
                 communeCessationDate: communeCessationDate,
                 newPost: newPost,
                 observations: observations,
+                assignmentDecisionNumber: assignmentDecisionNumber,
+                assignmentDecisionDate: assignmentDecisionDate,
+                serviceStartDate: serviceStartDate,
                 archivedAt: archivedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -30030,6 +31066,9 @@ class $TeachersTableManager
                 Value<String?> communeCessationDate = const Value.absent(),
                 Value<String?> newPost = const Value.absent(),
                 Value<String?> observations = const Value.absent(),
+                Value<String?> assignmentDecisionNumber = const Value.absent(),
+                Value<String?> assignmentDecisionDate = const Value.absent(),
+                Value<String?> serviceStartDate = const Value.absent(),
                 Value<String?> archivedAt = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 required String updatedAt,
@@ -30063,6 +31102,9 @@ class $TeachersTableManager
                 communeCessationDate: communeCessationDate,
                 newPost: newPost,
                 observations: observations,
+                assignmentDecisionNumber: assignmentDecisionNumber,
+                assignmentDecisionDate: assignmentDecisionDate,
+                serviceStartDate: serviceStartDate,
                 archivedAt: archivedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -37116,6 +38158,316 @@ typedef $ScolarityCopyLogProcessedTableManager =
       ScolarityCopyRow,
       PrefetchHooks Function()
     >;
+typedef $IssuedDocumentsCreateCompanionBuilder =
+    IssuedDocumentsCompanion Function({
+      required String id,
+      required String schoolId,
+      Value<String?> schoolYearId,
+      required String docCode,
+      Value<String?> studentId,
+      Value<String?> teacherId,
+      Value<String?> generatedBy,
+      Value<String?> generatedAt,
+      required String updatedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $IssuedDocumentsUpdateCompanionBuilder =
+    IssuedDocumentsCompanion Function({
+      Value<String> id,
+      Value<String> schoolId,
+      Value<String?> schoolYearId,
+      Value<String> docCode,
+      Value<String?> studentId,
+      Value<String?> teacherId,
+      Value<String?> generatedBy,
+      Value<String?> generatedAt,
+      Value<String> updatedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $IssuedDocumentsFilterComposer
+    extends Composer<_$AppDatabase, IssuedDocuments> {
+  $IssuedDocumentsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get docCode => $composableBuilder(
+    column: $table.docCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teacherId => $composableBuilder(
+    column: $table.teacherId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get generatedBy => $composableBuilder(
+    column: $table.generatedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $IssuedDocumentsOrderingComposer
+    extends Composer<_$AppDatabase, IssuedDocuments> {
+  $IssuedDocumentsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get docCode => $composableBuilder(
+    column: $table.docCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teacherId => $composableBuilder(
+    column: $table.teacherId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get generatedBy => $composableBuilder(
+    column: $table.generatedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $IssuedDocumentsAnnotationComposer
+    extends Composer<_$AppDatabase, IssuedDocuments> {
+  $IssuedDocumentsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get docCode =>
+      $composableBuilder(column: $table.docCode, builder: (column) => column);
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get teacherId =>
+      $composableBuilder(column: $table.teacherId, builder: (column) => column);
+
+  GeneratedColumn<String> get generatedBy => $composableBuilder(
+    column: $table.generatedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $IssuedDocumentsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          IssuedDocuments,
+          IssuedDocumentRow,
+          $IssuedDocumentsFilterComposer,
+          $IssuedDocumentsOrderingComposer,
+          $IssuedDocumentsAnnotationComposer,
+          $IssuedDocumentsCreateCompanionBuilder,
+          $IssuedDocumentsUpdateCompanionBuilder,
+          (
+            IssuedDocumentRow,
+            BaseReferences<_$AppDatabase, IssuedDocuments, IssuedDocumentRow>,
+          ),
+          IssuedDocumentRow,
+          PrefetchHooks Function()
+        > {
+  $IssuedDocumentsTableManager(_$AppDatabase db, IssuedDocuments table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $IssuedDocumentsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $IssuedDocumentsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $IssuedDocumentsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String?> schoolYearId = const Value.absent(),
+                Value<String> docCode = const Value.absent(),
+                Value<String?> studentId = const Value.absent(),
+                Value<String?> teacherId = const Value.absent(),
+                Value<String?> generatedBy = const Value.absent(),
+                Value<String?> generatedAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IssuedDocumentsCompanion(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                docCode: docCode,
+                studentId: studentId,
+                teacherId: teacherId,
+                generatedBy: generatedBy,
+                generatedAt: generatedAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                Value<String?> schoolYearId = const Value.absent(),
+                required String docCode,
+                Value<String?> studentId = const Value.absent(),
+                Value<String?> teacherId = const Value.absent(),
+                Value<String?> generatedBy = const Value.absent(),
+                Value<String?> generatedAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IssuedDocumentsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                docCode: docCode,
+                studentId: studentId,
+                teacherId: teacherId,
+                generatedBy: generatedBy,
+                generatedAt: generatedAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<IssuedDocuments, IssuedDocumentRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    IssuedDocuments,
+                    IssuedDocumentRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $IssuedDocumentsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      IssuedDocuments,
+      IssuedDocumentRow,
+      $IssuedDocumentsFilterComposer,
+      $IssuedDocumentsOrderingComposer,
+      $IssuedDocumentsAnnotationComposer,
+      $IssuedDocumentsCreateCompanionBuilder,
+      $IssuedDocumentsUpdateCompanionBuilder,
+      (
+        IssuedDocumentRow,
+        BaseReferences<_$AppDatabase, IssuedDocuments, IssuedDocumentRow>,
+      ),
+      IssuedDocumentRow,
+      PrefetchHooks Function()
+    >;
 typedef $OutboxCreateCompanionBuilder = OutboxCompanion Function({
   Value<int> id,
   required String targetTable,
@@ -38756,6 +40108,8 @@ class $AppDatabaseManager {
       $ReportCardsTableManager(_db, _db.reportCards);
   $ScolarityCopyLogTableManager get scolarityCopyLog =>
       $ScolarityCopyLogTableManager(_db, _db.scolarityCopyLog);
+  $IssuedDocumentsTableManager get issuedDocuments =>
+      $IssuedDocumentsTableManager(_db, _db.issuedDocuments);
   $OutboxTableManager get outbox => $OutboxTableManager(_db, _db.outbox);
   $SyncCursorsTableManager get syncCursors =>
       $SyncCursorsTableManager(_db, _db.syncCursors);

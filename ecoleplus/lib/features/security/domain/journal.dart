@@ -111,6 +111,20 @@ EvenementJournal decrireEvenement({
       securite: false,
     );
   }
+  if (table == 'issued_documents') {
+    final valeurs = d['valeurs'] as Map<String, dynamic>? ?? const {};
+    final titre = switch (valeurs['doc_code']) {
+      'prise_service' => 'une attestation de prise de service',
+      'certificat_scolarite' => 'un certificat de scolarité',
+      'attestation_niveau' => 'une attestation de niveau',
+      'non_redevance' => 'un certificat de non redevance',
+      _ => 'un document',
+    };
+    return EvenementJournal(
+      phrase: '$acteur a délivré $titre',
+      securite: false,
+    );
+  }
   if (table == 'school_modules') {
     final valeurs = d['valeurs'] as Map<String, dynamic>? ?? const {};
     final on = valeurs['enabled'] == true;

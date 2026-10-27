@@ -69,7 +69,7 @@ void main() {
       'Élèves',
       'Classes',
       'Enseignants',
-      'Registres et formulaires',
+      'Documents',
       'Mon école',
       'Personnes et droits',
       'Sécurité',

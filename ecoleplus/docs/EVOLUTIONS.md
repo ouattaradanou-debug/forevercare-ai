@@ -29,6 +29,7 @@
 | A14 | ➕ Ajout demandé (22/10/2026, test sur téléphone) | **Dates saisies en chiffres « jj/mm/aaaa »** au lieu du calendrier — fiche ci-dessous | **Acceptée** (22/10/2026), avec un petit bouton calendrier — construite | 2 |
 | A15 | ➕ Ajout demandé (23/10/2026) | **Calcul des moyennes selon le type d'école** (publique / privée, choisi dans « Mon école ») : 3 trimestres ; publique = 1 composition par matière ; privée = évaluation + composition par matière ; moyenne annuelle = moyenne des 3 trimestres — fiche ci-dessous | **Acceptée** (23/10/2026) : coefficients gardés (1 par défaut) ; en privé, si une seule des deux notes existe, **elle constitue la moyenne de la matière** et la moyenne du trimestre est calculée ; construite (23/10/2026) | 3 |
 | A16 | ➕ Ajout demandé (27/10/2026) | **Version ordinateur (Windows)** de l'application, mêmes données et même serveur que le téléphone — fiche ci-dessous | **Acceptée** (27/10/2026) — à construire à la fin ; dès maintenant, pas de choix réservé au téléphone | Fin |
+| A17 | ➕ Ajout demandé (27/10/2026) | **Documents du directeur réunis sous un seul bouton « Documents »**, rangés « Enseignants » / « Élèves » ; **4 nouveaux modèles** fournis par le porteur : attestation de prise de service (enseignant), certificat de scolarité, attestation de niveau, certificat de non redevance (élèves) — fiche ci-dessous | **Acceptée** (27/10/2026) : certificat de scolarité en **page entière ou demi-page au choix** ; **pas de numéro** ; non redevance : **avertissement** si impayés (quand les Finances existeront), le directeur décide ; 3e rubrique **« École »** (programme et bilan, phase 5) | 4 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -170,4 +171,26 @@
 Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 inchangée).
 
 **Règle du porteur (27/10/2026)** : avant de construire une fonction qui ne pourrait marcher **que sur le téléphone** (caméra, capteur, micro, NFC, SMS…), je demande l'avis du porteur, avec ce qui se passerait sur l'ordinateur. Fonctions déjà construites concernées, à revoir lors de la construction d'A16 : dictée vocale (micro), ouverture par empreinte.
+
+## Fiche d'impact A17 — Un seul bouton « Documents » (enseignants / élèves) et 4 nouveaux modèles
+* **Description** : l'accueil du directeur a un seul bouton **« Documents »**, qui remplace « Registres et formulaires ». Il ouvre deux rubriques :
+  * **Enseignants** : fiche de renseignement du personnel (B1), registre du personnel (B3), **attestation de prise de service** (nouveau, par enseignant) ;
+  * **Élèves** : registre matricule (B2), fiche de scolarité (B4), **certificat de scolarité**, **attestation de niveau**, **certificat de non redevance** (nouveaux, par élève), et un accès aux bulletins.
+  Les documents d'un seul élève ou d'un seul enseignant se choisissent dans une liste (recherche par nom), puis s'impriment ou se partagent en PDF.
+* **Les 4 modèles** (scans du porteur, école de Barkouitenga, reproduits avec leur contenu et leur mise en forme) :
+  * en-tête à gauche : ministère, direction régionale, direction provinciale, circonscription (CEB), école, séparés par des étoiles ; à droite : « BURKINA FASO », étoiles, devise de l'année (déjà réglable : « La Patrie ou la Mort, nous Vaincrons ») ;
+  * titre souligné ; texte « Je soussigné(e) … Directeur/Directrice de l'école … » ; pointillés remplacés par les données de l'élève ou de l'enseignant ; « En foi de quoi … pour servir et valoir ce que de droit » ; « Fait à …, le … » ; « Le Directeur / La Directrice », nom, grade ;
+  * attestation de prise de service : enseignant, matricule, emploi (« Instituteur Certifié »…), affectation suivant décision n° … du …, prise de service le … ;
+  * certificat de scolarité : élève, parents et professions, né(e) le … à …, numéro du registre matricule, fréquente régulièrement depuis le …, classe ;
+  * attestation de niveau : élève, né(e) le …, fils/fille de … et de …, « a le niveau de la classe de … » ;
+  * certificat de non redevance : élève, né(e) le … à …, parents, classe, « ne doit rien à l'établissement … libre de tout engagement », année scolaire.
+* **Données réutilisées** (aucun doublon) : en-têtes administratifs de l'année, nom de l'école, commune (« Fait à »), fiche élève, parents, registre matricule (B2), classe de l'année, fiche enseignant (matricule, emploi), journal des copies (comme la fiche de scolarité).
+* **Données à ajouter** :
+  * « Mon école » : civilité et grade du directeur (« Madame », « Directrice », « Professeur Certifié des Écoles ») ;
+  * fiche enseignant : n° et date de la décision d'affectation, date de prise de service à l'école ;
+  * chaque document délivré est journalisé (qui, quand, pour qui), **sans numéro** (décision du 27/10/2026).
+* **Droits** : directeur ; délégué « registres » pour les élèves et le personnel ; jamais l'enseignant.
+* **Fonctionne sur ordinateur** : oui (aucune fonction réservée au téléphone).
+* **Effort** : M. **Risques** : faibles ; textes à vérifier mot pour mot sur les scans.
+* **Recommandation** : maintenant, avec la phase 4 (documents d'élèves, comme la fiche de scolarité).
 

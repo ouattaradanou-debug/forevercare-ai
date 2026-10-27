@@ -65,3 +65,7 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H56 | Blocs de suite de la fiche de scolarité : **deux blocs vierges** imprimés en page 2, à remplir à la main par les écoles suivantes (pas de transfert numérique : P7, version 3) | B4 | `pdfB4` |
 | H57 | **Chaque** fiche de scolarité générée est inscrite au journal (copie conforme ou non), avec son auteur ; seuls le directeur et les délégués « registres » peuvent en générer | B4 | `scolarity_copy_log` |
 | H58 | L'enseignant écrit l'appréciation de sa classe ; seul le directeur écrit l'observation et la décision (une valeur envoyée par un enseignant est ignorée par le serveur) | Bulletins | `app.report_card_guard` |
+| H59 | Documents A17 : textes repris des modèles de l'école de Barkouitenga fournis par le porteur, rendus **neutres** (nom de l'école, commune, directeur ou directrice, accords fille/garçon tirés des fiches) ; « Fait à » = commune de l'école, modifiable | Documents | `pdf_documents.dart` |
+| H60 | Certificat de non redevance et certificat de scolarité court : format **demi-page** (A5 paysage), comme les scans | Documents | `pdfDocumentDirecteur` |
+| H61 | Attestation de niveau : « a le niveau de la classe de » = niveau de la classe de l'année (ex. CM2), modifiable avant l'impression | Documents | `DocumentPage` |
+| H62 | Élève parti : ses certificats utilisent sa dernière classe ; tous les élèves (même partis) sont proposés dans le choix | Documents | `DocumentsRepository.eleve` |

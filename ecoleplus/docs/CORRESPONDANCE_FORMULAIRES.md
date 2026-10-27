@@ -159,3 +159,17 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | Résultats atteints | `activity_lines.achieved_result` |
 | Taux de réussite (%) | `activity_lines.success_rate` (saisi ; moyenne par objectif **calculée** en option) |
 | Bloc de fin | identique à B6 |
+
+## Documents du directeur (A17, modèles du porteur)
+
+| Élément | Source |
+|---|---|
+| En-tête long : ministère, direction régionale, direction provinciale, circonscription, école ; « BURKINA FASO », devise | `admin_headers` (`ministry`, `regional_direction`, `provincial_direction`, `ceb`, `school_label`, `country`, `motto`) ; à défaut `schools.name` |
+| En-tête court (demi-page) : circonscription, école ; année scolaire | `admin_headers.ceb`, `school_label` ; `school_years.label` |
+| « Je soussigné(e) Madame/Monsieur …, Directrice/Directeur … » ; nom ; grade | `schools.director_civility`, `schools.director_name`, `schools.director_grade` |
+| Élève : nom, né(e) le, à, fils/fille de … et de …, professions | `students`, `guardians` (père, mère) |
+| N° matricule, « fréquente depuis le » | `students.registry_number`, `students.entry_date` |
+| Classe, niveau | `enrollments` (année en cours, sinon la dernière) + `classes.name` / `level_code` |
+| Enseignant : nom, matricule, emploi | `teachers.last_name`, `first_names`, `matricule`, `emploi` |
+| Décision d'affectation n° … du … ; prise de service le … | `teachers.assignment_decision_number`, `assignment_decision_date`, `service_start_date` |
+| Journal (sans numéro) | `issued_documents` |

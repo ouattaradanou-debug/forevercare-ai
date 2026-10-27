@@ -77,9 +77,35 @@ trimestre ».
    notez chaque écart (intitulés, ordre, place des cases, texte des
    observations générales — à reprendre mot pour mot, H51).
 
+## 7. Un seul bouton « Documents » et les 4 nouveaux modèles (A17)
+1. Accueil du directeur. ✅ « Documents » remplace « Registres et
+   formulaires ».
+2. « Mon école » : « Sur les documents » → **Madame** (ou Monsieur), et le
+   grade (« Professeur Certifié des Écoles »). Vérifiez aussi le nom du
+   directeur.
+3. « Documents ». ✅ Trois rubriques : **Enseignants** (B1, B3, attestation
+   de prise de service), **Élèves** (B2, fiche de scolarité, certificat de
+   scolarité, attestation de niveau, certificat de non redevance,
+   bulletins), **École** (programme et bilan : phase 5).
+4. **Certificat de scolarité** → tapez « aich » → TEST Aïcha. ✅ « À
+   compléter » liste ce qui manque. Essayez « Page entière » puis
+   « Demi-page » → « Aperçu et impression ».
+5. **Attestation de niveau** et **Certificat de non redevance** pour le même
+   élève. ✅ « Fille de », « née le », « elle » s'accordent ; « Fait à »
+   (commune de l'école) et la date se changent avant d'imprimer.
+6. **Attestation de prise de service** → ENSEIGNANT Un. Complétez d'abord sur
+   sa fiche (« Enseignants ») : n° et date de la décision d'affectation, date
+   de prise de service. ✅ Elles s'impriment.
+7. **Comparaison avec vos scans** : en-tête (ministère, directions, CEB,
+   école, étoiles ; « BURKINA FASO », devise), titre souligné, texte, « Fait
+   à … le … », « La Directrice », nom, grade. Notez chaque écart.
+8. « Sécurité » → « Journal d'activité ». ✅ « … a délivré un certificat de
+   scolarité », etc.
+9. Comme enseignante : ✅ pas de bouton « Documents ».
+
 ## Tests automatiques (pour information)
 ```
-flutter test                        # application (143 tests)
-supabase test db                    # base de données, droits (226 vérifications)
-SUPABASE_URL=… SUPABASE_ANON_KEY=… flutter test test/integration   # 15 tests
+flutter test                        # application (148 tests)
+supabase test db                    # base de données, droits (234 vérifications)
+SUPABASE_URL=… SUPABASE_ANON_KEY=… flutter test test/integration   # 16 tests
 ```

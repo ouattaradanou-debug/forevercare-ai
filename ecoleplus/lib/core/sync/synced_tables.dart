@@ -106,6 +106,10 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
     name: 'scolarity_copy_log',
     info: db.scolarityCopyLog,
   ),
+  SyncedTable<IssuedDocumentRow>(
+    name: 'issued_documents',
+    info: db.issuedDocuments,
+  ),
   SyncedTable<OfficialFormRow>(name: 'official_forms', info: db.officialForms),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),

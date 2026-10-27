@@ -167,7 +167,7 @@ List<Widget> _boutonsEcole(
     ],
     if (registres) ...[
       bouton(Icons.badge, 'Enseignants', '/enseignants'),
-      bouton(Icons.menu_book, 'Registres et formulaires', '/registres'),
+      bouton(Icons.folder_copy_outlined, 'Documents', '/documents'),
     ],
     if (notes) bouton(Icons.grading, 'Notes et classement', '/notes'),
   ];

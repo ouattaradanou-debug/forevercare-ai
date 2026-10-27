@@ -1,6 +1,7 @@
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/core/widgets/form_fields.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,6 +41,22 @@ class SchoolPage extends ConsumerWidget {
             label: 'Nom du directeur ou de la directrice',
             initial: school.directorName,
             onSave: (v) => save('director_name', v),
+          ),
+          // Signature des attestations et certificats (A17).
+          ChoiceField(
+            key: const Key('civilite-directeur'),
+            label:
+                'Sur les documents : « Madame … Directrice » ou '
+                '« Monsieur … Directeur »',
+            value: school.directorCivility,
+            options: const {'madame': 'Madame', 'monsieur': 'Monsieur'},
+            onChanged: (v) => save('director_civility', v),
+          ),
+          AutoSaveField(
+            key: const Key('grade-directeur'),
+            label: 'Grade du directeur (ex. Professeur Certifié des Écoles)',
+            initial: school.directorGrade,
+            onSave: (v) => save('director_grade', v),
           ),
           AutoSaveField(
             label: 'Commune',

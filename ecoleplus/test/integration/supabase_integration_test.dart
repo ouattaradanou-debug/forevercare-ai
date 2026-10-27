@@ -17,6 +17,8 @@ import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/auth/data/auth_service.dart';
 import 'package:ecoleplus/features/auth/data/members_service.dart';
 import 'package:ecoleplus/features/bulletins/data/bulletins_repository.dart';
+import 'package:ecoleplus/features/documents/data/documents_repository.dart';
+import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
 import 'package:ecoleplus/features/forms/data/fiche_scolarite_repository.dart';
 import 'package:ecoleplus/features/grades/data/grades_repository.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
@@ -844,6 +846,47 @@ void mainA6() {
       ens.store,
       gE,
     ).journaliser(ecoleTest, clarisse.id, copieConforme: false);
+    await ens.engine.syncNow();
+    expect(await refus(ens), hasLength(1));
+    await ens.close();
+    await dir.close();
+  }, skip: skip);
+
+  test('A17 : documents du directeur préremplis, délivrés et journalisés ; '
+      'refusés à l’enseignante', () async {
+    const fatou = 'd0000000-0000-4000-8000-000000000005';
+    final dir = await connecte('directeur@ecole-test.local');
+    await dir.store.save('schools', {
+      'id': ecoleTest,
+      'director_civility': 'madame',
+      'director_grade': 'Professeur Certifié des Écoles',
+    });
+    final repo = DocumentsRepository(dir.store);
+    final d = (await repo.document(
+      CodeDocument.certificatScolarite,
+      ecoleTest,
+      fatou,
+    ))!;
+    expect(d.eleve!.nom, 'TEST Fatou');
+    expect(d.eleve!.accords.inscrit, 'inscrite');
+    expect(d.signataire.titreSignature, 'La Directrice');
+    await repo.journaliser(CodeDocument.certificatScolarite, ecoleTest, fatou);
+    await dir.engine.syncNow();
+    Future<List<OutboxEntry>> refus(Phone p) => (p.db.select(
+      p.db.outbox,
+    )..where((o) => o.status.equals('refuse'))).get();
+    expect(await refus(dir), isEmpty);
+    final serveur = await dir.client
+        .from('issued_documents')
+        .select('doc_code')
+        .eq('student_id', fatou);
+    expect(serveur, [
+      {'doc_code': 'certificat_scolarite'},
+    ]);
+
+    final ens = await connecte('enseignant1@ecole-test.local');
+    await DocumentsRepository(ens.store)
+        .journaliser(CodeDocument.attestationNiveau, ecoleTest, fatou);
     await ens.engine.syncNow();
     expect(await refus(ens), hasLength(1));
     await ens.close();

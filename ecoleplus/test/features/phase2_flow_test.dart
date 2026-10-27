@@ -127,7 +127,7 @@ void main() {
     await h.login(tester, '70 11 22 33');
     expect(find.text('Mes élèves'), findsOneWidget);
     expect(find.text('Enseignants'), findsNothing);
-    expect(find.text('Registres et formulaires'), findsNothing);
+    expect(find.text('Documents'), findsNothing);
     await tap(tester, find.text('Mes élèves'));
     expect(find.text('Ajouter un élève'), findsNothing);
     await tap(tester, find.text('TEST Aïcha'));
@@ -251,9 +251,9 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Registres et formulaires'));
-    expect(find.text('Registre matricule des élèves'), findsOneWidget);
-    await tap(tester, find.text('Registre matricule des élèves'));
+    await tap(tester, find.text('Documents'));
+    expect(find.text('Registre matricule (B2)'), findsOneWidget);
+    await tap(tester, find.text('Registre matricule (B2)'));
     expect(find.text('• 4 élève(s) sans date de naissance'), findsOneWidget);
     await tester.enterText(
       find.widgetWithText(TextField, 'Fait à'),

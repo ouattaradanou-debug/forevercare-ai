@@ -19,6 +19,8 @@ CREATE TABLE schools (
   show_race_religion BOOLEAN NOT NULL DEFAULT FALSE,
   absent_rule TEXT NOT NULL DEFAULT 'non_compte',
   current_school_year_id TEXT,
+  director_civility TEXT,
+  director_grade TEXT,
   created_at TEXT,
   updated_at TEXT NOT NULL,
   deleted_at TEXT,
@@ -173,6 +175,9 @@ CREATE TABLE teachers (
   commune_cessation_date TEXT,
   new_post TEXT,
   observations TEXT,
+  assignment_decision_number TEXT,
+  assignment_decision_date TEXT,
+  service_start_date TEXT,
   archived_at TEXT,
   created_at TEXT,
   updated_at TEXT NOT NULL,
@@ -508,6 +513,20 @@ CREATE TABLE scolarity_copy_log (
 ) AS ScolarityCopyRow;
 
 CREATE INDEX report_cards_class ON report_cards (class_id);
+
+-- A17 : documents délivrés par le directeur (ajout seul, sans numéro).
+CREATE TABLE issued_documents (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT,
+  doc_code TEXT NOT NULL,
+  student_id TEXT,
+  teacher_id TEXT,
+  generated_by TEXT,
+  generated_at TEXT,
+  updated_at TEXT NOT NULL,
+  synced_at TEXT
+) AS IssuedDocumentRow;
 
 CREATE INDEX enrollments_class ON enrollments (class_id);
 CREATE INDEX enrollments_student ON enrollments (student_id);

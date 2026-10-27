@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -110,6 +110,15 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(reportCards);
         await m.createTable(scolarityCopyLog);
         await m.createIndex(reportCardsClass);
+      }
+      if (from < 7) {
+        // A17 : documents du directeur.
+        await m.addColumn(schools, schools.directorCivility);
+        await m.addColumn(schools, schools.directorGrade);
+        await m.addColumn(teachers, teachers.assignmentDecisionNumber);
+        await m.addColumn(teachers, teachers.assignmentDecisionDate);
+        await m.addColumn(teachers, teachers.serviceStartDate);
+        await m.createTable(issuedDocuments);
       }
     },
   );
