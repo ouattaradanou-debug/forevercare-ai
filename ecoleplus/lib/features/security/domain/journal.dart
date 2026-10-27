@@ -16,6 +16,8 @@ const _objets = {
   'admin_headers': 'les en-têtes administratifs',
   'memberships': 'un compte',
   'delegate_permissions': 'les droits d’un délégué',
+  'report_cards': 'un bulletin',
+  'report_templates': 'le modèle de bulletin',
 };
 
 const _colonnes = {
@@ -99,6 +101,15 @@ EvenementJournal decrireEvenement({
         phrase: '$acteur a créé l’école',
         securite: false,
       );
+  }
+  if (table == 'scolarity_copy_log') {
+    final valeurs = d['valeurs'] as Map<String, dynamic>? ?? const {};
+    return EvenementJournal(
+      phrase:
+          '$acteur a généré une fiche de scolarité'
+          '${valeurs['is_certified_copy'] == true ? ' (copie conforme)' : ''}',
+      securite: false,
+    );
   }
   if (table == 'school_modules') {
     final valeurs = d['valeurs'] as Map<String, dynamic>? ?? const {};

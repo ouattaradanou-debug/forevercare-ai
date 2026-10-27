@@ -98,6 +98,11 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | Diplômes obtenus et date d'obtention | `student_registry.diplomas` (+ `student_registry.cep_date`) |
 | Observations du Directeur | `student_registry.director_observations` |
 | Signature du Directeur | `schools.director_signature_path` / `official_forms.director_name` |
+| Année en cours (phase 4) | **calculée en direct** depuis les notes (moyenne annuelle (T1 + T2 + T3) ÷ 3, rang, effectif) : une note corrigée change aussitôt la fiche |
+| Logeur (si aucun parent n'est marqué logeur) | `guardians` « logeur », puis « tuteur », puis « père » |
+| Blocs de suite (établissements suivants) | imprimés **vierges** en page 2 (deux blocs), à remplir à la main |
+| Copie conforme | mention « COPIE CONFORME » + date ; chaque génération dans `scolarity_copy_log` (journal d'activité) |
+| Emblème, image de signature | non imprimés pour l'instant (images à ajouter avec la phase des cartes) |
 | Blocs de suite : N° Mle / École / Logeur | `scolarity_followups.registry_number` / `.school_name` / `.lodger_name_address` |
 | Entré le / Venant de | `scolarity_followups.entered_on` / `.came_from` |
 | Sorti le / allant à / Motif du départ | `scolarity_followups.left_on` / `.going_to` / `.exit_reason` |

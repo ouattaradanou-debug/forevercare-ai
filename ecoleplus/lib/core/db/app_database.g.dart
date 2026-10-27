@@ -21030,6 +21030,2093 @@ class AnnualResultsCompanion extends UpdateCompanion<AnnualResultRow> {
   }
 }
 
+class ReportTemplates extends Table
+    with TableInfo<ReportTemplates, ReportTemplateRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  ReportTemplates(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _settingsMeta = const VerificationMeta(
+    'settings',
+  );
+  late final GeneratedColumn<String> settings = GeneratedColumn<String>(
+    'settings',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'{}\'',
+    defaultValue: const CustomExpression('\'{}\''),
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    name,
+    settings,
+    isDefault,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'report_templates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReportTemplateRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('settings')) {
+      context.handle(
+        _settingsMeta,
+        settings.isAcceptableOrUnknown(data['settings']!, _settingsMeta),
+      );
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReportTemplateRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReportTemplateRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      settings: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}settings'],
+      )!,
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  ReportTemplates createAlias(String alias) {
+    return ReportTemplates(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class ReportTemplateRow extends DataClass
+    implements Insertable<ReportTemplateRow> {
+  final String id;
+  final String schoolId;
+  final String name;
+  final String settings;
+  final bool isDefault;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const ReportTemplateRow({
+    required this.id,
+    required this.schoolId,
+    required this.name,
+    required this.settings,
+    required this.isDefault,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['name'] = Variable<String>(name);
+    map['settings'] = Variable<String>(settings);
+    map['is_default'] = Variable<bool>(isDefault);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  ReportTemplatesCompanion toCompanion(bool nullToAbsent) {
+    return ReportTemplatesCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      name: Value(name),
+      settings: Value(settings),
+      isDefault: Value(isDefault),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory ReportTemplateRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReportTemplateRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      name: serializer.fromJson<String>(json['name']),
+      settings: serializer.fromJson<String>(json['settings']),
+      isDefault: serializer.fromJson<bool>(json['is_default']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'name': serializer.toJson<String>(name),
+      'settings': serializer.toJson<String>(settings),
+      'is_default': serializer.toJson<bool>(isDefault),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  ReportTemplateRow copyWith({
+    String? id,
+    String? schoolId,
+    String? name,
+    String? settings,
+    bool? isDefault,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => ReportTemplateRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    name: name ?? this.name,
+    settings: settings ?? this.settings,
+    isDefault: isDefault ?? this.isDefault,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  ReportTemplateRow copyWithCompanion(ReportTemplatesCompanion data) {
+    return ReportTemplateRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      name: data.name.present ? data.name.value : this.name,
+      settings: data.settings.present ? data.settings.value : this.settings,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReportTemplateRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('name: $name, ')
+          ..write('settings: $settings, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    name,
+    settings,
+    isDefault,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReportTemplateRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.name == this.name &&
+          other.settings == this.settings &&
+          other.isDefault == this.isDefault &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class ReportTemplatesCompanion extends UpdateCompanion<ReportTemplateRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> name;
+  final Value<String> settings;
+  final Value<bool> isDefault;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const ReportTemplatesCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.settings = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReportTemplatesCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String name,
+    this.settings = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       name = Value(name),
+       updatedAt = Value(updatedAt);
+  static Insertable<ReportTemplateRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? name,
+    Expression<String>? settings,
+    Expression<bool>? isDefault,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (name != null) 'name': name,
+      if (settings != null) 'settings': settings,
+      if (isDefault != null) 'is_default': isDefault,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReportTemplatesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? name,
+    Value<String>? settings,
+    Value<bool>? isDefault,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return ReportTemplatesCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      name: name ?? this.name,
+      settings: settings ?? this.settings,
+      isDefault: isDefault ?? this.isDefault,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (settings.present) {
+      map['settings'] = Variable<String>(settings.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReportTemplatesCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('name: $name, ')
+          ..write('settings: $settings, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class ReportCards extends Table with TableInfo<ReportCards, ReportCardRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  ReportCards(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _classIdMeta = const VerificationMeta(
+    'classId',
+  );
+  late final GeneratedColumn<String> classId = GeneratedColumn<String>(
+    'class_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _assessmentIdMeta = const VerificationMeta(
+    'assessmentId',
+  );
+  late final GeneratedColumn<String> assessmentId = GeneratedColumn<String>(
+    'assessment_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _templateIdMeta = const VerificationMeta(
+    'templateId',
+  );
+  late final GeneratedColumn<String> templateId = GeneratedColumn<String>(
+    'template_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _teacherAppreciationMeta =
+      const VerificationMeta('teacherAppreciation');
+  late final GeneratedColumn<String> teacherAppreciation =
+      GeneratedColumn<String>(
+        'teacher_appreciation',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
+  static const VerificationMeta _directorObservationMeta =
+      const VerificationMeta('directorObservation');
+  late final GeneratedColumn<String> directorObservation =
+      GeneratedColumn<String>(
+        'director_observation',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
+  static const VerificationMeta _decisionMeta = const VerificationMeta(
+    'decision',
+  );
+  late final GeneratedColumn<String> decision = GeneratedColumn<String>(
+    'decision',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'brouillon\'',
+    defaultValue: const CustomExpression('\'brouillon\''),
+  );
+  static const VerificationMeta _generatedAtMeta = const VerificationMeta(
+    'generatedAt',
+  );
+  late final GeneratedColumn<String> generatedAt = GeneratedColumn<String>(
+    'generated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _pdfPathMeta = const VerificationMeta(
+    'pdfPath',
+  );
+  late final GeneratedColumn<String> pdfPath = GeneratedColumn<String>(
+    'pdf_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    studentId,
+    classId,
+    assessmentId,
+    templateId,
+    teacherAppreciation,
+    directorObservation,
+    decision,
+    status,
+    generatedAt,
+    pdfPath,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'report_cards';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReportCardRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_studentIdMeta);
+    }
+    if (data.containsKey('class_id')) {
+      context.handle(
+        _classIdMeta,
+        classId.isAcceptableOrUnknown(data['class_id']!, _classIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_classIdMeta);
+    }
+    if (data.containsKey('assessment_id')) {
+      context.handle(
+        _assessmentIdMeta,
+        assessmentId.isAcceptableOrUnknown(
+          data['assessment_id']!,
+          _assessmentIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('template_id')) {
+      context.handle(
+        _templateIdMeta,
+        templateId.isAcceptableOrUnknown(data['template_id']!, _templateIdMeta),
+      );
+    }
+    if (data.containsKey('teacher_appreciation')) {
+      context.handle(
+        _teacherAppreciationMeta,
+        teacherAppreciation.isAcceptableOrUnknown(
+          data['teacher_appreciation']!,
+          _teacherAppreciationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('director_observation')) {
+      context.handle(
+        _directorObservationMeta,
+        directorObservation.isAcceptableOrUnknown(
+          data['director_observation']!,
+          _directorObservationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('decision')) {
+      context.handle(
+        _decisionMeta,
+        decision.isAcceptableOrUnknown(data['decision']!, _decisionMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('generated_at')) {
+      context.handle(
+        _generatedAtMeta,
+        generatedAt.isAcceptableOrUnknown(
+          data['generated_at']!,
+          _generatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pdf_path')) {
+      context.handle(
+        _pdfPathMeta,
+        pdfPath.isAcceptableOrUnknown(data['pdf_path']!, _pdfPathMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReportCardRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReportCardRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      )!,
+      classId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}class_id'],
+      )!,
+      assessmentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assessment_id'],
+      ),
+      templateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}template_id'],
+      ),
+      teacherAppreciation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}teacher_appreciation'],
+      ),
+      directorObservation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}director_observation'],
+      ),
+      decision: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}decision'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      generatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}generated_at'],
+      ),
+      pdfPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pdf_path'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  ReportCards createAlias(String alias) {
+    return ReportCards(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class ReportCardRow extends DataClass implements Insertable<ReportCardRow> {
+  final String id;
+  final String schoolId;
+  final String studentId;
+  final String classId;
+  final String? assessmentId;
+  final String? templateId;
+  final String? teacherAppreciation;
+  final String? directorObservation;
+  final String? decision;
+  final String status;
+  final String? generatedAt;
+  final String? pdfPath;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const ReportCardRow({
+    required this.id,
+    required this.schoolId,
+    required this.studentId,
+    required this.classId,
+    this.assessmentId,
+    this.templateId,
+    this.teacherAppreciation,
+    this.directorObservation,
+    this.decision,
+    required this.status,
+    this.generatedAt,
+    this.pdfPath,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['student_id'] = Variable<String>(studentId);
+    map['class_id'] = Variable<String>(classId);
+    if (!nullToAbsent || assessmentId != null) {
+      map['assessment_id'] = Variable<String>(assessmentId);
+    }
+    if (!nullToAbsent || templateId != null) {
+      map['template_id'] = Variable<String>(templateId);
+    }
+    if (!nullToAbsent || teacherAppreciation != null) {
+      map['teacher_appreciation'] = Variable<String>(teacherAppreciation);
+    }
+    if (!nullToAbsent || directorObservation != null) {
+      map['director_observation'] = Variable<String>(directorObservation);
+    }
+    if (!nullToAbsent || decision != null) {
+      map['decision'] = Variable<String>(decision);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || generatedAt != null) {
+      map['generated_at'] = Variable<String>(generatedAt);
+    }
+    if (!nullToAbsent || pdfPath != null) {
+      map['pdf_path'] = Variable<String>(pdfPath);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  ReportCardsCompanion toCompanion(bool nullToAbsent) {
+    return ReportCardsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      studentId: Value(studentId),
+      classId: Value(classId),
+      assessmentId: assessmentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(assessmentId),
+      templateId: templateId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(templateId),
+      teacherAppreciation: teacherAppreciation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(teacherAppreciation),
+      directorObservation: directorObservation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(directorObservation),
+      decision: decision == null && nullToAbsent
+          ? const Value.absent()
+          : Value(decision),
+      status: Value(status),
+      generatedAt: generatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(generatedAt),
+      pdfPath: pdfPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pdfPath),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory ReportCardRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReportCardRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      studentId: serializer.fromJson<String>(json['student_id']),
+      classId: serializer.fromJson<String>(json['class_id']),
+      assessmentId: serializer.fromJson<String?>(json['assessment_id']),
+      templateId: serializer.fromJson<String?>(json['template_id']),
+      teacherAppreciation: serializer.fromJson<String?>(
+        json['teacher_appreciation'],
+      ),
+      directorObservation: serializer.fromJson<String?>(
+        json['director_observation'],
+      ),
+      decision: serializer.fromJson<String?>(json['decision']),
+      status: serializer.fromJson<String>(json['status']),
+      generatedAt: serializer.fromJson<String?>(json['generated_at']),
+      pdfPath: serializer.fromJson<String?>(json['pdf_path']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'student_id': serializer.toJson<String>(studentId),
+      'class_id': serializer.toJson<String>(classId),
+      'assessment_id': serializer.toJson<String?>(assessmentId),
+      'template_id': serializer.toJson<String?>(templateId),
+      'teacher_appreciation': serializer.toJson<String?>(teacherAppreciation),
+      'director_observation': serializer.toJson<String?>(directorObservation),
+      'decision': serializer.toJson<String?>(decision),
+      'status': serializer.toJson<String>(status),
+      'generated_at': serializer.toJson<String?>(generatedAt),
+      'pdf_path': serializer.toJson<String?>(pdfPath),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  ReportCardRow copyWith({
+    String? id,
+    String? schoolId,
+    String? studentId,
+    String? classId,
+    Value<String?> assessmentId = const Value.absent(),
+    Value<String?> templateId = const Value.absent(),
+    Value<String?> teacherAppreciation = const Value.absent(),
+    Value<String?> directorObservation = const Value.absent(),
+    Value<String?> decision = const Value.absent(),
+    String? status,
+    Value<String?> generatedAt = const Value.absent(),
+    Value<String?> pdfPath = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => ReportCardRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    studentId: studentId ?? this.studentId,
+    classId: classId ?? this.classId,
+    assessmentId: assessmentId.present ? assessmentId.value : this.assessmentId,
+    templateId: templateId.present ? templateId.value : this.templateId,
+    teacherAppreciation: teacherAppreciation.present
+        ? teacherAppreciation.value
+        : this.teacherAppreciation,
+    directorObservation: directorObservation.present
+        ? directorObservation.value
+        : this.directorObservation,
+    decision: decision.present ? decision.value : this.decision,
+    status: status ?? this.status,
+    generatedAt: generatedAt.present ? generatedAt.value : this.generatedAt,
+    pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  ReportCardRow copyWithCompanion(ReportCardsCompanion data) {
+    return ReportCardRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      classId: data.classId.present ? data.classId.value : this.classId,
+      assessmentId: data.assessmentId.present
+          ? data.assessmentId.value
+          : this.assessmentId,
+      templateId: data.templateId.present
+          ? data.templateId.value
+          : this.templateId,
+      teacherAppreciation: data.teacherAppreciation.present
+          ? data.teacherAppreciation.value
+          : this.teacherAppreciation,
+      directorObservation: data.directorObservation.present
+          ? data.directorObservation.value
+          : this.directorObservation,
+      decision: data.decision.present ? data.decision.value : this.decision,
+      status: data.status.present ? data.status.value : this.status,
+      generatedAt: data.generatedAt.present
+          ? data.generatedAt.value
+          : this.generatedAt,
+      pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReportCardRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('classId: $classId, ')
+          ..write('assessmentId: $assessmentId, ')
+          ..write('templateId: $templateId, ')
+          ..write('teacherAppreciation: $teacherAppreciation, ')
+          ..write('directorObservation: $directorObservation, ')
+          ..write('decision: $decision, ')
+          ..write('status: $status, ')
+          ..write('generatedAt: $generatedAt, ')
+          ..write('pdfPath: $pdfPath, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    studentId,
+    classId,
+    assessmentId,
+    templateId,
+    teacherAppreciation,
+    directorObservation,
+    decision,
+    status,
+    generatedAt,
+    pdfPath,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReportCardRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.studentId == this.studentId &&
+          other.classId == this.classId &&
+          other.assessmentId == this.assessmentId &&
+          other.templateId == this.templateId &&
+          other.teacherAppreciation == this.teacherAppreciation &&
+          other.directorObservation == this.directorObservation &&
+          other.decision == this.decision &&
+          other.status == this.status &&
+          other.generatedAt == this.generatedAt &&
+          other.pdfPath == this.pdfPath &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class ReportCardsCompanion extends UpdateCompanion<ReportCardRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> studentId;
+  final Value<String> classId;
+  final Value<String?> assessmentId;
+  final Value<String?> templateId;
+  final Value<String?> teacherAppreciation;
+  final Value<String?> directorObservation;
+  final Value<String?> decision;
+  final Value<String> status;
+  final Value<String?> generatedAt;
+  final Value<String?> pdfPath;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const ReportCardsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.classId = const Value.absent(),
+    this.assessmentId = const Value.absent(),
+    this.templateId = const Value.absent(),
+    this.teacherAppreciation = const Value.absent(),
+    this.directorObservation = const Value.absent(),
+    this.decision = const Value.absent(),
+    this.status = const Value.absent(),
+    this.generatedAt = const Value.absent(),
+    this.pdfPath = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReportCardsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String studentId,
+    required String classId,
+    this.assessmentId = const Value.absent(),
+    this.templateId = const Value.absent(),
+    this.teacherAppreciation = const Value.absent(),
+    this.directorObservation = const Value.absent(),
+    this.decision = const Value.absent(),
+    this.status = const Value.absent(),
+    this.generatedAt = const Value.absent(),
+    this.pdfPath = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       studentId = Value(studentId),
+       classId = Value(classId),
+       updatedAt = Value(updatedAt);
+  static Insertable<ReportCardRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? studentId,
+    Expression<String>? classId,
+    Expression<String>? assessmentId,
+    Expression<String>? templateId,
+    Expression<String>? teacherAppreciation,
+    Expression<String>? directorObservation,
+    Expression<String>? decision,
+    Expression<String>? status,
+    Expression<String>? generatedAt,
+    Expression<String>? pdfPath,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (studentId != null) 'student_id': studentId,
+      if (classId != null) 'class_id': classId,
+      if (assessmentId != null) 'assessment_id': assessmentId,
+      if (templateId != null) 'template_id': templateId,
+      if (teacherAppreciation != null)
+        'teacher_appreciation': teacherAppreciation,
+      if (directorObservation != null)
+        'director_observation': directorObservation,
+      if (decision != null) 'decision': decision,
+      if (status != null) 'status': status,
+      if (generatedAt != null) 'generated_at': generatedAt,
+      if (pdfPath != null) 'pdf_path': pdfPath,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReportCardsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? studentId,
+    Value<String>? classId,
+    Value<String?>? assessmentId,
+    Value<String?>? templateId,
+    Value<String?>? teacherAppreciation,
+    Value<String?>? directorObservation,
+    Value<String?>? decision,
+    Value<String>? status,
+    Value<String?>? generatedAt,
+    Value<String?>? pdfPath,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return ReportCardsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      studentId: studentId ?? this.studentId,
+      classId: classId ?? this.classId,
+      assessmentId: assessmentId ?? this.assessmentId,
+      templateId: templateId ?? this.templateId,
+      teacherAppreciation: teacherAppreciation ?? this.teacherAppreciation,
+      directorObservation: directorObservation ?? this.directorObservation,
+      decision: decision ?? this.decision,
+      status: status ?? this.status,
+      generatedAt: generatedAt ?? this.generatedAt,
+      pdfPath: pdfPath ?? this.pdfPath,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (classId.present) {
+      map['class_id'] = Variable<String>(classId.value);
+    }
+    if (assessmentId.present) {
+      map['assessment_id'] = Variable<String>(assessmentId.value);
+    }
+    if (templateId.present) {
+      map['template_id'] = Variable<String>(templateId.value);
+    }
+    if (teacherAppreciation.present) {
+      map['teacher_appreciation'] = Variable<String>(teacherAppreciation.value);
+    }
+    if (directorObservation.present) {
+      map['director_observation'] = Variable<String>(directorObservation.value);
+    }
+    if (decision.present) {
+      map['decision'] = Variable<String>(decision.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (generatedAt.present) {
+      map['generated_at'] = Variable<String>(generatedAt.value);
+    }
+    if (pdfPath.present) {
+      map['pdf_path'] = Variable<String>(pdfPath.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReportCardsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('classId: $classId, ')
+          ..write('assessmentId: $assessmentId, ')
+          ..write('templateId: $templateId, ')
+          ..write('teacherAppreciation: $teacherAppreciation, ')
+          ..write('directorObservation: $directorObservation, ')
+          ..write('decision: $decision, ')
+          ..write('status: $status, ')
+          ..write('generatedAt: $generatedAt, ')
+          ..write('pdfPath: $pdfPath, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class ScolarityCopyLog extends Table
+    with TableInfo<ScolarityCopyLog, ScolarityCopyRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  ScolarityCopyLog(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _formVersionIdMeta = const VerificationMeta(
+    'formVersionId',
+  );
+  late final GeneratedColumn<String> formVersionId = GeneratedColumn<String>(
+    'form_version_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _isCertifiedCopyMeta = const VerificationMeta(
+    'isCertifiedCopy',
+  );
+  late final GeneratedColumn<bool> isCertifiedCopy = GeneratedColumn<bool>(
+    'is_certified_copy',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _generatedByMeta = const VerificationMeta(
+    'generatedBy',
+  );
+  late final GeneratedColumn<String> generatedBy = GeneratedColumn<String>(
+    'generated_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _generatedAtMeta = const VerificationMeta(
+    'generatedAt',
+  );
+  late final GeneratedColumn<String> generatedAt = GeneratedColumn<String>(
+    'generated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    studentId,
+    formVersionId,
+    isCertifiedCopy,
+    generatedBy,
+    generatedAt,
+    updatedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'scolarity_copy_log';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ScolarityCopyRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_studentIdMeta);
+    }
+    if (data.containsKey('form_version_id')) {
+      context.handle(
+        _formVersionIdMeta,
+        formVersionId.isAcceptableOrUnknown(
+          data['form_version_id']!,
+          _formVersionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_certified_copy')) {
+      context.handle(
+        _isCertifiedCopyMeta,
+        isCertifiedCopy.isAcceptableOrUnknown(
+          data['is_certified_copy']!,
+          _isCertifiedCopyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_isCertifiedCopyMeta);
+    }
+    if (data.containsKey('generated_by')) {
+      context.handle(
+        _generatedByMeta,
+        generatedBy.isAcceptableOrUnknown(
+          data['generated_by']!,
+          _generatedByMeta,
+        ),
+      );
+    }
+    if (data.containsKey('generated_at')) {
+      context.handle(
+        _generatedAtMeta,
+        generatedAt.isAcceptableOrUnknown(
+          data['generated_at']!,
+          _generatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ScolarityCopyRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ScolarityCopyRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      )!,
+      formVersionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}form_version_id'],
+      ),
+      isCertifiedCopy: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_certified_copy'],
+      )!,
+      generatedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}generated_by'],
+      ),
+      generatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}generated_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  ScolarityCopyLog createAlias(String alias) {
+    return ScolarityCopyLog(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class ScolarityCopyRow extends DataClass
+    implements Insertable<ScolarityCopyRow> {
+  final String id;
+  final String schoolId;
+  final String studentId;
+  final String? formVersionId;
+  final bool isCertifiedCopy;
+  final String? generatedBy;
+  final String? generatedAt;
+  final String updatedAt;
+  final String? syncedAt;
+  const ScolarityCopyRow({
+    required this.id,
+    required this.schoolId,
+    required this.studentId,
+    this.formVersionId,
+    required this.isCertifiedCopy,
+    this.generatedBy,
+    this.generatedAt,
+    required this.updatedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['student_id'] = Variable<String>(studentId);
+    if (!nullToAbsent || formVersionId != null) {
+      map['form_version_id'] = Variable<String>(formVersionId);
+    }
+    map['is_certified_copy'] = Variable<bool>(isCertifiedCopy);
+    if (!nullToAbsent || generatedBy != null) {
+      map['generated_by'] = Variable<String>(generatedBy);
+    }
+    if (!nullToAbsent || generatedAt != null) {
+      map['generated_at'] = Variable<String>(generatedAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  ScolarityCopyLogCompanion toCompanion(bool nullToAbsent) {
+    return ScolarityCopyLogCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      studentId: Value(studentId),
+      formVersionId: formVersionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(formVersionId),
+      isCertifiedCopy: Value(isCertifiedCopy),
+      generatedBy: generatedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(generatedBy),
+      generatedAt: generatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(generatedAt),
+      updatedAt: Value(updatedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory ScolarityCopyRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ScolarityCopyRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      studentId: serializer.fromJson<String>(json['student_id']),
+      formVersionId: serializer.fromJson<String?>(json['form_version_id']),
+      isCertifiedCopy: serializer.fromJson<bool>(json['is_certified_copy']),
+      generatedBy: serializer.fromJson<String?>(json['generated_by']),
+      generatedAt: serializer.fromJson<String?>(json['generated_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'student_id': serializer.toJson<String>(studentId),
+      'form_version_id': serializer.toJson<String?>(formVersionId),
+      'is_certified_copy': serializer.toJson<bool>(isCertifiedCopy),
+      'generated_by': serializer.toJson<String?>(generatedBy),
+      'generated_at': serializer.toJson<String?>(generatedAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  ScolarityCopyRow copyWith({
+    String? id,
+    String? schoolId,
+    String? studentId,
+    Value<String?> formVersionId = const Value.absent(),
+    bool? isCertifiedCopy,
+    Value<String?> generatedBy = const Value.absent(),
+    Value<String?> generatedAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> syncedAt = const Value.absent(),
+  }) => ScolarityCopyRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    studentId: studentId ?? this.studentId,
+    formVersionId: formVersionId.present
+        ? formVersionId.value
+        : this.formVersionId,
+    isCertifiedCopy: isCertifiedCopy ?? this.isCertifiedCopy,
+    generatedBy: generatedBy.present ? generatedBy.value : this.generatedBy,
+    generatedAt: generatedAt.present ? generatedAt.value : this.generatedAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  ScolarityCopyRow copyWithCompanion(ScolarityCopyLogCompanion data) {
+    return ScolarityCopyRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      formVersionId: data.formVersionId.present
+          ? data.formVersionId.value
+          : this.formVersionId,
+      isCertifiedCopy: data.isCertifiedCopy.present
+          ? data.isCertifiedCopy.value
+          : this.isCertifiedCopy,
+      generatedBy: data.generatedBy.present
+          ? data.generatedBy.value
+          : this.generatedBy,
+      generatedAt: data.generatedAt.present
+          ? data.generatedAt.value
+          : this.generatedAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScolarityCopyRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('formVersionId: $formVersionId, ')
+          ..write('isCertifiedCopy: $isCertifiedCopy, ')
+          ..write('generatedBy: $generatedBy, ')
+          ..write('generatedAt: $generatedAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    studentId,
+    formVersionId,
+    isCertifiedCopy,
+    generatedBy,
+    generatedAt,
+    updatedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ScolarityCopyRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.studentId == this.studentId &&
+          other.formVersionId == this.formVersionId &&
+          other.isCertifiedCopy == this.isCertifiedCopy &&
+          other.generatedBy == this.generatedBy &&
+          other.generatedAt == this.generatedAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class ScolarityCopyLogCompanion extends UpdateCompanion<ScolarityCopyRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> studentId;
+  final Value<String?> formVersionId;
+  final Value<bool> isCertifiedCopy;
+  final Value<String?> generatedBy;
+  final Value<String?> generatedAt;
+  final Value<String> updatedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const ScolarityCopyLogCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.formVersionId = const Value.absent(),
+    this.isCertifiedCopy = const Value.absent(),
+    this.generatedBy = const Value.absent(),
+    this.generatedAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ScolarityCopyLogCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String studentId,
+    this.formVersionId = const Value.absent(),
+    required bool isCertifiedCopy,
+    this.generatedBy = const Value.absent(),
+    this.generatedAt = const Value.absent(),
+    required String updatedAt,
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       studentId = Value(studentId),
+       isCertifiedCopy = Value(isCertifiedCopy),
+       updatedAt = Value(updatedAt);
+  static Insertable<ScolarityCopyRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? studentId,
+    Expression<String>? formVersionId,
+    Expression<bool>? isCertifiedCopy,
+    Expression<String>? generatedBy,
+    Expression<String>? generatedAt,
+    Expression<String>? updatedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (studentId != null) 'student_id': studentId,
+      if (formVersionId != null) 'form_version_id': formVersionId,
+      if (isCertifiedCopy != null) 'is_certified_copy': isCertifiedCopy,
+      if (generatedBy != null) 'generated_by': generatedBy,
+      if (generatedAt != null) 'generated_at': generatedAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ScolarityCopyLogCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? studentId,
+    Value<String?>? formVersionId,
+    Value<bool>? isCertifiedCopy,
+    Value<String?>? generatedBy,
+    Value<String?>? generatedAt,
+    Value<String>? updatedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return ScolarityCopyLogCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      studentId: studentId ?? this.studentId,
+      formVersionId: formVersionId ?? this.formVersionId,
+      isCertifiedCopy: isCertifiedCopy ?? this.isCertifiedCopy,
+      generatedBy: generatedBy ?? this.generatedBy,
+      generatedAt: generatedAt ?? this.generatedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (formVersionId.present) {
+      map['form_version_id'] = Variable<String>(formVersionId.value);
+    }
+    if (isCertifiedCopy.present) {
+      map['is_certified_copy'] = Variable<bool>(isCertifiedCopy.value);
+    }
+    if (generatedBy.present) {
+      map['generated_by'] = Variable<String>(generatedBy.value);
+    }
+    if (generatedAt.present) {
+      map['generated_at'] = Variable<String>(generatedAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScolarityCopyLogCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('formVersionId: $formVersionId, ')
+          ..write('isCertifiedCopy: $isCertifiedCopy, ')
+          ..write('generatedBy: $generatedBy, ')
+          ..write('generatedAt: $generatedAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Outbox extends Table with TableInfo<Outbox, OutboxEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -24041,6 +26128,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final MentionScales mentionScales = MentionScales(this);
   late final AnnualResults annualResults = AnnualResults(this);
+  late final ReportTemplates reportTemplates = ReportTemplates(this);
+  late final ReportCards reportCards = ReportCards(this);
+  late final ScolarityCopyLog scolarityCopyLog = ScolarityCopyLog(this);
+  late final Index reportCardsClass = Index(
+    'report_cards_class',
+    'CREATE INDEX report_cards_class ON report_cards (class_id)',
+  );
   late final Index enrollmentsClass = Index(
     'enrollments_class',
     'CREATE INDEX enrollments_class ON enrollments (class_id)',
@@ -24090,6 +26184,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     gradesAssessment,
     mentionScales,
     annualResults,
+    reportTemplates,
+    reportCards,
+    scolarityCopyLog,
+    reportCardsClass,
     enrollmentsClass,
     enrollmentsStudent,
     outbox,
@@ -34015,6 +36113,1009 @@ typedef $AnnualResultsProcessedTableManager =
       AnnualResultRow,
       PrefetchHooks Function()
     >;
+typedef $ReportTemplatesCreateCompanionBuilder =
+    ReportTemplatesCompanion Function({
+      required String id,
+      required String schoolId,
+      required String name,
+      Value<String> settings,
+      Value<bool> isDefault,
+      Value<String?> createdAt,
+      required String updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $ReportTemplatesUpdateCompanionBuilder =
+    ReportTemplatesCompanion Function({
+      Value<String> id,
+      Value<String> schoolId,
+      Value<String> name,
+      Value<String> settings,
+      Value<bool> isDefault,
+      Value<String?> createdAt,
+      Value<String> updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $ReportTemplatesFilterComposer
+    extends Composer<_$AppDatabase, ReportTemplates> {
+  $ReportTemplatesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get settings => $composableBuilder(
+    column: $table.settings,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $ReportTemplatesOrderingComposer
+    extends Composer<_$AppDatabase, ReportTemplates> {
+  $ReportTemplatesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get settings => $composableBuilder(
+    column: $table.settings,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $ReportTemplatesAnnotationComposer
+    extends Composer<_$AppDatabase, ReportTemplates> {
+  $ReportTemplatesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get settings =>
+      $composableBuilder(column: $table.settings, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $ReportTemplatesTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          ReportTemplates,
+          ReportTemplateRow,
+          $ReportTemplatesFilterComposer,
+          $ReportTemplatesOrderingComposer,
+          $ReportTemplatesAnnotationComposer,
+          $ReportTemplatesCreateCompanionBuilder,
+          $ReportTemplatesUpdateCompanionBuilder,
+          (
+            ReportTemplateRow,
+            BaseReferences<_$AppDatabase, ReportTemplates, ReportTemplateRow>,
+          ),
+          ReportTemplateRow,
+          PrefetchHooks Function()
+        > {
+  $ReportTemplatesTableManager(_$AppDatabase db, ReportTemplates table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $ReportTemplatesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $ReportTemplatesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $ReportTemplatesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> settings = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReportTemplatesCompanion(
+                id: id,
+                schoolId: schoolId,
+                name: name,
+                settings: settings,
+                isDefault: isDefault,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String name,
+                Value<String> settings = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReportTemplatesCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                name: name,
+                settings: settings,
+                isDefault: isDefault,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<ReportTemplates, ReportTemplateRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    ReportTemplates,
+                    ReportTemplateRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $ReportTemplatesProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      ReportTemplates,
+      ReportTemplateRow,
+      $ReportTemplatesFilterComposer,
+      $ReportTemplatesOrderingComposer,
+      $ReportTemplatesAnnotationComposer,
+      $ReportTemplatesCreateCompanionBuilder,
+      $ReportTemplatesUpdateCompanionBuilder,
+      (
+        ReportTemplateRow,
+        BaseReferences<_$AppDatabase, ReportTemplates, ReportTemplateRow>,
+      ),
+      ReportTemplateRow,
+      PrefetchHooks Function()
+    >;
+typedef $ReportCardsCreateCompanionBuilder = ReportCardsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String studentId,
+  required String classId,
+  Value<String?> assessmentId,
+  Value<String?> templateId,
+  Value<String?> teacherAppreciation,
+  Value<String?> directorObservation,
+  Value<String?> decision,
+  Value<String> status,
+  Value<String?> generatedAt,
+  Value<String?> pdfPath,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $ReportCardsUpdateCompanionBuilder = ReportCardsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> studentId,
+  Value<String> classId,
+  Value<String?> assessmentId,
+  Value<String?> templateId,
+  Value<String?> teacherAppreciation,
+  Value<String?> directorObservation,
+  Value<String?> decision,
+  Value<String> status,
+  Value<String?> generatedAt,
+  Value<String?> pdfPath,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $ReportCardsFilterComposer extends Composer<_$AppDatabase, ReportCards> {
+  $ReportCardsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get assessmentId => $composableBuilder(
+    column: $table.assessmentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teacherAppreciation => $composableBuilder(
+    column: $table.teacherAppreciation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get directorObservation => $composableBuilder(
+    column: $table.directorObservation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get decision => $composableBuilder(
+    column: $table.decision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pdfPath => $composableBuilder(
+    column: $table.pdfPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $ReportCardsOrderingComposer
+    extends Composer<_$AppDatabase, ReportCards> {
+  $ReportCardsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get assessmentId => $composableBuilder(
+    column: $table.assessmentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teacherAppreciation => $composableBuilder(
+    column: $table.teacherAppreciation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get directorObservation => $composableBuilder(
+    column: $table.directorObservation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get decision => $composableBuilder(
+    column: $table.decision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pdfPath => $composableBuilder(
+    column: $table.pdfPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $ReportCardsAnnotationComposer
+    extends Composer<_$AppDatabase, ReportCards> {
+  $ReportCardsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get classId =>
+      $composableBuilder(column: $table.classId, builder: (column) => column);
+
+  GeneratedColumn<String> get assessmentId => $composableBuilder(
+    column: $table.assessmentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get templateId => $composableBuilder(
+    column: $table.templateId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get teacherAppreciation => $composableBuilder(
+    column: $table.teacherAppreciation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get directorObservation => $composableBuilder(
+    column: $table.directorObservation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get decision =>
+      $composableBuilder(column: $table.decision, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pdfPath =>
+      $composableBuilder(column: $table.pdfPath, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $ReportCardsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          ReportCards,
+          ReportCardRow,
+          $ReportCardsFilterComposer,
+          $ReportCardsOrderingComposer,
+          $ReportCardsAnnotationComposer,
+          $ReportCardsCreateCompanionBuilder,
+          $ReportCardsUpdateCompanionBuilder,
+          (
+            ReportCardRow,
+            BaseReferences<_$AppDatabase, ReportCards, ReportCardRow>,
+          ),
+          ReportCardRow,
+          PrefetchHooks Function()
+        > {
+  $ReportCardsTableManager(_$AppDatabase db, ReportCards table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $ReportCardsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $ReportCardsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $ReportCardsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> studentId = const Value.absent(),
+                Value<String> classId = const Value.absent(),
+                Value<String?> assessmentId = const Value.absent(),
+                Value<String?> templateId = const Value.absent(),
+                Value<String?> teacherAppreciation = const Value.absent(),
+                Value<String?> directorObservation = const Value.absent(),
+                Value<String?> decision = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> generatedAt = const Value.absent(),
+                Value<String?> pdfPath = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReportCardsCompanion(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                classId: classId,
+                assessmentId: assessmentId,
+                templateId: templateId,
+                teacherAppreciation: teacherAppreciation,
+                directorObservation: directorObservation,
+                decision: decision,
+                status: status,
+                generatedAt: generatedAt,
+                pdfPath: pdfPath,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String studentId,
+                required String classId,
+                Value<String?> assessmentId = const Value.absent(),
+                Value<String?> templateId = const Value.absent(),
+                Value<String?> teacherAppreciation = const Value.absent(),
+                Value<String?> directorObservation = const Value.absent(),
+                Value<String?> decision = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> generatedAt = const Value.absent(),
+                Value<String?> pdfPath = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReportCardsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                classId: classId,
+                assessmentId: assessmentId,
+                templateId: templateId,
+                teacherAppreciation: teacherAppreciation,
+                directorObservation: directorObservation,
+                decision: decision,
+                status: status,
+                generatedAt: generatedAt,
+                pdfPath: pdfPath,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<ReportCards, ReportCardRow>(table),
+                  BaseReferences<_$AppDatabase, ReportCards, ReportCardRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $ReportCardsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      ReportCards,
+      ReportCardRow,
+      $ReportCardsFilterComposer,
+      $ReportCardsOrderingComposer,
+      $ReportCardsAnnotationComposer,
+      $ReportCardsCreateCompanionBuilder,
+      $ReportCardsUpdateCompanionBuilder,
+      (
+        ReportCardRow,
+        BaseReferences<_$AppDatabase, ReportCards, ReportCardRow>,
+      ),
+      ReportCardRow,
+      PrefetchHooks Function()
+    >;
+typedef $ScolarityCopyLogCreateCompanionBuilder =
+    ScolarityCopyLogCompanion Function({
+      required String id,
+      required String schoolId,
+      required String studentId,
+      Value<String?> formVersionId,
+      required bool isCertifiedCopy,
+      Value<String?> generatedBy,
+      Value<String?> generatedAt,
+      required String updatedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $ScolarityCopyLogUpdateCompanionBuilder =
+    ScolarityCopyLogCompanion Function({
+      Value<String> id,
+      Value<String> schoolId,
+      Value<String> studentId,
+      Value<String?> formVersionId,
+      Value<bool> isCertifiedCopy,
+      Value<String?> generatedBy,
+      Value<String?> generatedAt,
+      Value<String> updatedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $ScolarityCopyLogFilterComposer
+    extends Composer<_$AppDatabase, ScolarityCopyLog> {
+  $ScolarityCopyLogFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get formVersionId => $composableBuilder(
+    column: $table.formVersionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCertifiedCopy => $composableBuilder(
+    column: $table.isCertifiedCopy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get generatedBy => $composableBuilder(
+    column: $table.generatedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $ScolarityCopyLogOrderingComposer
+    extends Composer<_$AppDatabase, ScolarityCopyLog> {
+  $ScolarityCopyLogOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get formVersionId => $composableBuilder(
+    column: $table.formVersionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCertifiedCopy => $composableBuilder(
+    column: $table.isCertifiedCopy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get generatedBy => $composableBuilder(
+    column: $table.generatedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $ScolarityCopyLogAnnotationComposer
+    extends Composer<_$AppDatabase, ScolarityCopyLog> {
+  $ScolarityCopyLogAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get formVersionId => $composableBuilder(
+    column: $table.formVersionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCertifiedCopy => $composableBuilder(
+    column: $table.isCertifiedCopy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get generatedBy => $composableBuilder(
+    column: $table.generatedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $ScolarityCopyLogTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          ScolarityCopyLog,
+          ScolarityCopyRow,
+          $ScolarityCopyLogFilterComposer,
+          $ScolarityCopyLogOrderingComposer,
+          $ScolarityCopyLogAnnotationComposer,
+          $ScolarityCopyLogCreateCompanionBuilder,
+          $ScolarityCopyLogUpdateCompanionBuilder,
+          (
+            ScolarityCopyRow,
+            BaseReferences<_$AppDatabase, ScolarityCopyLog, ScolarityCopyRow>,
+          ),
+          ScolarityCopyRow,
+          PrefetchHooks Function()
+        > {
+  $ScolarityCopyLogTableManager(_$AppDatabase db, ScolarityCopyLog table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $ScolarityCopyLogFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $ScolarityCopyLogOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $ScolarityCopyLogAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> studentId = const Value.absent(),
+                Value<String?> formVersionId = const Value.absent(),
+                Value<bool> isCertifiedCopy = const Value.absent(),
+                Value<String?> generatedBy = const Value.absent(),
+                Value<String?> generatedAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ScolarityCopyLogCompanion(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                formVersionId: formVersionId,
+                isCertifiedCopy: isCertifiedCopy,
+                generatedBy: generatedBy,
+                generatedAt: generatedAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String studentId,
+                Value<String?> formVersionId = const Value.absent(),
+                required bool isCertifiedCopy,
+                Value<String?> generatedBy = const Value.absent(),
+                Value<String?> generatedAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ScolarityCopyLogCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                formVersionId: formVersionId,
+                isCertifiedCopy: isCertifiedCopy,
+                generatedBy: generatedBy,
+                generatedAt: generatedAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<ScolarityCopyLog, ScolarityCopyRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    ScolarityCopyLog,
+                    ScolarityCopyRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $ScolarityCopyLogProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      ScolarityCopyLog,
+      ScolarityCopyRow,
+      $ScolarityCopyLogFilterComposer,
+      $ScolarityCopyLogOrderingComposer,
+      $ScolarityCopyLogAnnotationComposer,
+      $ScolarityCopyLogCreateCompanionBuilder,
+      $ScolarityCopyLogUpdateCompanionBuilder,
+      (
+        ScolarityCopyRow,
+        BaseReferences<_$AppDatabase, ScolarityCopyLog, ScolarityCopyRow>,
+      ),
+      ScolarityCopyRow,
+      PrefetchHooks Function()
+    >;
 typedef $OutboxCreateCompanionBuilder = OutboxCompanion Function({
   Value<int> id,
   required String targetTable,
@@ -35649,6 +38750,12 @@ class $AppDatabaseManager {
       $MentionScalesTableManager(_db, _db.mentionScales);
   $AnnualResultsTableManager get annualResults =>
       $AnnualResultsTableManager(_db, _db.annualResults);
+  $ReportTemplatesTableManager get reportTemplates =>
+      $ReportTemplatesTableManager(_db, _db.reportTemplates);
+  $ReportCardsTableManager get reportCards =>
+      $ReportCardsTableManager(_db, _db.reportCards);
+  $ScolarityCopyLogTableManager get scolarityCopyLog =>
+      $ScolarityCopyLogTableManager(_db, _db.scolarityCopyLog);
   $OutboxTableManager get outbox => $OutboxTableManager(_db, _db.outbox);
   $SyncCursorsTableManager get syncCursors =>
       $SyncCursorsTableManager(_db, _db.syncCursors);

@@ -458,6 +458,57 @@ CREATE TABLE annual_results (
   synced_at TEXT
 ) AS AnnualResultRow;
 
+-- ------------------------- Phase 4 : bulletins, fiche de scolarité ----
+
+-- Modèle de bulletin de l'école (réglages en JSON).
+CREATE TABLE report_templates (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  settings TEXT NOT NULL DEFAULT '{}',
+  is_default BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS ReportTemplateRow;
+
+-- Bulletin d'un élève : trimestre (composition du trimestre) ou année
+-- (assessment_id nul).
+CREATE TABLE report_cards (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  class_id TEXT NOT NULL,
+  assessment_id TEXT,
+  template_id TEXT,
+  teacher_appreciation TEXT,
+  director_observation TEXT,
+  decision TEXT,
+  status TEXT NOT NULL DEFAULT 'brouillon',
+  generated_at TEXT,
+  pdf_path TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS ReportCardRow;
+
+-- Journal des fiches de scolarité générées (ajout seul).
+CREATE TABLE scolarity_copy_log (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  form_version_id TEXT,
+  is_certified_copy BOOLEAN NOT NULL,
+  generated_by TEXT,
+  generated_at TEXT,
+  updated_at TEXT NOT NULL,
+  synced_at TEXT
+) AS ScolarityCopyRow;
+
+CREATE INDEX report_cards_class ON report_cards (class_id);
+
 CREATE INDEX enrollments_class ON enrollments (class_id);
 CREATE INDEX enrollments_student ON enrollments (student_id);
 

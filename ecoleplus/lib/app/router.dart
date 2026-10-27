@@ -4,7 +4,9 @@ import 'package:ecoleplus/features/auth/presentation/forgot_password_page.dart';
 import 'package:ecoleplus/features/auth/presentation/login_page.dart';
 import 'package:ecoleplus/features/auth/presentation/welcome_page.dart';
 import 'package:ecoleplus/features/backup/presentation/backup_page.dart';
+import 'package:ecoleplus/features/bulletins/presentation/bulletins_pages.dart';
 import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
+import 'package:ecoleplus/features/forms/presentation/fiche_scolarite_page.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
 import 'package:ecoleplus/features/grades/presentation/classement_page.dart';
 import 'package:ecoleplus/features/grades/presentation/grades_pages.dart';
@@ -45,6 +47,7 @@ const _directorRoutes = {
   '/sauvegarde',
   '/securite',
   '/mentions',
+  '/bulletins-modele',
 };
 
 const _lockRoutes = {'/verrouille', '/verrouille/mot-de-passe'};
@@ -151,6 +154,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const ImportPage(TypeImport.enseignants),
       ),
       GoRoute(
+        path: '/eleves/:id/fiche',
+        builder: (_, s) => FicheScolaritePage(s.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/eleves/:id',
         builder: (_, s) => StudentPage(s.pathParameters['id']!),
       ),
@@ -168,6 +175,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/notes', builder: (_, _) => const NotesPage()),
       GoRoute(path: '/mentions', builder: (_, _) => const MentionsPage()),
+      GoRoute(
+        path: '/bulletins-modele',
+        builder: (_, _) => const ModeleBulletinPage(),
+      ),
+      GoRoute(
+        path: '/bulletins/:classId',
+        builder: (_, s) => BulletinsPage(s.pathParameters['classId']!),
+      ),
       GoRoute(
         path: '/notes/:classId',
         builder: (_, s) => ClasseNotesPage(s.pathParameters['classId']!),

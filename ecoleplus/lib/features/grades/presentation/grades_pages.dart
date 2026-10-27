@@ -78,6 +78,11 @@ class NotesPage extends ConsumerWidget {
               label: const Text('Mentions (appréciations selon la moyenne)'),
               onPressed: () => context.push('/mentions'),
             ),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.description_outlined),
+              label: const Text('Modèle de bulletin'),
+              onPressed: () => context.push('/bulletins-modele'),
+            ),
           ],
         ],
       ),
@@ -141,6 +146,12 @@ class ClasseNotesPage extends ConsumerWidget {
             icon: Icons.leaderboard,
             label: 'Classement',
             onPressed: () => context.push('/notes/$classId/classement'),
+          ),
+          const SizedBox(height: 12),
+          BigButton(
+            icon: Icons.description_outlined,
+            label: 'Bulletins',
+            onPressed: () => context.push('/bulletins/$classId'),
           ),
           const SectionTitle('Saisie des notes'),
           for (final t in const [1, 2, 3])

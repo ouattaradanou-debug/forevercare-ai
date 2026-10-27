@@ -170,13 +170,7 @@ class _ClassementState extends ConsumerState<ClassementPage> {
       );
     }
     // Par défaut : le dernier trimestre qui a des notes.
-    final p = _periode ??= () {
-      for (final t in const [3, 2, 1]) {
-        final ids = {for (final e in d.epreuvesTrimestre(t)) e.id};
-        if (d.notes.any((g) => ids.contains(g.assessmentId))) return t;
-      }
-      return 1;
-    }();
+    final p = _periode ??= d.dernierTrimestreNote;
     final annee = p == _annee;
     final c = annee ? d.annee() : d.trimestre(p);
     final s = c.statistiques;

@@ -377,6 +377,22 @@ class StudentPage extends ConsumerWidget {
           const SectionTitle('Classe'),
           if (modifiable && yearId != null)
             _ChangerClasse(eleve: s, yearId: yearId, actuelle: classeActuelle),
+          if (modifiable)
+            for (final (e, _) in parcours)
+              if (e.schoolYearId == yearId && e.endsOn == null)
+                SwitchListTile(
+                  key: const Key('redouble'),
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Redouble cette classe'),
+                  subtitle: const Text(
+                    'Même niveau qu’une année précédente : seconde colonne '
+                    'du niveau sur la fiche de scolarité.',
+                  ),
+                  value: e.isRepeat,
+                  onChanged: (v) => ref
+                      .read(studentsRepositoryProvider)
+                      .marquerRedoublement(e.id, redouble: v),
+                ),
           for (final (e, c) in parcours) Text(_ligneParcours(e, c)),
           _Parents(eleve: s, modifiable: modifiable),
           const SectionTitle('Scolarité'),
@@ -390,6 +406,13 @@ class StudentPage extends ConsumerWidget {
             _Registre(
               eleve: s,
               raceReligion: school?.showRaceReligion ?? false,
+            ),
+          if (registre)
+            OutlinedButton.icon(
+              key: const Key('ouvrir-b4'),
+              icon: const Icon(Icons.description_outlined),
+              label: const Text('Fiche de scolarité (B4)'),
+              onPressed: () => context.push('/eleves/${s.id}/fiche'),
             ),
           const SectionTitle('Observations'),
           if (modifiable)

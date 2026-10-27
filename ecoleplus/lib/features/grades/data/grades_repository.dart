@@ -84,6 +84,15 @@ class DonneesClasse {
       ),
   ];
 
+  /// Dernier trimestre qui a des notes (1 s'il n'y en a aucune).
+  int get dernierTrimestreNote {
+    for (final t in const [3, 2, 1]) {
+      final ids = {for (final e in epreuvesTrimestre(t)) e.id};
+      if (notes.any((g) => ids.contains(g.assessmentId))) return t;
+    }
+    return 1;
+  }
+
   /// Classement d'un trimestre (1, 2, 3).
   Classement trimestre(int t) => classementTrimestre(
     type: type,
@@ -356,6 +365,15 @@ class GradesRepository {
                 )
                 ..limit(1))
               .getSingleOrNull();
+      // Redoublement : seconde colonne du niveau sur la fiche de scolarité.
+      final inscription =
+          await (db.select(db.enrollments)..where(
+                (e) =>
+                    e.studentId.equals(r.eleve.id) &
+                    e.classId.equals(d.classe.id) &
+                    e.deletedAt.isNull(),
+              ))
+              .getSingleOrNull();
       await store.save('annual_results', {
         'id': existe?.id ?? idResultatAnnuel(r.eleve.id, d.classe.schoolYearId),
         'school_id': d.classe.schoolId,
@@ -363,6 +381,7 @@ class GradesRepository {
         'school_year_id': d.classe.schoolYearId,
         'class_id': d.classe.id,
         'level_code': d.classe.levelCode,
+        'attempt': (inscription?.isRepeat ?? false) ? 2 : 1,
         'result_date': date,
         'general_average': r.moyenne == null ? null : r.moyenne! / 100,
         'rank': r.rang,

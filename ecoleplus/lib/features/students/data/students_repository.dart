@@ -205,6 +205,12 @@ class StudentsRepository {
     ...fields,
   });
 
+  /// Redoublement : l'élève refait le même niveau cette année.
+  Future<void> marquerRedoublement(
+    String enrollmentId, {
+    required bool redouble,
+  }) => store.save('enrollments', {'id': enrollmentId, 'is_repeat': redouble});
+
   /// Changement de classe dans l'année : l'ancienne inscription est close
   /// (l'historique est conservé), la nouvelle commence aujourd'hui.
   Future<void> changerDeClasse(String studentId, ClassRow nouvelle) =>

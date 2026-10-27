@@ -97,6 +97,15 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
   SyncedTable<AssessmentRow>(name: 'assessments', info: db.assessments),
   SyncedTable<GradeRow>(name: 'grades', info: db.grades),
   SyncedTable<AnnualResultRow>(name: 'annual_results', info: db.annualResults),
+  SyncedTable<ReportTemplateRow>(
+    name: 'report_templates',
+    info: db.reportTemplates,
+  ),
+  SyncedTable<ReportCardRow>(name: 'report_cards', info: db.reportCards),
+  SyncedTable<ScolarityCopyRow>(
+    name: 'scolarity_copy_log',
+    info: db.scolarityCopyLog,
+  ),
   SyncedTable<OfficialFormRow>(name: 'official_forms', info: db.officialForms),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),

@@ -16,6 +16,8 @@ import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/auth/data/auth_service.dart';
 import 'package:ecoleplus/features/auth/data/members_service.dart';
+import 'package:ecoleplus/features/bulletins/data/bulletins_repository.dart';
+import 'package:ecoleplus/features/forms/data/fiche_scolarite_repository.dart';
 import 'package:ecoleplus/features/grades/data/grades_repository.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
 import 'package:ecoleplus/features/school/data/school_repository.dart';
@@ -761,6 +763,89 @@ void mainA6() {
       hasLength(4),
       reason: 'l’enseignante lit les résultats de ses élèves',
     );
+    await ens.close();
+    await dir.close();
+  }, skip: skip);
+
+  test('phase 4 : appréciation de l’enseignante, observation et décision du '
+      'directeur (la décision de l’enseignante est ignorée) ; bulletin avec '
+      'rang ; fiche de scolarité « 7e/39 » et copie conforme journalisée, '
+      'refusée à l’enseignante', () async {
+    const cm1 = 'c0000000-0000-4000-8000-000000000002';
+    const fatou = 'd0000000-0000-4000-8000-000000000005';
+    final ens = await connecte('enseignant1@ecole-test.local');
+    final dir = await connecte('directeur@ecole-test.local');
+    final gE = GradesRepository(ens.store);
+    final bE = BulletinsRepository(ens.store, gE);
+    final dE = (await gE.chargerDonnees(cm1))!;
+    final clarisse = dE.eleves.firstWhere((e) => e.firstNames == 'Clarisse');
+    await bE.enregistrerCarte(dE, clarisse.id, 1, {
+      'teacher_appreciation': 'Peut mieux faire',
+      'decision': 'Redouble',
+    });
+    await ens.engine.syncNow();
+    Future<List<OutboxEntry>> refus(Phone p) => (p.db.select(
+      p.db.outbox,
+    )..where((o) => o.status.equals('refuse'))).get();
+    expect(await refus(ens), isEmpty);
+
+    final gD = GradesRepository(dir.store);
+    final bD = BulletinsRepository(dir.store, gD);
+    await dir.engine.syncNow();
+    var dD = (await gD.chargerDonnees(cm1))!;
+    var carte = (await bD.watchCartes(cm1).first).single;
+    expect(carte.teacherAppreciation, 'Peut mieux faire');
+    expect(carte.decision, isNull, reason: 'décision réservée au directeur');
+    await bD.enregistrerCarte(dD, clarisse.id, 1, {
+      'director_observation': 'Élève sérieuse',
+    });
+    await dir.engine.syncNow();
+    expect(await refus(dir), isEmpty);
+    await ens.engine.syncNow();
+    carte = (await bE.watchCartes(cm1).first).single;
+    expect(carte.directorObservation, 'Élève sérieuse');
+
+    // Bulletin du 1er trimestre : même rang que le classement en direct
+    // (les notes ont pu être corrigées par le test de la phase 3).
+    dD = (await gD.chargerDonnees(cm1))!;
+    final b = (await bD.bulletins(dD, 1, eleve: clarisse.id)).single;
+    final r = dD
+        .trimestre(1)
+        .resultats
+        .firstWhere((x) => x.eleve.id == clarisse.id);
+    expect(b.rang, '${r.rangTexte}/4');
+    expect(b.statistiques.effectif, 4);
+    expect(b.appreciation, 'Peut mieux faire');
+    expect(b.observation, 'Élève sérieuse');
+
+    // Fiche de scolarité de Fatou : CM1 l'an passé, 7e/39.
+    final fD = FicheScolariteRepository(dir.store, gD);
+    final f = (await fD.fiche(fatou, copieConforme: true))!;
+    expect(f.cours[('CM1', 1)]!.classement, '7e/39');
+    expect(f.cours[('CM1', 1)]!.moyenneTexte, '7,25');
+    await fD.journaliser(ecoleTest, fatou, copieConforme: true);
+    await dir.engine.syncNow();
+    expect(await refus(dir), isEmpty);
+    final copies = await dir.client
+        .from('scolarity_copy_log')
+        .select('is_certified_copy')
+        .eq('student_id', fatou);
+    expect(copies, [
+      {'is_certified_copy': true},
+    ]);
+    final journal = await dir.client
+        .from('audit_log')
+        .select('action')
+        .eq('table_name', 'scolarity_copy_log');
+    expect(journal, hasLength(1));
+
+    // L'enseignante ne peut pas générer de fiche de scolarité.
+    await FicheScolariteRepository(
+      ens.store,
+      gE,
+    ).journaliser(ecoleTest, clarisse.id, copieConforme: false);
+    await ens.engine.syncNow();
+    expect(await refus(ens), hasLength(1));
     await ens.close();
     await dir.close();
   }, skip: skip);
