@@ -169,3 +169,5 @@
 
 Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 inchangée).
 
+**Règle du porteur (27/10/2026)** : avant de construire une fonction qui ne pourrait marcher **que sur le téléphone** (caméra, capteur, micro, NFC, SMS…), je demande l'avis du porteur, avec ce qui se passerait sur l'ordinateur. Fonctions déjà construites concernées, à revoir lors de la construction d'A16 : dictée vocale (micro), ouverture par empreinte.
+
