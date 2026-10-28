@@ -3,6 +3,7 @@ import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/features/lock/data/biometric_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:local_auth/local_auth.dart';
 
 import '../helpers/app_harness.dart';
 
@@ -71,7 +72,17 @@ void main() {
     await h.relancer(tester);
     expect(find.text('Posez votre doigt sur le capteur'), findsOneWidget);
     expect(find.byKey(const Key('pin-1')), findsNothing);
-    capteur.accepte = true;
+    // Trop d'essais : le téléphone bloque l'empreinte ; la raison s'affiche.
+    capteur.refus = LocalAuthExceptionCode.biometricLockout;
+    await tester.tap(find.text('Ouvrir avec mon empreinte'));
+    await AppHarness.settle(tester);
+    expect(
+      find.textContaining('Déverrouillez d’abord le téléphone avec son code'),
+      findsOneWidget,
+    );
+    capteur
+      ..refus = null
+      ..accepte = true;
     await tester.tap(find.text('Ouvrir avec mon empreinte'));
     await AppHarness.settle(tester);
     expect(find.text('Mon école'), findsOneWidget);

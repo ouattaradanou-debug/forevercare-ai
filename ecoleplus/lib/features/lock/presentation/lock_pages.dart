@@ -43,13 +43,14 @@ class _CreatePinState extends ConsumerState<CreatePinPage> {
       _occupe = true;
       _message = null;
     });
-    final ok = await ref.read(biometricGateProvider).authentifier();
+    final r = await ref.read(biometricGateProvider).authentifier();
     if (!mounted) return;
-    if (!ok) {
+    if (!r.ok) {
       setState(() {
         _occupe = false;
-        _message =
-            'Empreinte non reconnue. Réessayez, ou choisissez plutôt un code.';
+        _message = r.message == null
+            ? null
+            : '${r.message} Vous pouvez aussi choisir plutôt un code.';
       });
       return;
     }
@@ -187,11 +188,14 @@ class _LockPageState extends ConsumerState<LockPage> {
   Future<void> _empreinte({bool demandee = false}) async {
     final lock = await ref.read(lockServiceProvider).get();
     if (lock == null || !lock.empreinteSeule) return;
-    if (await ref.read(biometricGateProvider).authentifier()) {
+    final r = await ref.read(biometricGateProvider).authentifier();
+    if (r.ok) {
       await ref.read(lockServiceProvider).reussiteBiometrie();
       ref.read(lockedProvider.notifier).unlock();
-    } else if (demandee && mounted) {
-      setState(() => _message = 'Empreinte non reconnue. Réessayez.');
+    } else if (mounted && (demandee || r.message != null)) {
+      // Raison claire (trop d'essais, aucune empreinte enregistrée…) au
+      // lieu d'un échec muet.
+      setState(() => _message = r.message);
     }
   }
 
