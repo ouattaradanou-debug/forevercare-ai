@@ -5,7 +5,7 @@
 \set ens2 '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}'
 \set dir2 '{"sub":"a0000000-0000-4000-8000-000000000009","role":"authenticated"}'
 begin;
-select plan(23);
+select plan(24);
 
 set local role authenticated;
 select set_config('request.jwt.claims', :'dir1', true);
@@ -93,6 +93,9 @@ select set_config('request.jwt.claims', :'dir1', true);
 select throws_like($$insert into public.documents (school_id, space, title, size_bytes) values
   ('10000000-0000-4000-8000-000000000001', 'bibliotheque', 'Gros scan', 9000)$$,
   'Espace plein%', 'quota atteint : message clair');
+update public.schools set storage_quota_bytes = 999999999999 where id = '10000000-0000-4000-8000-000000000001';
+select is((select storage_quota_bytes from public.schools where id = '10000000-0000-4000-8000-000000000001'),
+  10000::bigint, 'le directeur ne peut pas augmenter son quota');
 
 -- Ajout fermé aux enseignants.
 update public.schools set library_teacher_mode = 'interdit' where id = '10000000-0000-4000-8000-000000000001';

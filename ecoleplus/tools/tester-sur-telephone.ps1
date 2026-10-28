@@ -255,6 +255,10 @@ if ($Reinitialiser) {
     Write-Host '    Installation du jeu de données fictif « École Test »...'
     ExecuterSql ("begin;`n" + [System.IO.File]::ReadAllText((Join-Path $racine 'supabase\seed.sql')) + "`ncommit;") 'École Test'
   }
+  # Serveur de test : 300 Mo pour l'école fictive « École Test » seulement
+  # (si le quota n'a pas été changé à la main ; les autres écoles gardent le leur).
+  ExecuterSql ("update public.schools set storage_quota_bytes = 314572800 " +
+               "where id = '10000000-0000-4000-8000-000000000001' and storage_quota_bytes = 5368709120;") 'quota École Test'
   Remove-Item -Force -ErrorAction SilentlyContinue $tmp
 }
 Ok 'tables à jour'
