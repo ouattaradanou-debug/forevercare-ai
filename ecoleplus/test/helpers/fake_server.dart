@@ -14,6 +14,7 @@ class FakeServer {
   DateTime now = DateTime.utc(2026, 10, 21, 8);
   int _tick = 0;
   int pushCalls = 0;
+  final _depuis = Stopwatch()..start();
   int registryCounter = 0;
 
   /// Renvoie un code d'erreur SQL pour refuser un changement, sinon null.
@@ -110,7 +111,8 @@ class FakeRemote implements SyncRemote {
   @override
   Future<DateTime> serverNow() async {
     _check();
-    return server.now;
+    // Comme un vrai serveur : l'heure avance avec le temps réel.
+    return server.now.add(server._depuis.elapsed);
   }
 
   @override

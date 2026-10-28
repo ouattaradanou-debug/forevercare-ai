@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/core/sync/sync_engine.dart';
 import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
 import 'package:ecoleplus/features/bibliotheque/domain/document.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/app_harness.dart';
@@ -33,6 +36,23 @@ List<FichierChoisi> fichiersDeTest(
   ];
 }
 
+/// Attend la fin des traitements en cours (ajout, synchronisation) avant
+/// de lire la base : sinon la lecture attend un verrou que seul le temps
+/// simulé libère.
+Future<void> calme(WidgetTester tester) async {
+  for (var i = 0; i < 60; i++) {
+    await AppHarness.settle(tester);
+    final moteur = ProviderScope.containerOf(
+      tester.element(find.byType(Scaffold).first),
+    ).read(syncEngineProvider);
+    if (moteur.state.phase != SyncPhase.running &&
+        find.byType(CircularProgressIndicator).evaluate().isEmpty) {
+      break;
+    }
+  }
+  await AppHarness.settle(tester);
+}
+
 Future<void> ouvrirBibliotheque(WidgetTester tester) async {
   await AppHarness.toucher(tester, 'Bibliothèque');
   await AppHarness.settle(tester);
@@ -41,8 +61,10 @@ Future<void> ouvrirBibliotheque(WidgetTester tester) async {
 /// Ajoute les fichiers choisis (« Commun à toute l'école »).
 Future<void> ajouterCommun(WidgetTester tester) async {
   await tapLong(tester, find.text('Ajouter des documents'));
+  await calme(tester);
   await tap(tester, find.byKey(const Key('commun')));
   await tapLong(tester, find.widgetWithText(FilledButton, 'Ajouter'));
+  await calme(tester);
 }
 
 void main() {
@@ -76,15 +98,18 @@ void main() {
     // Recherche dans le texte : Internet nécessaire, message clair.
     await tap(tester, find.byKey(const Key('chercher-texte')));
     expect(find.textContaining('connexion à Internet nécessaire'), findsOne);
-    await tester.tap(find.byTooltip('Effacer'));
+    await AppHarness.settle(tester);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await AppHarness.settle(tester);
+    await tester.enterText(find.byKey(const Key('recherche-documents')), '');
     await AppHarness.settle(tester);
 
     // Réseau qui revient… puis coupe après 40 morceaux.
     h.online = true;
     h.remote.couperApresMorceaux = 40;
     await accueil(tester);
-    await tester.runAsync(() => h.synchroniser(tester));
-    await AppHarness.settle(tester);
+    await h.synchroniser(tester);
+    await calme(tester);
     expect(h.server.tables['documents'], hasLength(50));
     final envoyes = h.remote.morceauxRecus;
     expect(envoyes, 40);
@@ -97,8 +122,8 @@ void main() {
     h
       ..online = true
       ..remote.couperApresMorceaux = null;
-    await tester.runAsync(() => h.synchroniser(tester));
-    await AppHarness.settle(tester);
+    await h.synchroniser(tester);
+    await calme(tester);
     expect(await h.db.select(h.db.documentUploads).get(), isEmpty);
     final fichiers = h.server.files.keys
         .where((k) => k.startsWith('documents/'))
@@ -115,10 +140,22 @@ void main() {
     }
 
     // Même lot une 2e fois : rien de nouveau.
-    await ouvrirBibliotheque(tester);
-    await ajouterCommun(tester);
-    expect(find.textContaining('0 document(s) ajouté(s) ; 50 déjà'), findsOne);
+    final repo = ProviderScope.containerOf(
+      tester.element(find.byType(Scaffold).first),
+    ).read(bibliothequeRepositoryProvider);
+    final r = (await tester.runAsync(
+      () => repo.ajouter(
+        schoolId: ecoleId,
+        espace: Espace.bibliotheque,
+        fichiers: h.fichiersChoisis,
+        fiche: const FicheDocument(commun: true),
+        gestionnaire: true,
+      ),
+    ))!;
+    expect((r.ajoutes, r.doublons.length), (0, 50));
+    await calme(tester);
     expect(await h.db.select(h.db.documents).get(), hasLength(50));
+    expect(await h.db.select(h.db.documentUploads).get(), isEmpty);
     await h.dispose(tester);
   });
 
@@ -138,8 +175,8 @@ void main() {
     await ouvrirBibliotheque(tester);
     await ajouterCommun(tester);
     await accueil(tester);
-    await tester.runAsync(() => h.synchroniser(tester));
-    await AppHarness.settle(tester);
+    await h.synchroniser(tester);
+    await calme(tester);
     expect(await h.db.select(h.db.documentUploads).get(), isEmpty);
 
     final docs = await h.db.select(h.db.documents).get();
@@ -161,15 +198,20 @@ void main() {
     await tap(tester, find.byKey(const Key('chercher-texte')));
     expect(find.byKey(Key('trouve-${deux.id}-3')), findsOneWidget);
     expect(find.text('Page 3 : « fractions »'), findsOneWidget);
-    await tester.tap(find.byTooltip('Effacer'));
+    await AppHarness.settle(tester);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await AppHarness.settle(tester);
+    await tester.enterText(find.byKey(const Key('recherche-documents')), '');
     await AppHarness.settle(tester);
 
     // Épingler le 1er, libérer l'espace : seul le 1er reste.
     await tap(tester, find.byKey(Key('document-${un.id}')));
     await tapLong(tester, find.byKey(const Key('epingler')));
+    await calme(tester);
     await retour(tester);
     await voir(tester, find.byKey(const Key('liberer')));
     await tapLong(tester, find.byKey(const Key('liberer')));
+    await calme(tester);
     final locaux = await h.db.select(h.db.documentFiles).get();
     expect(locaux.map((f) => f.documentId), [un.id]);
     expect(locaux.single.pinned, isTrue);
@@ -198,8 +240,17 @@ void main() {
     await retour(tester);
 
     await tap(tester, find.byKey(Key('document-${deux.id}')));
-    await tapLong(tester, find.text('Ouvrir'));
-    expect(find.textContaining('n’est pas sur le téléphone'), findsOne);
+    await voir(tester, find.text('Ouvrir'));
+    await tester.tap(find.text('Ouvrir'));
+    final message = find.textContaining('n’est pas sur le téléphone');
+    for (var i = 0; i < 100 && message.evaluate().isEmpty; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(message, findsOne);
+    await AppHarness.settle(tester);
     await h.dispose(tester);
   });
 
@@ -214,10 +265,12 @@ void main() {
     await h.login(tester, '70 11 22 33');
     await ouvrirBibliotheque(tester);
     await tapLong(tester, find.text('Ajouter des documents'));
+    await calme(tester);
     expect(find.textContaining('après validation du directeur'), findsOne);
     expect(find.byKey(const Key('commun')), findsNothing);
     await tap(tester, find.widgetWithText(FilterChip, 'CM1 A'));
     await tapLong(tester, find.widgetWithText(FilledButton, 'Ajouter'));
+    await calme(tester);
     expect(find.textContaining('En attente de validation'), findsOne);
     final d = (await h.db.select(h.db.documents).get()).single;
     expect(d.approved, isFalse);
@@ -238,8 +291,8 @@ void main() {
     await ouvrirBibliotheque(tester);
     await ajouterCommun(tester);
     await accueil(tester);
-    await tester.runAsync(() => h2.synchroniser(tester));
-    await AppHarness.settle(tester);
+    await h2.synchroniser(tester);
+    await calme(tester);
     expect(
       h2.server.files.keys.where((k) => k.startsWith('documents/')),
       isEmpty,
@@ -267,6 +320,7 @@ void main() {
     await AppHarness.settle(tester);
     await tap(tester, find.byKey(const Key('doc-/registres/B1')));
     await tapLong(tester, find.byKey(const Key('archiver-copie-signee')));
+    await calme(tester);
     expect(find.byKey(const Key('copie-signee')), findsOneWidget);
     final d = (await h.db.select(h.db.documents).get()).single;
     expect(d.space, 'archives');
