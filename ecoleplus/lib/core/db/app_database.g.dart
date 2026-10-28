@@ -213,6 +213,17 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
     $customConstraints: 'NOT NULL DEFAULT FALSE',
     defaultValue: const CustomExpression('FALSE'),
   );
+  static const VerificationMeta _logoPathMeta = const VerificationMeta(
+    'logoPath',
+  );
+  late final GeneratedColumn<String> logoPath = GeneratedColumn<String>(
+    'logo_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -278,6 +289,7 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
     directorCivility,
     directorGrade,
     preschoolRanking,
+    logoPath,
     createdAt,
     updatedAt,
     deletedAt,
@@ -437,6 +449,12 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
         ),
       );
     }
+    if (data.containsKey('logo_path')) {
+      context.handle(
+        _logoPathMeta,
+        logoPath.isAcceptableOrUnknown(data['logo_path']!, _logoPathMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -548,6 +566,10 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
         DriftSqlType.bool,
         data['${effectivePrefix}preschool_ranking'],
       )!,
+      logoPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}logo_path'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_at'],
@@ -596,6 +618,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
   final String? directorCivility;
   final String? directorGrade;
   final bool preschoolRanking;
+  final String? logoPath;
   final String? createdAt;
   final String updatedAt;
   final String? deletedAt;
@@ -620,6 +643,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     this.directorCivility,
     this.directorGrade,
     required this.preschoolRanking,
+    this.logoPath,
     this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -669,6 +693,9 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       map['director_grade'] = Variable<String>(directorGrade);
     }
     map['preschool_ranking'] = Variable<bool>(preschoolRanking);
+    if (!nullToAbsent || logoPath != null) {
+      map['logo_path'] = Variable<String>(logoPath);
+    }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<String>(createdAt);
     }
@@ -725,6 +752,9 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
           ? const Value.absent()
           : Value(directorGrade),
       preschoolRanking: Value(preschoolRanking),
+      logoPath: logoPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(logoPath),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -765,6 +795,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       directorCivility: serializer.fromJson<String?>(json['director_civility']),
       directorGrade: serializer.fromJson<String?>(json['director_grade']),
       preschoolRanking: serializer.fromJson<bool>(json['preschool_ranking']),
+      logoPath: serializer.fromJson<String?>(json['logo_path']),
       createdAt: serializer.fromJson<String?>(json['created_at']),
       updatedAt: serializer.fromJson<String>(json['updated_at']),
       deletedAt: serializer.fromJson<String?>(json['deleted_at']),
@@ -794,6 +825,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       'director_civility': serializer.toJson<String?>(directorCivility),
       'director_grade': serializer.toJson<String?>(directorGrade),
       'preschool_ranking': serializer.toJson<bool>(preschoolRanking),
+      'logo_path': serializer.toJson<String?>(logoPath),
       'created_at': serializer.toJson<String?>(createdAt),
       'updated_at': serializer.toJson<String>(updatedAt),
       'deleted_at': serializer.toJson<String?>(deletedAt),
@@ -821,6 +853,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     Value<String?> directorCivility = const Value.absent(),
     Value<String?> directorGrade = const Value.absent(),
     bool? preschoolRanking,
+    Value<String?> logoPath = const Value.absent(),
     Value<String?> createdAt = const Value.absent(),
     String? updatedAt,
     Value<String?> deletedAt = const Value.absent(),
@@ -851,6 +884,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
         ? directorGrade.value
         : this.directorGrade,
     preschoolRanking: preschoolRanking ?? this.preschoolRanking,
+    logoPath: logoPath.present ? logoPath.value : this.logoPath,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -899,6 +933,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       preschoolRanking: data.preschoolRanking.present
           ? data.preschoolRanking.value
           : this.preschoolRanking,
+      logoPath: data.logoPath.present ? data.logoPath.value : this.logoPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -928,6 +963,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
           ..write('directorCivility: $directorCivility, ')
           ..write('directorGrade: $directorGrade, ')
           ..write('preschoolRanking: $preschoolRanking, ')
+          ..write('logoPath: $logoPath, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -957,6 +993,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     directorCivility,
     directorGrade,
     preschoolRanking,
+    logoPath,
     createdAt,
     updatedAt,
     deletedAt,
@@ -985,6 +1022,7 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
           other.directorCivility == this.directorCivility &&
           other.directorGrade == this.directorGrade &&
           other.preschoolRanking == this.preschoolRanking &&
+          other.logoPath == this.logoPath &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -1011,6 +1049,7 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
   final Value<String?> directorCivility;
   final Value<String?> directorGrade;
   final Value<bool> preschoolRanking;
+  final Value<String?> logoPath;
   final Value<String?> createdAt;
   final Value<String> updatedAt;
   final Value<String?> deletedAt;
@@ -1036,6 +1075,7 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     this.directorCivility = const Value.absent(),
     this.directorGrade = const Value.absent(),
     this.preschoolRanking = const Value.absent(),
+    this.logoPath = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1062,6 +1102,7 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     this.directorCivility = const Value.absent(),
     this.directorGrade = const Value.absent(),
     this.preschoolRanking = const Value.absent(),
+    this.logoPath = const Value.absent(),
     this.createdAt = const Value.absent(),
     required String updatedAt,
     this.deletedAt = const Value.absent(),
@@ -1090,6 +1131,7 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     Expression<String>? directorCivility,
     Expression<String>? directorGrade,
     Expression<bool>? preschoolRanking,
+    Expression<String>? logoPath,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
     Expression<String>? deletedAt,
@@ -1117,6 +1159,7 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
       if (directorCivility != null) 'director_civility': directorCivility,
       if (directorGrade != null) 'director_grade': directorGrade,
       if (preschoolRanking != null) 'preschool_ranking': preschoolRanking,
+      if (logoPath != null) 'logo_path': logoPath,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -1145,6 +1188,7 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     Value<String?>? directorCivility,
     Value<String?>? directorGrade,
     Value<bool>? preschoolRanking,
+    Value<String?>? logoPath,
     Value<String?>? createdAt,
     Value<String>? updatedAt,
     Value<String?>? deletedAt,
@@ -1171,6 +1215,7 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
       directorCivility: directorCivility ?? this.directorCivility,
       directorGrade: directorGrade ?? this.directorGrade,
       preschoolRanking: preschoolRanking ?? this.preschoolRanking,
+      logoPath: logoPath ?? this.logoPath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -1241,6 +1286,9 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     if (preschoolRanking.present) {
       map['preschool_ranking'] = Variable<bool>(preschoolRanking.value);
     }
+    if (logoPath.present) {
+      map['logo_path'] = Variable<String>(logoPath.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
     }
@@ -1281,6 +1329,7 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
           ..write('directorCivility: $directorCivility, ')
           ..write('directorGrade: $directorGrade, ')
           ..write('preschoolRanking: $preschoolRanking, ')
+          ..write('logoPath: $logoPath, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -30318,6 +30367,1246 @@ class AttendanceCompanion extends UpdateCompanion<AttendanceRow> {
   }
 }
 
+class CardTemplates extends Table
+    with TableInfo<CardTemplates, CardTemplateRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  CardTemplates(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _primaryColorMeta = const VerificationMeta(
+    'primaryColor',
+  );
+  late final GeneratedColumn<String> primaryColor = GeneratedColumn<String>(
+    'primary_color',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'#1B6E3C\'',
+    defaultValue: const CustomExpression('\'#1B6E3C\''),
+  );
+  static const VerificationMeta _secondaryColorMeta = const VerificationMeta(
+    'secondaryColor',
+  );
+  late final GeneratedColumn<String> secondaryColor = GeneratedColumn<String>(
+    'secondary_color',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'#FFFFFF\'',
+    defaultValue: const CustomExpression('\'#FFFFFF\''),
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    name,
+    primaryColor,
+    secondaryColor,
+    isDefault,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'card_templates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CardTemplateRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('primary_color')) {
+      context.handle(
+        _primaryColorMeta,
+        primaryColor.isAcceptableOrUnknown(
+          data['primary_color']!,
+          _primaryColorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('secondary_color')) {
+      context.handle(
+        _secondaryColorMeta,
+        secondaryColor.isAcceptableOrUnknown(
+          data['secondary_color']!,
+          _secondaryColorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CardTemplateRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CardTemplateRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      primaryColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}primary_color'],
+      )!,
+      secondaryColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}secondary_color'],
+      )!,
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  CardTemplates createAlias(String alias) {
+    return CardTemplates(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class CardTemplateRow extends DataClass implements Insertable<CardTemplateRow> {
+  final String id;
+  final String schoolId;
+  final String name;
+  final String primaryColor;
+  final String secondaryColor;
+  final bool isDefault;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const CardTemplateRow({
+    required this.id,
+    required this.schoolId,
+    required this.name,
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.isDefault,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['name'] = Variable<String>(name);
+    map['primary_color'] = Variable<String>(primaryColor);
+    map['secondary_color'] = Variable<String>(secondaryColor);
+    map['is_default'] = Variable<bool>(isDefault);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  CardTemplatesCompanion toCompanion(bool nullToAbsent) {
+    return CardTemplatesCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      name: Value(name),
+      primaryColor: Value(primaryColor),
+      secondaryColor: Value(secondaryColor),
+      isDefault: Value(isDefault),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory CardTemplateRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CardTemplateRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      name: serializer.fromJson<String>(json['name']),
+      primaryColor: serializer.fromJson<String>(json['primary_color']),
+      secondaryColor: serializer.fromJson<String>(json['secondary_color']),
+      isDefault: serializer.fromJson<bool>(json['is_default']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'name': serializer.toJson<String>(name),
+      'primary_color': serializer.toJson<String>(primaryColor),
+      'secondary_color': serializer.toJson<String>(secondaryColor),
+      'is_default': serializer.toJson<bool>(isDefault),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  CardTemplateRow copyWith({
+    String? id,
+    String? schoolId,
+    String? name,
+    String? primaryColor,
+    String? secondaryColor,
+    bool? isDefault,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => CardTemplateRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    name: name ?? this.name,
+    primaryColor: primaryColor ?? this.primaryColor,
+    secondaryColor: secondaryColor ?? this.secondaryColor,
+    isDefault: isDefault ?? this.isDefault,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  CardTemplateRow copyWithCompanion(CardTemplatesCompanion data) {
+    return CardTemplateRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      name: data.name.present ? data.name.value : this.name,
+      primaryColor: data.primaryColor.present
+          ? data.primaryColor.value
+          : this.primaryColor,
+      secondaryColor: data.secondaryColor.present
+          ? data.secondaryColor.value
+          : this.secondaryColor,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CardTemplateRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('name: $name, ')
+          ..write('primaryColor: $primaryColor, ')
+          ..write('secondaryColor: $secondaryColor, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    name,
+    primaryColor,
+    secondaryColor,
+    isDefault,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CardTemplateRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.name == this.name &&
+          other.primaryColor == this.primaryColor &&
+          other.secondaryColor == this.secondaryColor &&
+          other.isDefault == this.isDefault &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class CardTemplatesCompanion extends UpdateCompanion<CardTemplateRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> name;
+  final Value<String> primaryColor;
+  final Value<String> secondaryColor;
+  final Value<bool> isDefault;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const CardTemplatesCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.primaryColor = const Value.absent(),
+    this.secondaryColor = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CardTemplatesCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String name,
+    this.primaryColor = const Value.absent(),
+    this.secondaryColor = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       name = Value(name),
+       updatedAt = Value(updatedAt);
+  static Insertable<CardTemplateRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? name,
+    Expression<String>? primaryColor,
+    Expression<String>? secondaryColor,
+    Expression<bool>? isDefault,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (name != null) 'name': name,
+      if (primaryColor != null) 'primary_color': primaryColor,
+      if (secondaryColor != null) 'secondary_color': secondaryColor,
+      if (isDefault != null) 'is_default': isDefault,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CardTemplatesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? name,
+    Value<String>? primaryColor,
+    Value<String>? secondaryColor,
+    Value<bool>? isDefault,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return CardTemplatesCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      name: name ?? this.name,
+      primaryColor: primaryColor ?? this.primaryColor,
+      secondaryColor: secondaryColor ?? this.secondaryColor,
+      isDefault: isDefault ?? this.isDefault,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (primaryColor.present) {
+      map['primary_color'] = Variable<String>(primaryColor.value);
+    }
+    if (secondaryColor.present) {
+      map['secondary_color'] = Variable<String>(secondaryColor.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CardTemplatesCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('name: $name, ')
+          ..write('primaryColor: $primaryColor, ')
+          ..write('secondaryColor: $secondaryColor, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class StudentCards extends Table with TableInfo<StudentCards, StudentCardRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  StudentCards(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _qrTokenMeta = const VerificationMeta(
+    'qrToken',
+  );
+  late final GeneratedColumn<String> qrToken = GeneratedColumn<String>(
+    'qr_token',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _generatedAtMeta = const VerificationMeta(
+    'generatedAt',
+  );
+  late final GeneratedColumn<String> generatedAt = GeneratedColumn<String>(
+    'generated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    studentId,
+    schoolYearId,
+    qrToken,
+    generatedAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'student_cards';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StudentCardRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_studentIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('qr_token')) {
+      context.handle(
+        _qrTokenMeta,
+        qrToken.isAcceptableOrUnknown(data['qr_token']!, _qrTokenMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_qrTokenMeta);
+    }
+    if (data.containsKey('generated_at')) {
+      context.handle(
+        _generatedAtMeta,
+        generatedAt.isAcceptableOrUnknown(
+          data['generated_at']!,
+          _generatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StudentCardRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StudentCardRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      qrToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}qr_token'],
+      )!,
+      generatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}generated_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  StudentCards createAlias(String alias) {
+    return StudentCards(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class StudentCardRow extends DataClass implements Insertable<StudentCardRow> {
+  final String id;
+  final String schoolId;
+  final String studentId;
+  final String schoolYearId;
+  final String qrToken;
+  final String? generatedAt;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const StudentCardRow({
+    required this.id,
+    required this.schoolId,
+    required this.studentId,
+    required this.schoolYearId,
+    required this.qrToken,
+    this.generatedAt,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['student_id'] = Variable<String>(studentId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    map['qr_token'] = Variable<String>(qrToken);
+    if (!nullToAbsent || generatedAt != null) {
+      map['generated_at'] = Variable<String>(generatedAt);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  StudentCardsCompanion toCompanion(bool nullToAbsent) {
+    return StudentCardsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      studentId: Value(studentId),
+      schoolYearId: Value(schoolYearId),
+      qrToken: Value(qrToken),
+      generatedAt: generatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(generatedAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory StudentCardRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StudentCardRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      studentId: serializer.fromJson<String>(json['student_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      qrToken: serializer.fromJson<String>(json['qr_token']),
+      generatedAt: serializer.fromJson<String?>(json['generated_at']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'student_id': serializer.toJson<String>(studentId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'qr_token': serializer.toJson<String>(qrToken),
+      'generated_at': serializer.toJson<String?>(generatedAt),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  StudentCardRow copyWith({
+    String? id,
+    String? schoolId,
+    String? studentId,
+    String? schoolYearId,
+    String? qrToken,
+    Value<String?> generatedAt = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => StudentCardRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    studentId: studentId ?? this.studentId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    qrToken: qrToken ?? this.qrToken,
+    generatedAt: generatedAt.present ? generatedAt.value : this.generatedAt,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  StudentCardRow copyWithCompanion(StudentCardsCompanion data) {
+    return StudentCardRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      qrToken: data.qrToken.present ? data.qrToken.value : this.qrToken,
+      generatedAt: data.generatedAt.present
+          ? data.generatedAt.value
+          : this.generatedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StudentCardRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('qrToken: $qrToken, ')
+          ..write('generatedAt: $generatedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    studentId,
+    schoolYearId,
+    qrToken,
+    generatedAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StudentCardRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.studentId == this.studentId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.qrToken == this.qrToken &&
+          other.generatedAt == this.generatedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class StudentCardsCompanion extends UpdateCompanion<StudentCardRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> studentId;
+  final Value<String> schoolYearId;
+  final Value<String> qrToken;
+  final Value<String?> generatedAt;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const StudentCardsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.qrToken = const Value.absent(),
+    this.generatedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StudentCardsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String studentId,
+    required String schoolYearId,
+    required String qrToken,
+    this.generatedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       studentId = Value(studentId),
+       schoolYearId = Value(schoolYearId),
+       qrToken = Value(qrToken),
+       updatedAt = Value(updatedAt);
+  static Insertable<StudentCardRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? studentId,
+    Expression<String>? schoolYearId,
+    Expression<String>? qrToken,
+    Expression<String>? generatedAt,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (studentId != null) 'student_id': studentId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (qrToken != null) 'qr_token': qrToken,
+      if (generatedAt != null) 'generated_at': generatedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StudentCardsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? studentId,
+    Value<String>? schoolYearId,
+    Value<String>? qrToken,
+    Value<String?>? generatedAt,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return StudentCardsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      studentId: studentId ?? this.studentId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      qrToken: qrToken ?? this.qrToken,
+      generatedAt: generatedAt ?? this.generatedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (qrToken.present) {
+      map['qr_token'] = Variable<String>(qrToken.value);
+    }
+    if (generatedAt.present) {
+      map['generated_at'] = Variable<String>(generatedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StudentCardsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('qrToken: $qrToken, ')
+          ..write('generatedAt: $generatedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Outbox extends Table with TableInfo<Outbox, OutboxEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -33348,6 +34637,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final PreschoolBooklets preschoolBooklets = PreschoolBooklets(this);
   late final Attendance attendance = Attendance(this);
+  late final CardTemplates cardTemplates = CardTemplates(this);
+  late final StudentCards studentCards = StudentCards(this);
   late final Index preschoolEvaluationsPeriod = Index(
     'preschool_evaluations_period',
     'CREATE INDEX preschool_evaluations_period ON preschool_evaluations (period_id)',
@@ -33423,6 +34714,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     preschoolEvaluations,
     preschoolBooklets,
     attendance,
+    cardTemplates,
+    studentCards,
     preschoolEvaluationsPeriod,
     attendanceClassDay,
     activityLinesObjective,
@@ -33458,6 +34751,7 @@ typedef $SchoolsCreateCompanionBuilder = SchoolsCompanion Function({
   Value<String?> directorCivility,
   Value<String?> directorGrade,
   Value<bool> preschoolRanking,
+  Value<String?> logoPath,
   Value<String?> createdAt,
   required String updatedAt,
   Value<String?> deletedAt,
@@ -33484,6 +34778,7 @@ typedef $SchoolsUpdateCompanionBuilder = SchoolsCompanion Function({
   Value<String?> directorCivility,
   Value<String?> directorGrade,
   Value<bool> preschoolRanking,
+  Value<String?> logoPath,
   Value<String?> createdAt,
   Value<String> updatedAt,
   Value<String?> deletedAt,
@@ -33591,6 +34886,11 @@ class $SchoolsFilterComposer extends Composer<_$AppDatabase, Schools> {
 
   ColumnFilters<bool> get preschoolRanking => $composableBuilder(
     column: $table.preschoolRanking,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get logoPath => $composableBuilder(
+    column: $table.logoPath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -33718,6 +35018,11 @@ class $SchoolsOrderingComposer extends Composer<_$AppDatabase, Schools> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get logoPath => $composableBuilder(
+    column: $table.logoPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -33826,6 +35131,9 @@ class $SchoolsAnnotationComposer extends Composer<_$AppDatabase, Schools> {
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get logoPath =>
+      $composableBuilder(column: $table.logoPath, builder: (column) => column);
+
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -33886,6 +35194,7 @@ class $SchoolsTableManager
                 Value<String?> directorCivility = const Value.absent(),
                 Value<String?> directorGrade = const Value.absent(),
                 Value<bool> preschoolRanking = const Value.absent(),
+                Value<String?> logoPath = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> deletedAt = const Value.absent(),
@@ -33911,6 +35220,7 @@ class $SchoolsTableManager
                 directorCivility: directorCivility,
                 directorGrade: directorGrade,
                 preschoolRanking: preschoolRanking,
+                logoPath: logoPath,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -33938,6 +35248,7 @@ class $SchoolsTableManager
                 Value<String?> directorCivility = const Value.absent(),
                 Value<String?> directorGrade = const Value.absent(),
                 Value<bool> preschoolRanking = const Value.absent(),
+                Value<String?> logoPath = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 required String updatedAt,
                 Value<String?> deletedAt = const Value.absent(),
@@ -33963,6 +35274,7 @@ class $SchoolsTableManager
                 directorCivility: directorCivility,
                 directorGrade: directorGrade,
                 preschoolRanking: preschoolRanking,
+                logoPath: logoPath,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -47816,6 +49128,618 @@ typedef $AttendanceProcessedTableManager =
       AttendanceRow,
       PrefetchHooks Function()
     >;
+typedef $CardTemplatesCreateCompanionBuilder = CardTemplatesCompanion Function({
+  required String id,
+  required String schoolId,
+  required String name,
+  Value<String> primaryColor,
+  Value<String> secondaryColor,
+  Value<bool> isDefault,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $CardTemplatesUpdateCompanionBuilder = CardTemplatesCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> name,
+  Value<String> primaryColor,
+  Value<String> secondaryColor,
+  Value<bool> isDefault,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $CardTemplatesFilterComposer
+    extends Composer<_$AppDatabase, CardTemplates> {
+  $CardTemplatesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get primaryColor => $composableBuilder(
+    column: $table.primaryColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondaryColor => $composableBuilder(
+    column: $table.secondaryColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $CardTemplatesOrderingComposer
+    extends Composer<_$AppDatabase, CardTemplates> {
+  $CardTemplatesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get primaryColor => $composableBuilder(
+    column: $table.primaryColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondaryColor => $composableBuilder(
+    column: $table.secondaryColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $CardTemplatesAnnotationComposer
+    extends Composer<_$AppDatabase, CardTemplates> {
+  $CardTemplatesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get primaryColor => $composableBuilder(
+    column: $table.primaryColor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get secondaryColor => $composableBuilder(
+    column: $table.secondaryColor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $CardTemplatesTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          CardTemplates,
+          CardTemplateRow,
+          $CardTemplatesFilterComposer,
+          $CardTemplatesOrderingComposer,
+          $CardTemplatesAnnotationComposer,
+          $CardTemplatesCreateCompanionBuilder,
+          $CardTemplatesUpdateCompanionBuilder,
+          (
+            CardTemplateRow,
+            BaseReferences<_$AppDatabase, CardTemplates, CardTemplateRow>,
+          ),
+          CardTemplateRow,
+          PrefetchHooks Function()
+        > {
+  $CardTemplatesTableManager(_$AppDatabase db, CardTemplates table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $CardTemplatesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $CardTemplatesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $CardTemplatesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> primaryColor = const Value.absent(),
+                Value<String> secondaryColor = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CardTemplatesCompanion(
+                id: id,
+                schoolId: schoolId,
+                name: name,
+                primaryColor: primaryColor,
+                secondaryColor: secondaryColor,
+                isDefault: isDefault,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String name,
+                Value<String> primaryColor = const Value.absent(),
+                Value<String> secondaryColor = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CardTemplatesCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                name: name,
+                primaryColor: primaryColor,
+                secondaryColor: secondaryColor,
+                isDefault: isDefault,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<CardTemplates, CardTemplateRow>(table),
+                  BaseReferences<_$AppDatabase, CardTemplates, CardTemplateRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $CardTemplatesProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      CardTemplates,
+      CardTemplateRow,
+      $CardTemplatesFilterComposer,
+      $CardTemplatesOrderingComposer,
+      $CardTemplatesAnnotationComposer,
+      $CardTemplatesCreateCompanionBuilder,
+      $CardTemplatesUpdateCompanionBuilder,
+      (
+        CardTemplateRow,
+        BaseReferences<_$AppDatabase, CardTemplates, CardTemplateRow>,
+      ),
+      CardTemplateRow,
+      PrefetchHooks Function()
+    >;
+typedef $StudentCardsCreateCompanionBuilder = StudentCardsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String studentId,
+  required String schoolYearId,
+  required String qrToken,
+  Value<String?> generatedAt,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $StudentCardsUpdateCompanionBuilder = StudentCardsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> studentId,
+  Value<String> schoolYearId,
+  Value<String> qrToken,
+  Value<String?> generatedAt,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $StudentCardsFilterComposer
+    extends Composer<_$AppDatabase, StudentCards> {
+  $StudentCardsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get qrToken => $composableBuilder(
+    column: $table.qrToken,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $StudentCardsOrderingComposer
+    extends Composer<_$AppDatabase, StudentCards> {
+  $StudentCardsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get qrToken => $composableBuilder(
+    column: $table.qrToken,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $StudentCardsAnnotationComposer
+    extends Composer<_$AppDatabase, StudentCards> {
+  $StudentCardsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get qrToken =>
+      $composableBuilder(column: $table.qrToken, builder: (column) => column);
+
+  GeneratedColumn<String> get generatedAt => $composableBuilder(
+    column: $table.generatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $StudentCardsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          StudentCards,
+          StudentCardRow,
+          $StudentCardsFilterComposer,
+          $StudentCardsOrderingComposer,
+          $StudentCardsAnnotationComposer,
+          $StudentCardsCreateCompanionBuilder,
+          $StudentCardsUpdateCompanionBuilder,
+          (
+            StudentCardRow,
+            BaseReferences<_$AppDatabase, StudentCards, StudentCardRow>,
+          ),
+          StudentCardRow,
+          PrefetchHooks Function()
+        > {
+  $StudentCardsTableManager(_$AppDatabase db, StudentCards table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $StudentCardsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $StudentCardsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $StudentCardsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> studentId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String> qrToken = const Value.absent(),
+                Value<String?> generatedAt = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StudentCardsCompanion(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                schoolYearId: schoolYearId,
+                qrToken: qrToken,
+                generatedAt: generatedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String studentId,
+                required String schoolYearId,
+                required String qrToken,
+                Value<String?> generatedAt = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StudentCardsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                schoolYearId: schoolYearId,
+                qrToken: qrToken,
+                generatedAt: generatedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<StudentCards, StudentCardRow>(table),
+                  BaseReferences<_$AppDatabase, StudentCards, StudentCardRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $StudentCardsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      StudentCards,
+      StudentCardRow,
+      $StudentCardsFilterComposer,
+      $StudentCardsOrderingComposer,
+      $StudentCardsAnnotationComposer,
+      $StudentCardsCreateCompanionBuilder,
+      $StudentCardsUpdateCompanionBuilder,
+      (
+        StudentCardRow,
+        BaseReferences<_$AppDatabase, StudentCards, StudentCardRow>,
+      ),
+      StudentCardRow,
+      PrefetchHooks Function()
+    >;
 typedef $OutboxCreateCompanionBuilder = OutboxCompanion Function({
   Value<int> id,
   required String targetTable,
@@ -49476,6 +51400,10 @@ class $AppDatabaseManager {
       $PreschoolBookletsTableManager(_db, _db.preschoolBooklets);
   $AttendanceTableManager get attendance =>
       $AttendanceTableManager(_db, _db.attendance);
+  $CardTemplatesTableManager get cardTemplates =>
+      $CardTemplatesTableManager(_db, _db.cardTemplates);
+  $StudentCardsTableManager get studentCards =>
+      $StudentCardsTableManager(_db, _db.studentCards);
   $OutboxTableManager get outbox => $OutboxTableManager(_db, _db.outbox);
   $SyncCursorsTableManager get syncCursors =>
       $SyncCursorsTableManager(_db, _db.syncCursors);

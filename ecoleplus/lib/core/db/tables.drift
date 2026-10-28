@@ -22,6 +22,7 @@ CREATE TABLE schools (
   director_civility TEXT,
   director_grade TEXT,
   preschool_ranking BOOLEAN NOT NULL DEFAULT FALSE,
+  logo_path TEXT,
   created_at TEXT,
   updated_at TEXT NOT NULL,
   deleted_at TEXT,
@@ -666,6 +667,35 @@ CREATE TABLE attendance (
   deleted_at TEXT,
   synced_at TEXT
 ) AS AttendanceRow;
+
+-- ---------------- Phase 8 : cartes scolaires ----------------
+
+CREATE TABLE card_templates (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  primary_color TEXT NOT NULL DEFAULT '#1B6E3C',
+  secondary_color TEXT NOT NULL DEFAULT '#FFFFFF',
+  is_default BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS CardTemplateRow;
+
+-- Le QR code ne contient que qr_token (identifiant opaque aléatoire).
+CREATE TABLE student_cards (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  qr_token TEXT NOT NULL,
+  generated_at TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS StudentCardRow;
 
 CREATE INDEX preschool_evaluations_period ON preschool_evaluations (period_id);
 CREATE INDEX attendance_class_day ON attendance (class_id, day);

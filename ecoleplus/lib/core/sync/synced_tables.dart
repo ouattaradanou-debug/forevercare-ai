@@ -138,6 +138,8 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
     info: db.preschoolBooklets,
   ),
   SyncedTable<AttendanceRow>(name: 'attendance', info: db.attendance),
+  SyncedTable<CardTemplateRow>(name: 'card_templates', info: db.cardTemplates),
+  SyncedTable<StudentCardRow>(name: 'student_cards', info: db.studentCards),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];

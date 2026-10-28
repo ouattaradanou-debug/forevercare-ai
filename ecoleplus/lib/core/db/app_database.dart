@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -144,6 +144,12 @@ class AppDatabase extends _$AppDatabase {
         }
         await m.createIndex(preschoolEvaluationsPeriod);
         await m.createIndex(attendanceClassDay);
+      }
+      if (from < 10) {
+        // Phase 8 : logo de l'école, cartes scolaires.
+        await m.addColumn(schools, schools.logoPath);
+        await m.createTable(cardTemplates);
+        await m.createTable(studentCards);
       }
     },
   );

@@ -39,7 +39,11 @@ class SyncEngine {
   final Future<void> Function()? onRevoked;
 
   /// Fichiers rattachés à des lignes : (table, colonne, compartiment).
-  static const fileColumns = [('admin_headers', 'emblem_path', 'ecole-medias')];
+  static const fileColumns = [
+    ('admin_headers', 'emblem_path', 'ecole-medias'),
+    ('schools', 'logo_path', 'ecole-medias'),
+    ('students', 'photo_path', 'ecole-medias'),
+  ];
 
   final LocalStore store;
   final SyncRemote remote;
