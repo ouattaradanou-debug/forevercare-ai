@@ -1,0 +1,58 @@
+# Indexation des documents de la bibliothèque et des archives (phase 9) :
+# lecture du texte (Tesseract, français) toutes les 15 minutes.
+# Mêmes secrets que la livraison : SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF.
+# La clé de service est lue au moment de l'exécution, jamais stockée ni
+# placée dans l'application.
+name: EcolePlus — indexation des documents
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecoleplus-indexation
+  cancel-in-progress: false
+
+jobs:
+  indexer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+    steps:
+      - name: Serveur configuré ?
+        id: conf
+        run: |
+          if [ -n "$PROJECT_REF" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Serveur non configuré : indexation sautée."
+          fi
+      - uses: actions/checkout@v4
+        if: steps.conf.outputs.ok == 'true'
+        with:
+          sparse-checkout: ecoleplus/tools/indexation
+      - uses: supabase/setup-cli@v1
+        if: steps.conf.outputs.ok == 'true'
+        with:
+          version: 2.121.0
+      - name: Outils de lecture (Tesseract français, Poppler, bureautique)
+        if: steps.conf.outputs.ok == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-fra poppler-utils > /dev/null
+          pip install --quiet python-docx==1.1.2 openpyxl==3.1.5 python-pptx==1.0.2
+      - name: Indexer
+        if: steps.conf.outputs.ok == 'true'
+        run: |
+          CLE=$(supabase projects api-keys --project-ref "$PROJECT_REF" -o json \
+                | python3 -c 'import json,sys; print(next(k["api_key"] for k in json.load(sys.stdin) if k["name"] == "service_role"))')
+          echo "::add-mask::$CLE"
+          SUPABASE_URL="https://$PROJECT_REF.supabase.co" SUPABASE_SERVICE_ROLE_KEY="$CLE" \
+            python3 -I ecoleplus/tools/indexation/indexer.py
