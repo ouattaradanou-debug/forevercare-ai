@@ -185,9 +185,23 @@ class _LockPageState extends ConsumerState<LockPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _empreinte());
   }
 
+  /// Une fenêtre d'empreinte est déjà ouverte : ne pas en ouvrir une
+  /// seconde (le téléphone la refuserait).
+  bool _enCours = false;
+
   Future<void> _empreinte({bool demandee = false}) async {
+    if (_enCours) return;
     final lock = await ref.read(lockServiceProvider).get();
     if (lock == null || !lock.empreinteSeule) return;
+    _enCours = true;
+    try {
+      await _essayerEmpreinte(demandee: demandee);
+    } finally {
+      _enCours = false;
+    }
+  }
+
+  Future<void> _essayerEmpreinte({required bool demandee}) async {
     final r = await ref.read(biometricGateProvider).authentifier();
     if (r.ok) {
       await ref.read(lockServiceProvider).reussiteBiometrie();

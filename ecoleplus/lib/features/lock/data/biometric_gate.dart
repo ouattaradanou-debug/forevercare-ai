@@ -20,8 +20,11 @@ abstract interface class BiometricGate {
 
 /// Phrase simple pour chaque refus du téléphone (au lieu d'un échec muet).
 String? messageEmpreinte(LocalAuthExceptionCode code) => switch (code) {
+  // Annulé, ou une fenêtre d'empreinte est déjà ouverte (ouverture
+  // automatique puis toucher du bouton) : rien à signaler.
   LocalAuthExceptionCode.userCanceled ||
   LocalAuthExceptionCode.systemCanceled ||
+  LocalAuthExceptionCode.authInProgress ||
   LocalAuthExceptionCode.timeout => null,
   LocalAuthExceptionCode.temporaryLockout =>
     'Trop d’essais : l’empreinte est bloquée quelques instants. Attendez '
@@ -39,9 +42,10 @@ String? messageEmpreinte(LocalAuthExceptionCode code) => switch (code) {
   LocalAuthExceptionCode.biometricHardwareTemporarilyUnavailable =>
     'Le capteur d’empreinte n’est pas disponible pour le moment. '
         'Réessayez plus tard ou touchez « Empreinte refusée ? ».',
+  // Cas imprévu : le nom de l'erreur aide à la retrouver (capture d'écran).
   _ =>
     'L’empreinte n’a pas fonctionné. Réessayez, ou touchez « Empreinte '
-        'refusée ? ».',
+        'refusée ? ». (erreur : ${code.name})',
 };
 
 class LocalAuthGate implements BiometricGate {
