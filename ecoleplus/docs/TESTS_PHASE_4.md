@@ -80,16 +80,19 @@ trimestre ».
 ## 7. Un seul bouton « Documents » et les 4 nouveaux modèles (A17)
 1. Accueil du directeur. ✅ « Documents » remplace « Registres et
    formulaires ».
-2. « Mon école » : « Sur les documents » → **Madame** (ou Monsieur), et le
-   grade (« Professeur Certifié des Écoles »). Vérifiez aussi le nom du
-   directeur.
+2. « Mon école » → section « Signature des documents » : « Les documents
+   sont signés par » → **La Directrice** (ou Le Directeur), puis le grade
+   (touchez une proposition ou écrivez le vôtre). Vérifiez aussi le nom.
+   ✅ Les documents impriment « Je soussignée Camarade …, Directrice ».
 3. « Documents ». ✅ Trois rubriques : **Enseignants** (B1, B3, attestation
    de prise de service), **Élèves** (B2, fiche de scolarité, certificat de
    scolarité, attestation de niveau, certificat de non redevance,
    bulletins), **École** (programme et bilan : phase 5).
 4. **Certificat de scolarité** → tapez « aich » → TEST Aïcha. ✅ « À
    compléter » liste ce qui manque. Essayez « Page entière » puis
-   « Demi-page » → « Aperçu et impression ».
+   « Demi-page » → « Aperçu et impression ». ✅ L'aperçu s'ouvre dans
+   l'application : écartez deux doigts (ou touchez + et −) pour agrandir,
+   puis « Imprimer » ou « Partager ».
 5. **Attestation de niveau** et **Certificat de non redevance** pour le même
    élève. ✅ « Fille de », « née le », « elle » s'accordent ; « Fait à »
    (commune de l'école) et la date se changent avant d'imprimer.

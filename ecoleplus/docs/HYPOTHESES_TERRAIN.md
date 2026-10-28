@@ -69,3 +69,5 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H60 | Certificat de non redevance et certificat de scolarité court : format **demi-page** (A5 paysage), comme les scans | Documents | `pdfDocumentDirecteur` |
 | H61 | Attestation de niveau : « a le niveau de la classe de » = niveau de la classe de l'année (ex. CM2), modifiable avant l'impression | Documents | `DocumentPage` |
 | H62 | Élève parti : ses certificats utilisent sa dernière classe ; tous les élèves (même partis) sont proposés dans le choix | Documents | `DocumentsRepository.eleve` |
+| H63 | Grades proposés pour le directeur : Professeur Certifié des Écoles, Instituteur Principal, Instituteur Certifié, Instituteur Adjoint Certifié — **liste à vérifier** ; le directeur peut toujours écrire le sien | Mon école | `gradesProposes` |
+| H64 | « Camarade » s'imprime devant le nom du directeur et de l'enseignant (décision du porteur, 28/10/2026) ; « Directrice / Directeur » et « soussigné(e) » restent accordés | Documents | `Signataire.civiliteTexte` |

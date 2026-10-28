@@ -20,11 +20,13 @@ enum CodeDocument {
       values.where((c) => c.code == code).firstOrNull;
 }
 
-/// Le directeur qui signe : « Je soussignée Madame … Directrice … ».
+/// Le directeur qui signe : « Je soussignée Camarade … Directrice … »
+/// (au Burkina Faso, « Camarade » remplace « Madame » et « Monsieur »).
 class Signataire {
   const new({this.civilite, this.nom, this.grade});
 
-  /// « madame », « monsieur » ou null (inconnu).
+  /// Directrice (« madame ») ou directeur (« monsieur ») : sert aux accords
+  /// (« Directrice », « soussignée ») ; null si inconnu.
   final String? civilite;
   final String? nom;
 
@@ -37,11 +39,9 @@ class Signataire {
       connu ? (femme ? 'Directrice' : 'Directeur') : 'Directeur/Directrice';
   String get soussigne =>
       connu ? (femme ? 'soussignée' : 'soussigné') : 'soussigné(e)';
-  String get civiliteTexte => switch (civilite) {
-    'madame' => 'Madame',
-    'monsieur' => 'Monsieur',
-    _ => '',
-  };
+
+  /// Formule d'appel imprimée devant le nom.
+  String get civiliteTexte => 'Camarade';
 
   /// « La Directrice », « Le Directeur ».
   String get titreSignature =>
@@ -64,7 +64,9 @@ class Accords {
   String get il => _choix('elle', 'il', 'il/elle');
   String get inscrit => _choix('inscrite', 'inscrit', 'inscrit(e)');
   String get affecte => _choix('affectée', 'affecté', 'affecté(e)');
-  String get monsieurMadame => _choix('Mme', 'M.', 'M./Mme');
+
+  /// « Atteste que Camarade … » (au lieu de « M. » ou « Mme »).
+  String get appel => 'Camarade';
 }
 
 /// « de l'École Primaire Publique de X » / « de l'école X ».
@@ -181,7 +183,7 @@ List<String> manquesDocument(
   EnseignantDocument? enseignant,
 }) => [
   if (signataire.nom == null) 'nom du directeur (Mon école)',
-  if (!signataire.connu) 'Madame ou Monsieur (Mon école)',
+  if (!signataire.connu) 'directeur ou directrice (Mon école)',
   if (eleve != null) ...[
     if (eleve.neLe == null) 'date de naissance',
     if (code != CodeDocument.attestationNiveau && eleve.lieuNaissance == null)

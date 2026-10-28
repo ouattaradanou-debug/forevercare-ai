@@ -199,7 +199,7 @@ List<Object?> _jeSoussigne(DocumentDirecteur d, {bool virgule = false}) {
   final s = d.signataire;
   return [
     'Je ${s.soussigne}${virgule ? ',' : ''} ',
-    if (s.civiliteTexte.isNotEmpty) '${s.civiliteTexte} ',
+    '${s.civiliteTexte} ',
     _v(s.nom),
     ', ${s.fonction} ${deLEcole(d.entete.ecole)}',
   ];
@@ -219,7 +219,7 @@ pw.Widget _priseService(DocumentDirecteur d) {
       pw.SizedBox(height: 10),
       _paragraphe([..._jeSoussigne(d, virgule: true), ','], retrait: 24),
       _paragraphe([
-        'Atteste que ${a.monsieurMadame} ',
+        'Atteste que ${a.appel} ',
         _v(e.nom),
         ', matricule ',
         _v(e.matricule),

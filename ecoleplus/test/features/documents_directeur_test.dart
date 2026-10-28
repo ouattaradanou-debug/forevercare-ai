@@ -88,7 +88,7 @@ void main() {
           enseignant: const EnseignantDocument(nom: 'Y', matricule: '1'),
         ),
         [
-          'Madame ou Monsieur (Mon école)',
+          'directeur ou directrice (Mon école)',
           'emploi',
           'n° de la décision d’affectation',
           'date de prise de service',
@@ -176,9 +176,9 @@ void main() {
         prise,
         [
           'ATTESTATION DE PRISE DE SERVICE',
-          'Je soussignée, Madame TEST Directrice, Directrice',
+          'Je soussignée, Camarade TEST Directrice, Directrice',
           'de l’École Primaire Publique de Barkouitenga',
-          'Atteste que Mme ENSEIGNANT Un, matricule 123456A',
+          'Atteste que Camarade ENSEIGNANT Un, matricule 123456A',
           'Institutrice Certifiée, affectée à l’École Primaire',
           'suivant décision N° 2025-045/MENAPLN du 15/09/2025',
           'a effectivement pris service le 01/10/2025.',

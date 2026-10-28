@@ -8,6 +8,7 @@ import 'package:ecoleplus/features/bulletins/presentation/bulletins_pages.dart';
 import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
 import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
 import 'package:ecoleplus/features/documents/presentation/documents_pages.dart';
+import 'package:ecoleplus/features/forms/presentation/apercu_pdf_page.dart';
 import 'package:ecoleplus/features/forms/presentation/fiche_scolarite_page.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
 import 'package:ecoleplus/features/grades/presentation/classement_page.dart';
@@ -146,6 +147,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       // « Documents » (A17).
       GoRoute(path: '/registres', builder: (_, _) => const DocumentsPage()),
       GoRoute(path: '/documents', builder: (_, _) => const DocumentsPage()),
+      GoRoute(
+        path: '/apercu',
+        builder: (_, s) => ApercuPdfPage(s.extra! as ApercuPdf),
+      ),
       GoRoute(
         path: '/documents/choisir/:code',
         builder: (_, s) => ChoisirPersonnePage(s.pathParameters['code']!),

@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/app/router.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
 import 'package:ecoleplus/features/forms/data/forms_repository.dart';
 import 'package:ecoleplus/features/forms/pdf/pdf_formulaires.dart';
+import 'package:ecoleplus/features/forms/presentation/apercu_pdf_page.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/staff/domain/anciennete.dart';
 import 'package:flutter/material.dart';
@@ -36,8 +38,12 @@ class SortiePdf {
 
 final sortiePdfProvider = Provider<SortiePdf>(
   (ref) => SortiePdf(
-    imprimer: (pdf, nom) =>
-        Printing.layoutPdf(onLayout: (_) async => pdf, name: nom),
+    // « Aperçu et impression » : d'abord l'aperçu qu'on peut agrandir.
+    imprimer: (pdf, nom) async {
+      await ref
+          .read(routerProvider)
+          .push('/apercu', extra: ApercuPdf(pdf, nom));
+    },
     partager: (pdf, nom) => Printing.sharePdf(bytes: pdf, filename: nom),
   ),
 );

@@ -42,17 +42,12 @@ void main() {
     // Signataire dans « Mon école ».
     await AppHarness.toucher(tester, 'Mon école');
     await AppHarness.settle(tester);
-    await tap(tester, find.byKey(const Key('civilite-directeur')));
-    await tester.tap(find.text('Madame').last);
-    await AppHarness.settle(tester);
-    await tester.enterText(
-      find.byKey(const Key('grade-directeur')),
-      'Professeur Certifié des Écoles',
+    await tap(tester, find.widgetWithText(ChoiceChip, 'La Directrice'));
+    // Grade : une proposition d'un toucher (ou texte libre).
+    await tap(
+      tester,
+      find.widgetWithText(ActionChip, 'Professeur Certifié des Écoles'),
     );
-    await tester.testTextInput.receiveAction(TextInputAction.done);
-    await AppHarness.settle(tester);
-    await tester.pump(const Duration(seconds: 1));
-    await AppHarness.settle(tester);
     final ecole = await h.db.select(h.db.schools).getSingle();
     expect(ecole.directorCivility, 'madame');
     expect(ecole.directorGrade, 'Professeur Certifié des Écoles');

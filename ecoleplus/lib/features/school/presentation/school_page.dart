@@ -7,6 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+/// Grades proposés (le directeur peut écrire le sien) — à vérifier (H63).
+const gradesProposes = [
+  'Professeur Certifié des Écoles',
+  'Instituteur Principal',
+  'Instituteur Certifié',
+  'Instituteur Adjoint Certifié',
+];
+
 class SchoolPage extends ConsumerWidget {
   const new({super.key});
 
@@ -43,21 +51,39 @@ class SchoolPage extends ConsumerWidget {
             onSave: (v) => save('director_name', v),
           ),
           // Signature des attestations et certificats (A17).
+          const SectionTitle('Signature des documents'),
+          const Text(
+            '« Je soussigné(e) Camarade …, Directeur/Directrice … », puis le '
+            'nom et le grade sous la signature.',
+          ),
           ChoiceField(
             key: const Key('civilite-directeur'),
-            label:
-                'Sur les documents : « Madame … Directrice » ou '
-                '« Monsieur … Directeur »',
+            label: 'Les documents sont signés par',
             value: school.directorCivility,
-            options: const {'madame': 'Madame', 'monsieur': 'Monsieur'},
+            options: const {
+              'madame': 'La Directrice',
+              'monsieur': 'Le Directeur',
+            },
             onChanged: (v) => save('director_civility', v),
           ),
           AutoSaveField(
-            key: const Key('grade-directeur'),
-            label: 'Grade du directeur (ex. Professeur Certifié des Écoles)',
+            key: ValueKey('grade-directeur-${school.directorGrade}'),
+            label: 'Grade du directeur ou de la directrice',
+            hint: 'ex. Professeur Certifié des Écoles',
             initial: school.directorGrade,
             onSave: (v) => save('director_grade', v),
           ),
+          Wrap(
+            spacing: 6,
+            children: [
+              for (final g in gradesProposes)
+                ActionChip(
+                  label: Text(g),
+                  onPressed: () => save('director_grade', g),
+                ),
+            ],
+          ),
+          const SectionTitle('Adresse'),
           AutoSaveField(
             label: 'Commune',
             initial: school.commune,
