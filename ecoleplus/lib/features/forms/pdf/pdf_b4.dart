@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:ecoleplus/core/pdf/tableaux_pdf.dart';
 import 'package:ecoleplus/features/forms/domain/fiche_scolarite.dart';
 import 'package:ecoleplus/features/forms/pdf/pdf_formulaires.dart';
 import 'package:pdf/pdf.dart';
@@ -45,14 +46,13 @@ pw.Widget _ligne(List<pw.Widget> champs) => pw.Padding(
   child: pw.Row(children: champs),
 );
 
-pw.Widget _cellule(String t, {bool gras = false}) => pw.Padding(
-  padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 3),
-  child: pw.Text(
-    t,
-    style: gras ? _gras : _normal,
-    textAlign: pw.TextAlign.center,
-  ),
-);
+pw.Widget _cellule(String t, {bool gras = false, bool gauche = false}) =>
+    caseTableau(
+      t,
+      gras ? _gras : _normal,
+      centre: !gauche,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 3),
+    );
 
 /// Tableau « Cours suivis » : 6 niveaux × 2 sous-colonnes (1re année et
 /// redoublement). [lignes] : titres des lignes et valeur de chaque case.
@@ -70,7 +70,10 @@ pw.Widget _coursSuivis(
             child: pw.Container(
               height: 16,
               alignment: pw.Alignment.center,
-              decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.6)),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(width: 0.5, color: couleurTraitTableau),
+                color: couleurEnteteTableau,
+              ),
               child: pw.Text('Cours suivis', style: _gras),
             ),
           ),
@@ -81,8 +84,8 @@ pw.Widget _coursSuivis(
                 height: 16,
                 alignment: pw.Alignment.center,
                 decoration: pw.BoxDecoration(
-                  border: pw.Border.all(width: 0.6),
-                  color: PdfColors.grey200,
+                  border: pw.Border.all(width: 0.5, color: couleurTraitTableau),
+                  color: couleurEnteteTableau,
                 ),
                 child: pw.Text(libellesNiveauxB4[n]!, style: _gras),
               ),
@@ -90,16 +93,18 @@ pw.Widget _coursSuivis(
         ],
       ),
       pw.Table(
-        border: pw.TableBorder.all(width: 0.6),
+        border: bordureTableau(),
         columnWidths: {
           0: const pw.FlexColumnWidth(libelle * 1.0),
           for (var i = 1; i <= 12; i++) i: const pw.FlexColumnWidth(),
         },
         children: [
-          for (final (titre, valeur) in lignes)
+          for (final (k, (titre, valeur)) in lignes.indexed)
             pw.TableRow(
+              decoration: fondLigne(k),
+              verticalAlignment: pw.TableCellVerticalAlignment.middle,
               children: [
-                _cellule(titre, gras: true),
+                _cellule(titre, gras: true, gauche: true),
                 for (final n in niveauxB4)
                   for (final e in const [1, 2])
                     _cellule(switch (cours[(n, e)]) {

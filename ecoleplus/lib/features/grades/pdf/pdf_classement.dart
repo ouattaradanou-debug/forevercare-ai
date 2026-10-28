@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:ecoleplus/core/pdf/tableaux_pdf.dart';
 import 'package:ecoleplus/features/forms/pdf/pdf_formulaires.dart';
 import 'package:ecoleplus/features/grades/domain/tableau_classement.dart';
 import 'package:pdf/pdf.dart';
@@ -18,16 +19,15 @@ Future<Uint8List> pdfClassement(
   const taille = 8.0;
   const style = pw.TextStyle(fontSize: taille);
   const gras = pw.TextStyle(fontSize: taille, fontWeight: pw.FontWeight.bold);
-  pw.Widget cellule(String t, pw.TextStyle s, {bool gauche = false}) =>
-      pw.Padding(
-        padding: const pw.EdgeInsets.all(2.5),
-        child: pw.Text(
-          t,
-          style: s,
-          textAlign: gauche ? pw.TextAlign.left : pw.TextAlign.center,
-        ),
-      );
   final nb = tableau.entete.length;
+  // Mention absente : case vide (pas de tiret).
+  String texte(int i, Object? v) =>
+      v == null && i == nb - 1 ? '' : caseTexte(v);
+  final textes = [
+    for (final l in tableau.lignes)
+      [for (final (i, v) in l.indexed) texte(i, v)],
+  ];
+  final centrees = colonnesCentrees(textes, nb);
   final doc = pw.Document(theme: polices.theme, title: 'Classement $classe')
     ..addPage(
       pw.MultiPage(
@@ -68,7 +68,7 @@ Future<Uint8List> pdfClassement(
             ),
           ),
           pw.Table(
-            border: pw.TableBorder.all(width: 0.6),
+            border: bordureTableau(),
             columnWidths: {
               0: const pw.FixedColumnWidth(58),
               1: const pw.FlexColumnWidth(3),
@@ -76,19 +76,17 @@ Future<Uint8List> pdfClassement(
               nb - 1: const pw.FlexColumnWidth(1.4),
             },
             children: [
-              pw.TableRow(
-                repeat: true,
-                decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                children: [for (final e in tableau.entete) cellule(e, gras)],
-              ),
-              for (final l in tableau.lignes)
+              ligneEntete(tableau.entete, gras),
+              for (final (k, l) in textes.indexed)
                 pw.TableRow(
+                  decoration: fondLigne(k),
+                  verticalAlignment: pw.TableCellVerticalAlignment.middle,
                   children: [
                     for (final (i, v) in l.indexed)
-                      cellule(
-                        v == null && i == nb - 1 ? '' : caseTexte(v),
+                      caseTableau(
+                        v,
                         i == nb - 2 ? gras : style,
-                        gauche: i == 1,
+                        centre: centrees[i] || valeurCourte(v),
                       ),
                   ],
                 ),

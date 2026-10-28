@@ -195,3 +195,16 @@ Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 in
 * **Effort** : M. **Risques** : faibles ; textes à vérifier mot pour mot sur les scans.
 * **Recommandation** : maintenant, avec la phase 4 (documents d'élèves, comme la fiche de scolarité).
 
+
+## Fiche d'impact A19 — Présentation soignée de tous les tableaux imprimés
+* **Demande du porteur (28/10/2026)** : texte aligné à gauche ; tirets, nombres et dates centrés ; colonnes centrées quand leurs cases ont la même taille ; des tableaux « joliment présentés et très attrayants ».
+* **Ce qui change** (B1, B2, B3, B4, B6, B7, bulletins, classement) — une seule règle commune (`lib/core/pdf/tableaux_pdf.dart`) :
+  * texte (noms, activités, observations…) **à gauche** ;
+  * valeurs courtes **centrées** : tirets, nombres, %, notes « 12,5/20 », dates, années scolaires, rangs (« 7e/39 », « 1re »), codes de 3 caractères au plus (« M », « T », « CM1 ») ;
+  * colonne entière centrée si toutes ses cases sont courtes, ou si ce sont des codes de même longueur avec des chiffres (matricules) ;
+  * en-tête en gras, centré, sur fond gris bleuté, répété à chaque page ; une ligne sur deux très légèrement teintée (un objectif sur deux pour B6/B7) ; contenu centré en hauteur ; traits fins gris foncé ;
+  * B6/B7 : échéances et taux toujours centrés ; ligne « Moyenne de l'objectif » teintée.
+* **Données** : aucune. **Écrans** : aucun (les écrans n'ont pas de tableau).
+* **Fonctionne sur ordinateur** : oui.
+* **Effort** : S. **Risques** : très faibles ; les teintes restent lisibles en photocopie noir et blanc.
+* **Décision** : demandée par le porteur le 28/10/2026, construite le jour même.

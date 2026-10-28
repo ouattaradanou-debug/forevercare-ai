@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:ecoleplus/core/pdf/tableaux_pdf.dart';
 import 'package:ecoleplus/features/bulletins/domain/bulletin.dart';
 import 'package:ecoleplus/features/forms/pdf/pdf_formulaires.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
@@ -35,14 +36,7 @@ const _normal = pw.TextStyle(fontSize: 9.5);
 const _gras = pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold);
 
 pw.Widget _cellule(String t, {bool gras = false, bool gauche = false}) =>
-    pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 3, vertical: 2.5),
-      child: pw.Text(
-        t,
-        style: gras ? _gras : _normal,
-        textAlign: gauche ? pw.TextAlign.left : pw.TextAlign.center,
-      ),
-    );
+    caseTableau(t, gras ? _gras : _normal, centre: !gauche);
 
 pw.Widget _cadre(String titre, String? texte, {double hauteur = 46}) =>
     pw.Container(
@@ -140,17 +134,15 @@ pw.Widget _page(ModeleBulletin m, Bulletin b) {
       ),
       pw.SizedBox(height: 8),
       pw.Table(
-        border: pw.TableBorder.all(width: 0.6),
+        border: bordureTableau(),
         columnWidths: {0: const pw.FlexColumnWidth(3)},
         defaultColumnWidth: const pw.FlexColumnWidth(),
         children: [
-          pw.TableRow(
-            repeat: true,
-            decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-            children: [for (final e in entete) _cellule(e, gras: true)],
-          ),
-          for (final l in b.lignes)
+          ligneEntete(entete, _gras),
+          for (final (i, l) in b.lignes.indexed)
             pw.TableRow(
+              decoration: fondLigne(i),
+              verticalAlignment: pw.TableCellVerticalAlignment.middle,
               children: [
                 _cellule(
                   l.uneSeuleNote ? '${l.matiere} *' : l.matiere,

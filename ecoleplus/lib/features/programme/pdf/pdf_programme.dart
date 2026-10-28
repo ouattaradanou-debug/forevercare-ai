@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:ecoleplus/core/pdf/tableaux_pdf.dart';
 import 'package:ecoleplus/features/documents/pdf/pdf_documents.dart';
 import 'package:ecoleplus/features/forms/domain/donnees_formulaires.dart';
 import 'package:ecoleplus/features/forms/pdf/pdf_formulaires.dart';
@@ -62,15 +63,8 @@ const _taille = 8.5;
 const _style = pw.TextStyle(fontSize: _taille);
 const _gras = pw.TextStyle(fontSize: _taille, fontWeight: pw.FontWeight.bold);
 
-pw.Widget _cellule(String t, pw.TextStyle s, {bool centre = false}) =>
-    pw.Padding(
-      padding: const pw.EdgeInsets.all(3),
-      child: pw.Text(
-        t,
-        style: s,
-        textAlign: centre ? pw.TextAlign.center : pw.TextAlign.left,
-      ),
-    );
+pw.Widget _cellule(String t, pw.TextStyle s, {bool? centre}) =>
+    caseTableau(t, s, centre: centre);
 
 /// Colonnes des activités (à droite de « N° » et « Objectifs ») et leurs
 /// largeurs relatives.
@@ -105,24 +99,31 @@ List<String> _valeurs(FormulaireActivites f, ActiviteProgramme a) =>
       ],
     };
 
+/// Colonnes toujours centrées : échéances (dates) et taux.
+bool _colonneCentree(FormulaireActivites f, int i) => switch (f) {
+  FormulaireActivites.programme => i == 1,
+  FormulaireActivites.bilan => i == 3,
+};
+
 /// Petit tableau des activités d'un objectif, sans bord extérieur (le
 /// grand tableau le dessine) : ses colonnes s'alignent sur l'en-tête.
 pw.Widget _interieur(
   List<(String, double)> colonnes,
-  List<List<pw.Widget>> lignes,
+  List<(List<pw.Widget>, pw.BoxDecoration?)> lignes,
 ) => pw.Table(
   border: const pw.TableBorder(
-    horizontalInside: pw.BorderSide(width: 0.6),
-    verticalInside: pw.BorderSide(width: 0.6),
+    horizontalInside: traitInterieur,
+    verticalInside: traitInterieur,
   ),
   columnWidths: {
     for (final (i, c) in colonnes.indexed) i: pw.FlexColumnWidth(c.$2),
   },
   children: [
-    for (final l in lignes)
+    for (final (cases, fond) in lignes)
       pw.TableRow(
+        decoration: fond,
         verticalAlignment: pw.TableCellVerticalAlignment.middle,
-        children: l,
+        children: cases,
       ),
   ],
 );
@@ -130,29 +131,31 @@ pw.Widget _interieur(
 pw.Widget _tableau(DonneesProgramme d) {
   final f = d.formulaire;
   final colonnes = _colonnes(f);
-  final dernier = colonnes.length - 1;
   pw.Widget activites(ObjectifProgramme o) => _interieur(colonnes, [
     for (final a in o.activites)
-      [
-        for (final (i, v) in _valeurs(f, a).indexed)
-          _cellule(
-            v,
-            _style,
-            centre: f == FormulaireActivites.bilan && i == dernier,
-          ),
-      ],
-    if (o.activites.isEmpty) [for (final _ in colonnes) _cellule('', _style)],
+      (
+        [
+          for (final (i, v) in _valeurs(f, a).indexed)
+            _cellule(v, _style, centre: _colonneCentree(f, i) ? true : null),
+        ],
+        null,
+      ),
+    if (o.activites.isEmpty)
+      ([for (final _ in colonnes) _cellule('', _style)], null),
     if (f == FormulaireActivites.bilan && d.moyenneParObjectif)
-      [
-        _cellule('', _style),
-        _cellule('', _style),
-        _cellule('Moyenne de l’objectif', _gras),
-        _cellule(texteTaux(o.tauxMoyen), _gras, centre: true),
-      ],
+      (
+        [
+          _cellule('', _style),
+          _cellule('', _style),
+          _cellule('Moyenne de l’objectif', _gras, centre: false),
+          _cellule(texteTaux(o.tauxMoyen), _gras, centre: true),
+        ],
+        fondEntete,
+      ),
   ]);
 
   return pw.Table(
-    border: pw.TableBorder.all(width: 0.6),
+    border: bordureTableau(),
     columnWidths: const {
       0: pw.FixedColumnWidth(36),
       1: pw.FlexColumnWidth(2.4),
@@ -161,21 +164,26 @@ pw.Widget _tableau(DonneesProgramme d) {
     children: [
       pw.TableRow(
         repeat: true,
-        decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+        decoration: fondEntete,
         verticalAlignment: pw.TableCellVerticalAlignment.middle,
         children: [
           _cellule('N° d’ordre', _gras, centre: true),
           _cellule('Objectifs', _gras, centre: true),
           _interieur(colonnes, [
-            [for (final c in colonnes) _cellule(c.$1, _gras, centre: true)],
+            (
+              [for (final c in colonnes) _cellule(c.$1, _gras, centre: true)],
+              null,
+            ),
           ]),
         ],
       ),
       for (final (i, o) in d.objectifs.indexed)
         pw.TableRow(
+          decoration: fondLigne(i),
+          verticalAlignment: pw.TableCellVerticalAlignment.middle,
           children: [
             _cellule('${i + 1}', _style, centre: true),
-            _cellule(o.libelle, _style),
+            _cellule(o.libelle, _style, centre: false),
             activites(o),
           ],
         ),

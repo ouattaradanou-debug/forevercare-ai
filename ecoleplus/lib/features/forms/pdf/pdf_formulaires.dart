@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:ecoleplus/core/pdf/tableaux_pdf.dart';
 import 'package:ecoleplus/features/forms/domain/donnees_formulaires.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -108,44 +109,57 @@ pw.Widget _tableau(
 }) {
   final style = pw.TextStyle(fontSize: taille);
   final gras = pw.TextStyle(fontSize: taille, fontWeight: pw.FontWeight.bold);
-  pw.Widget cellule(String t, pw.TextStyle s, {bool centre = false}) =>
-      pw.Padding(
-        padding: const pw.EdgeInsets.all(2.5),
-        child: pw.Text(
-          t,
-          style: s,
-          textAlign: centre ? pw.TextAlign.center : pw.TextAlign.left,
-        ),
-      );
+  const padding = pw.EdgeInsets.symmetric(horizontal: 3, vertical: 2.5);
+  final centrees = colonnesCentrees(lignes, entete.length);
+  pw.Widget cellule(int colonne, String t) => caseTableau(
+    t,
+    style,
+    centre: centrees[colonne] || valeurCourte(t),
+    padding: padding,
+  );
   return pw.Table(
-    border: pw.TableBorder.all(width: 0.6),
+    border: bordureTableau(),
     columnWidths: largeurs,
     children: [
       if (numerosDeColonnes)
         pw.TableRow(
           repeat: true,
+          decoration: fondEntete,
           children: [
             for (var i = 0; i < entete.length; i++)
-              cellule('${premierNumero + i}', gras, centre: true),
+              caseTableau(
+                '${premierNumero + i}',
+                gras,
+                centre: true,
+                padding: padding,
+              ),
           ],
         ),
-      pw.TableRow(
-        repeat: true,
-        decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-        children: [for (final e in entete) cellule(e, gras, centre: true)],
-      ),
+      ligneEntete(entete, gras, padding: padding),
       for (final (i, l) in lignes.indexed)
         pw.TableRow(
+          decoration: fondLigne(i),
+          verticalAlignment: pw.TableCellVerticalAlignment.middle,
           children: [
-            for (final c in l)
+            for (final (j, c) in l.indexed)
               if (hauteurs == null)
-                cellule(c, style)
+                cellule(j, c)
               else
-                pw.SizedBox(height: hauteurs[i], child: cellule(c, style)),
+                pw.SizedBox(
+                  height: hauteurs[i],
+                  child: pw.Align(
+                    alignment: centrees[j] || valeurCourte(c)
+                        ? pw.Alignment.center
+                        : pw.Alignment.centerLeft,
+                    child: cellule(j, c),
+                  ),
+                ),
           ],
         ),
       if (lignes.isEmpty)
-        pw.TableRow(children: [for (final _ in entete) cellule(' ', style)]),
+        pw.TableRow(
+          children: [for (final _ in entete) caseTableau(' ', style)],
+        ),
     ],
   );
 }
@@ -215,8 +229,11 @@ Future<Uint8List> pdfB1(
                 child: pw.Container(
                   padding: const pw.EdgeInsets.all(2),
                   decoration: pw.BoxDecoration(
-                    border: pw.Border.all(width: 0.6),
-                    color: PdfColors.grey200,
+                    border: pw.Border.all(
+                      width: 0.5,
+                      color: couleurTraitTableau,
+                    ),
+                    color: couleurEnteteTableau,
                   ),
                   child: pw.Center(
                     child: pw.Text(
