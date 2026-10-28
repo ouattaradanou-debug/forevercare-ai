@@ -6,6 +6,7 @@ import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
+import 'package:ecoleplus/features/bibliotheque/presentation/copie_signee.dart';
 import 'package:ecoleplus/features/forms/data/forms_repository.dart';
 import 'package:ecoleplus/features/forms/pdf/pdf_formulaires.dart';
 import 'package:ecoleplus/features/forms/presentation/apercu_pdf_page.dart';
@@ -227,6 +228,18 @@ class _FormulaireState extends ConsumerState<FormulairePage> {
             onPressed: _occupe
                 ? null
                 : () => _sortir(ecole, annee, partager: true),
+          ),
+          const SizedBox(height: 12),
+          CopieSignee(
+            titre: '${widget.code} ${annee.label}',
+            anneeId: annee.id,
+            documentId: f?.signedScanDocumentId,
+            onArchivee: (id) => repo.enregistrer(
+              ecole.id,
+              annee.id,
+              widget.code,
+              {'signed_scan_document_id': id, 'status': 'signe_archive'},
+            ),
           ),
           if (_occupe) ...[
             const SizedBox(height: 12),

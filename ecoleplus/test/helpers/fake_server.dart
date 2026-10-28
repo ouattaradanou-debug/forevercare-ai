@@ -19,6 +19,9 @@ class FakeServer {
   /// Renvoie un code d'erreur SQL pour refuser un changement, sinon null.
   String? Function(String table, Map<String, dynamic> row)? rejectWith;
 
+  /// Message joint au refus (exception levée par une règle du serveur).
+  String? rejectMessage;
+
   static List<String> keyColumns(String table) => switch (table) {
     'school_modules' => const ['school_id', 'module_key'],
     'modules_catalog' => const ['key'],
@@ -45,7 +48,14 @@ class FakeServer {
     for (final c in changes) {
       final code = rejectWith?.call(c.table, c.row);
       if (code != null) {
-        out.add(PushResult(changeId: c.changeId, status: 'rejete', code: code));
+        out.add(
+          PushResult(
+            changeId: c.changeId,
+            status: 'rejete',
+            code: code,
+            message: rejectMessage,
+          ),
+        );
         continue;
       }
       final t = table(c.table);
@@ -159,6 +169,54 @@ class FakeRemote implements SyncRemote {
   ) async {
     _check();
     server.files['$bucket/$path'] = bytes;
+  }
+
+  /// Envois reprenables en cours : adresse → (fichier, octets reçus).
+  final Map<String, (String, BytesBuilder)> envois = {};
+
+  /// Coupure de connexion simulée après ce nombre de morceaux (null : jamais).
+  int? couperApresMorceaux;
+  int morceauxRecus = 0;
+
+  @override
+  int tailleMorceau = 64 * 1024;
+
+  @override
+  Future<String> debutEnvoi(
+    String bucket,
+    String path,
+    int taille,
+    String contentType,
+  ) async {
+    _check();
+    final adresse = 'tus://$bucket/$path/${envois.length}';
+    envois[adresse] = ('$bucket/$path', BytesBuilder());
+    return adresse;
+  }
+
+  @override
+  Future<int> positionEnvoi(String adresse) async {
+    _check();
+    return envois[adresse]!.$2.length;
+  }
+
+  @override
+  Future<int> envoyerMorceau(
+    String adresse,
+    int position,
+    Uint8List octets,
+  ) async {
+    _check();
+    if (couperApresMorceaux != null && morceauxRecus >= couperApresMorceaux!) {
+      online = false;
+      throw const RemoteUnavailable('coupure');
+    }
+    final (fichier, recu) = envois[adresse]!;
+    if (position != recu.length) throw StateError('position $position');
+    recu.add(octets);
+    morceauxRecus++;
+    server.files[fichier] = recu.toBytes();
+    return recu.length;
   }
 
   @override

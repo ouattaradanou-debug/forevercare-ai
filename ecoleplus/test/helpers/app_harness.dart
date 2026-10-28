@@ -12,6 +12,8 @@ import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
+import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
+import 'package:ecoleplus/features/bibliotheque/presentation/bibliotheque_pages.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
 import 'package:ecoleplus/features/grades/presentation/classement_page.dart';
 import 'package:ecoleplus/features/import/presentation/import_page.dart';
@@ -26,6 +28,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'fake_auth_api.dart';
+import 'fake_documents_en_ligne.dart';
 import 'fake_medical_api.dart';
 import 'fake_server.dart';
 
@@ -40,7 +43,14 @@ class AppHarness {
     db = AppDatabase(NativeDatabase.memory());
     remote = FakeRemote(server);
     auth = FakeAuthApi(server);
+    enLigne = FakeDocumentsEnLigne(server);
   }
+
+  /// Recherche dans le texte et espace utilisé (serveur simulé).
+  late final FakeDocumentsEnLigne enLigne;
+
+  /// Fichiers renvoyés par « Ajouter des documents » (vide : annulé).
+  List<FichierChoisi> fichiersChoisis = const [];
 
   final server = FakeServer();
   late final AppDatabase db;
@@ -75,6 +85,7 @@ class AppHarness {
   set online(bool v) {
     remote.online = v;
     auth.online = v;
+    enLigne.enLigne = v;
   }
 
   /// École Test côté serveur, avec un directeur et un enseignant.
@@ -276,6 +287,10 @@ class AppHarness {
           ),
           sortieFichierProvider.overrideWithValue(
             (octets, nom, type) async => fichiersSortis[nom] = octets,
+          ),
+          documentsEnLigneProvider.overrideWithValue(enLigne),
+          choisirFichiersProvider.overrideWithValue(
+            () async => fichiersChoisis,
           ),
           choisirTableurProvider.overrideWithValue(
             () async => fichierAImporter,

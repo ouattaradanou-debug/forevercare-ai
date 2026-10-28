@@ -11,6 +11,7 @@ import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/auth/data/auth_service.dart';
 import 'package:ecoleplus/features/auth/data/members_service.dart';
+import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
 import 'package:ecoleplus/features/school/data/school_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -43,11 +44,20 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     onRevoked: () => effacerTelephoneDeconnecte(
       ref.read(databaseProvider),
       ref.read(authApiProvider),
+      ref.read(mediaDirProvider),
     ),
+    autresEnvois: () => ref.read(bibliothequeRepositoryProvider).envoyer(),
   );
   ref.onDispose(engine.dispose);
   return engine;
 });
+final bibliothequeRepositoryProvider = Provider<BibliothequeRepository>(
+  (ref) => BibliothequeRepository(
+    ref.watch(localStoreProvider),
+    remote: ref.watch(syncRemoteProvider),
+    mediaDir: ref.watch(mediaDirProvider),
+  ),
+);
 final authApiProvider = Provider<AuthApi>(
   (ref) => SupabaseAuthApi(ref.watch(supabaseClientProvider)),
 );

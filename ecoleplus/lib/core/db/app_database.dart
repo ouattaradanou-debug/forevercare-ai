@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -150,6 +150,15 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(schools, schools.logoPath);
         await m.createTable(cardTemplates);
         await m.createTable(studentCards);
+      }
+      if (from < 11) {
+        // Phase 9 : bibliothèque et archives.
+        await m.addColumn(schools, schools.storageQuotaBytes);
+        await m.addColumn(schools, schools.libraryTeacherMode);
+        await m.addColumn(officialForms, officialForms.signedScanDocumentId);
+        await m.createTable(documents);
+        await m.createTable(documentUploads);
+        await m.createTable(documentFiles);
       }
     },
   );

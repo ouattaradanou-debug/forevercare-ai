@@ -79,6 +79,16 @@ class ToggleRemote implements SyncRemote {
   Future<void> upload(String b, String p, Uint8List d, String c) =>
       _go(() => inner.upload(b, p, d, c));
   @override
+  Future<String> debutEnvoi(String b, String p, int t, String c) =>
+      _go(() => inner.debutEnvoi(b, p, t, c));
+  @override
+  Future<int> positionEnvoi(String a) => _go(() => inner.positionEnvoi(a));
+  @override
+  Future<int> envoyerMorceau(String a, int p, Uint8List o) =>
+      _go(() => inner.envoyerMorceau(a, p, o));
+  @override
+  int get tailleMorceau => inner.tailleMorceau;
+  @override
   Future<Uint8List> download(String b, String p) =>
       _go(() => inner.download(b, p));
   @override

@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ecoleplus/core/sync/sync_remote.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Implémentation Supabase : RPC sync_push pour l'envoi, API REST (donc RLS)
@@ -136,4 +138,83 @@ class SupabaseSyncRemote implements SyncRemote {
         );
         return (r as Map)['revoked'] == true;
       });
+
+  // ------------------------- Envoi reprenable (TUS) -------------------------
+
+  Map<String, String> get _entetesTus => {
+    ...client.storage.headers,
+    'Tus-Resumable': '1.0.0',
+  };
+
+  static String _b64(String v) => base64.encode(utf8.encode(v));
+
+  void _verifierTus(http.Response r, List<int> attendus) {
+    if (attendus.contains(r.statusCode)) return;
+    if (r.statusCode == 401) throw const SessionExpired();
+    throw HttpStatusException(r.statusCode, r.body);
+  }
+
+  @override
+  int get tailleMorceau => 6 * 1024 * 1024;
+
+  @override
+  Future<String> debutEnvoi(
+    String bucket,
+    String path,
+    int taille,
+    String contentType,
+  ) => _call(() async {
+    final r = await http.post(
+      Uri.parse('${client.storage.url}/upload/resumable'),
+      headers: {
+        ..._entetesTus,
+        'Upload-Length': '$taille',
+        'x-upsert': 'true',
+        'Upload-Metadata': [
+          'bucketName ${_b64(bucket)}',
+          'objectName ${_b64(path)}',
+          'contentType ${_b64(contentType)}',
+          'cacheControl ${_b64('3600')}',
+        ].join(','),
+      },
+    );
+    _verifierTus(r, [201]);
+    final adresse = r.headers['location']!;
+    return adresse.startsWith('http')
+        ? adresse
+        : Uri.parse(client.storage.url).resolve(adresse).toString();
+  });
+
+  @override
+  Future<int> positionEnvoi(String adresse) => _call(() async {
+    final r = await http.head(Uri.parse(adresse), headers: _entetesTus);
+    _verifierTus(r, [200, 204]);
+    return int.parse(r.headers['upload-offset'] ?? '0');
+  });
+
+  @override
+  Future<int> envoyerMorceau(String adresse, int position, Uint8List octets) =>
+      _call(() async {
+        final r = await http.patch(
+          Uri.parse(adresse),
+          headers: {
+            ..._entetesTus,
+            'Upload-Offset': '$position',
+            'Content-Type': 'application/offset+octet-stream',
+          },
+          body: octets,
+        );
+        _verifierTus(r, [204]);
+        return int.parse(r.headers['upload-offset']!);
+      });
+}
+
+/// Réponse inattendue du serveur de fichiers (adresse d'envoi expirée,
+/// droits…).
+class HttpStatusException implements Exception {
+  const new(this.code, this.corps);
+  final int code;
+  final String corps;
+  @override
+  String toString() => 'HTTP $code : $corps';
 }

@@ -1,0 +1,287 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
+import 'package:ecoleplus/features/bibliotheque/domain/document.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/app_harness.dart';
+import 'phase8_cartes_test.dart' show accueil, retour, tap, tapLong, voir;
+
+/// Fichiers de test : contenu différent pour chacun (pas de doublon), assez
+/// gros pour être envoyés en plusieurs morceaux (64 Ko dans les tests).
+List<FichierChoisi> fichiersDeTest(
+  Directory dossier,
+  int n, {
+  int taille = 150 * 1024,
+  String extension = 'pdf',
+}) {
+  dossier.createSync(recursive: true);
+  return [
+    for (var i = 1; i <= n; i++)
+      () {
+        final nom = 'Fiche_${i.toString().padLeft(3, '0')}.$extension';
+        final f = File('${dossier.path}/$nom');
+        final octets = Uint8List(taille);
+        for (var j = 0; j < taille; j++) {
+          octets[j] = (i * 31 + j * 7) % 251;
+        }
+        f.writeAsBytesSync(octets);
+        return FichierChoisi(nom, f.path);
+      }(),
+  ];
+}
+
+Future<void> ouvrirBibliotheque(WidgetTester tester) async {
+  await AppHarness.toucher(tester, 'Bibliothèque');
+  await AppHarness.settle(tester);
+}
+
+/// Ajoute les fichiers choisis (« Commun à toute l'école »).
+Future<void> ajouterCommun(WidgetTester tester) async {
+  await tapLong(tester, find.text('Ajouter des documents'));
+  await tap(tester, find.byKey(const Key('commun')));
+  await tapLong(tester, find.widgetWithText(FilledButton, 'Ajouter'));
+}
+
+void main() {
+  testWidgets('50 fichiers ajoutés hors ligne : catalogue tout de suite '
+      'utilisable ; envoi coupé en cours de route puis repris, sans doublon '
+      'ni fichier abîmé ; le même lot ajouté une 2e fois est reconnu', (
+    tester,
+  ) async {
+    final h = AppHarness()..seedEcoleTest();
+    final source = Directory('${h.mediaDir.parent.path}/lot_${h.hashCode}');
+    h.fichiersChoisis = fichiersDeTest(source, 50);
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    h.online = false;
+
+    await ouvrirBibliotheque(tester);
+    await ajouterCommun(tester);
+    expect(find.text('50 documents'), findsOneWidget);
+    expect(find.byKey(const Key('envois-en-cours')), findsOneWidget);
+    expect(await h.db.select(h.db.documents).get(), hasLength(50));
+    expect(await h.db.select(h.db.documentUploads).get(), hasLength(50));
+
+    // Recherche par titre sans Internet.
+    await tester.enterText(
+      find.byKey(const Key('recherche-documents')),
+      'fiche 017',
+    );
+    await AppHarness.settle(tester);
+    expect(find.text('1 document'), findsOneWidget);
+    expect(find.text('Fiche 017'), findsOneWidget);
+    // Recherche dans le texte : Internet nécessaire, message clair.
+    await tap(tester, find.byKey(const Key('chercher-texte')));
+    expect(find.textContaining('connexion à Internet nécessaire'), findsOne);
+    await tester.tap(find.byTooltip('Effacer'));
+    await AppHarness.settle(tester);
+
+    // Réseau qui revient… puis coupe après 40 morceaux.
+    h.online = true;
+    h.remote.couperApresMorceaux = 40;
+    await accueil(tester);
+    await tester.runAsync(() => h.synchroniser(tester));
+    await AppHarness.settle(tester);
+    expect(h.server.tables['documents'], hasLength(50));
+    final envoyes = h.remote.morceauxRecus;
+    expect(envoyes, 40);
+    final restants = await h.db.select(h.db.documentUploads).get();
+    expect(restants.length, inInclusiveRange(1, 49));
+    final commences = restants.where((e) => e.sentBytes > 0).toList();
+    expect(commences, hasLength(1), reason: 'un fichier coupé en cours');
+
+    // Le réseau revient : l'envoi reprend où il s'était arrêté.
+    h
+      ..online = true
+      ..remote.couperApresMorceaux = null;
+    await tester.runAsync(() => h.synchroniser(tester));
+    await AppHarness.settle(tester);
+    expect(await h.db.select(h.db.documentUploads).get(), isEmpty);
+    final fichiers = h.server.files.keys
+        .where((k) => k.startsWith('documents/'))
+        .toList();
+    expect(fichiers, hasLength(50));
+    // 150 Ko = 3 morceaux de 64 Ko : 150 morceaux en tout, aucun renvoyé.
+    expect(h.remote.morceauxRecus, 150);
+    for (final d in await h.db.select(h.db.documents).get()) {
+      final recu = h.server.files['documents/${d.storagePath}']!;
+      final original = File('${source.path}/${d.originalName}')
+          .readAsBytesSync();
+      expect(recu, original, reason: d.title);
+      expect(h.server.tables['documents']![d.id]!['uploaded_at'], isNotNull);
+    }
+
+    // Même lot une 2e fois : rien de nouveau.
+    await ouvrirBibliotheque(tester);
+    await ajouterCommun(tester);
+    expect(find.textContaining('0 document(s) ajouté(s) ; 50 déjà'), findsOne);
+    expect(await h.db.select(h.db.documents).get(), hasLength(50));
+    await h.dispose(tester);
+  });
+
+  testWidgets('garder sur le téléphone : en mode avion, un document épinglé '
+      's’ouvre (moins de 3 s), un document libéré donne un message clair ; '
+      'recherche dans le texte en ligne', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    final source = Directory('${h.mediaDir.parent.path}/av_${h.hashCode}');
+    h.fichiersChoisis = fichiersDeTest(
+      source,
+      2,
+      taille: 2000,
+      extension: 'txt',
+    );
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await ouvrirBibliotheque(tester);
+    await ajouterCommun(tester);
+    await accueil(tester);
+    await tester.runAsync(() => h.synchroniser(tester));
+    await AppHarness.settle(tester);
+    expect(await h.db.select(h.db.documentUploads).get(), isEmpty);
+
+    final docs = await h.db.select(h.db.documents).get();
+    final un = docs.firstWhere((d) => d.title == 'Fiche 001');
+    final deux = docs.firstWhere((d) => d.title == 'Fiche 002');
+    h.enLigne.textes[deux.id] = [(3, 'Les fractions au CM1 : exercices')];
+
+    await ouvrirBibliotheque(tester);
+    await tester.enterText(
+      find.byKey(const Key('recherche-documents')),
+      'fractions',
+    );
+    await AppHarness.settle(tester);
+    expect(
+      find.text('0 document'),
+      findsOneWidget,
+      reason: 'pas dans le titre',
+    );
+    await tap(tester, find.byKey(const Key('chercher-texte')));
+    expect(find.byKey(Key('trouve-${deux.id}-3')), findsOneWidget);
+    expect(find.text('Page 3 : « fractions »'), findsOneWidget);
+    await tester.tap(find.byTooltip('Effacer'));
+    await AppHarness.settle(tester);
+
+    // Épingler le 1er, libérer l'espace : seul le 1er reste.
+    await tap(tester, find.byKey(Key('document-${un.id}')));
+    await tapLong(tester, find.byKey(const Key('epingler')));
+    await retour(tester);
+    await voir(tester, find.byKey(const Key('liberer')));
+    await tapLong(tester, find.byKey(const Key('liberer')));
+    final locaux = await h.db.select(h.db.documentFiles).get();
+    expect(locaux.map((f) => f.documentId), [un.id]);
+    expect(locaux.single.pinned, isTrue);
+
+    // Mode avion.
+    h.online = false;
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await AppHarness.settle(tester);
+    await tap(tester, find.byKey(Key('document-${un.id}')));
+    // Ouverture chronométrée (temps réel) : document épinglé, sans réseau.
+    await voir(tester, find.text('Ouvrir'));
+    final chrono = Stopwatch()..start();
+    await tester.tap(find.text('Ouvrir'));
+    while (h.fichiersSortis.isEmpty && chrono.elapsed.inSeconds < 10) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump();
+    }
+    chrono.stop();
+    expect(h.fichiersSortis.keys, ['Fiche_001.txt']);
+    expect(chrono.elapsedMilliseconds, lessThan(3000));
+    // ignore: avoid_print, mesure affichée dans le rapport de la phase.
+    print('Ouverture du document épinglé : ${chrono.elapsedMilliseconds} ms');
+    await AppHarness.settle(tester);
+    await retour(tester);
+
+    await tap(tester, find.byKey(Key('document-${deux.id}')));
+    await tapLong(tester, find.text('Ouvrir'));
+    expect(find.textContaining('n’est pas sur le téléphone'), findsOne);
+    await h.dispose(tester);
+  });
+
+  testWidgets('enseignant : ajout en attente de validation, le directeur '
+      'valide ; espace plein : refus expliqué, rien n’est envoyé', (
+    tester,
+  ) async {
+    final h = AppHarness()..seedEcoleTest();
+    final source = Directory('${h.mediaDir.parent.path}/ens_${h.hashCode}');
+    h.fichiersChoisis = fichiersDeTest(source, 1, taille: 3000);
+    await h.pump(tester);
+    await h.login(tester, '70 11 22 33');
+    await ouvrirBibliotheque(tester);
+    await tapLong(tester, find.text('Ajouter des documents'));
+    expect(find.textContaining('après validation du directeur'), findsOne);
+    expect(find.byKey(const Key('commun')), findsNothing);
+    await tap(tester, find.widgetWithText(FilterChip, 'CM1 A'));
+    await tapLong(tester, find.widgetWithText(FilledButton, 'Ajouter'));
+    expect(find.textContaining('En attente de validation'), findsOne);
+    final d = (await h.db.select(h.db.documents).get()).single;
+    expect(d.approved, isFalse);
+    expect(d.classes, ['c-cm1']);
+    await h.dispose(tester);
+
+    // Espace plein (règle du serveur).
+    final h2 = AppHarness()
+      ..seedEcoleTest()
+      ..fichiersChoisis = h.fichiersChoisis;
+    h2.server
+      ..rejectWith = ((t, _) => t == 'documents' ? 'P0001' : null)
+      ..rejectMessage =
+          'Espace plein : 300 Mo utilisés sur 300 Mo. Videz la corbeille ou '
+          'demandez plus d’espace.';
+    await h2.pump(tester);
+    await h2.login(tester, 'directeur@ecole-test.local');
+    await ouvrirBibliotheque(tester);
+    await ajouterCommun(tester);
+    await accueil(tester);
+    await tester.runAsync(() => h2.synchroniser(tester));
+    await AppHarness.settle(tester);
+    expect(
+      h2.server.files.keys.where((k) => k.startsWith('documents/')),
+      isEmpty,
+    );
+    expect(await h2.db.select(h2.db.documents).get(), isEmpty);
+    expect(await h2.db.select(h2.db.documentUploads).get(), isEmpty);
+    expect(await h2.db.select(h2.db.documentFiles).get(), isEmpty);
+    final refus = await h2.db.select(h2.db.outbox).get();
+    expect(
+      refus.single.message,
+      'Document « Fiche 001 » — Espace plein : 300 Mo utilisés sur 300 Mo. '
+      'Videz la corbeille ou demandez plus d’espace.',
+    );
+    await h2.dispose(tester);
+  });
+
+  testWidgets('copie signée du B1 archivée : rangée dans les archives, '
+      'formulaire « Signé et archivé »', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    final source = Directory('${h.mediaDir.parent.path}/b1_${h.hashCode}');
+    h.fichiersChoisis = fichiersDeTest(source, 1, taille: 5000);
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await AppHarness.toucher(tester, 'Documents');
+    await AppHarness.settle(tester);
+    await tap(tester, find.byKey(const Key('doc-/registres/B1')));
+    await tapLong(tester, find.byKey(const Key('archiver-copie-signee')));
+    expect(find.byKey(const Key('copie-signee')), findsOneWidget);
+    final d = (await h.db.select(h.db.documents).get()).single;
+    expect(d.space, 'archives');
+    expect(d.aiAllowed, isFalse);
+    expect(d.title, 'B1 2025-2026 — copie signée');
+    final f = (await h.db.select(h.db.officialForms).get()).single;
+    expect(f.status, 'signe_archive');
+    expect(f.signedScanDocumentId, d.id);
+    await retour(tester);
+    await tap(tester, find.text('Archives administratives'));
+    expect(find.text('B1 2025-2026 — copie signée'), findsOneWidget);
+    expect(
+      find.textContaining('jamais utilisées par l’assistant IA'),
+      findsOne,
+    );
+    await h.dispose(tester);
+  });
+}

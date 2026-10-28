@@ -227,7 +227,7 @@ void main() {
   });
 
   test(
-    'base du téléphone : passage de la version 5 à la 10 sans perte',
+    'base du téléphone : passage de la version 5 à la 11 sans perte',
     () async {
       final dir = Directory.systemTemp.createTempSync('migration');
       final fichier = File('${dir.path}/ecole.db');
@@ -253,6 +253,9 @@ void main() {
         'attendance',
         'card_templates',
         'student_cards',
+        'documents',
+        'document_uploads',
+        'document_files',
       ]) {
         await db.customStatement('DROP TABLE $t');
       }
@@ -266,6 +269,9 @@ void main() {
         ('official_forms', 'show_objective_average'),
         ('schools', 'preschool_ranking'),
         ('schools', 'logo_path'),
+        ('schools', 'storage_quota_bytes'),
+        ('schools', 'library_teacher_mode'),
+        ('official_forms', 'signed_scan_document_id'),
       ]) {
         await db.customStatement('ALTER TABLE $t DROP COLUMN $c');
       }

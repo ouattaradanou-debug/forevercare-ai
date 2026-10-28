@@ -4,6 +4,9 @@ import 'package:ecoleplus/features/auth/presentation/forgot_password_page.dart';
 import 'package:ecoleplus/features/auth/presentation/login_page.dart';
 import 'package:ecoleplus/features/auth/presentation/welcome_page.dart';
 import 'package:ecoleplus/features/backup/presentation/backup_page.dart';
+import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
+import 'package:ecoleplus/features/bibliotheque/domain/document.dart';
+import 'package:ecoleplus/features/bibliotheque/presentation/bibliotheque_pages.dart';
 import 'package:ecoleplus/features/bulletins/presentation/bulletins_pages.dart';
 import 'package:ecoleplus/features/cartes/presentation/cartes_pages.dart';
 import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
@@ -244,6 +247,42 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/securite/journal',
         builder: (_, _) => const JournalPage(),
+      ),
+      GoRoute(
+        path: '/bibliotheque',
+        builder: (_, _) => const BibliothequePage(Espace.bibliotheque),
+      ),
+      GoRoute(
+        path: '/bibliotheque/corbeille',
+        builder: (_, _) =>
+            const BibliothequePage(Espace.bibliotheque, corbeille: true),
+      ),
+      GoRoute(
+        path: '/bibliotheque/ajout',
+        builder: (_, s) => AjoutDocumentsPage(
+          Espace.bibliotheque,
+          s.extra as List<FichierChoisi>? ?? const [],
+        ),
+      ),
+      GoRoute(
+        path: '/archives',
+        builder: (_, _) => const BibliothequePage(Espace.archives),
+      ),
+      GoRoute(
+        path: '/archives/corbeille',
+        builder: (_, _) =>
+            const BibliothequePage(Espace.archives, corbeille: true),
+      ),
+      GoRoute(
+        path: '/archives/ajout',
+        builder: (_, s) => AjoutDocumentsPage(
+          Espace.archives,
+          s.extra as List<FichierChoisi>? ?? const [],
+        ),
+      ),
+      GoRoute(
+        path: '/document/:id',
+        builder: (_, s) => FicheDocumentPage(s.pathParameters['id']!),
       ),
       GoRoute(path: '/notes', builder: (_, _) => const NotesPage()),
       GoRoute(path: '/mentions', builder: (_, _) => const MentionsPage()),

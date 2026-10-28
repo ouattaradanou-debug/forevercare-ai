@@ -131,6 +131,19 @@ class DocumentsPage extends ConsumerWidget {
             sousTitre: 'Où en est chaque formulaire',
             icone: Icons.checklist,
           ),
+          ligne(
+            'Bibliothèque pédagogique',
+            '/bibliotheque',
+            sousTitre: 'Programmes, guides, sujets, fiches…',
+            icone: Icons.local_library_outlined,
+          ),
+          if (ref.watch(mesDroitsProvider).contains('archives'))
+            ligne(
+              'Archives administratives',
+              '/archives',
+              sousTitre: 'Formulaires signés, registres, courriers…',
+              icone: Icons.inventory_2_outlined,
+            ),
         ],
       ),
     );

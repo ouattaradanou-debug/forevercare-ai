@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/sync/local_store.dart';
@@ -234,7 +236,8 @@ class AuthService {
 
   /// Le directeur a déconnecté ce téléphone (perte, vol) : les données de
   /// l'école sont effacées, le téléphone reçoit une nouvelle identité.
-  Future<void> handleRevoked() => effacerTelephoneDeconnecte(db, api);
+  Future<void> handleRevoked() =>
+      effacerTelephoneDeconnecte(db, api, engine.mediaDir);
 
   /// Message à montrer une fois sur l'écran d'accueil (puis effacé).
   Future<String?> takeNotice() async {
@@ -292,13 +295,18 @@ class AuthService {
   Future<void> logout() async {
     await api.signOut();
     await db.clearAll();
+    await effacerMedias(engine.mediaDir);
   }
 }
 
 /// Le directeur a déconnecté ce téléphone (perte, vol) : les données de
 /// l'école sont effacées et le téléphone reçoit une nouvelle identité.
 /// Fonction autonome : appelée par le moteur de synchronisation.
-Future<void> effacerTelephoneDeconnecte(AppDatabase db, AuthApi api) async {
+Future<void> effacerTelephoneDeconnecte(
+  AppDatabase db,
+  AuthApi api, [
+  Directory? mediaDir,
+]) async {
   // L'avis est écrit AVANT l'effacement : l'écran d'accueil qui s'affiche
   // juste après doit pouvoir le lire.
   await db
@@ -316,6 +324,21 @@ Future<void> effacerTelephoneDeconnecte(AppDatabase db, AuthApi api) async {
       );
   await api.signOut();
   await db.clearAll();
+  await effacerMedias(mediaDir);
+}
+
+/// Efface les fichiers de l'école sur ce téléphone (photos, logo, images
+/// d’en-tête, documents) : dossiers au nom de l’école (identifiant) et
+/// « documents ». La base elle-même (même dossier) n'est pas touchée.
+Future<void> effacerMedias(Directory? dir) async {
+  if (dir == null || !dir.existsSync()) return;
+  final ecole = RegExp(r'^[0-9a-fA-F-]{36}$');
+  await for (final e in dir.list()) {
+    final nom = e.uri.pathSegments.where((s) => s.isNotEmpty).last;
+    if (e is Directory && (nom == 'documents' || ecole.hasMatch(nom))) {
+      await e.delete(recursive: true);
+    }
+  }
 }
 
 /// Numéro saisi → 226XXXXXXXX ; null si vide. Message clair si invalide.

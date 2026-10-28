@@ -30,10 +30,15 @@ class SyncEngine {
     this.overlap = const Duration(minutes: 2),
     this.mediaDir,
     this.onRevoked,
+    this.autresEnvois,
   });
 
   /// Dossier local des images (téléchargées sur un nouveau téléphone).
   final Directory? mediaDir;
+
+  /// Envois de fichiers supplémentaires (documents de la bibliothèque,
+  /// reprenables), après les lignes et les petites images.
+  final Future<void> Function()? autresEnvois;
 
   /// Appelé quand le directeur a déconnecté ce téléphone.
   final Future<void> Function()? onRevoked;
@@ -83,6 +88,11 @@ class SyncEngine {
       await _push();
       await _pull();
       await _uploadFiles();
+      if (autresEnvois != null) {
+        await autresEnvois!();
+        // Fin d'envoi notée sur la fiche : signalée tout de suite.
+        await _push();
+      }
       await _downloadFiles();
       await _heartbeat();
       final done = SyncState(
@@ -240,6 +250,8 @@ class SyncEngine {
       'students' when nom != null && nom.isNotEmpty => 'Élève $nom',
       'teachers' when nom != null && nom.isNotEmpty => 'Enseignant $nom',
       'classes' when ligne?['name'] != null => 'Classe ${ligne!['name']}',
+      'documents' when ligne?['title'] != null =>
+        'Document « ${ligne!['title']} »',
       _ => null,
     };
   }

@@ -90,6 +90,25 @@ abstract interface class SyncRemote {
 
   Future<Uint8List> download(String bucket, String path);
 
+  /// Envoi reprenable (gros fichiers, connexion faible) : ouvre un envoi et
+  /// renvoie son adresse, à garder pour reprendre après une coupure.
+  Future<String> debutEnvoi(
+    String bucket,
+    String path,
+    int taille,
+    String contentType,
+  );
+
+  /// Octets déjà reçus par le serveur pour cet envoi.
+  Future<int> positionEnvoi(String adresse);
+
+  /// Envoie un morceau à partir de [position] ; renvoie la nouvelle
+  /// position.
+  Future<int> envoyerMorceau(String adresse, int position, Uint8List octets);
+
+  /// Taille des morceaux (le serveur Supabase impose 6 Mo).
+  int get tailleMorceau => 6 * 1024 * 1024;
+
   /// Signale l'état du téléphone ; renvoie vrai s'il a été déconnecté.
   Future<bool> heartbeat(String deviceId, int pending, String appVersion);
 }

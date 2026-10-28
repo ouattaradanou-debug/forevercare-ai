@@ -224,6 +224,30 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _storageQuotaBytesMeta = const VerificationMeta(
+    'storageQuotaBytes',
+  );
+  late final GeneratedColumn<int> storageQuotaBytes = GeneratedColumn<int>(
+    'storage_quota_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 5368709120',
+    defaultValue: const CustomExpression('5368709120'),
+  );
+  static const VerificationMeta _libraryTeacherModeMeta =
+      const VerificationMeta('libraryTeacherMode');
+  late final GeneratedColumn<String> libraryTeacherMode =
+      GeneratedColumn<String>(
+        'library_teacher_mode',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: 'NOT NULL DEFAULT \'validation\'',
+        defaultValue: const CustomExpression('\'validation\''),
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -290,6 +314,8 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
     directorGrade,
     preschoolRanking,
     logoPath,
+    storageQuotaBytes,
+    libraryTeacherMode,
     createdAt,
     updatedAt,
     deletedAt,
@@ -455,6 +481,24 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
         logoPath.isAcceptableOrUnknown(data['logo_path']!, _logoPathMeta),
       );
     }
+    if (data.containsKey('storage_quota_bytes')) {
+      context.handle(
+        _storageQuotaBytesMeta,
+        storageQuotaBytes.isAcceptableOrUnknown(
+          data['storage_quota_bytes']!,
+          _storageQuotaBytesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('library_teacher_mode')) {
+      context.handle(
+        _libraryTeacherModeMeta,
+        libraryTeacherMode.isAcceptableOrUnknown(
+          data['library_teacher_mode']!,
+          _libraryTeacherModeMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -570,6 +614,14 @@ class Schools extends Table with TableInfo<Schools, SchoolRow> {
         DriftSqlType.string,
         data['${effectivePrefix}logo_path'],
       ),
+      storageQuotaBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}storage_quota_bytes'],
+      )!,
+      libraryTeacherMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}library_teacher_mode'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_at'],
@@ -619,6 +671,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
   final String? directorGrade;
   final bool preschoolRanking;
   final String? logoPath;
+  final int storageQuotaBytes;
+  final String libraryTeacherMode;
   final String? createdAt;
   final String updatedAt;
   final String? deletedAt;
@@ -644,6 +698,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     this.directorGrade,
     required this.preschoolRanking,
     this.logoPath,
+    required this.storageQuotaBytes,
+    required this.libraryTeacherMode,
     this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -696,6 +752,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     if (!nullToAbsent || logoPath != null) {
       map['logo_path'] = Variable<String>(logoPath);
     }
+    map['storage_quota_bytes'] = Variable<int>(storageQuotaBytes);
+    map['library_teacher_mode'] = Variable<String>(libraryTeacherMode);
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<String>(createdAt);
     }
@@ -755,6 +813,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       logoPath: logoPath == null && nullToAbsent
           ? const Value.absent()
           : Value(logoPath),
+      storageQuotaBytes: Value(storageQuotaBytes),
+      libraryTeacherMode: Value(libraryTeacherMode),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -796,6 +856,10 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       directorGrade: serializer.fromJson<String?>(json['director_grade']),
       preschoolRanking: serializer.fromJson<bool>(json['preschool_ranking']),
       logoPath: serializer.fromJson<String?>(json['logo_path']),
+      storageQuotaBytes: serializer.fromJson<int>(json['storage_quota_bytes']),
+      libraryTeacherMode: serializer.fromJson<String>(
+        json['library_teacher_mode'],
+      ),
       createdAt: serializer.fromJson<String?>(json['created_at']),
       updatedAt: serializer.fromJson<String>(json['updated_at']),
       deletedAt: serializer.fromJson<String?>(json['deleted_at']),
@@ -826,6 +890,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
       'director_grade': serializer.toJson<String?>(directorGrade),
       'preschool_ranking': serializer.toJson<bool>(preschoolRanking),
       'logo_path': serializer.toJson<String?>(logoPath),
+      'storage_quota_bytes': serializer.toJson<int>(storageQuotaBytes),
+      'library_teacher_mode': serializer.toJson<String>(libraryTeacherMode),
       'created_at': serializer.toJson<String?>(createdAt),
       'updated_at': serializer.toJson<String>(updatedAt),
       'deleted_at': serializer.toJson<String?>(deletedAt),
@@ -854,6 +920,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     Value<String?> directorGrade = const Value.absent(),
     bool? preschoolRanking,
     Value<String?> logoPath = const Value.absent(),
+    int? storageQuotaBytes,
+    String? libraryTeacherMode,
     Value<String?> createdAt = const Value.absent(),
     String? updatedAt,
     Value<String?> deletedAt = const Value.absent(),
@@ -885,6 +953,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
         : this.directorGrade,
     preschoolRanking: preschoolRanking ?? this.preschoolRanking,
     logoPath: logoPath.present ? logoPath.value : this.logoPath,
+    storageQuotaBytes: storageQuotaBytes ?? this.storageQuotaBytes,
+    libraryTeacherMode: libraryTeacherMode ?? this.libraryTeacherMode,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -934,6 +1004,12 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
           ? data.preschoolRanking.value
           : this.preschoolRanking,
       logoPath: data.logoPath.present ? data.logoPath.value : this.logoPath,
+      storageQuotaBytes: data.storageQuotaBytes.present
+          ? data.storageQuotaBytes.value
+          : this.storageQuotaBytes,
+      libraryTeacherMode: data.libraryTeacherMode.present
+          ? data.libraryTeacherMode.value
+          : this.libraryTeacherMode,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -964,6 +1040,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
           ..write('directorGrade: $directorGrade, ')
           ..write('preschoolRanking: $preschoolRanking, ')
           ..write('logoPath: $logoPath, ')
+          ..write('storageQuotaBytes: $storageQuotaBytes, ')
+          ..write('libraryTeacherMode: $libraryTeacherMode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -994,6 +1072,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
     directorGrade,
     preschoolRanking,
     logoPath,
+    storageQuotaBytes,
+    libraryTeacherMode,
     createdAt,
     updatedAt,
     deletedAt,
@@ -1023,6 +1103,8 @@ class SchoolRow extends DataClass implements Insertable<SchoolRow> {
           other.directorGrade == this.directorGrade &&
           other.preschoolRanking == this.preschoolRanking &&
           other.logoPath == this.logoPath &&
+          other.storageQuotaBytes == this.storageQuotaBytes &&
+          other.libraryTeacherMode == this.libraryTeacherMode &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -1050,6 +1132,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
   final Value<String?> directorGrade;
   final Value<bool> preschoolRanking;
   final Value<String?> logoPath;
+  final Value<int> storageQuotaBytes;
+  final Value<String> libraryTeacherMode;
   final Value<String?> createdAt;
   final Value<String> updatedAt;
   final Value<String?> deletedAt;
@@ -1076,6 +1160,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     this.directorGrade = const Value.absent(),
     this.preschoolRanking = const Value.absent(),
     this.logoPath = const Value.absent(),
+    this.storageQuotaBytes = const Value.absent(),
+    this.libraryTeacherMode = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1103,6 +1189,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     this.directorGrade = const Value.absent(),
     this.preschoolRanking = const Value.absent(),
     this.logoPath = const Value.absent(),
+    this.storageQuotaBytes = const Value.absent(),
+    this.libraryTeacherMode = const Value.absent(),
     this.createdAt = const Value.absent(),
     required String updatedAt,
     this.deletedAt = const Value.absent(),
@@ -1132,6 +1220,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     Expression<String>? directorGrade,
     Expression<bool>? preschoolRanking,
     Expression<String>? logoPath,
+    Expression<int>? storageQuotaBytes,
+    Expression<String>? libraryTeacherMode,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
     Expression<String>? deletedAt,
@@ -1160,6 +1250,9 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
       if (directorGrade != null) 'director_grade': directorGrade,
       if (preschoolRanking != null) 'preschool_ranking': preschoolRanking,
       if (logoPath != null) 'logo_path': logoPath,
+      if (storageQuotaBytes != null) 'storage_quota_bytes': storageQuotaBytes,
+      if (libraryTeacherMode != null)
+        'library_teacher_mode': libraryTeacherMode,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -1189,6 +1282,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     Value<String?>? directorGrade,
     Value<bool>? preschoolRanking,
     Value<String?>? logoPath,
+    Value<int>? storageQuotaBytes,
+    Value<String>? libraryTeacherMode,
     Value<String?>? createdAt,
     Value<String>? updatedAt,
     Value<String?>? deletedAt,
@@ -1216,6 +1311,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
       directorGrade: directorGrade ?? this.directorGrade,
       preschoolRanking: preschoolRanking ?? this.preschoolRanking,
       logoPath: logoPath ?? this.logoPath,
+      storageQuotaBytes: storageQuotaBytes ?? this.storageQuotaBytes,
+      libraryTeacherMode: libraryTeacherMode ?? this.libraryTeacherMode,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -1289,6 +1386,12 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
     if (logoPath.present) {
       map['logo_path'] = Variable<String>(logoPath.value);
     }
+    if (storageQuotaBytes.present) {
+      map['storage_quota_bytes'] = Variable<int>(storageQuotaBytes.value);
+    }
+    if (libraryTeacherMode.present) {
+      map['library_teacher_mode'] = Variable<String>(libraryTeacherMode.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
     }
@@ -1330,6 +1433,8 @@ class SchoolsCompanion extends UpdateCompanion<SchoolRow> {
           ..write('directorGrade: $directorGrade, ')
           ..write('preschoolRanking: $preschoolRanking, ')
           ..write('logoPath: $logoPath, ')
+          ..write('storageQuotaBytes: $storageQuotaBytes, ')
+          ..write('libraryTeacherMode: $libraryTeacherMode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -16411,6 +16516,17 @@ class OfficialForms extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _signedScanDocumentIdMeta =
+      const VerificationMeta('signedScanDocumentId');
+  late final GeneratedColumn<String> signedScanDocumentId =
+      GeneratedColumn<String>(
+        'signed_scan_document_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
   static const VerificationMeta _showObjectiveAverageMeta =
       const VerificationMeta('showObjectiveAverage');
   late final GeneratedColumn<bool> showObjectiveAverage = GeneratedColumn<bool>(
@@ -16481,6 +16597,7 @@ class OfficialForms extends Table
     signedOn,
     directorName,
     lockedVersion,
+    signedScanDocumentId,
     showObjectiveAverage,
     createdAt,
     updatedAt,
@@ -16603,6 +16720,15 @@ class OfficialForms extends Table
         ),
       );
     }
+    if (data.containsKey('signed_scan_document_id')) {
+      context.handle(
+        _signedScanDocumentIdMeta,
+        signedScanDocumentId.isAcceptableOrUnknown(
+          data['signed_scan_document_id']!,
+          _signedScanDocumentIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('show_objective_average')) {
       context.handle(
         _showObjectiveAverageMeta,
@@ -16699,6 +16825,10 @@ class OfficialForms extends Table
         DriftSqlType.int,
         data['${effectivePrefix}locked_version'],
       ),
+      signedScanDocumentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}signed_scan_document_id'],
+      ),
       showObjectiveAverage: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}show_objective_average'],
@@ -16745,6 +16875,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
   final String? signedOn;
   final String? directorName;
   final int? lockedVersion;
+  final String? signedScanDocumentId;
   final bool showObjectiveAverage;
   final String? createdAt;
   final String updatedAt;
@@ -16764,6 +16895,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     this.signedOn,
     this.directorName,
     this.lockedVersion,
+    this.signedScanDocumentId,
     required this.showObjectiveAverage,
     this.createdAt,
     required this.updatedAt,
@@ -16801,6 +16933,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     }
     if (!nullToAbsent || lockedVersion != null) {
       map['locked_version'] = Variable<int>(lockedVersion);
+    }
+    if (!nullToAbsent || signedScanDocumentId != null) {
+      map['signed_scan_document_id'] = Variable<String>(signedScanDocumentId);
     }
     map['show_objective_average'] = Variable<bool>(showObjectiveAverage);
     if (!nullToAbsent || createdAt != null) {
@@ -16847,6 +16982,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       lockedVersion: lockedVersion == null && nullToAbsent
           ? const Value.absent()
           : Value(lockedVersion),
+      signedScanDocumentId: signedScanDocumentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(signedScanDocumentId),
       showObjectiveAverage: Value(showObjectiveAverage),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
@@ -16884,6 +17022,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       signedOn: serializer.fromJson<String?>(json['signed_on']),
       directorName: serializer.fromJson<String?>(json['director_name']),
       lockedVersion: serializer.fromJson<int?>(json['locked_version']),
+      signedScanDocumentId: serializer.fromJson<String?>(
+        json['signed_scan_document_id'],
+      ),
       showObjectiveAverage: serializer.fromJson<bool>(
         json['show_objective_average'],
       ),
@@ -16910,6 +17051,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       'signed_on': serializer.toJson<String?>(signedOn),
       'director_name': serializer.toJson<String?>(directorName),
       'locked_version': serializer.toJson<int?>(lockedVersion),
+      'signed_scan_document_id': serializer.toJson<String?>(
+        signedScanDocumentId,
+      ),
       'show_objective_average': serializer.toJson<bool>(showObjectiveAverage),
       'created_at': serializer.toJson<String?>(createdAt),
       'updated_at': serializer.toJson<String>(updatedAt),
@@ -16932,6 +17076,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     Value<String?> signedOn = const Value.absent(),
     Value<String?> directorName = const Value.absent(),
     Value<int?> lockedVersion = const Value.absent(),
+    Value<String?> signedScanDocumentId = const Value.absent(),
     bool? showObjectiveAverage,
     Value<String?> createdAt = const Value.absent(),
     String? updatedAt,
@@ -16959,6 +17104,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     lockedVersion: lockedVersion.present
         ? lockedVersion.value
         : this.lockedVersion,
+    signedScanDocumentId: signedScanDocumentId.present
+        ? signedScanDocumentId.value
+        : this.signedScanDocumentId,
     showObjectiveAverage: showObjectiveAverage ?? this.showObjectiveAverage,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -16994,6 +17142,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       lockedVersion: data.lockedVersion.present
           ? data.lockedVersion.value
           : this.lockedVersion,
+      signedScanDocumentId: data.signedScanDocumentId.present
+          ? data.signedScanDocumentId.value
+          : this.signedScanDocumentId,
       showObjectiveAverage: data.showObjectiveAverage.present
           ? data.showObjectiveAverage.value
           : this.showObjectiveAverage,
@@ -17020,6 +17171,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
           ..write('signedOn: $signedOn, ')
           ..write('directorName: $directorName, ')
           ..write('lockedVersion: $lockedVersion, ')
+          ..write('signedScanDocumentId: $signedScanDocumentId, ')
           ..write('showObjectiveAverage: $showObjectiveAverage, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -17044,6 +17196,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     signedOn,
     directorName,
     lockedVersion,
+    signedScanDocumentId,
     showObjectiveAverage,
     createdAt,
     updatedAt,
@@ -17067,6 +17220,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
           other.signedOn == this.signedOn &&
           other.directorName == this.directorName &&
           other.lockedVersion == this.lockedVersion &&
+          other.signedScanDocumentId == this.signedScanDocumentId &&
           other.showObjectiveAverage == this.showObjectiveAverage &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -17088,6 +17242,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
   final Value<String?> signedOn;
   final Value<String?> directorName;
   final Value<int?> lockedVersion;
+  final Value<String?> signedScanDocumentId;
   final Value<bool> showObjectiveAverage;
   final Value<String?> createdAt;
   final Value<String> updatedAt;
@@ -17108,6 +17263,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     this.signedOn = const Value.absent(),
     this.directorName = const Value.absent(),
     this.lockedVersion = const Value.absent(),
+    this.signedScanDocumentId = const Value.absent(),
     this.showObjectiveAverage = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -17129,6 +17285,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     this.signedOn = const Value.absent(),
     this.directorName = const Value.absent(),
     this.lockedVersion = const Value.absent(),
+    this.signedScanDocumentId = const Value.absent(),
     this.showObjectiveAverage = const Value.absent(),
     this.createdAt = const Value.absent(),
     required String updatedAt,
@@ -17154,6 +17311,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     Expression<String>? signedOn,
     Expression<String>? directorName,
     Expression<int>? lockedVersion,
+    Expression<String>? signedScanDocumentId,
     Expression<bool>? showObjectiveAverage,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
@@ -17176,6 +17334,8 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
       if (signedOn != null) 'signed_on': signedOn,
       if (directorName != null) 'director_name': directorName,
       if (lockedVersion != null) 'locked_version': lockedVersion,
+      if (signedScanDocumentId != null)
+        'signed_scan_document_id': signedScanDocumentId,
       if (showObjectiveAverage != null)
         'show_objective_average': showObjectiveAverage,
       if (createdAt != null) 'created_at': createdAt,
@@ -17200,6 +17360,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     Value<String?>? signedOn,
     Value<String?>? directorName,
     Value<int?>? lockedVersion,
+    Value<String?>? signedScanDocumentId,
     Value<bool>? showObjectiveAverage,
     Value<String?>? createdAt,
     Value<String>? updatedAt,
@@ -17221,6 +17382,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
       signedOn: signedOn ?? this.signedOn,
       directorName: directorName ?? this.directorName,
       lockedVersion: lockedVersion ?? this.lockedVersion,
+      signedScanDocumentId: signedScanDocumentId ?? this.signedScanDocumentId,
       showObjectiveAverage: showObjectiveAverage ?? this.showObjectiveAverage,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -17272,6 +17434,11 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     if (lockedVersion.present) {
       map['locked_version'] = Variable<int>(lockedVersion.value);
     }
+    if (signedScanDocumentId.present) {
+      map['signed_scan_document_id'] = Variable<String>(
+        signedScanDocumentId.value,
+      );
+    }
     if (showObjectiveAverage.present) {
       map['show_objective_average'] = Variable<bool>(
         showObjectiveAverage.value,
@@ -17311,6 +17478,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
           ..write('signedOn: $signedOn, ')
           ..write('directorName: $directorName, ')
           ..write('lockedVersion: $lockedVersion, ')
+          ..write('signedScanDocumentId: $signedScanDocumentId, ')
           ..write('showObjectiveAverage: $showObjectiveAverage, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -31607,6 +31775,2602 @@ class StudentCardsCompanion extends UpdateCompanion<StudentCardRow> {
   }
 }
 
+class Documents extends Table with TableInfo<Documents, DocumentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Documents(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _spaceMeta = const VerificationMeta('space');
+  late final GeneratedColumn<String> space = GeneratedColumn<String>(
+    'space',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _isCommonMeta = const VerificationMeta(
+    'isCommon',
+  );
+  late final GeneratedColumn<bool> isCommon = GeneratedColumn<bool>(
+    'is_common',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _docTypeMeta = const VerificationMeta(
+    'docType',
+  );
+  late final GeneratedColumn<String> docType = GeneratedColumn<String>(
+    'doc_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _sourceAuthorMeta = const VerificationMeta(
+    'sourceAuthor',
+  );
+  late final GeneratedColumn<String> sourceAuthor = GeneratedColumn<String>(
+    'source_author',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _keywordsMeta = const VerificationMeta(
+    'keywords',
+  );
+  late final GeneratedColumn<String> keywords = GeneratedColumn<String>(
+    'keywords',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'[]\'',
+    defaultValue: const CustomExpression('\'[]\''),
+  );
+  static const VerificationMeta _classIdsMeta = const VerificationMeta(
+    'classIds',
+  );
+  late final GeneratedColumn<String> classIds = GeneratedColumn<String>(
+    'class_ids',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'[]\'',
+    defaultValue: const CustomExpression('\'[]\''),
+  );
+  static const VerificationMeta _levelCodesMeta = const VerificationMeta(
+    'levelCodes',
+  );
+  late final GeneratedColumn<String> levelCodes = GeneratedColumn<String>(
+    'level_codes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'[]\'',
+    defaultValue: const CustomExpression('\'[]\''),
+  );
+  static const VerificationMeta _storagePathMeta = const VerificationMeta(
+    'storagePath',
+  );
+  late final GeneratedColumn<String> storagePath = GeneratedColumn<String>(
+    'storage_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _originalNameMeta = const VerificationMeta(
+    'originalName',
+  );
+  late final GeneratedColumn<String> originalName = GeneratedColumn<String>(
+    'original_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _mimeTypeMeta = const VerificationMeta(
+    'mimeType',
+  );
+  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
+    'mime_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _sha256Meta = const VerificationMeta('sha256');
+  late final GeneratedColumn<String> sha256 = GeneratedColumn<String>(
+    'sha256',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _pageCountMeta = const VerificationMeta(
+    'pageCount',
+  );
+  late final GeneratedColumn<int> pageCount = GeneratedColumn<int>(
+    'page_count',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _aiAllowedMeta = const VerificationMeta(
+    'aiAllowed',
+  );
+  late final GeneratedColumn<bool> aiAllowed = GeneratedColumn<bool>(
+    'ai_allowed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT TRUE',
+    defaultValue: const CustomExpression('TRUE'),
+  );
+  static const VerificationMeta _isSensitiveMeta = const VerificationMeta(
+    'isSensitive',
+  );
+  late final GeneratedColumn<bool> isSensitive = GeneratedColumn<bool>(
+    'is_sensitive',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
+  static const VerificationMeta _indexStatusMeta = const VerificationMeta(
+    'indexStatus',
+  );
+  late final GeneratedColumn<String> indexStatus = GeneratedColumn<String>(
+    'index_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'en_attente\'',
+    defaultValue: const CustomExpression('\'en_attente\''),
+  );
+  static const VerificationMeta _indexErrorMeta = const VerificationMeta(
+    'indexError',
+  );
+  late final GeneratedColumn<String> indexError = GeneratedColumn<String>(
+    'index_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _approvedMeta = const VerificationMeta(
+    'approved',
+  );
+  late final GeneratedColumn<bool> approved = GeneratedColumn<bool>(
+    'approved',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT TRUE',
+    defaultValue: const CustomExpression('TRUE'),
+  );
+  static const VerificationMeta _trashedAtMeta = const VerificationMeta(
+    'trashedAt',
+  );
+  late final GeneratedColumn<String> trashedAt = GeneratedColumn<String>(
+    'trashed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _uploadedByMeta = const VerificationMeta(
+    'uploadedBy',
+  );
+  late final GeneratedColumn<String> uploadedBy = GeneratedColumn<String>(
+    'uploaded_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _uploadedAtMeta = const VerificationMeta(
+    'uploadedAt',
+  );
+  late final GeneratedColumn<String> uploadedAt = GeneratedColumn<String>(
+    'uploaded_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    space,
+    title,
+    isCommon,
+    subjectId,
+    docType,
+    schoolYearId,
+    sourceAuthor,
+    keywords,
+    classIds,
+    levelCodes,
+    storagePath,
+    originalName,
+    mimeType,
+    sizeBytes,
+    sha256,
+    pageCount,
+    aiAllowed,
+    isSensitive,
+    indexStatus,
+    indexError,
+    approved,
+    trashedAt,
+    uploadedBy,
+    uploadedAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'documents';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DocumentRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('space')) {
+      context.handle(
+        _spaceMeta,
+        space.isAcceptableOrUnknown(data['space']!, _spaceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_spaceMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('is_common')) {
+      context.handle(
+        _isCommonMeta,
+        isCommon.isAcceptableOrUnknown(data['is_common']!, _isCommonMeta),
+      );
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    }
+    if (data.containsKey('doc_type')) {
+      context.handle(
+        _docTypeMeta,
+        docType.isAcceptableOrUnknown(data['doc_type']!, _docTypeMeta),
+      );
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_author')) {
+      context.handle(
+        _sourceAuthorMeta,
+        sourceAuthor.isAcceptableOrUnknown(
+          data['source_author']!,
+          _sourceAuthorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('keywords')) {
+      context.handle(
+        _keywordsMeta,
+        keywords.isAcceptableOrUnknown(data['keywords']!, _keywordsMeta),
+      );
+    }
+    if (data.containsKey('class_ids')) {
+      context.handle(
+        _classIdsMeta,
+        classIds.isAcceptableOrUnknown(data['class_ids']!, _classIdsMeta),
+      );
+    }
+    if (data.containsKey('level_codes')) {
+      context.handle(
+        _levelCodesMeta,
+        levelCodes.isAcceptableOrUnknown(data['level_codes']!, _levelCodesMeta),
+      );
+    }
+    if (data.containsKey('storage_path')) {
+      context.handle(
+        _storagePathMeta,
+        storagePath.isAcceptableOrUnknown(
+          data['storage_path']!,
+          _storagePathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('original_name')) {
+      context.handle(
+        _originalNameMeta,
+        originalName.isAcceptableOrUnknown(
+          data['original_name']!,
+          _originalNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('mime_type')) {
+      context.handle(
+        _mimeTypeMeta,
+        mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta),
+      );
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    }
+    if (data.containsKey('sha256')) {
+      context.handle(
+        _sha256Meta,
+        sha256.isAcceptableOrUnknown(data['sha256']!, _sha256Meta),
+      );
+    }
+    if (data.containsKey('page_count')) {
+      context.handle(
+        _pageCountMeta,
+        pageCount.isAcceptableOrUnknown(data['page_count']!, _pageCountMeta),
+      );
+    }
+    if (data.containsKey('ai_allowed')) {
+      context.handle(
+        _aiAllowedMeta,
+        aiAllowed.isAcceptableOrUnknown(data['ai_allowed']!, _aiAllowedMeta),
+      );
+    }
+    if (data.containsKey('is_sensitive')) {
+      context.handle(
+        _isSensitiveMeta,
+        isSensitive.isAcceptableOrUnknown(
+          data['is_sensitive']!,
+          _isSensitiveMeta,
+        ),
+      );
+    }
+    if (data.containsKey('index_status')) {
+      context.handle(
+        _indexStatusMeta,
+        indexStatus.isAcceptableOrUnknown(
+          data['index_status']!,
+          _indexStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('index_error')) {
+      context.handle(
+        _indexErrorMeta,
+        indexError.isAcceptableOrUnknown(data['index_error']!, _indexErrorMeta),
+      );
+    }
+    if (data.containsKey('approved')) {
+      context.handle(
+        _approvedMeta,
+        approved.isAcceptableOrUnknown(data['approved']!, _approvedMeta),
+      );
+    }
+    if (data.containsKey('trashed_at')) {
+      context.handle(
+        _trashedAtMeta,
+        trashedAt.isAcceptableOrUnknown(data['trashed_at']!, _trashedAtMeta),
+      );
+    }
+    if (data.containsKey('uploaded_by')) {
+      context.handle(
+        _uploadedByMeta,
+        uploadedBy.isAcceptableOrUnknown(data['uploaded_by']!, _uploadedByMeta),
+      );
+    }
+    if (data.containsKey('uploaded_at')) {
+      context.handle(
+        _uploadedAtMeta,
+        uploadedAt.isAcceptableOrUnknown(data['uploaded_at']!, _uploadedAtMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DocumentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DocumentRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      space: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}space'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      isCommon: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_common'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      ),
+      docType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}doc_type'],
+      ),
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      ),
+      sourceAuthor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_author'],
+      ),
+      keywords: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}keywords'],
+      )!,
+      classIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}class_ids'],
+      )!,
+      levelCodes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}level_codes'],
+      )!,
+      storagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}storage_path'],
+      ),
+      originalName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_name'],
+      ),
+      mimeType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mime_type'],
+      ),
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      ),
+      sha256: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sha256'],
+      ),
+      pageCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}page_count'],
+      ),
+      aiAllowed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ai_allowed'],
+      )!,
+      isSensitive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_sensitive'],
+      )!,
+      indexStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}index_status'],
+      )!,
+      indexError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}index_error'],
+      ),
+      approved: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}approved'],
+      )!,
+      trashedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}trashed_at'],
+      ),
+      uploadedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uploaded_by'],
+      ),
+      uploadedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uploaded_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  Documents createAlias(String alias) {
+    return Documents(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class DocumentRow extends DataClass implements Insertable<DocumentRow> {
+  final String id;
+  final String schoolId;
+  final String space;
+  final String title;
+  final bool isCommon;
+  final String? subjectId;
+  final String? docType;
+  final String? schoolYearId;
+  final String? sourceAuthor;
+  final String keywords;
+  final String classIds;
+  final String levelCodes;
+  final String? storagePath;
+  final String? originalName;
+  final String? mimeType;
+  final int? sizeBytes;
+  final String? sha256;
+  final int? pageCount;
+  final bool aiAllowed;
+  final bool isSensitive;
+  final String indexStatus;
+  final String? indexError;
+  final bool approved;
+  final String? trashedAt;
+  final String? uploadedBy;
+  final String? uploadedAt;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const DocumentRow({
+    required this.id,
+    required this.schoolId,
+    required this.space,
+    required this.title,
+    required this.isCommon,
+    this.subjectId,
+    this.docType,
+    this.schoolYearId,
+    this.sourceAuthor,
+    required this.keywords,
+    required this.classIds,
+    required this.levelCodes,
+    this.storagePath,
+    this.originalName,
+    this.mimeType,
+    this.sizeBytes,
+    this.sha256,
+    this.pageCount,
+    required this.aiAllowed,
+    required this.isSensitive,
+    required this.indexStatus,
+    this.indexError,
+    required this.approved,
+    this.trashedAt,
+    this.uploadedBy,
+    this.uploadedAt,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['space'] = Variable<String>(space);
+    map['title'] = Variable<String>(title);
+    map['is_common'] = Variable<bool>(isCommon);
+    if (!nullToAbsent || subjectId != null) {
+      map['subject_id'] = Variable<String>(subjectId);
+    }
+    if (!nullToAbsent || docType != null) {
+      map['doc_type'] = Variable<String>(docType);
+    }
+    if (!nullToAbsent || schoolYearId != null) {
+      map['school_year_id'] = Variable<String>(schoolYearId);
+    }
+    if (!nullToAbsent || sourceAuthor != null) {
+      map['source_author'] = Variable<String>(sourceAuthor);
+    }
+    map['keywords'] = Variable<String>(keywords);
+    map['class_ids'] = Variable<String>(classIds);
+    map['level_codes'] = Variable<String>(levelCodes);
+    if (!nullToAbsent || storagePath != null) {
+      map['storage_path'] = Variable<String>(storagePath);
+    }
+    if (!nullToAbsent || originalName != null) {
+      map['original_name'] = Variable<String>(originalName);
+    }
+    if (!nullToAbsent || mimeType != null) {
+      map['mime_type'] = Variable<String>(mimeType);
+    }
+    if (!nullToAbsent || sizeBytes != null) {
+      map['size_bytes'] = Variable<int>(sizeBytes);
+    }
+    if (!nullToAbsent || sha256 != null) {
+      map['sha256'] = Variable<String>(sha256);
+    }
+    if (!nullToAbsent || pageCount != null) {
+      map['page_count'] = Variable<int>(pageCount);
+    }
+    map['ai_allowed'] = Variable<bool>(aiAllowed);
+    map['is_sensitive'] = Variable<bool>(isSensitive);
+    map['index_status'] = Variable<String>(indexStatus);
+    if (!nullToAbsent || indexError != null) {
+      map['index_error'] = Variable<String>(indexError);
+    }
+    map['approved'] = Variable<bool>(approved);
+    if (!nullToAbsent || trashedAt != null) {
+      map['trashed_at'] = Variable<String>(trashedAt);
+    }
+    if (!nullToAbsent || uploadedBy != null) {
+      map['uploaded_by'] = Variable<String>(uploadedBy);
+    }
+    if (!nullToAbsent || uploadedAt != null) {
+      map['uploaded_at'] = Variable<String>(uploadedAt);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  DocumentsCompanion toCompanion(bool nullToAbsent) {
+    return DocumentsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      space: Value(space),
+      title: Value(title),
+      isCommon: Value(isCommon),
+      subjectId: subjectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subjectId),
+      docType: docType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(docType),
+      schoolYearId: schoolYearId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(schoolYearId),
+      sourceAuthor: sourceAuthor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceAuthor),
+      keywords: Value(keywords),
+      classIds: Value(classIds),
+      levelCodes: Value(levelCodes),
+      storagePath: storagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(storagePath),
+      originalName: originalName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalName),
+      mimeType: mimeType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mimeType),
+      sizeBytes: sizeBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sizeBytes),
+      sha256: sha256 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sha256),
+      pageCount: pageCount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pageCount),
+      aiAllowed: Value(aiAllowed),
+      isSensitive: Value(isSensitive),
+      indexStatus: Value(indexStatus),
+      indexError: indexError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(indexError),
+      approved: Value(approved),
+      trashedAt: trashedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trashedAt),
+      uploadedBy: uploadedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(uploadedBy),
+      uploadedAt: uploadedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(uploadedAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory DocumentRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DocumentRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      space: serializer.fromJson<String>(json['space']),
+      title: serializer.fromJson<String>(json['title']),
+      isCommon: serializer.fromJson<bool>(json['is_common']),
+      subjectId: serializer.fromJson<String?>(json['subject_id']),
+      docType: serializer.fromJson<String?>(json['doc_type']),
+      schoolYearId: serializer.fromJson<String?>(json['school_year_id']),
+      sourceAuthor: serializer.fromJson<String?>(json['source_author']),
+      keywords: serializer.fromJson<String>(json['keywords']),
+      classIds: serializer.fromJson<String>(json['class_ids']),
+      levelCodes: serializer.fromJson<String>(json['level_codes']),
+      storagePath: serializer.fromJson<String?>(json['storage_path']),
+      originalName: serializer.fromJson<String?>(json['original_name']),
+      mimeType: serializer.fromJson<String?>(json['mime_type']),
+      sizeBytes: serializer.fromJson<int?>(json['size_bytes']),
+      sha256: serializer.fromJson<String?>(json['sha256']),
+      pageCount: serializer.fromJson<int?>(json['page_count']),
+      aiAllowed: serializer.fromJson<bool>(json['ai_allowed']),
+      isSensitive: serializer.fromJson<bool>(json['is_sensitive']),
+      indexStatus: serializer.fromJson<String>(json['index_status']),
+      indexError: serializer.fromJson<String?>(json['index_error']),
+      approved: serializer.fromJson<bool>(json['approved']),
+      trashedAt: serializer.fromJson<String?>(json['trashed_at']),
+      uploadedBy: serializer.fromJson<String?>(json['uploaded_by']),
+      uploadedAt: serializer.fromJson<String?>(json['uploaded_at']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'space': serializer.toJson<String>(space),
+      'title': serializer.toJson<String>(title),
+      'is_common': serializer.toJson<bool>(isCommon),
+      'subject_id': serializer.toJson<String?>(subjectId),
+      'doc_type': serializer.toJson<String?>(docType),
+      'school_year_id': serializer.toJson<String?>(schoolYearId),
+      'source_author': serializer.toJson<String?>(sourceAuthor),
+      'keywords': serializer.toJson<String>(keywords),
+      'class_ids': serializer.toJson<String>(classIds),
+      'level_codes': serializer.toJson<String>(levelCodes),
+      'storage_path': serializer.toJson<String?>(storagePath),
+      'original_name': serializer.toJson<String?>(originalName),
+      'mime_type': serializer.toJson<String?>(mimeType),
+      'size_bytes': serializer.toJson<int?>(sizeBytes),
+      'sha256': serializer.toJson<String?>(sha256),
+      'page_count': serializer.toJson<int?>(pageCount),
+      'ai_allowed': serializer.toJson<bool>(aiAllowed),
+      'is_sensitive': serializer.toJson<bool>(isSensitive),
+      'index_status': serializer.toJson<String>(indexStatus),
+      'index_error': serializer.toJson<String?>(indexError),
+      'approved': serializer.toJson<bool>(approved),
+      'trashed_at': serializer.toJson<String?>(trashedAt),
+      'uploaded_by': serializer.toJson<String?>(uploadedBy),
+      'uploaded_at': serializer.toJson<String?>(uploadedAt),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  DocumentRow copyWith({
+    String? id,
+    String? schoolId,
+    String? space,
+    String? title,
+    bool? isCommon,
+    Value<String?> subjectId = const Value.absent(),
+    Value<String?> docType = const Value.absent(),
+    Value<String?> schoolYearId = const Value.absent(),
+    Value<String?> sourceAuthor = const Value.absent(),
+    String? keywords,
+    String? classIds,
+    String? levelCodes,
+    Value<String?> storagePath = const Value.absent(),
+    Value<String?> originalName = const Value.absent(),
+    Value<String?> mimeType = const Value.absent(),
+    Value<int?> sizeBytes = const Value.absent(),
+    Value<String?> sha256 = const Value.absent(),
+    Value<int?> pageCount = const Value.absent(),
+    bool? aiAllowed,
+    bool? isSensitive,
+    String? indexStatus,
+    Value<String?> indexError = const Value.absent(),
+    bool? approved,
+    Value<String?> trashedAt = const Value.absent(),
+    Value<String?> uploadedBy = const Value.absent(),
+    Value<String?> uploadedAt = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => DocumentRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    space: space ?? this.space,
+    title: title ?? this.title,
+    isCommon: isCommon ?? this.isCommon,
+    subjectId: subjectId.present ? subjectId.value : this.subjectId,
+    docType: docType.present ? docType.value : this.docType,
+    schoolYearId: schoolYearId.present ? schoolYearId.value : this.schoolYearId,
+    sourceAuthor: sourceAuthor.present ? sourceAuthor.value : this.sourceAuthor,
+    keywords: keywords ?? this.keywords,
+    classIds: classIds ?? this.classIds,
+    levelCodes: levelCodes ?? this.levelCodes,
+    storagePath: storagePath.present ? storagePath.value : this.storagePath,
+    originalName: originalName.present ? originalName.value : this.originalName,
+    mimeType: mimeType.present ? mimeType.value : this.mimeType,
+    sizeBytes: sizeBytes.present ? sizeBytes.value : this.sizeBytes,
+    sha256: sha256.present ? sha256.value : this.sha256,
+    pageCount: pageCount.present ? pageCount.value : this.pageCount,
+    aiAllowed: aiAllowed ?? this.aiAllowed,
+    isSensitive: isSensitive ?? this.isSensitive,
+    indexStatus: indexStatus ?? this.indexStatus,
+    indexError: indexError.present ? indexError.value : this.indexError,
+    approved: approved ?? this.approved,
+    trashedAt: trashedAt.present ? trashedAt.value : this.trashedAt,
+    uploadedBy: uploadedBy.present ? uploadedBy.value : this.uploadedBy,
+    uploadedAt: uploadedAt.present ? uploadedAt.value : this.uploadedAt,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  DocumentRow copyWithCompanion(DocumentsCompanion data) {
+    return DocumentRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      space: data.space.present ? data.space.value : this.space,
+      title: data.title.present ? data.title.value : this.title,
+      isCommon: data.isCommon.present ? data.isCommon.value : this.isCommon,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      docType: data.docType.present ? data.docType.value : this.docType,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      sourceAuthor: data.sourceAuthor.present
+          ? data.sourceAuthor.value
+          : this.sourceAuthor,
+      keywords: data.keywords.present ? data.keywords.value : this.keywords,
+      classIds: data.classIds.present ? data.classIds.value : this.classIds,
+      levelCodes: data.levelCodes.present
+          ? data.levelCodes.value
+          : this.levelCodes,
+      storagePath: data.storagePath.present
+          ? data.storagePath.value
+          : this.storagePath,
+      originalName: data.originalName.present
+          ? data.originalName.value
+          : this.originalName,
+      mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      sha256: data.sha256.present ? data.sha256.value : this.sha256,
+      pageCount: data.pageCount.present ? data.pageCount.value : this.pageCount,
+      aiAllowed: data.aiAllowed.present ? data.aiAllowed.value : this.aiAllowed,
+      isSensitive: data.isSensitive.present
+          ? data.isSensitive.value
+          : this.isSensitive,
+      indexStatus: data.indexStatus.present
+          ? data.indexStatus.value
+          : this.indexStatus,
+      indexError: data.indexError.present
+          ? data.indexError.value
+          : this.indexError,
+      approved: data.approved.present ? data.approved.value : this.approved,
+      trashedAt: data.trashedAt.present ? data.trashedAt.value : this.trashedAt,
+      uploadedBy: data.uploadedBy.present
+          ? data.uploadedBy.value
+          : this.uploadedBy,
+      uploadedAt: data.uploadedAt.present
+          ? data.uploadedAt.value
+          : this.uploadedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('space: $space, ')
+          ..write('title: $title, ')
+          ..write('isCommon: $isCommon, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('docType: $docType, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('sourceAuthor: $sourceAuthor, ')
+          ..write('keywords: $keywords, ')
+          ..write('classIds: $classIds, ')
+          ..write('levelCodes: $levelCodes, ')
+          ..write('storagePath: $storagePath, ')
+          ..write('originalName: $originalName, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('sha256: $sha256, ')
+          ..write('pageCount: $pageCount, ')
+          ..write('aiAllowed: $aiAllowed, ')
+          ..write('isSensitive: $isSensitive, ')
+          ..write('indexStatus: $indexStatus, ')
+          ..write('indexError: $indexError, ')
+          ..write('approved: $approved, ')
+          ..write('trashedAt: $trashedAt, ')
+          ..write('uploadedBy: $uploadedBy, ')
+          ..write('uploadedAt: $uploadedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    schoolId,
+    space,
+    title,
+    isCommon,
+    subjectId,
+    docType,
+    schoolYearId,
+    sourceAuthor,
+    keywords,
+    classIds,
+    levelCodes,
+    storagePath,
+    originalName,
+    mimeType,
+    sizeBytes,
+    sha256,
+    pageCount,
+    aiAllowed,
+    isSensitive,
+    indexStatus,
+    indexError,
+    approved,
+    trashedAt,
+    uploadedBy,
+    uploadedAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DocumentRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.space == this.space &&
+          other.title == this.title &&
+          other.isCommon == this.isCommon &&
+          other.subjectId == this.subjectId &&
+          other.docType == this.docType &&
+          other.schoolYearId == this.schoolYearId &&
+          other.sourceAuthor == this.sourceAuthor &&
+          other.keywords == this.keywords &&
+          other.classIds == this.classIds &&
+          other.levelCodes == this.levelCodes &&
+          other.storagePath == this.storagePath &&
+          other.originalName == this.originalName &&
+          other.mimeType == this.mimeType &&
+          other.sizeBytes == this.sizeBytes &&
+          other.sha256 == this.sha256 &&
+          other.pageCount == this.pageCount &&
+          other.aiAllowed == this.aiAllowed &&
+          other.isSensitive == this.isSensitive &&
+          other.indexStatus == this.indexStatus &&
+          other.indexError == this.indexError &&
+          other.approved == this.approved &&
+          other.trashedAt == this.trashedAt &&
+          other.uploadedBy == this.uploadedBy &&
+          other.uploadedAt == this.uploadedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class DocumentsCompanion extends UpdateCompanion<DocumentRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> space;
+  final Value<String> title;
+  final Value<bool> isCommon;
+  final Value<String?> subjectId;
+  final Value<String?> docType;
+  final Value<String?> schoolYearId;
+  final Value<String?> sourceAuthor;
+  final Value<String> keywords;
+  final Value<String> classIds;
+  final Value<String> levelCodes;
+  final Value<String?> storagePath;
+  final Value<String?> originalName;
+  final Value<String?> mimeType;
+  final Value<int?> sizeBytes;
+  final Value<String?> sha256;
+  final Value<int?> pageCount;
+  final Value<bool> aiAllowed;
+  final Value<bool> isSensitive;
+  final Value<String> indexStatus;
+  final Value<String?> indexError;
+  final Value<bool> approved;
+  final Value<String?> trashedAt;
+  final Value<String?> uploadedBy;
+  final Value<String?> uploadedAt;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const DocumentsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.space = const Value.absent(),
+    this.title = const Value.absent(),
+    this.isCommon = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.docType = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.sourceAuthor = const Value.absent(),
+    this.keywords = const Value.absent(),
+    this.classIds = const Value.absent(),
+    this.levelCodes = const Value.absent(),
+    this.storagePath = const Value.absent(),
+    this.originalName = const Value.absent(),
+    this.mimeType = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.sha256 = const Value.absent(),
+    this.pageCount = const Value.absent(),
+    this.aiAllowed = const Value.absent(),
+    this.isSensitive = const Value.absent(),
+    this.indexStatus = const Value.absent(),
+    this.indexError = const Value.absent(),
+    this.approved = const Value.absent(),
+    this.trashedAt = const Value.absent(),
+    this.uploadedBy = const Value.absent(),
+    this.uploadedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DocumentsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String space,
+    required String title,
+    this.isCommon = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.docType = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.sourceAuthor = const Value.absent(),
+    this.keywords = const Value.absent(),
+    this.classIds = const Value.absent(),
+    this.levelCodes = const Value.absent(),
+    this.storagePath = const Value.absent(),
+    this.originalName = const Value.absent(),
+    this.mimeType = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.sha256 = const Value.absent(),
+    this.pageCount = const Value.absent(),
+    this.aiAllowed = const Value.absent(),
+    this.isSensitive = const Value.absent(),
+    this.indexStatus = const Value.absent(),
+    this.indexError = const Value.absent(),
+    this.approved = const Value.absent(),
+    this.trashedAt = const Value.absent(),
+    this.uploadedBy = const Value.absent(),
+    this.uploadedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       space = Value(space),
+       title = Value(title),
+       updatedAt = Value(updatedAt);
+  static Insertable<DocumentRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? space,
+    Expression<String>? title,
+    Expression<bool>? isCommon,
+    Expression<String>? subjectId,
+    Expression<String>? docType,
+    Expression<String>? schoolYearId,
+    Expression<String>? sourceAuthor,
+    Expression<String>? keywords,
+    Expression<String>? classIds,
+    Expression<String>? levelCodes,
+    Expression<String>? storagePath,
+    Expression<String>? originalName,
+    Expression<String>? mimeType,
+    Expression<int>? sizeBytes,
+    Expression<String>? sha256,
+    Expression<int>? pageCount,
+    Expression<bool>? aiAllowed,
+    Expression<bool>? isSensitive,
+    Expression<String>? indexStatus,
+    Expression<String>? indexError,
+    Expression<bool>? approved,
+    Expression<String>? trashedAt,
+    Expression<String>? uploadedBy,
+    Expression<String>? uploadedAt,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (space != null) 'space': space,
+      if (title != null) 'title': title,
+      if (isCommon != null) 'is_common': isCommon,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (docType != null) 'doc_type': docType,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (sourceAuthor != null) 'source_author': sourceAuthor,
+      if (keywords != null) 'keywords': keywords,
+      if (classIds != null) 'class_ids': classIds,
+      if (levelCodes != null) 'level_codes': levelCodes,
+      if (storagePath != null) 'storage_path': storagePath,
+      if (originalName != null) 'original_name': originalName,
+      if (mimeType != null) 'mime_type': mimeType,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (sha256 != null) 'sha256': sha256,
+      if (pageCount != null) 'page_count': pageCount,
+      if (aiAllowed != null) 'ai_allowed': aiAllowed,
+      if (isSensitive != null) 'is_sensitive': isSensitive,
+      if (indexStatus != null) 'index_status': indexStatus,
+      if (indexError != null) 'index_error': indexError,
+      if (approved != null) 'approved': approved,
+      if (trashedAt != null) 'trashed_at': trashedAt,
+      if (uploadedBy != null) 'uploaded_by': uploadedBy,
+      if (uploadedAt != null) 'uploaded_at': uploadedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DocumentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? space,
+    Value<String>? title,
+    Value<bool>? isCommon,
+    Value<String?>? subjectId,
+    Value<String?>? docType,
+    Value<String?>? schoolYearId,
+    Value<String?>? sourceAuthor,
+    Value<String>? keywords,
+    Value<String>? classIds,
+    Value<String>? levelCodes,
+    Value<String?>? storagePath,
+    Value<String?>? originalName,
+    Value<String?>? mimeType,
+    Value<int?>? sizeBytes,
+    Value<String?>? sha256,
+    Value<int?>? pageCount,
+    Value<bool>? aiAllowed,
+    Value<bool>? isSensitive,
+    Value<String>? indexStatus,
+    Value<String?>? indexError,
+    Value<bool>? approved,
+    Value<String?>? trashedAt,
+    Value<String?>? uploadedBy,
+    Value<String?>? uploadedAt,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return DocumentsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      space: space ?? this.space,
+      title: title ?? this.title,
+      isCommon: isCommon ?? this.isCommon,
+      subjectId: subjectId ?? this.subjectId,
+      docType: docType ?? this.docType,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      sourceAuthor: sourceAuthor ?? this.sourceAuthor,
+      keywords: keywords ?? this.keywords,
+      classIds: classIds ?? this.classIds,
+      levelCodes: levelCodes ?? this.levelCodes,
+      storagePath: storagePath ?? this.storagePath,
+      originalName: originalName ?? this.originalName,
+      mimeType: mimeType ?? this.mimeType,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      sha256: sha256 ?? this.sha256,
+      pageCount: pageCount ?? this.pageCount,
+      aiAllowed: aiAllowed ?? this.aiAllowed,
+      isSensitive: isSensitive ?? this.isSensitive,
+      indexStatus: indexStatus ?? this.indexStatus,
+      indexError: indexError ?? this.indexError,
+      approved: approved ?? this.approved,
+      trashedAt: trashedAt ?? this.trashedAt,
+      uploadedBy: uploadedBy ?? this.uploadedBy,
+      uploadedAt: uploadedAt ?? this.uploadedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (space.present) {
+      map['space'] = Variable<String>(space.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (isCommon.present) {
+      map['is_common'] = Variable<bool>(isCommon.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (docType.present) {
+      map['doc_type'] = Variable<String>(docType.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (sourceAuthor.present) {
+      map['source_author'] = Variable<String>(sourceAuthor.value);
+    }
+    if (keywords.present) {
+      map['keywords'] = Variable<String>(keywords.value);
+    }
+    if (classIds.present) {
+      map['class_ids'] = Variable<String>(classIds.value);
+    }
+    if (levelCodes.present) {
+      map['level_codes'] = Variable<String>(levelCodes.value);
+    }
+    if (storagePath.present) {
+      map['storage_path'] = Variable<String>(storagePath.value);
+    }
+    if (originalName.present) {
+      map['original_name'] = Variable<String>(originalName.value);
+    }
+    if (mimeType.present) {
+      map['mime_type'] = Variable<String>(mimeType.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (sha256.present) {
+      map['sha256'] = Variable<String>(sha256.value);
+    }
+    if (pageCount.present) {
+      map['page_count'] = Variable<int>(pageCount.value);
+    }
+    if (aiAllowed.present) {
+      map['ai_allowed'] = Variable<bool>(aiAllowed.value);
+    }
+    if (isSensitive.present) {
+      map['is_sensitive'] = Variable<bool>(isSensitive.value);
+    }
+    if (indexStatus.present) {
+      map['index_status'] = Variable<String>(indexStatus.value);
+    }
+    if (indexError.present) {
+      map['index_error'] = Variable<String>(indexError.value);
+    }
+    if (approved.present) {
+      map['approved'] = Variable<bool>(approved.value);
+    }
+    if (trashedAt.present) {
+      map['trashed_at'] = Variable<String>(trashedAt.value);
+    }
+    if (uploadedBy.present) {
+      map['uploaded_by'] = Variable<String>(uploadedBy.value);
+    }
+    if (uploadedAt.present) {
+      map['uploaded_at'] = Variable<String>(uploadedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('space: $space, ')
+          ..write('title: $title, ')
+          ..write('isCommon: $isCommon, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('docType: $docType, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('sourceAuthor: $sourceAuthor, ')
+          ..write('keywords: $keywords, ')
+          ..write('classIds: $classIds, ')
+          ..write('levelCodes: $levelCodes, ')
+          ..write('storagePath: $storagePath, ')
+          ..write('originalName: $originalName, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('sha256: $sha256, ')
+          ..write('pageCount: $pageCount, ')
+          ..write('aiAllowed: $aiAllowed, ')
+          ..write('isSensitive: $isSensitive, ')
+          ..write('indexStatus: $indexStatus, ')
+          ..write('indexError: $indexError, ')
+          ..write('approved: $approved, ')
+          ..write('trashedAt: $trashedAt, ')
+          ..write('uploadedBy: $uploadedBy, ')
+          ..write('uploadedAt: $uploadedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class DocumentUploads extends Table
+    with TableInfo<DocumentUploads, DocumentUploadRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  DocumentUploads(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _documentIdMeta = const VerificationMeta(
+    'documentId',
+  );
+  late final GeneratedColumn<String> documentId = GeneratedColumn<String>(
+    'document_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _objectPathMeta = const VerificationMeta(
+    'objectPath',
+  );
+  late final GeneratedColumn<String> objectPath = GeneratedColumn<String>(
+    'object_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _contentTypeMeta = const VerificationMeta(
+    'contentType',
+  );
+  late final GeneratedColumn<String> contentType = GeneratedColumn<String>(
+    'content_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _sentBytesMeta = const VerificationMeta(
+    'sentBytes',
+  );
+  late final GeneratedColumn<int> sentBytes = GeneratedColumn<int>(
+    'sent_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _uploadUrlMeta = const VerificationMeta(
+    'uploadUrl',
+  );
+  late final GeneratedColumn<String> uploadUrl = GeneratedColumn<String>(
+    'upload_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta(
+    'attempts',
+  );
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+    'attempts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    documentId,
+    localPath,
+    objectPath,
+    contentType,
+    sizeBytes,
+    sentBytes,
+    uploadUrl,
+    attempts,
+    lastError,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'document_uploads';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DocumentUploadRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('document_id')) {
+      context.handle(
+        _documentIdMeta,
+        documentId.isAcceptableOrUnknown(data['document_id']!, _documentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_documentIdMeta);
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_localPathMeta);
+    }
+    if (data.containsKey('object_path')) {
+      context.handle(
+        _objectPathMeta,
+        objectPath.isAcceptableOrUnknown(data['object_path']!, _objectPathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_objectPathMeta);
+    }
+    if (data.containsKey('content_type')) {
+      context.handle(
+        _contentTypeMeta,
+        contentType.isAcceptableOrUnknown(
+          data['content_type']!,
+          _contentTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_contentTypeMeta);
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sizeBytesMeta);
+    }
+    if (data.containsKey('sent_bytes')) {
+      context.handle(
+        _sentBytesMeta,
+        sentBytes.isAcceptableOrUnknown(data['sent_bytes']!, _sentBytesMeta),
+      );
+    }
+    if (data.containsKey('upload_url')) {
+      context.handle(
+        _uploadUrlMeta,
+        uploadUrl.isAcceptableOrUnknown(data['upload_url']!, _uploadUrlMeta),
+      );
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(
+        _attemptsMeta,
+        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {documentId};
+  @override
+  DocumentUploadRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DocumentUploadRow(
+      documentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_id'],
+      )!,
+      localPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_path'],
+      )!,
+      objectPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}object_path'],
+      )!,
+      contentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_type'],
+      )!,
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      )!,
+      sentBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sent_bytes'],
+      )!,
+      uploadUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}upload_url'],
+      ),
+      attempts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempts'],
+      )!,
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  DocumentUploads createAlias(String alias) {
+    return DocumentUploads(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class DocumentUploadRow extends DataClass
+    implements Insertable<DocumentUploadRow> {
+  final String documentId;
+  final String localPath;
+  final String objectPath;
+  final String contentType;
+  final int sizeBytes;
+  final int sentBytes;
+  final String? uploadUrl;
+  final int attempts;
+  final String? lastError;
+  final String createdAt;
+  const DocumentUploadRow({
+    required this.documentId,
+    required this.localPath,
+    required this.objectPath,
+    required this.contentType,
+    required this.sizeBytes,
+    required this.sentBytes,
+    this.uploadUrl,
+    required this.attempts,
+    this.lastError,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['document_id'] = Variable<String>(documentId);
+    map['local_path'] = Variable<String>(localPath);
+    map['object_path'] = Variable<String>(objectPath);
+    map['content_type'] = Variable<String>(contentType);
+    map['size_bytes'] = Variable<int>(sizeBytes);
+    map['sent_bytes'] = Variable<int>(sentBytes);
+    if (!nullToAbsent || uploadUrl != null) {
+      map['upload_url'] = Variable<String>(uploadUrl);
+    }
+    map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['created_at'] = Variable<String>(createdAt);
+    return map;
+  }
+
+  DocumentUploadsCompanion toCompanion(bool nullToAbsent) {
+    return DocumentUploadsCompanion(
+      documentId: Value(documentId),
+      localPath: Value(localPath),
+      objectPath: Value(objectPath),
+      contentType: Value(contentType),
+      sizeBytes: Value(sizeBytes),
+      sentBytes: Value(sentBytes),
+      uploadUrl: uploadUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(uploadUrl),
+      attempts: Value(attempts),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory DocumentUploadRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DocumentUploadRow(
+      documentId: serializer.fromJson<String>(json['document_id']),
+      localPath: serializer.fromJson<String>(json['local_path']),
+      objectPath: serializer.fromJson<String>(json['object_path']),
+      contentType: serializer.fromJson<String>(json['content_type']),
+      sizeBytes: serializer.fromJson<int>(json['size_bytes']),
+      sentBytes: serializer.fromJson<int>(json['sent_bytes']),
+      uploadUrl: serializer.fromJson<String?>(json['upload_url']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      lastError: serializer.fromJson<String?>(json['last_error']),
+      createdAt: serializer.fromJson<String>(json['created_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'document_id': serializer.toJson<String>(documentId),
+      'local_path': serializer.toJson<String>(localPath),
+      'object_path': serializer.toJson<String>(objectPath),
+      'content_type': serializer.toJson<String>(contentType),
+      'size_bytes': serializer.toJson<int>(sizeBytes),
+      'sent_bytes': serializer.toJson<int>(sentBytes),
+      'upload_url': serializer.toJson<String?>(uploadUrl),
+      'attempts': serializer.toJson<int>(attempts),
+      'last_error': serializer.toJson<String?>(lastError),
+      'created_at': serializer.toJson<String>(createdAt),
+    };
+  }
+
+  DocumentUploadRow copyWith({
+    String? documentId,
+    String? localPath,
+    String? objectPath,
+    String? contentType,
+    int? sizeBytes,
+    int? sentBytes,
+    Value<String?> uploadUrl = const Value.absent(),
+    int? attempts,
+    Value<String?> lastError = const Value.absent(),
+    String? createdAt,
+  }) => DocumentUploadRow(
+    documentId: documentId ?? this.documentId,
+    localPath: localPath ?? this.localPath,
+    objectPath: objectPath ?? this.objectPath,
+    contentType: contentType ?? this.contentType,
+    sizeBytes: sizeBytes ?? this.sizeBytes,
+    sentBytes: sentBytes ?? this.sentBytes,
+    uploadUrl: uploadUrl.present ? uploadUrl.value : this.uploadUrl,
+    attempts: attempts ?? this.attempts,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  DocumentUploadRow copyWithCompanion(DocumentUploadsCompanion data) {
+    return DocumentUploadRow(
+      documentId: data.documentId.present
+          ? data.documentId.value
+          : this.documentId,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      objectPath: data.objectPath.present
+          ? data.objectPath.value
+          : this.objectPath,
+      contentType: data.contentType.present
+          ? data.contentType.value
+          : this.contentType,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      sentBytes: data.sentBytes.present ? data.sentBytes.value : this.sentBytes,
+      uploadUrl: data.uploadUrl.present ? data.uploadUrl.value : this.uploadUrl,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentUploadRow(')
+          ..write('documentId: $documentId, ')
+          ..write('localPath: $localPath, ')
+          ..write('objectPath: $objectPath, ')
+          ..write('contentType: $contentType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('sentBytes: $sentBytes, ')
+          ..write('uploadUrl: $uploadUrl, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    documentId,
+    localPath,
+    objectPath,
+    contentType,
+    sizeBytes,
+    sentBytes,
+    uploadUrl,
+    attempts,
+    lastError,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DocumentUploadRow &&
+          other.documentId == this.documentId &&
+          other.localPath == this.localPath &&
+          other.objectPath == this.objectPath &&
+          other.contentType == this.contentType &&
+          other.sizeBytes == this.sizeBytes &&
+          other.sentBytes == this.sentBytes &&
+          other.uploadUrl == this.uploadUrl &&
+          other.attempts == this.attempts &&
+          other.lastError == this.lastError &&
+          other.createdAt == this.createdAt);
+}
+
+class DocumentUploadsCompanion extends UpdateCompanion<DocumentUploadRow> {
+  final Value<String> documentId;
+  final Value<String> localPath;
+  final Value<String> objectPath;
+  final Value<String> contentType;
+  final Value<int> sizeBytes;
+  final Value<int> sentBytes;
+  final Value<String?> uploadUrl;
+  final Value<int> attempts;
+  final Value<String?> lastError;
+  final Value<String> createdAt;
+  final Value<int> rowid;
+  const DocumentUploadsCompanion({
+    this.documentId = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.objectPath = const Value.absent(),
+    this.contentType = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.sentBytes = const Value.absent(),
+    this.uploadUrl = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DocumentUploadsCompanion.insert({
+    required String documentId,
+    required String localPath,
+    required String objectPath,
+    required String contentType,
+    required int sizeBytes,
+    this.sentBytes = const Value.absent(),
+    this.uploadUrl = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    required String createdAt,
+    this.rowid = const Value.absent(),
+  }) : documentId = Value(documentId),
+       localPath = Value(localPath),
+       objectPath = Value(objectPath),
+       contentType = Value(contentType),
+       sizeBytes = Value(sizeBytes),
+       createdAt = Value(createdAt);
+  static Insertable<DocumentUploadRow> custom({
+    Expression<String>? documentId,
+    Expression<String>? localPath,
+    Expression<String>? objectPath,
+    Expression<String>? contentType,
+    Expression<int>? sizeBytes,
+    Expression<int>? sentBytes,
+    Expression<String>? uploadUrl,
+    Expression<int>? attempts,
+    Expression<String>? lastError,
+    Expression<String>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (documentId != null) 'document_id': documentId,
+      if (localPath != null) 'local_path': localPath,
+      if (objectPath != null) 'object_path': objectPath,
+      if (contentType != null) 'content_type': contentType,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (sentBytes != null) 'sent_bytes': sentBytes,
+      if (uploadUrl != null) 'upload_url': uploadUrl,
+      if (attempts != null) 'attempts': attempts,
+      if (lastError != null) 'last_error': lastError,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DocumentUploadsCompanion copyWith({
+    Value<String>? documentId,
+    Value<String>? localPath,
+    Value<String>? objectPath,
+    Value<String>? contentType,
+    Value<int>? sizeBytes,
+    Value<int>? sentBytes,
+    Value<String?>? uploadUrl,
+    Value<int>? attempts,
+    Value<String?>? lastError,
+    Value<String>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return DocumentUploadsCompanion(
+      documentId: documentId ?? this.documentId,
+      localPath: localPath ?? this.localPath,
+      objectPath: objectPath ?? this.objectPath,
+      contentType: contentType ?? this.contentType,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      sentBytes: sentBytes ?? this.sentBytes,
+      uploadUrl: uploadUrl ?? this.uploadUrl,
+      attempts: attempts ?? this.attempts,
+      lastError: lastError ?? this.lastError,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (documentId.present) {
+      map['document_id'] = Variable<String>(documentId.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (objectPath.present) {
+      map['object_path'] = Variable<String>(objectPath.value);
+    }
+    if (contentType.present) {
+      map['content_type'] = Variable<String>(contentType.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (sentBytes.present) {
+      map['sent_bytes'] = Variable<int>(sentBytes.value);
+    }
+    if (uploadUrl.present) {
+      map['upload_url'] = Variable<String>(uploadUrl.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentUploadsCompanion(')
+          ..write('documentId: $documentId, ')
+          ..write('localPath: $localPath, ')
+          ..write('objectPath: $objectPath, ')
+          ..write('contentType: $contentType, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('sentBytes: $sentBytes, ')
+          ..write('uploadUrl: $uploadUrl, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class DocumentFiles extends Table
+    with TableInfo<DocumentFiles, DocumentFileRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  DocumentFiles(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _documentIdMeta = const VerificationMeta(
+    'documentId',
+  );
+  late final GeneratedColumn<String> documentId = GeneratedColumn<String>(
+    'document_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
+  late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
+    'pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
+  static const VerificationMeta _savedAtMeta = const VerificationMeta(
+    'savedAt',
+  );
+  late final GeneratedColumn<String> savedAt = GeneratedColumn<String>(
+    'saved_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    documentId,
+    localPath,
+    sizeBytes,
+    pinned,
+    savedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'document_files';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DocumentFileRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('document_id')) {
+      context.handle(
+        _documentIdMeta,
+        documentId.isAcceptableOrUnknown(data['document_id']!, _documentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_documentIdMeta);
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_localPathMeta);
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sizeBytesMeta);
+    }
+    if (data.containsKey('pinned')) {
+      context.handle(
+        _pinnedMeta,
+        pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta),
+      );
+    }
+    if (data.containsKey('saved_at')) {
+      context.handle(
+        _savedAtMeta,
+        savedAt.isAcceptableOrUnknown(data['saved_at']!, _savedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_savedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {documentId};
+  @override
+  DocumentFileRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DocumentFileRow(
+      documentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_id'],
+      )!,
+      localPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_path'],
+      )!,
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      )!,
+      pinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pinned'],
+      )!,
+      savedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}saved_at'],
+      )!,
+    );
+  }
+
+  @override
+  DocumentFiles createAlias(String alias) {
+    return DocumentFiles(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class DocumentFileRow extends DataClass implements Insertable<DocumentFileRow> {
+  final String documentId;
+  final String localPath;
+  final int sizeBytes;
+  final bool pinned;
+  final String savedAt;
+  const DocumentFileRow({
+    required this.documentId,
+    required this.localPath,
+    required this.sizeBytes,
+    required this.pinned,
+    required this.savedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['document_id'] = Variable<String>(documentId);
+    map['local_path'] = Variable<String>(localPath);
+    map['size_bytes'] = Variable<int>(sizeBytes);
+    map['pinned'] = Variable<bool>(pinned);
+    map['saved_at'] = Variable<String>(savedAt);
+    return map;
+  }
+
+  DocumentFilesCompanion toCompanion(bool nullToAbsent) {
+    return DocumentFilesCompanion(
+      documentId: Value(documentId),
+      localPath: Value(localPath),
+      sizeBytes: Value(sizeBytes),
+      pinned: Value(pinned),
+      savedAt: Value(savedAt),
+    );
+  }
+
+  factory DocumentFileRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DocumentFileRow(
+      documentId: serializer.fromJson<String>(json['document_id']),
+      localPath: serializer.fromJson<String>(json['local_path']),
+      sizeBytes: serializer.fromJson<int>(json['size_bytes']),
+      pinned: serializer.fromJson<bool>(json['pinned']),
+      savedAt: serializer.fromJson<String>(json['saved_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'document_id': serializer.toJson<String>(documentId),
+      'local_path': serializer.toJson<String>(localPath),
+      'size_bytes': serializer.toJson<int>(sizeBytes),
+      'pinned': serializer.toJson<bool>(pinned),
+      'saved_at': serializer.toJson<String>(savedAt),
+    };
+  }
+
+  DocumentFileRow copyWith({
+    String? documentId,
+    String? localPath,
+    int? sizeBytes,
+    bool? pinned,
+    String? savedAt,
+  }) => DocumentFileRow(
+    documentId: documentId ?? this.documentId,
+    localPath: localPath ?? this.localPath,
+    sizeBytes: sizeBytes ?? this.sizeBytes,
+    pinned: pinned ?? this.pinned,
+    savedAt: savedAt ?? this.savedAt,
+  );
+  DocumentFileRow copyWithCompanion(DocumentFilesCompanion data) {
+    return DocumentFileRow(
+      documentId: data.documentId.present
+          ? data.documentId.value
+          : this.documentId,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+      pinned: data.pinned.present ? data.pinned.value : this.pinned,
+      savedAt: data.savedAt.present ? data.savedAt.value : this.savedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentFileRow(')
+          ..write('documentId: $documentId, ')
+          ..write('localPath: $localPath, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('pinned: $pinned, ')
+          ..write('savedAt: $savedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(documentId, localPath, sizeBytes, pinned, savedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DocumentFileRow &&
+          other.documentId == this.documentId &&
+          other.localPath == this.localPath &&
+          other.sizeBytes == this.sizeBytes &&
+          other.pinned == this.pinned &&
+          other.savedAt == this.savedAt);
+}
+
+class DocumentFilesCompanion extends UpdateCompanion<DocumentFileRow> {
+  final Value<String> documentId;
+  final Value<String> localPath;
+  final Value<int> sizeBytes;
+  final Value<bool> pinned;
+  final Value<String> savedAt;
+  final Value<int> rowid;
+  const DocumentFilesCompanion({
+    this.documentId = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+    this.pinned = const Value.absent(),
+    this.savedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DocumentFilesCompanion.insert({
+    required String documentId,
+    required String localPath,
+    required int sizeBytes,
+    this.pinned = const Value.absent(),
+    required String savedAt,
+    this.rowid = const Value.absent(),
+  }) : documentId = Value(documentId),
+       localPath = Value(localPath),
+       sizeBytes = Value(sizeBytes),
+       savedAt = Value(savedAt);
+  static Insertable<DocumentFileRow> custom({
+    Expression<String>? documentId,
+    Expression<String>? localPath,
+    Expression<int>? sizeBytes,
+    Expression<bool>? pinned,
+    Expression<String>? savedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (documentId != null) 'document_id': documentId,
+      if (localPath != null) 'local_path': localPath,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+      if (pinned != null) 'pinned': pinned,
+      if (savedAt != null) 'saved_at': savedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DocumentFilesCompanion copyWith({
+    Value<String>? documentId,
+    Value<String>? localPath,
+    Value<int>? sizeBytes,
+    Value<bool>? pinned,
+    Value<String>? savedAt,
+    Value<int>? rowid,
+  }) {
+    return DocumentFilesCompanion(
+      documentId: documentId ?? this.documentId,
+      localPath: localPath ?? this.localPath,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+      pinned: pinned ?? this.pinned,
+      savedAt: savedAt ?? this.savedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (documentId.present) {
+      map['document_id'] = Variable<String>(documentId.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    if (pinned.present) {
+      map['pinned'] = Variable<bool>(pinned.value);
+    }
+    if (savedAt.present) {
+      map['saved_at'] = Variable<String>(savedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentFilesCompanion(')
+          ..write('documentId: $documentId, ')
+          ..write('localPath: $localPath, ')
+          ..write('sizeBytes: $sizeBytes, ')
+          ..write('pinned: $pinned, ')
+          ..write('savedAt: $savedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Outbox extends Table with TableInfo<Outbox, OutboxEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -34639,6 +37403,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Attendance attendance = Attendance(this);
   late final CardTemplates cardTemplates = CardTemplates(this);
   late final StudentCards studentCards = StudentCards(this);
+  late final Documents documents = Documents(this);
+  late final DocumentUploads documentUploads = DocumentUploads(this);
+  late final DocumentFiles documentFiles = DocumentFiles(this);
   late final Index preschoolEvaluationsPeriod = Index(
     'preschool_evaluations_period',
     'CREATE INDEX preschool_evaluations_period ON preschool_evaluations (period_id)',
@@ -34716,6 +37483,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     attendance,
     cardTemplates,
     studentCards,
+    documents,
+    documentUploads,
+    documentFiles,
     preschoolEvaluationsPeriod,
     attendanceClassDay,
     activityLinesObjective,
@@ -34752,6 +37522,8 @@ typedef $SchoolsCreateCompanionBuilder = SchoolsCompanion Function({
   Value<String?> directorGrade,
   Value<bool> preschoolRanking,
   Value<String?> logoPath,
+  Value<int> storageQuotaBytes,
+  Value<String> libraryTeacherMode,
   Value<String?> createdAt,
   required String updatedAt,
   Value<String?> deletedAt,
@@ -34779,6 +37551,8 @@ typedef $SchoolsUpdateCompanionBuilder = SchoolsCompanion Function({
   Value<String?> directorGrade,
   Value<bool> preschoolRanking,
   Value<String?> logoPath,
+  Value<int> storageQuotaBytes,
+  Value<String> libraryTeacherMode,
   Value<String?> createdAt,
   Value<String> updatedAt,
   Value<String?> deletedAt,
@@ -34891,6 +37665,16 @@ class $SchoolsFilterComposer extends Composer<_$AppDatabase, Schools> {
 
   ColumnFilters<String> get logoPath => $composableBuilder(
     column: $table.logoPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get storageQuotaBytes => $composableBuilder(
+    column: $table.storageQuotaBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get libraryTeacherMode => $composableBuilder(
+    column: $table.libraryTeacherMode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -35023,6 +37807,16 @@ class $SchoolsOrderingComposer extends Composer<_$AppDatabase, Schools> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get storageQuotaBytes => $composableBuilder(
+    column: $table.storageQuotaBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get libraryTeacherMode => $composableBuilder(
+    column: $table.libraryTeacherMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -35134,6 +37928,16 @@ class $SchoolsAnnotationComposer extends Composer<_$AppDatabase, Schools> {
   GeneratedColumn<String> get logoPath =>
       $composableBuilder(column: $table.logoPath, builder: (column) => column);
 
+  GeneratedColumn<int> get storageQuotaBytes => $composableBuilder(
+    column: $table.storageQuotaBytes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get libraryTeacherMode => $composableBuilder(
+    column: $table.libraryTeacherMode,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -35195,6 +37999,8 @@ class $SchoolsTableManager
                 Value<String?> directorGrade = const Value.absent(),
                 Value<bool> preschoolRanking = const Value.absent(),
                 Value<String?> logoPath = const Value.absent(),
+                Value<int> storageQuotaBytes = const Value.absent(),
+                Value<String> libraryTeacherMode = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> deletedAt = const Value.absent(),
@@ -35221,6 +38027,8 @@ class $SchoolsTableManager
                 directorGrade: directorGrade,
                 preschoolRanking: preschoolRanking,
                 logoPath: logoPath,
+                storageQuotaBytes: storageQuotaBytes,
+                libraryTeacherMode: libraryTeacherMode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -35249,6 +38057,8 @@ class $SchoolsTableManager
                 Value<String?> directorGrade = const Value.absent(),
                 Value<bool> preschoolRanking = const Value.absent(),
                 Value<String?> logoPath = const Value.absent(),
+                Value<int> storageQuotaBytes = const Value.absent(),
+                Value<String> libraryTeacherMode = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 required String updatedAt,
                 Value<String?> deletedAt = const Value.absent(),
@@ -35275,6 +38085,8 @@ class $SchoolsTableManager
                 directorGrade: directorGrade,
                 preschoolRanking: preschoolRanking,
                 logoPath: logoPath,
+                storageQuotaBytes: storageQuotaBytes,
+                libraryTeacherMode: libraryTeacherMode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -42357,6 +45169,7 @@ typedef $OfficialFormsCreateCompanionBuilder = OfficialFormsCompanion Function({
   Value<String?> signedOn,
   Value<String?> directorName,
   Value<int?> lockedVersion,
+  Value<String?> signedScanDocumentId,
   Value<bool> showObjectiveAverage,
   Value<String?> createdAt,
   required String updatedAt,
@@ -42378,6 +45191,7 @@ typedef $OfficialFormsUpdateCompanionBuilder = OfficialFormsCompanion Function({
   Value<String?> signedOn,
   Value<String?> directorName,
   Value<int?> lockedVersion,
+  Value<String?> signedScanDocumentId,
   Value<bool> showObjectiveAverage,
   Value<String?> createdAt,
   Value<String> updatedAt,
@@ -42457,6 +45271,11 @@ class $OfficialFormsFilterComposer
 
   ColumnFilters<int> get lockedVersion => $composableBuilder(
     column: $table.lockedVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get signedScanDocumentId => $composableBuilder(
+    column: $table.signedScanDocumentId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -42560,6 +45379,11 @@ class $OfficialFormsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get signedScanDocumentId => $composableBuilder(
+    column: $table.signedScanDocumentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get showObjectiveAverage => $composableBuilder(
     column: $table.showObjectiveAverage,
     builder: (column) => ColumnOrderings(column),
@@ -42648,6 +45472,11 @@ class $OfficialFormsAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get signedScanDocumentId => $composableBuilder(
+    column: $table.signedScanDocumentId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get showObjectiveAverage => $composableBuilder(
     column: $table.showObjectiveAverage,
     builder: (column) => column,
@@ -42710,6 +45539,7 @@ class $OfficialFormsTableManager
                 Value<String?> signedOn = const Value.absent(),
                 Value<String?> directorName = const Value.absent(),
                 Value<int?> lockedVersion = const Value.absent(),
+                Value<String?> signedScanDocumentId = const Value.absent(),
                 Value<bool> showObjectiveAverage = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
@@ -42730,6 +45560,7 @@ class $OfficialFormsTableManager
                 signedOn: signedOn,
                 directorName: directorName,
                 lockedVersion: lockedVersion,
+                signedScanDocumentId: signedScanDocumentId,
                 showObjectiveAverage: showObjectiveAverage,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -42752,6 +45583,7 @@ class $OfficialFormsTableManager
                 Value<String?> signedOn = const Value.absent(),
                 Value<String?> directorName = const Value.absent(),
                 Value<int?> lockedVersion = const Value.absent(),
+                Value<String?> signedScanDocumentId = const Value.absent(),
                 Value<bool> showObjectiveAverage = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 required String updatedAt,
@@ -42772,6 +45604,7 @@ class $OfficialFormsTableManager
                 signedOn: signedOn,
                 directorName: directorName,
                 lockedVersion: lockedVersion,
+                signedScanDocumentId: signedScanDocumentId,
                 showObjectiveAverage: showObjectiveAverage,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -49740,6 +52573,1218 @@ typedef $StudentCardsProcessedTableManager =
       StudentCardRow,
       PrefetchHooks Function()
     >;
+typedef $DocumentsCreateCompanionBuilder = DocumentsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String space,
+  required String title,
+  Value<bool> isCommon,
+  Value<String?> subjectId,
+  Value<String?> docType,
+  Value<String?> schoolYearId,
+  Value<String?> sourceAuthor,
+  Value<String> keywords,
+  Value<String> classIds,
+  Value<String> levelCodes,
+  Value<String?> storagePath,
+  Value<String?> originalName,
+  Value<String?> mimeType,
+  Value<int?> sizeBytes,
+  Value<String?> sha256,
+  Value<int?> pageCount,
+  Value<bool> aiAllowed,
+  Value<bool> isSensitive,
+  Value<String> indexStatus,
+  Value<String?> indexError,
+  Value<bool> approved,
+  Value<String?> trashedAt,
+  Value<String?> uploadedBy,
+  Value<String?> uploadedAt,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $DocumentsUpdateCompanionBuilder = DocumentsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> space,
+  Value<String> title,
+  Value<bool> isCommon,
+  Value<String?> subjectId,
+  Value<String?> docType,
+  Value<String?> schoolYearId,
+  Value<String?> sourceAuthor,
+  Value<String> keywords,
+  Value<String> classIds,
+  Value<String> levelCodes,
+  Value<String?> storagePath,
+  Value<String?> originalName,
+  Value<String?> mimeType,
+  Value<int?> sizeBytes,
+  Value<String?> sha256,
+  Value<int?> pageCount,
+  Value<bool> aiAllowed,
+  Value<bool> isSensitive,
+  Value<String> indexStatus,
+  Value<String?> indexError,
+  Value<bool> approved,
+  Value<String?> trashedAt,
+  Value<String?> uploadedBy,
+  Value<String?> uploadedAt,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $DocumentsFilterComposer extends Composer<_$AppDatabase, Documents> {
+  $DocumentsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get space => $composableBuilder(
+    column: $table.space,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCommon => $composableBuilder(
+    column: $table.isCommon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get docType => $composableBuilder(
+    column: $table.docType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceAuthor => $composableBuilder(
+    column: $table.sourceAuthor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get keywords => $composableBuilder(
+    column: $table.keywords,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get classIds => $composableBuilder(
+    column: $table.classIds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get levelCodes => $composableBuilder(
+    column: $table.levelCodes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get storagePath => $composableBuilder(
+    column: $table.storagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalName => $composableBuilder(
+    column: $table.originalName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sha256 => $composableBuilder(
+    column: $table.sha256,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pageCount => $composableBuilder(
+    column: $table.pageCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get aiAllowed => $composableBuilder(
+    column: $table.aiAllowed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSensitive => $composableBuilder(
+    column: $table.isSensitive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get indexStatus => $composableBuilder(
+    column: $table.indexStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get indexError => $composableBuilder(
+    column: $table.indexError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get approved => $composableBuilder(
+    column: $table.approved,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trashedAt => $composableBuilder(
+    column: $table.trashedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uploadedBy => $composableBuilder(
+    column: $table.uploadedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uploadedAt => $composableBuilder(
+    column: $table.uploadedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $DocumentsOrderingComposer extends Composer<_$AppDatabase, Documents> {
+  $DocumentsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get space => $composableBuilder(
+    column: $table.space,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCommon => $composableBuilder(
+    column: $table.isCommon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get docType => $composableBuilder(
+    column: $table.docType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceAuthor => $composableBuilder(
+    column: $table.sourceAuthor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get keywords => $composableBuilder(
+    column: $table.keywords,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get classIds => $composableBuilder(
+    column: $table.classIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get levelCodes => $composableBuilder(
+    column: $table.levelCodes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get storagePath => $composableBuilder(
+    column: $table.storagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalName => $composableBuilder(
+    column: $table.originalName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sha256 => $composableBuilder(
+    column: $table.sha256,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pageCount => $composableBuilder(
+    column: $table.pageCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get aiAllowed => $composableBuilder(
+    column: $table.aiAllowed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSensitive => $composableBuilder(
+    column: $table.isSensitive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get indexStatus => $composableBuilder(
+    column: $table.indexStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get indexError => $composableBuilder(
+    column: $table.indexError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get approved => $composableBuilder(
+    column: $table.approved,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get trashedAt => $composableBuilder(
+    column: $table.trashedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uploadedBy => $composableBuilder(
+    column: $table.uploadedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uploadedAt => $composableBuilder(
+    column: $table.uploadedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $DocumentsAnnotationComposer extends Composer<_$AppDatabase, Documents> {
+  $DocumentsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get space =>
+      $composableBuilder(column: $table.space, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCommon =>
+      $composableBuilder(column: $table.isCommon, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get docType =>
+      $composableBuilder(column: $table.docType, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceAuthor => $composableBuilder(
+    column: $table.sourceAuthor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get keywords =>
+      $composableBuilder(column: $table.keywords, builder: (column) => column);
+
+  GeneratedColumn<String> get classIds =>
+      $composableBuilder(column: $table.classIds, builder: (column) => column);
+
+  GeneratedColumn<String> get levelCodes => $composableBuilder(
+    column: $table.levelCodes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get storagePath => $composableBuilder(
+    column: $table.storagePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalName => $composableBuilder(
+    column: $table.originalName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get mimeType =>
+      $composableBuilder(column: $table.mimeType, builder: (column) => column);
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumn<String> get sha256 =>
+      $composableBuilder(column: $table.sha256, builder: (column) => column);
+
+  GeneratedColumn<int> get pageCount =>
+      $composableBuilder(column: $table.pageCount, builder: (column) => column);
+
+  GeneratedColumn<bool> get aiAllowed =>
+      $composableBuilder(column: $table.aiAllowed, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSensitive => $composableBuilder(
+    column: $table.isSensitive,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get indexStatus => $composableBuilder(
+    column: $table.indexStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get indexError => $composableBuilder(
+    column: $table.indexError,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get approved =>
+      $composableBuilder(column: $table.approved, builder: (column) => column);
+
+  GeneratedColumn<String> get trashedAt =>
+      $composableBuilder(column: $table.trashedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get uploadedBy => $composableBuilder(
+    column: $table.uploadedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get uploadedAt => $composableBuilder(
+    column: $table.uploadedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $DocumentsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          Documents,
+          DocumentRow,
+          $DocumentsFilterComposer,
+          $DocumentsOrderingComposer,
+          $DocumentsAnnotationComposer,
+          $DocumentsCreateCompanionBuilder,
+          $DocumentsUpdateCompanionBuilder,
+          (DocumentRow, BaseReferences<_$AppDatabase, Documents, DocumentRow>),
+          DocumentRow,
+          PrefetchHooks Function()
+        > {
+  $DocumentsTableManager(_$AppDatabase db, Documents table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $DocumentsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $DocumentsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $DocumentsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> space = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<bool> isCommon = const Value.absent(),
+                Value<String?> subjectId = const Value.absent(),
+                Value<String?> docType = const Value.absent(),
+                Value<String?> schoolYearId = const Value.absent(),
+                Value<String?> sourceAuthor = const Value.absent(),
+                Value<String> keywords = const Value.absent(),
+                Value<String> classIds = const Value.absent(),
+                Value<String> levelCodes = const Value.absent(),
+                Value<String?> storagePath = const Value.absent(),
+                Value<String?> originalName = const Value.absent(),
+                Value<String?> mimeType = const Value.absent(),
+                Value<int?> sizeBytes = const Value.absent(),
+                Value<String?> sha256 = const Value.absent(),
+                Value<int?> pageCount = const Value.absent(),
+                Value<bool> aiAllowed = const Value.absent(),
+                Value<bool> isSensitive = const Value.absent(),
+                Value<String> indexStatus = const Value.absent(),
+                Value<String?> indexError = const Value.absent(),
+                Value<bool> approved = const Value.absent(),
+                Value<String?> trashedAt = const Value.absent(),
+                Value<String?> uploadedBy = const Value.absent(),
+                Value<String?> uploadedAt = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentsCompanion(
+                id: id,
+                schoolId: schoolId,
+                space: space,
+                title: title,
+                isCommon: isCommon,
+                subjectId: subjectId,
+                docType: docType,
+                schoolYearId: schoolYearId,
+                sourceAuthor: sourceAuthor,
+                keywords: keywords,
+                classIds: classIds,
+                levelCodes: levelCodes,
+                storagePath: storagePath,
+                originalName: originalName,
+                mimeType: mimeType,
+                sizeBytes: sizeBytes,
+                sha256: sha256,
+                pageCount: pageCount,
+                aiAllowed: aiAllowed,
+                isSensitive: isSensitive,
+                indexStatus: indexStatus,
+                indexError: indexError,
+                approved: approved,
+                trashedAt: trashedAt,
+                uploadedBy: uploadedBy,
+                uploadedAt: uploadedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String space,
+                required String title,
+                Value<bool> isCommon = const Value.absent(),
+                Value<String?> subjectId = const Value.absent(),
+                Value<String?> docType = const Value.absent(),
+                Value<String?> schoolYearId = const Value.absent(),
+                Value<String?> sourceAuthor = const Value.absent(),
+                Value<String> keywords = const Value.absent(),
+                Value<String> classIds = const Value.absent(),
+                Value<String> levelCodes = const Value.absent(),
+                Value<String?> storagePath = const Value.absent(),
+                Value<String?> originalName = const Value.absent(),
+                Value<String?> mimeType = const Value.absent(),
+                Value<int?> sizeBytes = const Value.absent(),
+                Value<String?> sha256 = const Value.absent(),
+                Value<int?> pageCount = const Value.absent(),
+                Value<bool> aiAllowed = const Value.absent(),
+                Value<bool> isSensitive = const Value.absent(),
+                Value<String> indexStatus = const Value.absent(),
+                Value<String?> indexError = const Value.absent(),
+                Value<bool> approved = const Value.absent(),
+                Value<String?> trashedAt = const Value.absent(),
+                Value<String?> uploadedBy = const Value.absent(),
+                Value<String?> uploadedAt = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                space: space,
+                title: title,
+                isCommon: isCommon,
+                subjectId: subjectId,
+                docType: docType,
+                schoolYearId: schoolYearId,
+                sourceAuthor: sourceAuthor,
+                keywords: keywords,
+                classIds: classIds,
+                levelCodes: levelCodes,
+                storagePath: storagePath,
+                originalName: originalName,
+                mimeType: mimeType,
+                sizeBytes: sizeBytes,
+                sha256: sha256,
+                pageCount: pageCount,
+                aiAllowed: aiAllowed,
+                isSensitive: isSensitive,
+                indexStatus: indexStatus,
+                indexError: indexError,
+                approved: approved,
+                trashedAt: trashedAt,
+                uploadedBy: uploadedBy,
+                uploadedAt: uploadedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<Documents, DocumentRow>(table),
+                  BaseReferences<_$AppDatabase, Documents, DocumentRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $DocumentsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      Documents,
+      DocumentRow,
+      $DocumentsFilterComposer,
+      $DocumentsOrderingComposer,
+      $DocumentsAnnotationComposer,
+      $DocumentsCreateCompanionBuilder,
+      $DocumentsUpdateCompanionBuilder,
+      (DocumentRow, BaseReferences<_$AppDatabase, Documents, DocumentRow>),
+      DocumentRow,
+      PrefetchHooks Function()
+    >;
+typedef $DocumentUploadsCreateCompanionBuilder =
+    DocumentUploadsCompanion Function({
+      required String documentId,
+      required String localPath,
+      required String objectPath,
+      required String contentType,
+      required int sizeBytes,
+      Value<int> sentBytes,
+      Value<String?> uploadUrl,
+      Value<int> attempts,
+      Value<String?> lastError,
+      required String createdAt,
+      Value<int> rowid,
+    });
+typedef $DocumentUploadsUpdateCompanionBuilder =
+    DocumentUploadsCompanion Function({
+      Value<String> documentId,
+      Value<String> localPath,
+      Value<String> objectPath,
+      Value<String> contentType,
+      Value<int> sizeBytes,
+      Value<int> sentBytes,
+      Value<String?> uploadUrl,
+      Value<int> attempts,
+      Value<String?> lastError,
+      Value<String> createdAt,
+      Value<int> rowid,
+    });
+
+class $DocumentUploadsFilterComposer
+    extends Composer<_$AppDatabase, DocumentUploads> {
+  $DocumentUploadsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get objectPath => $composableBuilder(
+    column: $table.objectPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contentType => $composableBuilder(
+    column: $table.contentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sentBytes => $composableBuilder(
+    column: $table.sentBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uploadUrl => $composableBuilder(
+    column: $table.uploadUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $DocumentUploadsOrderingComposer
+    extends Composer<_$AppDatabase, DocumentUploads> {
+  $DocumentUploadsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get objectPath => $composableBuilder(
+    column: $table.objectPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contentType => $composableBuilder(
+    column: $table.contentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sentBytes => $composableBuilder(
+    column: $table.sentBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uploadUrl => $composableBuilder(
+    column: $table.uploadUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+    column: $table.attempts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $DocumentUploadsAnnotationComposer
+    extends Composer<_$AppDatabase, DocumentUploads> {
+  $DocumentUploadsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<String> get objectPath => $composableBuilder(
+    column: $table.objectPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get contentType => $composableBuilder(
+    column: $table.contentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumn<int> get sentBytes =>
+      $composableBuilder(column: $table.sentBytes, builder: (column) => column);
+
+  GeneratedColumn<String> get uploadUrl =>
+      $composableBuilder(column: $table.uploadUrl, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $DocumentUploadsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          DocumentUploads,
+          DocumentUploadRow,
+          $DocumentUploadsFilterComposer,
+          $DocumentUploadsOrderingComposer,
+          $DocumentUploadsAnnotationComposer,
+          $DocumentUploadsCreateCompanionBuilder,
+          $DocumentUploadsUpdateCompanionBuilder,
+          (
+            DocumentUploadRow,
+            BaseReferences<_$AppDatabase, DocumentUploads, DocumentUploadRow>,
+          ),
+          DocumentUploadRow,
+          PrefetchHooks Function()
+        > {
+  $DocumentUploadsTableManager(_$AppDatabase db, DocumentUploads table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $DocumentUploadsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $DocumentUploadsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $DocumentUploadsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> documentId = const Value.absent(),
+                Value<String> localPath = const Value.absent(),
+                Value<String> objectPath = const Value.absent(),
+                Value<String> contentType = const Value.absent(),
+                Value<int> sizeBytes = const Value.absent(),
+                Value<int> sentBytes = const Value.absent(),
+                Value<String?> uploadUrl = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentUploadsCompanion(
+                documentId: documentId,
+                localPath: localPath,
+                objectPath: objectPath,
+                contentType: contentType,
+                sizeBytes: sizeBytes,
+                sentBytes: sentBytes,
+                uploadUrl: uploadUrl,
+                attempts: attempts,
+                lastError: lastError,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String documentId,
+                required String localPath,
+                required String objectPath,
+                required String contentType,
+                required int sizeBytes,
+                Value<int> sentBytes = const Value.absent(),
+                Value<String?> uploadUrl = const Value.absent(),
+                Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                required String createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentUploadsCompanion.insert(
+                documentId: documentId,
+                localPath: localPath,
+                objectPath: objectPath,
+                contentType: contentType,
+                sizeBytes: sizeBytes,
+                sentBytes: sentBytes,
+                uploadUrl: uploadUrl,
+                attempts: attempts,
+                lastError: lastError,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<DocumentUploads, DocumentUploadRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    DocumentUploads,
+                    DocumentUploadRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $DocumentUploadsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      DocumentUploads,
+      DocumentUploadRow,
+      $DocumentUploadsFilterComposer,
+      $DocumentUploadsOrderingComposer,
+      $DocumentUploadsAnnotationComposer,
+      $DocumentUploadsCreateCompanionBuilder,
+      $DocumentUploadsUpdateCompanionBuilder,
+      (
+        DocumentUploadRow,
+        BaseReferences<_$AppDatabase, DocumentUploads, DocumentUploadRow>,
+      ),
+      DocumentUploadRow,
+      PrefetchHooks Function()
+    >;
+typedef $DocumentFilesCreateCompanionBuilder = DocumentFilesCompanion Function({
+  required String documentId,
+  required String localPath,
+  required int sizeBytes,
+  Value<bool> pinned,
+  required String savedAt,
+  Value<int> rowid,
+});
+typedef $DocumentFilesUpdateCompanionBuilder = DocumentFilesCompanion Function({
+  Value<String> documentId,
+  Value<String> localPath,
+  Value<int> sizeBytes,
+  Value<bool> pinned,
+  Value<String> savedAt,
+  Value<int> rowid,
+});
+
+class $DocumentFilesFilterComposer
+    extends Composer<_$AppDatabase, DocumentFiles> {
+  $DocumentFilesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get pinned => $composableBuilder(
+    column: $table.pinned,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $DocumentFilesOrderingComposer
+    extends Composer<_$AppDatabase, DocumentFiles> {
+  $DocumentFilesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get pinned => $composableBuilder(
+    column: $table.pinned,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $DocumentFilesAnnotationComposer
+    extends Composer<_$AppDatabase, DocumentFiles> {
+  $DocumentFilesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+
+  GeneratedColumn<bool> get pinned =>
+      $composableBuilder(column: $table.pinned, builder: (column) => column);
+
+  GeneratedColumn<String> get savedAt =>
+      $composableBuilder(column: $table.savedAt, builder: (column) => column);
+}
+
+class $DocumentFilesTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          DocumentFiles,
+          DocumentFileRow,
+          $DocumentFilesFilterComposer,
+          $DocumentFilesOrderingComposer,
+          $DocumentFilesAnnotationComposer,
+          $DocumentFilesCreateCompanionBuilder,
+          $DocumentFilesUpdateCompanionBuilder,
+          (
+            DocumentFileRow,
+            BaseReferences<_$AppDatabase, DocumentFiles, DocumentFileRow>,
+          ),
+          DocumentFileRow,
+          PrefetchHooks Function()
+        > {
+  $DocumentFilesTableManager(_$AppDatabase db, DocumentFiles table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $DocumentFilesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $DocumentFilesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $DocumentFilesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> documentId = const Value.absent(),
+                Value<String> localPath = const Value.absent(),
+                Value<int> sizeBytes = const Value.absent(),
+                Value<bool> pinned = const Value.absent(),
+                Value<String> savedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentFilesCompanion(
+                documentId: documentId,
+                localPath: localPath,
+                sizeBytes: sizeBytes,
+                pinned: pinned,
+                savedAt: savedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String documentId,
+                required String localPath,
+                required int sizeBytes,
+                Value<bool> pinned = const Value.absent(),
+                required String savedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentFilesCompanion.insert(
+                documentId: documentId,
+                localPath: localPath,
+                sizeBytes: sizeBytes,
+                pinned: pinned,
+                savedAt: savedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<DocumentFiles, DocumentFileRow>(table),
+                  BaseReferences<_$AppDatabase, DocumentFiles, DocumentFileRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $DocumentFilesProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      DocumentFiles,
+      DocumentFileRow,
+      $DocumentFilesFilterComposer,
+      $DocumentFilesOrderingComposer,
+      $DocumentFilesAnnotationComposer,
+      $DocumentFilesCreateCompanionBuilder,
+      $DocumentFilesUpdateCompanionBuilder,
+      (
+        DocumentFileRow,
+        BaseReferences<_$AppDatabase, DocumentFiles, DocumentFileRow>,
+      ),
+      DocumentFileRow,
+      PrefetchHooks Function()
+    >;
 typedef $OutboxCreateCompanionBuilder = OutboxCompanion Function({
   Value<int> id,
   required String targetTable,
@@ -51404,6 +55449,12 @@ class $AppDatabaseManager {
       $CardTemplatesTableManager(_db, _db.cardTemplates);
   $StudentCardsTableManager get studentCards =>
       $StudentCardsTableManager(_db, _db.studentCards);
+  $DocumentsTableManager get documents =>
+      $DocumentsTableManager(_db, _db.documents);
+  $DocumentUploadsTableManager get documentUploads =>
+      $DocumentUploadsTableManager(_db, _db.documentUploads);
+  $DocumentFilesTableManager get documentFiles =>
+      $DocumentFilesTableManager(_db, _db.documentFiles);
   $OutboxTableManager get outbox => $OutboxTableManager(_db, _db.outbox);
   $SyncCursorsTableManager get syncCursors =>
       $SyncCursorsTableManager(_db, _db.syncCursors);

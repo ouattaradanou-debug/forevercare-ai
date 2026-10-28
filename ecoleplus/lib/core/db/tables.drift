@@ -23,6 +23,8 @@ CREATE TABLE schools (
   director_grade TEXT,
   preschool_ranking BOOLEAN NOT NULL DEFAULT FALSE,
   logo_path TEXT,
+  storage_quota_bytes INTEGER NOT NULL DEFAULT 5368709120,
+  library_teacher_mode TEXT NOT NULL DEFAULT 'validation',
   created_at TEXT,
   updated_at TEXT NOT NULL,
   deleted_at TEXT,
@@ -362,6 +364,7 @@ CREATE TABLE official_forms (
   signed_on TEXT,
   director_name TEXT,
   locked_version INTEGER,
+  signed_scan_document_id TEXT,
   show_objective_average BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TEXT,
   updated_at TEXT NOT NULL,
@@ -696,6 +699,67 @@ CREATE TABLE student_cards (
   deleted_at TEXT,
   synced_at TEXT
 ) AS StudentCardRow;
+
+-- ---------------- Phase 9 : bibliothèque et archives ----------------
+
+-- Catalogue (fiches) : disponible hors ligne ; les fichiers ne sont jamais
+-- téléchargés automatiquement (document_files).
+CREATE TABLE documents (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  space TEXT NOT NULL,
+  title TEXT NOT NULL,
+  is_common BOOLEAN NOT NULL DEFAULT FALSE,
+  subject_id TEXT,
+  doc_type TEXT,
+  school_year_id TEXT,
+  source_author TEXT,
+  keywords TEXT NOT NULL DEFAULT '[]',
+  class_ids TEXT NOT NULL DEFAULT '[]',
+  level_codes TEXT NOT NULL DEFAULT '[]',
+  storage_path TEXT,
+  original_name TEXT,
+  mime_type TEXT,
+  size_bytes INTEGER,
+  sha256 TEXT,
+  page_count INTEGER,
+  ai_allowed BOOLEAN NOT NULL DEFAULT TRUE,
+  is_sensitive BOOLEAN NOT NULL DEFAULT FALSE,
+  index_status TEXT NOT NULL DEFAULT 'en_attente',
+  index_error TEXT,
+  approved BOOLEAN NOT NULL DEFAULT TRUE,
+  trashed_at TEXT,
+  uploaded_by TEXT,
+  uploaded_at TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS DocumentRow;
+
+-- File d'envoi des fichiers (reprenable) : la position est gardée après
+-- chaque morceau.
+CREATE TABLE document_uploads (
+  document_id TEXT NOT NULL PRIMARY KEY,
+  local_path TEXT NOT NULL,
+  object_path TEXT NOT NULL,
+  content_type TEXT NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  sent_bytes INTEGER NOT NULL DEFAULT 0,
+  upload_url TEXT,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT,
+  created_at TEXT NOT NULL
+) AS DocumentUploadRow;
+
+-- Fichiers présents sur ce téléphone (épinglés ou ouverts récemment).
+CREATE TABLE document_files (
+  document_id TEXT NOT NULL PRIMARY KEY,
+  local_path TEXT NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  pinned BOOLEAN NOT NULL DEFAULT FALSE,
+  saved_at TEXT NOT NULL
+) AS DocumentFileRow;
 
 CREATE INDEX preschool_evaluations_period ON preschool_evaluations (period_id);
 CREATE INDEX attendance_class_day ON attendance (class_id, day);
