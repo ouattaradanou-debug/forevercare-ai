@@ -123,6 +123,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 8) {
         // Phase 5 : programme d'activités et bilan, versions.
         await m.addColumn(officialForms, officialForms.lockedVersion);
+        await m.addColumn(officialForms, officialForms.showObjectiveAverage);
         await m.createTable(activityObjectives);
         await m.createTable(activityLines);
         await m.createTable(formVersions);

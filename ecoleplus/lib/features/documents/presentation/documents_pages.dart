@@ -33,8 +33,7 @@ class DocumentsPage extends ConsumerWidget {
     final yearId = school?.currentSchoolYearId;
     String? etat(String code) => yearId == null
         ? null
-        : etats[ref.watch(formulaireProvider((yearId, code))).value?.status ??
-              'a_completer'];
+        : texteEtat(ref.watch(formulaireProvider((yearId, code))).value);
     Widget ligne(
       String titre,
       String route, {
@@ -103,10 +102,94 @@ class DocumentsPage extends ConsumerWidget {
             icone: Icons.grading,
           ),
           const SectionTitle('École'),
-          const InfoMessage(
-            'Programme d’activités (B6) et bilan annuel (B7) : ils '
-            'arriveront ici avec la phase 5.',
+          ligne(
+            'Programme d’activités (B6)',
+            '/programme/B6',
+            sousTitre: etat('B6'),
+            icone: Icons.event_note,
           ),
+          ligne(
+            'Bilan annuel des activités (B7)',
+            '/programme/B7',
+            sousTitre: etat('B7'),
+            icone: Icons.fact_check_outlined,
+          ),
+          ligne(
+            'Mes formulaires de l’année',
+            '/formulaires',
+            sousTitre: 'Où en est chaque formulaire',
+            icone: Icons.checklist,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// État d'un formulaire en une phrase : « Complet • version finale 2
+/// verrouillée ».
+String texteEtat(OfficialFormRow? f) {
+  final etat = etats[f?.status ?? 'a_completer'] ?? 'À compléter';
+  final v = f?.lockedVersion;
+  return v == null ? etat : '$etat • version finale $v verrouillée';
+}
+
+/// « Mes formulaires de l'année » (17.3) : l'état de chaque formulaire.
+class FormulairesAnneePage extends ConsumerWidget {
+  const new({super.key});
+
+  static const formulaires = [
+    ('B1', 'Fiche de renseignement du personnel', '/registres/B1'),
+    ('B2', 'Registre matricule des élèves', '/registres/B2'),
+    ('B3', 'Registre du personnel enseignant', '/registres/B3'),
+    ('B6', 'Programme d’activités', '/programme/B6'),
+    ('B7', 'Bilan annuel des activités', '/programme/B7'),
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(sessionProvider).value!;
+    final school = ref.watch(schoolProvider(session.schoolId)).value;
+    final yearId = school?.currentSchoolYearId;
+    if (yearId == null) {
+      return const EcoleScaffold(
+        title: 'Mes formulaires de l’année',
+        body: InfoMessage('Année scolaire introuvable.'),
+      );
+    }
+    return EcoleScaffold(
+      title: 'Mes formulaires de l’année',
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text(
+            'Les fiches de scolarité (B4) se trouvent sur la fiche de '
+            'chaque élève.',
+          ),
+          const SizedBox(height: 8),
+          for (final (code, titre, route) in formulaires)
+            Builder(
+              builder: (context) {
+                final f = ref.watch(formulaireProvider((yearId, code))).value;
+                final fini = f?.status == 'signe_archive';
+                return Card(
+                  child: ListTile(
+                    key: Key('formulaire-$code'),
+                    leading: Icon(
+                      f?.lockedVersion != null
+                          ? Icons.lock
+                          : fini
+                          ? Icons.task_alt
+                          : Icons.description_outlined,
+                    ),
+                    title: Text('$code — $titre'),
+                    subtitle: Text(texteEtat(f)),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push(route),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );

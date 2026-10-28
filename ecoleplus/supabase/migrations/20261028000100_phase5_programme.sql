@@ -13,6 +13,9 @@ alter table public.activity_objectives
 alter table public.official_forms add column locked_version integer
   check (locked_version is null or locked_version > 0);
 
+-- B7 : imprimer la moyenne des taux de chaque objectif (facultatif).
+alter table public.official_forms add column show_objective_average boolean not null default false;
+
 -- Programme et bilan : directeur et délégué « formulaires » ; jamais
 -- l'enseignant (17.7).
 create policy activity_objectives_read on public.activity_objectives for select to authenticated

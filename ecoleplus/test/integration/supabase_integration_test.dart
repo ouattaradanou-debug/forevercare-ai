@@ -22,6 +22,8 @@ import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
 import 'package:ecoleplus/features/forms/data/fiche_scolarite_repository.dart';
 import 'package:ecoleplus/features/grades/data/grades_repository.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
+import 'package:ecoleplus/features/programme/data/programme_repository.dart';
+import 'package:ecoleplus/features/programme/domain/programme.dart';
 import 'package:ecoleplus/features/school/data/school_repository.dart';
 import 'package:ecoleplus/features/students/data/students_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -889,6 +891,83 @@ void mainA6() {
         .journaliser(CodeDocument.attestationNiveau, ecoleTest, fatou);
     await ens.engine.syncNow();
     expect(await refus(ens), hasLength(1));
+    await ens.close();
+    await dir.close();
+  }, skip: skip);
+
+  test('phase 5 : programme saisi au téléphone, version finale verrouillée '
+      'au serveur ; le bilan reste modifiable ; « Modifier » rouvre ; '
+      'l’enseignante ne voit rien', () async {
+    final dir = await connecte('directeur@ecole-test.local');
+    final ecole = await (dir.db.select(
+      dir.db.schools,
+    )..where((s) => s.id.equals(ecoleTest))).getSingle();
+    final annee = ecole.currentSchoolYearId!;
+    final repo = ProgrammeRepository(dir.store);
+    // L'objectif du jeu de test arrive avec ses deux activités.
+    expect(
+      (await repo.watchObjectifs(annee).first).single.activites,
+      hasLength(2),
+    );
+    final o = await repo.ajouterObjectif(ecoleTest, annee, 'Gérer le courrier');
+    final a = await repo.ajouterActivite(ecoleTest, o, 'Classer le courrier');
+    await repo.modifierActivite(a, {'expected_result': 'Courrier classé'});
+    final n = await repo.validerVersionFinale(
+      FormulaireActivites.programme,
+      ecole,
+      annee,
+    );
+    expect(n, 1);
+    await dir.engine.syncNow();
+    Future<List<OutboxEntry>> refus(Phone p) => (p.db.select(
+      p.db.outbox,
+    )..where((o) => o.status.equals('refuse'))).get();
+    expect(await refus(dir), isEmpty);
+    final versions = await dir.client
+        .from('form_versions')
+        .select('version_no, is_final, snapshot');
+    expect(versions, hasLength(1));
+    expect(versions.single['snapshot'], isA<Map<String, dynamic>>());
+    expect(
+      (versions.single['snapshot'] as Map)['objectifs'] as List,
+      hasLength(2),
+    );
+
+    // Verrou : un changement du programme est refusé par le serveur…
+    await repo.modifierActivite(a, {'expected_result': 'Autre chose'});
+    await dir.engine.syncNow();
+    expect(await refus(dir), hasLength(1));
+    // … mais le bilan se remplit.
+    await repo.modifierActivite(a, {
+      'achieved_result': 'Tout est classé',
+      'success_rate': 90,
+    });
+    await dir.engine.syncNow();
+    expect(await refus(dir), hasLength(1));
+    final ligne = await dir.client
+        .from('activity_lines')
+        .select('expected_result, success_rate')
+        .eq('id', a)
+        .single();
+    expect(ligne['expected_result'], 'Courrier classé');
+    expect(ligne['success_rate'], 90);
+
+    // « Modifier » : verrou levé, la version 1 reste.
+    await repo.deverrouiller(ecoleTest, annee, 'B6');
+    await repo.modifierActivite(a, {
+      'expected_result': 'Courrier classé chaque semaine',
+    });
+    await dir.engine.syncNow();
+    final apres = await dir.client
+        .from('activity_lines')
+        .select('expected_result')
+        .eq('id', a)
+        .single();
+    expect(apres['expected_result'], 'Courrier classé chaque semaine');
+    expect(await dir.client.from('form_versions').select('id'), hasLength(1));
+
+    final ens = await connecte('enseignant1@ecole-test.local');
+    expect(await ens.db.select(ens.db.activityLines).get(), isEmpty);
     await ens.close();
     await dir.close();
   }, skip: skip);

@@ -165,10 +165,10 @@ List<Widget> _boutonsEcole(
       bouton(Icons.school, 'Élèves', '/eleves'),
       bouton(Icons.class_, 'Classes', '/classes'),
     ],
-    if (registres) ...[
-      bouton(Icons.badge, 'Enseignants', '/enseignants'),
+    if (registres) bouton(Icons.badge, 'Enseignants', '/enseignants'),
+    // Délégué « formulaires » : programme et bilan (B6, B7), B1, B3.
+    if (registres || droits.contains('formulaires'))
       bouton(Icons.folder_copy_outlined, 'Documents', '/documents'),
-    ],
     if (notes) bouton(Icons.grading, 'Notes et classement', '/notes'),
   ];
 }

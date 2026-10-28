@@ -16311,6 +16311,17 @@ class OfficialForms extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _showObjectiveAverageMeta =
+      const VerificationMeta('showObjectiveAverage');
+  late final GeneratedColumn<bool> showObjectiveAverage = GeneratedColumn<bool>(
+    'show_objective_average',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -16370,6 +16381,7 @@ class OfficialForms extends Table
     signedOn,
     directorName,
     lockedVersion,
+    showObjectiveAverage,
     createdAt,
     updatedAt,
     deletedAt,
@@ -16491,6 +16503,15 @@ class OfficialForms extends Table
         ),
       );
     }
+    if (data.containsKey('show_objective_average')) {
+      context.handle(
+        _showObjectiveAverageMeta,
+        showObjectiveAverage.isAcceptableOrUnknown(
+          data['show_objective_average']!,
+          _showObjectiveAverageMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -16578,6 +16599,10 @@ class OfficialForms extends Table
         DriftSqlType.int,
         data['${effectivePrefix}locked_version'],
       ),
+      showObjectiveAverage: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_objective_average'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_at'],
@@ -16620,6 +16645,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
   final String? signedOn;
   final String? directorName;
   final int? lockedVersion;
+  final bool showObjectiveAverage;
   final String? createdAt;
   final String updatedAt;
   final String? deletedAt;
@@ -16638,6 +16664,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     this.signedOn,
     this.directorName,
     this.lockedVersion,
+    required this.showObjectiveAverage,
     this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -16675,6 +16702,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     if (!nullToAbsent || lockedVersion != null) {
       map['locked_version'] = Variable<int>(lockedVersion);
     }
+    map['show_objective_average'] = Variable<bool>(showObjectiveAverage);
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<String>(createdAt);
     }
@@ -16719,6 +16747,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       lockedVersion: lockedVersion == null && nullToAbsent
           ? const Value.absent()
           : Value(lockedVersion),
+      showObjectiveAverage: Value(showObjectiveAverage),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -16755,6 +16784,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       signedOn: serializer.fromJson<String?>(json['signed_on']),
       directorName: serializer.fromJson<String?>(json['director_name']),
       lockedVersion: serializer.fromJson<int?>(json['locked_version']),
+      showObjectiveAverage: serializer.fromJson<bool>(
+        json['show_objective_average'],
+      ),
       createdAt: serializer.fromJson<String?>(json['created_at']),
       updatedAt: serializer.fromJson<String>(json['updated_at']),
       deletedAt: serializer.fromJson<String?>(json['deleted_at']),
@@ -16778,6 +16810,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       'signed_on': serializer.toJson<String?>(signedOn),
       'director_name': serializer.toJson<String?>(directorName),
       'locked_version': serializer.toJson<int?>(lockedVersion),
+      'show_objective_average': serializer.toJson<bool>(showObjectiveAverage),
       'created_at': serializer.toJson<String?>(createdAt),
       'updated_at': serializer.toJson<String>(updatedAt),
       'deleted_at': serializer.toJson<String?>(deletedAt),
@@ -16799,6 +16832,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     Value<String?> signedOn = const Value.absent(),
     Value<String?> directorName = const Value.absent(),
     Value<int?> lockedVersion = const Value.absent(),
+    bool? showObjectiveAverage,
     Value<String?> createdAt = const Value.absent(),
     String? updatedAt,
     Value<String?> deletedAt = const Value.absent(),
@@ -16825,6 +16859,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     lockedVersion: lockedVersion.present
         ? lockedVersion.value
         : this.lockedVersion,
+    showObjectiveAverage: showObjectiveAverage ?? this.showObjectiveAverage,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -16859,6 +16894,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       lockedVersion: data.lockedVersion.present
           ? data.lockedVersion.value
           : this.lockedVersion,
+      showObjectiveAverage: data.showObjectiveAverage.present
+          ? data.showObjectiveAverage.value
+          : this.showObjectiveAverage,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -16882,6 +16920,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
           ..write('signedOn: $signedOn, ')
           ..write('directorName: $directorName, ')
           ..write('lockedVersion: $lockedVersion, ')
+          ..write('showObjectiveAverage: $showObjectiveAverage, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -16905,6 +16944,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     signedOn,
     directorName,
     lockedVersion,
+    showObjectiveAverage,
     createdAt,
     updatedAt,
     deletedAt,
@@ -16927,6 +16967,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
           other.signedOn == this.signedOn &&
           other.directorName == this.directorName &&
           other.lockedVersion == this.lockedVersion &&
+          other.showObjectiveAverage == this.showObjectiveAverage &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -16947,6 +16988,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
   final Value<String?> signedOn;
   final Value<String?> directorName;
   final Value<int?> lockedVersion;
+  final Value<bool> showObjectiveAverage;
   final Value<String?> createdAt;
   final Value<String> updatedAt;
   final Value<String?> deletedAt;
@@ -16966,6 +17008,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     this.signedOn = const Value.absent(),
     this.directorName = const Value.absent(),
     this.lockedVersion = const Value.absent(),
+    this.showObjectiveAverage = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -16986,6 +17029,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     this.signedOn = const Value.absent(),
     this.directorName = const Value.absent(),
     this.lockedVersion = const Value.absent(),
+    this.showObjectiveAverage = const Value.absent(),
     this.createdAt = const Value.absent(),
     required String updatedAt,
     this.deletedAt = const Value.absent(),
@@ -17010,6 +17054,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     Expression<String>? signedOn,
     Expression<String>? directorName,
     Expression<int>? lockedVersion,
+    Expression<bool>? showObjectiveAverage,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
     Expression<String>? deletedAt,
@@ -17031,6 +17076,8 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
       if (signedOn != null) 'signed_on': signedOn,
       if (directorName != null) 'director_name': directorName,
       if (lockedVersion != null) 'locked_version': lockedVersion,
+      if (showObjectiveAverage != null)
+        'show_objective_average': showObjectiveAverage,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -17053,6 +17100,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     Value<String?>? signedOn,
     Value<String?>? directorName,
     Value<int?>? lockedVersion,
+    Value<bool>? showObjectiveAverage,
     Value<String?>? createdAt,
     Value<String>? updatedAt,
     Value<String?>? deletedAt,
@@ -17073,6 +17121,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
       signedOn: signedOn ?? this.signedOn,
       directorName: directorName ?? this.directorName,
       lockedVersion: lockedVersion ?? this.lockedVersion,
+      showObjectiveAverage: showObjectiveAverage ?? this.showObjectiveAverage,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -17123,6 +17172,11 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     if (lockedVersion.present) {
       map['locked_version'] = Variable<int>(lockedVersion.value);
     }
+    if (showObjectiveAverage.present) {
+      map['show_objective_average'] = Variable<bool>(
+        showObjectiveAverage.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
     }
@@ -17157,6 +17211,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
           ..write('signedOn: $signedOn, ')
           ..write('directorName: $directorName, ')
           ..write('lockedVersion: $lockedVersion, ')
+          ..write('showObjectiveAverage: $showObjectiveAverage, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -36969,6 +37024,7 @@ typedef $OfficialFormsCreateCompanionBuilder = OfficialFormsCompanion Function({
   Value<String?> signedOn,
   Value<String?> directorName,
   Value<int?> lockedVersion,
+  Value<bool> showObjectiveAverage,
   Value<String?> createdAt,
   required String updatedAt,
   Value<String?> deletedAt,
@@ -36989,6 +37045,7 @@ typedef $OfficialFormsUpdateCompanionBuilder = OfficialFormsCompanion Function({
   Value<String?> signedOn,
   Value<String?> directorName,
   Value<int?> lockedVersion,
+  Value<bool> showObjectiveAverage,
   Value<String?> createdAt,
   Value<String> updatedAt,
   Value<String?> deletedAt,
@@ -37067,6 +37124,11 @@ class $OfficialFormsFilterComposer
 
   ColumnFilters<int> get lockedVersion => $composableBuilder(
     column: $table.lockedVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showObjectiveAverage => $composableBuilder(
+    column: $table.showObjectiveAverage,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -37165,6 +37227,11 @@ class $OfficialFormsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get showObjectiveAverage => $composableBuilder(
+    column: $table.showObjectiveAverage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -37248,6 +37315,11 @@ class $OfficialFormsAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get showObjectiveAverage => $composableBuilder(
+    column: $table.showObjectiveAverage,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -37305,6 +37377,7 @@ class $OfficialFormsTableManager
                 Value<String?> signedOn = const Value.absent(),
                 Value<String?> directorName = const Value.absent(),
                 Value<int?> lockedVersion = const Value.absent(),
+                Value<bool> showObjectiveAverage = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> deletedAt = const Value.absent(),
@@ -37324,6 +37397,7 @@ class $OfficialFormsTableManager
                 signedOn: signedOn,
                 directorName: directorName,
                 lockedVersion: lockedVersion,
+                showObjectiveAverage: showObjectiveAverage,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -37345,6 +37419,7 @@ class $OfficialFormsTableManager
                 Value<String?> signedOn = const Value.absent(),
                 Value<String?> directorName = const Value.absent(),
                 Value<int?> lockedVersion = const Value.absent(),
+                Value<bool> showObjectiveAverage = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 required String updatedAt,
                 Value<String?> deletedAt = const Value.absent(),
@@ -37364,6 +37439,7 @@ class $OfficialFormsTableManager
                 signedOn: signedOn,
                 directorName: directorName,
                 lockedVersion: lockedVersion,
+                showObjectiveAverage: showObjectiveAverage,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

@@ -360,6 +360,7 @@ CREATE TABLE official_forms (
   signed_on TEXT,
   director_name TEXT,
   locked_version INTEGER,
+  show_objective_average BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TEXT,
   updated_at TEXT NOT NULL,
   deleted_at TEXT,

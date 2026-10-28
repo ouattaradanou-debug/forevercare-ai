@@ -138,7 +138,7 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | Couverture : ministère, région, direction régionale, direction provinciale, CEB, école | `admin_headers.ministry`, `.region`, `.regional_direction`, `.provincial_direction`, `.ceb`, `.school_label` |
 | Titre « PROGRAMME D'ACTIVITÉS AU TITRE DE L'ANNÉE SCOLAIRE » | **fixe** |
 | Année | `school_years.label` |
-| N° d'ordre | `activity_objectives.order_no` |
+| N° d'ordre | position de l'objectif (tri par `activity_objectives.order_no`, H65) |
 | Objectifs (cellule fusionnée) | `activity_objectives.label` |
 | Activités prévues | `activity_lines.planned_activity` |
 | Échéances | `activity_lines.deadline_on` (ou `deadline_text`) |
@@ -146,6 +146,7 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | Résultats attendus | `activity_lines.expected_result` |
 | Fait à … le … ; directeur (nom, signature, cachet) | voir en-tête du document |
 | L'inspecteur, chef de la circonscription (nom, signature, cachet) | emplacement **laissé vide** à l'impression (aucune donnée) |
+| Version finale (17.4) | `form_versions` (instantané `snapshot`, ajout seul) ; verrou `official_forms.locked_version` |
 
 ## B7 — Bilan de programme annuel d'activités (A4 paysage)
 
@@ -157,7 +158,7 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | Activités prévues | `activity_lines.planned_activity` |
 | Résultats attendus | `activity_lines.expected_result` |
 | Résultats atteints | `activity_lines.achieved_result` |
-| Taux de réussite (%) | `activity_lines.success_rate` (saisi ; moyenne par objectif **calculée** en option) |
+| Taux de réussite (%) | `activity_lines.success_rate` (saisi ; moyenne par objectif **calculée** en option : `official_forms.show_objective_average`) |
 | Bloc de fin | identique à B6 |
 
 ## Documents du directeur (A17, modèles du porteur)

@@ -59,9 +59,14 @@ class LocalStore {
       };
       if (existing == null) merged['created_at'] ??= now;
       await writeLocal(t, merged);
-      // Ligne neuve : envoi complet (valeurs par défaut comprises).
+      // Ligne neuve : envoi complet (valeurs par défaut comprises) ; les
+      // valeurs données gardent leur forme (un objet JSON reste un objet).
       final payload = existing == null
-          ? ((await read(tableName, key))!..remove('synced_at'))
+          ? <String, dynamic>{
+              ...(await read(tableName, key))!..remove('synced_at'),
+              ...fields,
+              'updated_at': now,
+            }
           : <String, dynamic>{...key, ...fields, 'updated_at': now};
       await _enqueue(t, key, payload);
       return merged;

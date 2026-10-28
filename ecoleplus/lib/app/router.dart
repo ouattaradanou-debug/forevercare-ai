@@ -21,6 +21,7 @@ import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
 import 'package:ecoleplus/features/members/presentation/add_member_page.dart';
 import 'package:ecoleplus/features/members/presentation/members_page.dart';
 import 'package:ecoleplus/features/options/presentation/options_page.dart';
+import 'package:ecoleplus/features/programme/presentation/programme_pages.dart';
 import 'package:ecoleplus/features/school/presentation/headers_page.dart';
 import 'package:ecoleplus/features/school/presentation/school_page.dart';
 import 'package:ecoleplus/features/school/presentation/years_page.dart';
@@ -162,6 +163,19 @@ final routerProvider = Provider<GoRouter>((ref) {
               CodeDocument.certificatScolarite,
           s.pathParameters['id']!,
         ),
+      ),
+      GoRoute(
+        path: '/formulaires',
+        builder: (_, _) => const FormulairesAnneePage(),
+      ),
+      GoRoute(
+        path: '/programme/:code',
+        builder: (_, s) => ProgrammePage(s.pathParameters['code']!),
+      ),
+      GoRoute(
+        path: '/programme/:code/activite/:id',
+        builder: (_, s) =>
+            ActivitePage(s.pathParameters['code']!, s.pathParameters['id']!),
       ),
       GoRoute(
         path: '/registres/:code',

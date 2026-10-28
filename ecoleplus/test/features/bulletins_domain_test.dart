@@ -255,6 +255,7 @@ void main() {
         ('teachers', 'assignment_decision_date'),
         ('teachers', 'service_start_date'),
         ('official_forms', 'locked_version'),
+        ('official_forms', 'show_objective_average'),
       ]) {
         await db.customStatement('ALTER TABLE $t DROP COLUMN $c');
       }

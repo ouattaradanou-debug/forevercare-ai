@@ -89,7 +89,8 @@ class _Valeur {
 
 _Valeur _v(String? t) => _Valeur(t);
 
-pw.Widget _enteteLong(EnteteDocument e) {
+/// Grand en-tête (ministère … école | pays, devise) : documents et B6/B7.
+pw.Widget enteteLongPdf(EnteteDocument e) {
   const petit = pw.TextStyle(fontSize: 9.5);
   final lignes = e.lignesLongues;
   return pw.Row(
@@ -213,7 +214,7 @@ pw.Widget _priseService(DocumentDirecteur d) {
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
-      _enteteLong(d.entete),
+      enteteLongPdf(d.entete),
       pw.SizedBox(height: 20),
       _titre('ATTESTATION DE PRISE DE SERVICE', taille: 17),
       pw.SizedBox(height: 10),
@@ -250,7 +251,7 @@ pw.Widget _attestationNiveau(DocumentDirecteur d) {
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
-      _enteteLong(d.entete),
+      enteteLongPdf(d.entete),
       pw.SizedBox(height: 20),
       _titre('ATTESTATION DE NIVEAU'),
       pw.SizedBox(height: 6),
@@ -299,7 +300,7 @@ pw.Widget _certificatLong(DocumentDirecteur d) {
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
-      _enteteLong(d.entete),
+      enteteLongPdf(d.entete),
       pw.SizedBox(height: 20),
       _titre('CERTIFICAT DE SCOLARITÉ', taille: 17),
       pw.SizedBox(height: 6),
