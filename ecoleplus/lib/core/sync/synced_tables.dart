@@ -117,6 +117,27 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
   ),
   SyncedTable<ActivityLineRow>(name: 'activity_lines', info: db.activityLines),
   SyncedTable<FormVersionRow>(name: 'form_versions', info: db.formVersions),
+  SyncedTable<LearningDomainRow>(
+    name: 'learning_domains',
+    info: db.learningDomains,
+  ),
+  SyncedTable<QualitativeLevelRow>(
+    name: 'qualitative_levels',
+    info: db.qualitativeLevels,
+  ),
+  SyncedTable<PreschoolPeriodRow>(
+    name: 'preschool_periods',
+    info: db.preschoolPeriods,
+  ),
+  SyncedTable<PreschoolEvaluationRow>(
+    name: 'preschool_evaluations',
+    info: db.preschoolEvaluations,
+  ),
+  SyncedTable<PreschoolBookletRow>(
+    name: 'preschool_booklets',
+    info: db.preschoolBooklets,
+  ),
+  SyncedTable<AttendanceRow>(name: 'attendance', info: db.attendance),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];

@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -128,6 +128,22 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(activityLines);
         await m.createTable(formVersions);
         await m.createIndex(activityLinesObjective);
+      }
+      if (from < 9) {
+        // Phase 6 : maternelle (module optionnel) et présences.
+        await m.addColumn(schools, schools.preschoolRanking);
+        for (final t in <TableInfo<Table, dynamic>>[
+          learningDomains,
+          qualitativeLevels,
+          preschoolPeriods,
+          preschoolEvaluations,
+          preschoolBooklets,
+          attendance,
+        ]) {
+          await m.createTable(t);
+        }
+        await m.createIndex(preschoolEvaluationsPeriod);
+        await m.createIndex(attendanceClassDay);
       }
     },
   );
