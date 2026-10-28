@@ -92,6 +92,12 @@ Le poste dominant n'est pas la bibliothèque mais le **forfait Supabase** (25 $/
 3. Mettre les paires dans un dossier, puis lancer : `python3 -I tools/ocr_bench/bench_tesseract.py CHEMIN_DU_DOSSIER`.
 4. Reporter le CER moyen dans ce document ; si > 5 %, tester l'option B sur les mêmes pages.
 
+## 7. Mesures de la phase 9 (28/10/2026, serveur local)
+* Reconnaissance de texte : Tesseract 5 (français) via GitHub Actions, sur des pages scannées de test : 0,8 à 1,8 s par page ; coût mesuré (temps de calcul GitHub) **0,0001 à 0,0002 $ par page**, soit moins de 0,10 $ pour 500 pages.
+* Le mot « karité » d'un scan sans texte est retrouvé par la recherche dans le texte ; un passage des archives n'est jamais renvoyé à un enseignant ; les archives ont toujours `ai_allowed = false`.
+* Envoi : morceaux de 6 Mo, reprise au morceau près après une coupure (essai avec 14 Mo coupé après 6 Mo : 3 morceaux au total).
+* Espace : 5 Go par école par défaut (réglable côté serveur seulement) ; CER sur de vrais scans de l'école pilote : **encore à mesurer** (section 6).
+
 ## Sources des tarifs (consultées le 20/10/2026)
 * Supabase : synthèses tierces de la page de tarifs (makerkit.dev, jetadmin.io, schematichq.com) — page officielle supabase.com/pricing non consultée directement.
 * Google Cloud Vision : cloud.google.com/vision/pricing.

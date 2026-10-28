@@ -101,3 +101,9 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H92 | Identifiant imprimé : `student_code`, sinon « N° » du registre matricule | Cartes | `CartesRepository.cartes` |
 | H93 | Signature et cachet du directeur : à la main, dans le cadre du verso (pas d'image de signature, décision du porteur) | Cartes | `pdfCartes` |
 | H94 | Une photo remplacée ou retirée n'est pas effacée du serveur (à traiter avec la durée de conservation) | Photos | `PhotosRepository` |
+| H95 | Espace par école : 5 Go par défaut, réglable côté serveur seulement (300 Mo pour « École Test » sur le serveur de test) ; corbeille gardée 30 jours puis effacée | Bibliothèque | `schools.storage_quota_bytes` |
+| H96 | Envoi reprenable par morceaux de 6 Mo (protocole TUS de Supabase) ; fichier de 50 Mo au plus | Bibliothèque | `SupabaseSyncRemote.debutEnvoi` |
+| H97 | Doublon = même contenu (empreinte SHA-256) dans la même école, quel que soit le nom | Bibliothèque | `BibliothequeRepository.ajouter` |
+| H98 | Ajout par un enseignant : après validation du directeur par défaut (réglable : sans validation / interdit) ; un enseignant ne voit que le fonds commun et les documents de ses classes | Bibliothèque | `app.document_guard` |
+| H99 | Lecture du texte : Tesseract (français) sur GitHub toutes les 15 minutes ; 3 essais puis « Lecture du texte impossible » ; les vecteurs (recherche par le sens) viennent avec la phase 12 | Bibliothèque | `tools/indexation/indexer.py` |
+| H100 | Copie signée d'un formulaire : scan choisi dans les fichiers du téléphone (PDF ou photo déjà prise), pas d'appareil photo intégré à cet écran | Archives | `CopieSignee` |
