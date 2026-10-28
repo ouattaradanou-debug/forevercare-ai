@@ -31,6 +31,7 @@ class DocumentsPage extends ConsumerWidget {
     final session = ref.watch(sessionProvider).value!;
     final school = ref.watch(schoolProvider(session.schoolId)).value;
     final yearId = school?.currentSchoolYearId;
+    final primaire = school?.managesPrimary ?? true;
     String? etat(String code) => yearId == null
         ? null
         : texteEtat(ref.watch(formulaireProvider((yearId, code))).value);
@@ -75,16 +76,19 @@ class DocumentsPage extends ConsumerWidget {
             icone: Icons.badge_outlined,
           ),
           const SectionTitle('Élèves'),
-          ligne(
-            'Registre matricule (B2)',
-            '/registres/B2',
-            sousTitre: etat('B2'),
-          ),
-          ligne(
-            'Fiche de scolarité (B4)',
-            '/documents/choisir/$codeB4',
-            icone: Icons.school_outlined,
-          ),
+          // Registre matricule, fiche de scolarité et bulletins : primaire.
+          if (primaire) ...[
+            ligne(
+              'Registre matricule (B2)',
+              '/registres/B2',
+              sousTitre: etat('B2'),
+            ),
+            ligne(
+              'Fiche de scolarité (B4)',
+              '/documents/choisir/$codeB4',
+              icone: Icons.school_outlined,
+            ),
+          ],
           for (final c in const [
             CodeDocument.certificatScolarite,
             CodeDocument.attestationNiveau,
@@ -95,12 +99,13 @@ class DocumentsPage extends ConsumerWidget {
               '/documents/choisir/${c.code}',
               icone: Icons.school_outlined,
             ),
-          ligne(
-            'Bulletins',
-            '/notes',
-            sousTitre: 'Par classe, dans « Notes et classement »',
-            icone: Icons.grading,
-          ),
+          if (primaire)
+            ligne(
+              'Bulletins',
+              '/notes',
+              sousTitre: 'Par classe, dans « Notes et classement »',
+              icone: Icons.grading,
+            ),
           const SectionTitle('École'),
           ligne(
             'Programme d’activités (B6)',
@@ -168,28 +173,29 @@ class FormulairesAnneePage extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           for (final (code, titre, route) in formulaires)
-            Builder(
-              builder: (context) {
-                final f = ref.watch(formulaireProvider((yearId, code))).value;
-                final fini = f?.status == 'signe_archive';
-                return Card(
-                  child: ListTile(
-                    key: Key('formulaire-$code'),
-                    leading: Icon(
-                      f?.lockedVersion != null
-                          ? Icons.lock
-                          : fini
-                          ? Icons.task_alt
-                          : Icons.description_outlined,
+            if (code != 'B2' || (school?.managesPrimary ?? true))
+              Builder(
+                builder: (context) {
+                  final f = ref.watch(formulaireProvider((yearId, code))).value;
+                  final fini = f?.status == 'signe_archive';
+                  return Card(
+                    child: ListTile(
+                      key: Key('formulaire-$code'),
+                      leading: Icon(
+                        f?.lockedVersion != null
+                            ? Icons.lock
+                            : fini
+                            ? Icons.task_alt
+                            : Icons.description_outlined,
+                      ),
+                      title: Text('$code — $titre'),
+                      subtitle: Text(texteEtat(f)),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push(route),
                     ),
-                    title: Text('$code — $titre'),
-                    subtitle: Text(texteEtat(f)),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push(route),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
         ],
       ),
     );

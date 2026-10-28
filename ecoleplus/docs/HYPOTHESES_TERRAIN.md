@@ -79,3 +79,11 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H70 | Propositions : les 5 objectifs du modèle ; activités proposées seulement pour les deux premiers (seules lisibles sur le scan) ; rien n'est inséré sans que le directeur le touche | B6 | `suggestionsProgramme` |
 | H71 | Deux téléphones qui valident hors ligne la **même** version n : le serveur garde la première arrivée (même identifiant) ; l'autre est ignorée | B6, B7 | `validerVersionFinale` |
 | H72 | Programme et bilan : directeur et délégués « formulaires » seulement ; l'enseignant ne les voit pas | B6, B7 | RLS `activity_*` |
+| H73 | Domaines d'apprentissage proposés (Langage, Éveil mathématique, Éveil à l'environnement, Graphisme et préécriture, Motricité et activités physiques, Expression artistique) : **à confronter au programme officiel du préscolaire** ; le directeur les modifie | Maternelle | `domainesParDefaut` |
+| H74 | Sections « Petite, Moyenne, Grande section » (choix du porteur, 28/10/2026) | Maternelle | `levels` |
+| H75 | Trois niveaux qualitatifs (Acquis / En cours d'acquisition / Non acquis), chacun avec couleur **et** pictogramme (rond plein, demi-rond, rond vide) ; libellés, couleurs et pictogrammes modifiables | Maternelle | `niveauxParDefaut` |
+| H76 | Trois trimestres d'évaluation par an, un livret par trimestre (choix du porteur) | Maternelle | `trimestresMaternelle` |
+| H77 | Livret : **modèle proposé** (pas de modèle officiel fourni) : en-tête de l'école, tableau domaines × niveaux, présences, appréciation, observation, signatures enseignant(e) / directeur / parents ; à remplacer par un modèle officiel s'il en existe un | Maternelle | `pdfLivrets` |
+| H78 | Classement facultatif (désactivé par défaut) : score moyen des domaines évalués (meilleur niveau = le plus de points), mêmes scores = ex-aequo, enfant sans évaluation non classé | Maternelle | `classerEnfants` |
+| H79 | Présences (phase 6) : classes de maternelle seulement ; une saisie par enfant et par jour (présent, absent, retard) ; le livret compte les absences et retards de l'année ; ouvertes au primaire en phase 13 | Maternelle | `attendance` |
+| H80 | Domaine retiré : plus évalué ni imprimé, évaluations passées conservées | Maternelle | `retirerDomaine` |

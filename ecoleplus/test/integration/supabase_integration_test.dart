@@ -22,6 +22,7 @@ import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
 import 'package:ecoleplus/features/forms/data/fiche_scolarite_repository.dart';
 import 'package:ecoleplus/features/grades/data/grades_repository.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
+import 'package:ecoleplus/features/maternelle/data/maternelle_repository.dart';
 import 'package:ecoleplus/features/programme/data/programme_repository.dart';
 import 'package:ecoleplus/features/programme/domain/programme.dart';
 import 'package:ecoleplus/features/school/data/school_repository.dart';
@@ -969,6 +970,120 @@ void mainA6() {
     final ens = await connecte('enseignant1@ecole-test.local');
     expect(await ens.db.select(ens.db.activityLines).get(), isEmpty);
     await ens.close();
+    await dir.close();
+  }, skip: skip);
+
+  test('phase 6 : une école active la maternelle, l’autre ne voit rien '
+      'changer ; l’enseignante de la grande section évalue et fait l’appel, '
+      'pas l’autre ; désactivée, tout disparaît sans rien effacer', () async {
+    const temoin = '10000000-0000-4000-8000-000000000002';
+    Future<(int, int, int)> comptes(Phone p) async => (
+      (await p.db.select(p.db.classes).get()).length,
+      (await p.db.select(p.db.students).get()).length,
+      (await p.db.select(p.db.enrollments).get()).length,
+    );
+    Future<List<OutboxEntry>> refus(Phone p) => (p.db.select(
+      p.db.outbox,
+    )..where((o) => o.status.equals('refuse'))).get();
+
+    final dir = await connecte('directeur@ecole-test.local');
+    final avant = await comptes(dir);
+
+    // L'École Témoin active la maternelle et ouvre une grande section.
+    final t = await connecte('directeur@ecole-temoin.local');
+    await t.repo.setModule(temoin, 'maternelle', on: true);
+    await MaternelleRepository(t.store).assurerParDefaut(temoin);
+    await t.store.save('classes', {
+      'id': 'c2000000-0000-4000-8000-000000000001',
+      'school_id': temoin,
+      'school_year_id': '20000000-0000-4000-8000-000000009025',
+      'level_code': 'GS',
+      'name': 'GS Témoin',
+    });
+    await t.engine.syncNow();
+    expect(await refus(t), isEmpty);
+
+    // L'École Test (primaire seule) : exactement les mêmes effectifs.
+    await dir.engine.syncNow();
+    expect(await comptes(dir), avant);
+    expect(await dir.db.select(dir.db.learningDomains).get(), isEmpty);
+
+    // L'École Test active à son tour la maternelle.
+    final m = MaternelleRepository(dir.store);
+    await dir.repo.setModule(ecoleTest, 'maternelle', on: true);
+    await m.assurerParDefaut(ecoleTest);
+    const gs = 'c2000000-0000-4000-8000-000000000002';
+    await dir.store.save('classes', {
+      'id': gs,
+      'school_id': ecoleTest,
+      'school_year_id': '20000000-0000-4000-8000-000000002025',
+      'level_code': 'GS',
+      'name': 'GS A',
+      'main_teacher_id': 'b0000000-0000-4000-8000-000000000002',
+    });
+    await dir.engine.syncNow();
+    expect(await refus(dir), isEmpty);
+    expect(
+      await dir.client.from('learning_domains').select('id'),
+      hasLength(6),
+      reason: 'seulement ceux de l’École Test',
+    );
+
+    // Enseignante de la grande section : évaluation, livret, appel.
+    final ens2 = await connecte('enseignant2@ecole-test.local');
+    final classe = (await MaternelleRepository(ens2.store).classe(gs))!;
+    final me = MaternelleRepository(ens2.store);
+    final periode = await me.assurerTrimestre(classe, 1);
+    final niveaux = await me.watchNiveaux(ecoleTest).first;
+    final domaines = await me.watchDomaines(ecoleTest).first;
+    expect((niveaux.length, domaines.length), (3, 6));
+    const enfant = 'd0000000-0000-4000-8000-000000000012';
+    await me.evaluer(
+      schoolId: ecoleTest,
+      periodId: periode,
+      studentId: enfant,
+      domainId: domaines.first.id,
+      levelId: niveaux.first.id,
+    );
+    await me.enregistrerLivret(ecoleTest, periode, enfant, {
+      'teacher_appreciation': 'Bon début',
+      'observation': 'ignorée',
+    });
+    await me.marquer(classe, enfant, '2025-11-03', 'absent');
+    await ens2.engine.syncNow();
+    expect(await refus(ens2), isEmpty);
+    final livret = await dir.client
+        .from('preschool_booklets')
+        .select('teacher_appreciation, observation')
+        .single();
+    expect(livret, {'teacher_appreciation': 'Bon début', 'observation': null});
+
+    // L'autre enseignante : refusé.
+    final ens1 = await connecte('enseignant1@ecole-test.local');
+    final m1 = MaternelleRepository(ens1.store);
+    await m1.evaluer(
+      schoolId: ecoleTest,
+      periodId: periode,
+      studentId: enfant,
+      domainId: domaines.last.id,
+      levelId: niveaux.first.id,
+    );
+    await ens1.engine.syncNow();
+    expect(await refus(ens1), hasLength(1));
+
+    // Désactivation : invisible, mais conservé.
+    await dir.repo.setModule(ecoleTest, 'maternelle', on: false);
+    await t.repo.setModule(temoin, 'maternelle', on: false);
+    await dir.engine.syncNow();
+    await t.engine.syncNow();
+    expect(
+      await dir.client.from('preschool_evaluations').select('id'),
+      isEmpty,
+    );
+    expect(await dir.client.from('classes').select('id').eq('id', gs), isEmpty);
+    await ens1.close();
+    await ens2.close();
+    await t.close();
     await dir.close();
   }, skip: skip);
 }

@@ -35,7 +35,12 @@ class HomePage extends ConsumerWidget {
           const _Alertes(),
           const SizedBox(height: 8),
           if (isDirector) ...[
-            ..._boutonsEcole(context, tousLesDroits, enseignant: false),
+            ..._boutonsEcole(
+              context,
+              tousLesDroits,
+              enseignant: false,
+              primaire: school?.managesPrimary ?? true,
+            ),
             BigButton(
               icon: Icons.account_balance,
               label: 'Mon école',
@@ -58,6 +63,7 @@ class HomePage extends ConsumerWidget {
               context,
               ref.watch(mesDroitsProvider),
               enseignant: session.role == 'enseignant',
+              primaire: school?.managesPrimary ?? true,
             ),
             BigButton(
               icon: Icons.person,
@@ -144,6 +150,7 @@ List<Widget> _boutonsEcole(
   BuildContext context,
   Set<String> droits, {
   required bool enseignant,
+  required bool primaire,
 }) {
   final eleves = droits.contains('eleves') || droits.contains('registres');
   final registres = droits.contains('registres');
@@ -169,7 +176,12 @@ List<Widget> _boutonsEcole(
     // Délégué « formulaires » : programme et bilan (B6, B7), B1, B3.
     if (registres || droits.contains('formulaires'))
       bouton(Icons.folder_copy_outlined, 'Documents', '/documents'),
-    if (notes) bouton(Icons.grading, 'Notes et classement', '/notes'),
+    if (notes)
+      bouton(
+        Icons.grading,
+        primaire ? 'Notes et classement' : 'Évaluations (maternelle)',
+        '/notes',
+      ),
   ];
 }
 

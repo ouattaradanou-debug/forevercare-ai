@@ -407,7 +407,8 @@ class StudentPage extends ConsumerWidget {
               eleve: s,
               raceReligion: school?.showRaceReligion ?? false,
             ),
-          if (registre)
+          // Fiche de scolarité : primaire seulement.
+          if (registre && (school?.managesPrimary ?? true))
             OutlinedButton.icon(
               key: const Key('ouvrir-b4'),
               icon: const Icon(Icons.description_outlined),

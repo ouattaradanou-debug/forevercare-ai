@@ -174,3 +174,18 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | Enseignant : nom, matricule, emploi | `teachers.last_name`, `first_names`, `matricule`, `emploi` |
 | Décision d'affectation n° … du … ; prise de service le … | `teachers.assignment_decision_number`, `assignment_decision_date`, `service_start_date` |
 | Journal (sans numéro) | `issued_documents` |
+
+## Livret d'évaluation de maternelle (modèle proposé, H77 — pas de modèle officiel)
+
+| Élément | Source |
+|---|---|
+| En-tête : ministère, directions, circonscription, école ; pays, devise | `admin_headers`, `schools.name` |
+| Trimestre, année scolaire | `preschool_periods.label`, `school_years.label` |
+| Enfant (nom, sexe, né(e) le), classe, enseignant(e) | `students`, `classes`, `teachers` |
+| Domaines d'apprentissage (lignes) | `learning_domains` (actifs, dans l'ordre) |
+| Niveaux (colonnes : libellé, couleur, pictogramme) | `qualitative_levels` |
+| Niveau atteint | `preschool_evaluations.level_id` |
+| Présences : absences, retards | `attendance` |
+| Rang (seulement si activé) | **calculé** (`schools.preschool_ranking`) |
+| Appréciation de l'enseignant(e) ; observations du directeur | `preschool_booklets.teacher_appreciation`, `.observation` |
+| Signatures : enseignant(e), directeur/directrice, parents | **fixe** ; `schools.director_civility` |

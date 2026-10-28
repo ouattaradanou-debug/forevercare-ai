@@ -18,6 +18,7 @@ import 'package:ecoleplus/features/home/presentation/home_page.dart';
 import 'package:ecoleplus/features/import/presentation/import_page.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_pages.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
+import 'package:ecoleplus/features/maternelle/presentation/maternelle_pages.dart';
 import 'package:ecoleplus/features/members/presentation/add_member_page.dart';
 import 'package:ecoleplus/features/members/presentation/members_page.dart';
 import 'package:ecoleplus/features/options/presentation/options_page.dart';
@@ -162,6 +163,26 @@ final routerProvider = Provider<GoRouter>((ref) {
           CodeDocument.depuis(s.pathParameters['code']!) ??
               CodeDocument.certificatScolarite,
           s.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/maternelle/reglages',
+        builder: (_, _) => const MaternelleReglagesPage(),
+      ),
+      GoRoute(
+        path: '/maternelle/classe/:id',
+        builder: (_, s) => ClasseMaternellePage(s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/maternelle/classe/:id/presences',
+        builder: (_, s) => PresencesPage(s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/maternelle/classe/:id/t/:t/enfant/:eleve',
+        builder: (_, s) => EvaluationEnfantPage(
+          s.pathParameters['id']!,
+          int.parse(s.pathParameters['t']!),
+          s.pathParameters['eleve']!,
         ),
       ),
       GoRoute(

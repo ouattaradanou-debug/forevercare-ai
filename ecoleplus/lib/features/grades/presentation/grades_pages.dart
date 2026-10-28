@@ -8,6 +8,7 @@ import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/grades/data/grades_repository.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
+import 'package:ecoleplus/features/maternelle/presentation/maternelle_pages.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/staff/presentation/staff_providers.dart';
 import 'package:flutter/material.dart';
@@ -53,42 +54,77 @@ class NotesPage extends ConsumerWidget {
         ? const <ClassRow>[]
         : ref.watch(classesProvider(yearId)).value ?? const <ClassRow>[];
     final directeur = session.role == 'directeur';
+    final primaire = school?.managesPrimary ?? true;
+    final maternelle =
+        school != null && ref.watch(maternelleActiveProvider(school.id));
+    final cycles = {
+      for (final n in ref.watch(levelsProvider).value ?? const <LevelRow>[])
+        n.code: n.cycle,
+    };
+    bool estMaternelle(ClassRow c) => cycles[c.levelCode] == 'maternelle';
+    // Niveau non géré (primaire décoché, maternelle désactivée) : masqué.
+    final visibles = [
+      for (final c in classes)
+        if (estMaternelle(c) ? maternelle : primaire) c,
+    ];
     return EcoleScaffold(
-      title: 'Notes et classement',
+      title: titreNotes(primaire: primaire, maternelle: maternelle),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           const Text('Choisissez la classe.'),
           const SizedBox(height: 8),
-          if (classes.isEmpty)
+          if (visibles.isEmpty)
             const InfoMessage('Aucune classe pour l’année en cours.'),
-          for (final c in classes)
+          for (final c in visibles)
             Card(
               child: ListTile(
-                leading: const Icon(Icons.class_),
+                leading: Icon(
+                  estMaternelle(c) ? Icons.child_care : Icons.class_,
+                ),
                 title: Text(c.name),
+                subtitle: estMaternelle(c)
+                    ? const Text('Maternelle : évaluation sans note')
+                    : null,
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/notes/${c.id}'),
+                onTap: () => context.push(
+                  estMaternelle(c)
+                      ? '/maternelle/classe/${c.id}'
+                      : '/notes/${c.id}',
+                ),
               ),
             ),
           if (directeur) ...[
             const SizedBox(height: 16),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.workspace_premium_outlined),
-              label: const Text('Mentions (appréciations selon la moyenne)'),
-              onPressed: () => context.push('/mentions'),
-            ),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.description_outlined),
-              label: const Text('Modèle de bulletin'),
-              onPressed: () => context.push('/bulletins-modele'),
-            ),
+            if (primaire) ...[
+              OutlinedButton.icon(
+                icon: const Icon(Icons.workspace_premium_outlined),
+                label: const Text('Mentions (appréciations selon la moyenne)'),
+                onPressed: () => context.push('/mentions'),
+              ),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.description_outlined),
+                label: const Text('Modèle de bulletin'),
+                onPressed: () => context.push('/bulletins-modele'),
+              ),
+            ],
+            if (maternelle)
+              OutlinedButton.icon(
+                icon: const Icon(Icons.tune),
+                label: const Text('Réglages de la maternelle'),
+                onPressed: () => context.push('/maternelle/reglages'),
+              ),
           ],
         ],
       ),
     );
   }
 }
+
+/// « Notes et classement » ; « Évaluations (maternelle) » pour une école
+/// qui ne gère que la maternelle.
+String titreNotes({required bool primaire, required bool maternelle}) =>
+    primaire ? 'Notes et classement' : 'Évaluations (maternelle)';
 
 /// Une classe : les trois trimestres, le classement, les matières.
 class ClasseNotesPage extends ConsumerWidget {

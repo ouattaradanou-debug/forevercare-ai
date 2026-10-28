@@ -1,6 +1,7 @@
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/features/maternelle/presentation/maternelle_pages.dart';
 import 'package:ecoleplus/features/options/domain/module_rules.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:flutter/material.dart';
@@ -156,6 +157,10 @@ class _ModuleSwitch extends ConsumerWidget {
       await ref
           .read(schoolRepositoryProvider)
           .setModule(schoolId, module.key, on: v);
+      // Maternelle : domaines et niveaux proposés, modifiables ensuite.
+      if (v && module.key == 'maternelle') {
+        await ref.read(maternelleRepositoryProvider).assurerParDefaut(schoolId);
+      }
     },
   );
 }
