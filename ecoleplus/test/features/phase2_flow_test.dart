@@ -43,8 +43,17 @@ void main() {
     expect(find.text('Petite section'), findsNothing);
     await tester.tap(find.text('CM2').last);
     await tester.pumpAndSettle();
+    // L'enseignant responsable se choisit dès la création.
+    await tester.tap(find.byKey(const Key('enseignant-classe')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ENSEIGNANT Un').last);
+    await tester.pumpAndSettle();
     await tap(tester, find.text('Créer la classe'));
     expect(find.text('CM2 A'), findsOneWidget);
+    final cm2 = (await h.db.select(h.db.classes).get()).firstWhere(
+      (c) => c.name == 'CM2 A',
+    );
+    expect(cm2.mainTeacherId, 't-un');
     expect(find.text('3 classes · 4 élèves'), findsOneWidget);
     await h.dispose(tester);
   });

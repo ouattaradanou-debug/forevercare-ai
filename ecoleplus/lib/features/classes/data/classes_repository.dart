@@ -62,6 +62,7 @@ class ClassesRepository {
     required String yearId,
     required String levelCode,
     required String name,
+    String? mainTeacherId,
   }) async {
     final nom = name.trim();
     final doublon =
@@ -82,6 +83,7 @@ class ClassesRepository {
       'school_year_id': yearId,
       'level_code': levelCode,
       'name': nom,
+      'main_teacher_id': ?mainTeacherId,
     });
     return id;
   }

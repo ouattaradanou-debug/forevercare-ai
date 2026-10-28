@@ -40,9 +40,11 @@ class ClassesPage extends ConsumerWidget {
     WidgetRef ref,
     SchoolRow school,
     List<LevelRow> permis,
+    List<TeacherRow> enseignants,
   ) async {
     if (permis.isEmpty) return;
     var niveau = permis.first;
+    String? enseignant;
     final nom = TextEditingController(text: '${niveau.label} A');
     final ok = await showDialog<bool>(
       context: context,
@@ -70,6 +72,25 @@ class ClassesPage extends ConsumerWidget {
                 controller: nom,
                 label: 'Nom de la classe (ex. CM1 A)',
               ),
+              // L'enseignant voit sa classe dès qu'il est choisi ici.
+              DropdownButtonFormField<String?>(
+                key: const Key('enseignant-classe'),
+                initialValue: enseignant,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Enseignant responsable',
+                ),
+                items: [
+                  const DropdownMenuItem(child: Text('Plus tard')),
+                  for (final t in enseignants)
+                    if (t.status != 'parti')
+                      DropdownMenuItem(
+                        value: t.id,
+                        child: Text('${t.lastName} ${t.firstNames}'),
+                      ),
+                ],
+                onChanged: (v) => setState(() => enseignant = v),
+              ),
             ],
           ),
           actions: [
@@ -95,6 +116,7 @@ class ClassesPage extends ConsumerWidget {
             yearId: school.currentSchoolYearId!,
             levelCode: niveau.code,
             name: nom.text,
+            mainTeacherId: enseignant,
           ),
     );
   }
@@ -162,7 +184,14 @@ class ClassesPage extends ConsumerWidget {
               label: 'Ajouter une classe',
               onPressed: permis.isEmpty
                   ? null
-                  : () => _ajouter(context, ref, school, permis),
+                  : () => _ajouter(
+                      context,
+                      ref,
+                      school,
+                      permis,
+                      ref.read(teachersProvider(school.id)).value ??
+                          const <TeacherRow>[],
+                    ),
             ),
           const SizedBox(height: 12),
           if (classes.isEmpty)
