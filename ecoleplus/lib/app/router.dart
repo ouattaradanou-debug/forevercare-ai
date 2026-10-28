@@ -19,6 +19,7 @@ import 'package:ecoleplus/features/import/presentation/import_page.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_pages.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
 import 'package:ecoleplus/features/maternelle/presentation/maternelle_pages.dart';
+import 'package:ecoleplus/features/medical/presentation/medical_pages.dart';
 import 'package:ecoleplus/features/members/presentation/add_member_page.dart';
 import 'package:ecoleplus/features/members/presentation/members_page.dart';
 import 'package:ecoleplus/features/options/presentation/options_page.dart';
@@ -209,6 +210,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/import/enseignants',
         builder: (_, _) => const ImportPage(TypeImport.enseignants),
+      ),
+      GoRoute(
+        path: '/eleves/:id/medical',
+        builder: (_, s) => FicheMedicalePage(s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/medical/journal',
+        builder: (_, _) => const JournalMedicalPage(),
+      ),
+      GoRoute(
+        path: '/medical/information',
+        builder: (_, _) => const InformationParentsPage(),
       ),
       GoRoute(
         path: '/eleves/:id/fiche',

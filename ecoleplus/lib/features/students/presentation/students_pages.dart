@@ -4,6 +4,7 @@ import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
+import 'package:ecoleplus/features/medical/presentation/medical_pages.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/staff/presentation/staff_providers.dart';
 import 'package:ecoleplus/features/staff/presentation/teachers_pages.dart';
@@ -287,6 +288,10 @@ class StudentPage extends ConsumerWidget {
       for (final (e, c) in parcours)
         if (e.schoolYearId == yearId && e.endsOn == null) c,
     ].firstOrNull;
+    final role = ref.watch(sessionProvider).value?.role;
+    final directeur = role == 'directeur';
+    final enseignant = role == 'enseignant';
+    final medical = ref.watch(medicalActifProvider(s.schoolId));
 
     Widget texte(String label, String? valeur, String col, {int lignes = 1}) =>
         modifiable
@@ -407,6 +412,17 @@ class StudentPage extends ConsumerWidget {
               eleve: s,
               raceReligion: school?.showRaceReligion ?? false,
             ),
+          // Dossier médico-scolaire : directeur seulement, module actif.
+          if (directeur && medical)
+            OutlinedButton.icon(
+              key: const Key('ouvrir-b5'),
+              icon: const Icon(Icons.health_and_safety_outlined),
+              label: const Text('Fiche médico-scolaire (B5)'),
+              onPressed: () => context.push('/eleves/${s.id}/medical'),
+            ),
+          // Enseignant(e) : la seule mention d'aptitude, si exposée.
+          if (enseignant && medical && classeActuelle != null)
+            AptitudeExposee(classId: classeActuelle.id, studentId: s.id),
           // Fiche de scolarité : primaire seulement.
           if (registre && (school?.managesPrimary ?? true))
             OutlinedButton.icon(

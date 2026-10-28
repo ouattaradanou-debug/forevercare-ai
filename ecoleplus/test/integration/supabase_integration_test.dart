@@ -23,6 +23,8 @@ import 'package:ecoleplus/features/forms/data/fiche_scolarite_repository.dart';
 import 'package:ecoleplus/features/grades/data/grades_repository.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
 import 'package:ecoleplus/features/maternelle/data/maternelle_repository.dart';
+import 'package:ecoleplus/features/medical/data/medical_api.dart';
+import 'package:ecoleplus/features/medical/domain/fiche_medicale.dart';
 import 'package:ecoleplus/features/programme/data/programme_repository.dart';
 import 'package:ecoleplus/features/programme/domain/programme.dart';
 import 'package:ecoleplus/features/school/data/school_repository.dart';
@@ -1084,6 +1086,76 @@ void mainA6() {
     await ens1.close();
     await ens2.close();
     await t.close();
+    await dir.close();
+  }, skip: skip);
+
+  test('phase 7 : dossier médico-scolaire par les fonctions du serveur ; '
+      'refus journalisés ; seule l’aptitude exposée atteint l’enseignante ; '
+      'rien sur le téléphone', () async {
+    const aicha = 'd0000000-0000-4000-8000-000000000001';
+    const cm1 = 'c0000000-0000-4000-8000-000000000002';
+    const annee = '20000000-0000-4000-8000-000000002025';
+    final dir = await connecte('directeur@ecole-test.local');
+    final api = SupabaseMedicalApi(dir.client);
+
+    // Module désactivé : refus, même au directeur.
+    await expectLater(api.lire(aicha), throwsA(isA<UserMessage>()));
+
+    await dir.repo.setModule(ecoleTest, 'medico_scolaire', on: true);
+    await dir.engine.syncNow();
+    await api.enregistrer(
+      aicha,
+      fiche: {'groupe_sanguin_rhesus': 'O+', 'vacc_bcg': '2017'},
+      examens: [
+        ExamenAnnuel('2025-2026', {'poids': '24 kg'}),
+      ],
+      aptitude: {
+        'school_year_id': annee,
+        'aptitude': 'a_surveiller',
+        'expose_to_teacher': true,
+      },
+    );
+    final d = await api.lire(aicha);
+    expect(d.fiche['groupe_sanguin_rhesus'], 'O+');
+    expect(d.examens.single.valeurs['poids'], '24 kg');
+    expect(d.aptitudesParAnnee.single.exposee, isTrue);
+    await api.noterImpression(aicha);
+
+    final ens = await connecte('enseignant1@ecole-test.local');
+    final apiEns = SupabaseMedicalApi(ens.client);
+    await expectLater(apiEns.lire(aicha), throwsA(isA<UserMessage>()));
+    expect(await apiEns.aptitudesDeLaClasse(cm1), {aicha: 'a_surveiller'});
+    expect(await apiEns.journal(ecoleTest), isEmpty);
+
+    final journal = await api.journal(ecoleTest);
+    expect(
+      journal.where((l) => !l.autorise && l.eleve == 'TEST Aïcha'),
+      hasLength(2),
+      reason: 'directeur module désactivé, puis enseignante',
+    );
+    expect(
+      journal.map((l) => l.action),
+      containsAll(['consultation', 'modification', 'impression']),
+    );
+
+    // Rien sur les téléphones.
+    for (final p in [dir, ens]) {
+      final tables = await p.db
+          .customSelect("SELECT name FROM sqlite_master WHERE type = 'table'")
+          .get();
+      for (final t in tables) {
+        final nom = t.read<String>('name');
+        final lignes = await p.db.customSelect('SELECT * FROM "$nom"').get();
+        expect(
+          lignes.any((l) => l.data.values.any((v) => '$v' == 'O+')),
+          isFalse,
+          reason: nom,
+        );
+      }
+    }
+    await dir.repo.setModule(ecoleTest, 'medico_scolaire', on: false);
+    await dir.engine.syncNow();
+    await ens.close();
     await dir.close();
   }, skip: skip);
 }

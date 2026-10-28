@@ -6,6 +6,7 @@ import 'package:ecoleplus/features/options/domain/module_rules.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Module 0 : options de l'école (réservé au directeur).
 class OptionsPage extends ConsumerWidget {
@@ -44,7 +45,7 @@ class OptionsPage extends ConsumerWidget {
               otherLevelActive: school.managesPrimary,
             ),
           const SectionTitle('Modules'),
-          for (final m in modules.where((m) => m.$1.key != 'maternelle'))
+          for (final m in modules.where((m) => m.$1.key != 'maternelle')) ...[
             _ModuleSwitch(
               schoolId: school.id,
               module: m.$1,
@@ -52,6 +53,27 @@ class OptionsPage extends ConsumerWidget {
               title: 'Activer : ${m.$1.label.toLowerCase()}',
               otherLevelActive: true,
             ),
+            // Dossier médico-scolaire : information des parents et journal.
+            if (m.$1.key == 'medico_scolaire' && m.$2)
+              Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton.icon(
+                      icon: const Icon(Icons.family_restroom),
+                      label: const Text('Information des parents'),
+                      onPressed: () => context.push('/medical/information'),
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.history),
+                      label: const Text('Journal d’accès'),
+                      onPressed: () => context.push('/medical/journal'),
+                    ),
+                  ],
+                ),
+              ),
+          ],
           const Padding(
             padding: EdgeInsets.all(16),
             child: Text(

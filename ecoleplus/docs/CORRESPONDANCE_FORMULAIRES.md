@@ -130,6 +130,8 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | Poids ; Taille | `yearly_exams.poids`, `.taille` |
 | B) II Examen physique, lignes « 20… » (×8) | `yearly_exams.examen_physique` |
 | OBSERVATIONS : Apte / À surveiller / Inapte temporaire / Inapte définitif | `medical.fitness.aptitude` (par année ; `expose_to_teacher` pour la seule mention exposable) |
+| Identité (nom, sexe, né(e) le, à, classe) | `students`, classe de l'année |
+| Accès (phase 7) | uniquement par `public.medical_get`, `medical_save`, `medical_impression`, `medical_log`, `medical_aptitudes` ; rien sur le téléphone (H81) |
 
 ## B6 — Programme d'activités au titre de l'année scolaire (A4 paysage)
 

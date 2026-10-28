@@ -18,12 +18,14 @@ import 'package:ecoleplus/features/import/presentation/import_page.dart';
 import 'package:ecoleplus/features/lock/data/biometric_gate.dart';
 import 'package:ecoleplus/features/lock/data/lock_service.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
+import 'package:ecoleplus/features/medical/presentation/medical_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'fake_auth_api.dart';
+import 'fake_medical_api.dart';
 import 'fake_server.dart';
 
 const ecoleId = '10000000-0000-4000-8000-000000000001';
@@ -49,6 +51,9 @@ class AppHarness {
 
   /// PDF « imprimés » ou « partagés » (nom → contenu).
   final Map<String, Uint8List> pdfSortis = {};
+
+  /// Fonctions du serveur pour le dossier médico-scolaire.
+  final medical = FakeMedicalApi();
 
   /// Fichiers envoyés (Excel) : nom → contenu.
   final Map<String, Uint8List> fichiersSortis = {};
@@ -255,6 +260,7 @@ class AppHarness {
           ),
           biometricGateProvider.overrideWithValue(biometrie),
           dicteeProvider.overrideWithValue(dictee),
+          medicalApiProvider.overrideWithValue(medical),
           sortiePdfProvider.overrideWithValue(
             SortiePdf(
               imprimer: (pdf, nom) async => pdfSortis[nom] = pdf,

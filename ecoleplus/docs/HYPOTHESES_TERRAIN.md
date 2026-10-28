@@ -87,3 +87,10 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H78 | Classement facultatif (désactivé par défaut) : score moyen des domaines évalués (meilleur niveau = le plus de points), mêmes scores = ex-aequo, enfant sans évaluation non classé | Maternelle | `classerEnfants` |
 | H79 | Présences (phase 6) : classes de maternelle seulement ; une saisie par enfant et par jour (présent, absent, retard) ; le livret compte les absences et retards de l'année ; ouvertes au primaire en phase 13 | Maternelle | `attendance` |
 | H80 | Domaine retiré : plus évalué ni imprimé, évaluations passées conservées | Maternelle | `retirerDomaine` |
+| H81 | Dossier médico-scolaire **en ligne seulement** : jamais gardé sur le téléphone (ni copie locale, ni synchronisation) ; sans Internet, la fiche n'est pas disponible | B5 | `MedicalApi` |
+| H82 | Accès : directeur seul (pas encore de « personne désignée ») ; l'enseignant(e) voit seulement la mention d'aptitude de l'année si le directeur l'expose | B5 | `public.medical_*` |
+| H83 | Chaque ouverture, modification, impression et chaque tentative refusée est journalisée (qui, quand, quel élève) ; journal non modifiable | B5 | `medical.access_log` |
+| H84 | Pas de micro sur la fiche médicale (la dictée passerait par un service extérieur au téléphone) | B5 | `FicheMedicalePage` |
+| H85 | Examen par année : l'année scolaire en cours (« 2025-2026 ») tient lieu de colonne « 20… » ; huit années au plus, comme le modèle | B5 | `ExamenAnnuel` |
+| H86 | Texte d'information des parents : **modèle proposé**, à faire valider (`docs/MEDICO_POINTS_JURIDIQUES.md`) | B5 | `texteInformationParents` |
+| H87 | Fiche B5 imprimée sur deux pages (recto-verso) ; pas de scan du modèle fourni : mise en page tirée de l'annexe B | B5 | `pdfB5` |
