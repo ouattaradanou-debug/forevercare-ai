@@ -149,6 +149,14 @@ void main() {
       [for (final l in h.medical.journalEcrit) l.action],
       ['consultation', 'modification', 'impression'],
     );
+    // Changement non enregistré : l'application prévient avant de quitter.
+    await ecrire(tester, 'examen-2025-2026-physique', 'Changement');
+    await tester.tap(find.byTooltip('Retour').first);
+    await AppHarness.settle(tester);
+    expect(find.text('Modifications non enregistrées'), findsOneWidget);
+    await tester.tap(find.text('Quitter sans enregistrer'));
+    await AppHarness.settle(tester);
+    expect(h.medical.enregistrements, hasLength(1));
     await accueil(tester);
 
     // Journal d'accès.
