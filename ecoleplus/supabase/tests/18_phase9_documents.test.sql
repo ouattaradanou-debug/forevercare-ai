@@ -5,7 +5,7 @@
 \set ens2 '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}'
 \set dir2 '{"sub":"a0000000-0000-4000-8000-000000000009","role":"authenticated"}'
 begin;
-select plan(22);
+select plan(23);
 
 set local role authenticated;
 select set_config('request.jwt.claims', :'dir1', true);
@@ -13,6 +13,11 @@ select set_config('request.jwt.claims', :'dir1', true);
 select lives_ok($$insert into public.documents (id, school_id, space, title, is_common, size_bytes, sha256) values
   ('77000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'bibliotheque',
    'Programme officiel', true, 1000, repeat('a', 64))$$, 'directeur : document commun');
+-- Comme sync_push : insert … returning (la ligne neuve doit être lisible).
+select lives_ok($$insert into public.documents (id, school_id, space, title, class_ids, size_bytes, sha256) values
+  ('77000000-0000-4000-8000-000000000009', '10000000-0000-4000-8000-000000000001', 'bibliotheque',
+   'Guide CM2 (téléphone)', '{c0000000-0000-4000-8000-000000000003}', 0, repeat('f', 64)) returning *$$,
+  'directeur : ajout lu aussitôt (insert … returning)');
 select lives_ok($$insert into public.documents (id, school_id, space, title, class_ids, size_bytes, sha256) values
   ('77000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'bibliotheque',
    'Fiches CM1', '{c0000000-0000-4000-8000-000000000002}', 1000, repeat('b', 64))$$, 'directeur : document du CM1');

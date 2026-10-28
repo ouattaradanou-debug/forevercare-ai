@@ -141,10 +141,17 @@ class SupabaseSyncRemote implements SyncRemote {
 
   // ------------------------- Envoi reprenable (TUS) -------------------------
 
-  Map<String, String> get _entetesTus => {
-    ...client.storage.headers,
-    'Tus-Resumable': '1.0.0',
-  };
+  /// En-têtes des envois reprenables : le jeton de la session connectée
+  /// (la clé de l'application seule n'est pas un jeton d'utilisateur).
+  Map<String, String> get _entetesTus {
+    final jeton = client.auth.currentSession?.accessToken;
+    if (jeton == null) throw const SessionExpired();
+    return {
+      ...client.storage.headers,
+      'Authorization': 'Bearer $jeton',
+      'Tus-Resumable': '1.0.0',
+    };
+  }
 
   static String _b64(String v) => base64.encode(utf8.encode(v));
 

@@ -16,6 +16,9 @@ import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/auth/data/auth_service.dart';
 import 'package:ecoleplus/features/auth/data/members_service.dart';
+import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
+import 'package:ecoleplus/features/bibliotheque/data/documents_en_ligne.dart';
+import 'package:ecoleplus/features/bibliotheque/domain/document.dart';
 import 'package:ecoleplus/features/bulletins/data/bulletins_repository.dart';
 import 'package:ecoleplus/features/documents/data/documents_repository.dart';
 import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
@@ -83,9 +86,24 @@ class ToggleRemote implements SyncRemote {
       _go(() => inner.debutEnvoi(b, p, t, c));
   @override
   Future<int> positionEnvoi(String a) => _go(() => inner.positionEnvoi(a));
+
+  /// Coupure du réseau après ce nombre de morceaux (null : jamais).
+  int? couperApresMorceaux;
+  int morceauxEnvoyes = 0;
+
   @override
-  Future<int> envoyerMorceau(String a, int p, Uint8List o) =>
-      _go(() => inner.envoyerMorceau(a, p, o));
+  Future<int> envoyerMorceau(String a, int p, Uint8List o) {
+    if (couperApresMorceaux != null &&
+        morceauxEnvoyes >= couperApresMorceaux!) {
+      online = false;
+    }
+    return _go(() async {
+      final r = await inner.envoyerMorceau(a, p, o);
+      morceauxEnvoyes++;
+      return r;
+    });
+  }
+
   @override
   int get tailleMorceau => inner.tailleMorceau;
   @override
@@ -1171,6 +1189,143 @@ void mainA6() {
     await ens.close();
     await dir.close();
   }, skip: skip);
+
+  test(
+    'phase 9 : document de 14 Mo envoyé par morceaux, coupure puis '
+    'reprise sans doublon ; visible par la seule classe choisie ; '
+    'archives jamais lues par un enseignant ; recherche dans le texte',
+    () async {
+      final tmp = Directory.systemTemp.createTempSync('biblio');
+      final dir = await connecte(
+        'directeur@ecole-test.local',
+        motDePasse,
+        Directory('${tmp.path}/dir')..createSync(),
+      );
+      final repo = BibliothequeRepository(
+        dir.store,
+        remote: dir.remote,
+        mediaDir: dir.mediaDir,
+      );
+      const ecole = '10000000-0000-4000-8000-000000000001';
+      const cm1 = 'c0000000-0000-4000-8000-000000000002';
+      const taille = 14 * 1024 * 1024;
+      final octets = Uint8List(taille);
+      for (var i = 0; i < taille; i++) {
+        octets[i] = (i * 7 + i ~/ 4096) % 251;
+      }
+      // Contenu unique à chaque passage (sinon : doublon reconnu).
+      octets.setAll(0, utf8.encode('${DateTime.now().microsecondsSinceEpoch}'));
+      final source = File('${tmp.path}/Guide_CM1.pdf')
+        ..writeAsBytesSync(octets);
+      final ajout = await repo.ajouter(
+        schoolId: ecole,
+        espace: Espace.bibliotheque,
+        fichiers: [FichierChoisi('Guide_CM1.pdf', source.path)],
+        fiche: const FicheDocument(classes: [cm1], type: 'Guide du maître'),
+        gestionnaire: true,
+      );
+      final id = ajout.ids.single;
+      await dir.engine.syncNow(); // la fiche d'abord
+
+      // Coupure après le 1er morceau (6 Mo).
+      dir.remote.couperApresMorceaux = 1;
+      await expectLater(repo.envoyer(), throwsA(isA<RemoteUnavailable>()));
+      final enCours = await dir.db.select(dir.db.documentUploads).getSingle();
+      expect(enCours.sentBytes, dir.remote.tailleMorceau);
+      expect(enCours.uploadUrl, isNotNull);
+
+      // Retour du réseau : reprise au même endroit.
+      dir
+        ..online = true
+        ..remote.couperApresMorceaux = null;
+      await repo.envoyer();
+      await dir.engine.syncNow();
+      expect(
+        dir.remote.morceauxEnvoyes,
+        3,
+        reason: '6 + 6 + 2 Mo, rien renvoyé',
+      );
+      expect(await dir.db.select(dir.db.documentUploads).get(), isEmpty);
+      final d = await (dir.db.select(
+        dir.db.documents,
+      )..where((x) => x.id.equals(id))).getSingle();
+      final recu = await dir.client.storage
+          .from('documents')
+          .download(d.storagePath!);
+      expect(recu, octets);
+      final ligne = await dir.client
+          .from('documents')
+          .select('uploaded_at, approved')
+          .eq('id', id)
+          .single();
+      expect(ligne['uploaded_at'], isNotNull);
+
+      // Archives : un procès-verbal.
+      final pv = File('${tmp.path}/PV_conseil.pdf')
+        ..writeAsBytesSync(utf8.encode('%PDF-1.4 proces-verbal'));
+      final archive = await repo.ajouter(
+        schoolId: ecole,
+        espace: Espace.archives,
+        fichiers: [FichierChoisi('PV_conseil.pdf', pv.path)],
+        fiche: const FicheDocument(type: 'Procès-verbal'),
+        gestionnaire: true,
+      );
+      await dir.engine.syncNow();
+      await repo.envoyer();
+      await dir.engine.syncNow();
+      final archiveId = archive.ids.single;
+      final pvLigne = await dir.client
+          .from('documents')
+          .select('ai_allowed, storage_path')
+          .eq('id', archiveId)
+          .single();
+      expect(pvLigne['ai_allowed'], isFalse);
+
+      // Enseignante du CM1 : reçoit la fiche, pas les archives ; ouvre le
+      // fichier à la demande.
+      final ens1 = await connecte(
+        'enseignant1@ecole-test.local',
+        motDePasse,
+        Directory('${tmp.path}/ens1')..createSync(),
+      );
+      final vus1 = await ens1.db.select(ens1.db.documents).get();
+      expect(vus1.map((x) => x.id), contains(id));
+      expect(vus1.map((x) => x.id), isNot(contains(archiveId)));
+      final f = await BibliothequeRepository(
+        ens1.store,
+        remote: ens1.remote,
+        mediaDir: ens1.mediaDir,
+      ).obtenir(vus1.firstWhere((x) => x.id == id));
+      expect(f.lengthSync(), taille);
+      await expectLater(
+        ens1.client.storage
+            .from('documents')
+            .download(pvLigne['storage_path'] as String),
+        throwsA(anything),
+      );
+
+      // Enseignant du CM2 : ni la fiche ni le fichier.
+      final ens2 = await connecte('enseignant2@ecole-test.local');
+      final vus2 = await ens2.db.select(ens2.db.documents).get();
+      expect(vus2.map((x) => x.id), isNot(contains(id)));
+      await expectLater(
+        ens2.client.storage.from('documents').download(d.storagePath!),
+        throwsA(anything),
+      );
+
+      // Espace utilisé (serveur) : les deux fichiers.
+      final occ = await SupabaseDocumentsEnLigne(dir.client).occupation(ecole);
+      expect(occ.utilise, greaterThanOrEqualTo(taille));
+      expect(occ.documents, greaterThanOrEqualTo(2));
+
+      await ens2.close();
+      await ens1.close();
+      await dir.close();
+      tmp.deleteSync(recursive: true);
+    },
+    skip: skip,
+    timeout: const Timeout(Duration(minutes: 5)),
+  );
 
   test('phase 8 : photo déposée par le directeur, reçue par l’enseignante '
       'de la classe, refusée à l’enseignant d’une autre classe ; aucun lien '
