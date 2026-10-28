@@ -19,6 +19,7 @@ import 'package:ecoleplus/features/lock/data/biometric_gate.dart';
 import 'package:ecoleplus/features/lock/data/lock_service.dart';
 import 'package:ecoleplus/features/lock/presentation/lock_providers.dart';
 import 'package:ecoleplus/features/medical/presentation/medical_pages.dart';
+import 'package:ecoleplus/features/photos/presentation/photo_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -51,6 +52,9 @@ class AppHarness {
 
   /// PDF « imprimés » ou « partagés » (nom → contenu).
   final Map<String, Uint8List> pdfSortis = {};
+
+  /// Image renvoyée par « Prendre / Choisir une photo » (null : annulé).
+  Uint8List? imageChoisie;
 
   /// Fonctions du serveur pour le dossier médico-scolaire.
   final medical = FakeMedicalApi();
@@ -261,6 +265,9 @@ class AppHarness {
           biometricGateProvider.overrideWithValue(biometrie),
           dicteeProvider.overrideWithValue(dictee),
           medicalApiProvider.overrideWithValue(medical),
+          choisirImageProvider.overrideWithValue(
+            ({required camera}) async => imageChoisie,
+          ),
           sortiePdfProvider.overrideWithValue(
             SortiePdf(
               imprimer: (pdf, nom) async => pdfSortis[nom] = pdf,
@@ -354,6 +361,8 @@ class AppHarness {
       200,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.ensureVisible(find.text(bouton));
+    await tester.pump();
     await tester.tap(find.text(bouton));
     await settle(tester);
   }

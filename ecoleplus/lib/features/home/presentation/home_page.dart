@@ -173,8 +173,10 @@ List<Widget> _boutonsEcole(
       bouton(Icons.class_, 'Classes', '/classes'),
     ],
     if (registres) bouton(Icons.badge, 'Enseignants', '/enseignants'),
-    // Délégué « formulaires » : programme et bilan (B6, B7), B1, B3.
-    if (registres || droits.contains('formulaires'))
+    // Délégués « formulaires » (B1, B3, B6, B7) et « cartes ».
+    if (registres ||
+        droits.contains('formulaires') ||
+        droits.contains('cartes'))
       bouton(Icons.folder_copy_outlined, 'Documents', '/documents'),
     if (notes)
       bouton(

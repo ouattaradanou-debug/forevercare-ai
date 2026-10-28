@@ -191,3 +191,14 @@ Règle de calcul des durées (années, mois ; arrondi) : **hypothèse à valider
 | Rang (seulement si activé) | **calculé** (`schools.preschool_ranking`) |
 | Appréciation de l'enseignant(e) ; observations du directeur | `preschool_booklets.teacher_appreciation`, `.observation` |
 | Signatures : enseignant(e), directeur/directrice, parents | **fixe** ; `schools.director_civility` |
+
+## Carte scolaire (module 12, phase 8)
+
+| Élément | Source |
+|---|---|
+| Bandeau : logo, nom de l'école, commune, « CARTE SCOLAIRE », année | `schools.logo_path`, `.name`, `.commune` ; `school_years.label` ; couleur `card_templates.primary_color` |
+| Photo | `students.photo_path` (stockage privé) ; cadre « PHOTO » si absente |
+| Nom ; prénom(s) ; classe ; identifiant | `students.last_name`, `.first_names` ; classe de l'année ; `students.student_code` (sinon N° du registre) |
+| QR code | « EP1- » + `student_cards.qr_token` (aléatoire, aucune donnée personnelle) |
+| Verso : école, adresse, téléphone, e-mail, « si trouvée, contacter l'école » | `schools.name`, `.address`, `.commune`, `.phone`, `.email` ; texte fixe |
+| Cachet et signature du directeur | cadre vide (à la main) |

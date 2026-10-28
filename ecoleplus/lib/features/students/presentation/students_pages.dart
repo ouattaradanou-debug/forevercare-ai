@@ -4,7 +4,10 @@ import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
+import 'package:ecoleplus/features/cartes/data/cartes_repository.dart';
+import 'package:ecoleplus/features/cartes/presentation/cartes_pages.dart';
 import 'package:ecoleplus/features/medical/presentation/medical_pages.dart';
+import 'package:ecoleplus/features/photos/presentation/photo_pages.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/staff/presentation/staff_providers.dart';
 import 'package:ecoleplus/features/staff/presentation/teachers_pages.dart';
@@ -336,6 +339,25 @@ class StudentPage extends ConsumerWidget {
               'Pour modifier ou compléter la fiche, touchez un champ et '
               'changez-le : c’est enregistré tout seul (✓), même sans '
               'Internet.',
+            ),
+          // Photo (facultative) : carte scolaire.
+          PhotoEleve(eleve: s, modifiable: modifiable),
+          if (classeActuelle != null &&
+              (modifiable || droits.contains('cartes')))
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const Key('carte-eleve'),
+                icon: const Icon(Icons.badge_outlined),
+                label: const Text('Carte scolaire (PDF)'),
+                onPressed: () => imprimerCartes(
+                  context,
+                  ref,
+                  Lot.classe(classeActuelle.id),
+                  studentId: s.id,
+                  nomFichier: 'Carte_scolaire_${s.lastName}.pdf',
+                ),
+              ),
             ),
           const SectionTitle('Identité'),
           if (modifiable) ...[

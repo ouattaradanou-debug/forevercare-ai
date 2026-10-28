@@ -25,11 +25,14 @@ import 'package:ecoleplus/features/grades/domain/calculs.dart';
 import 'package:ecoleplus/features/maternelle/data/maternelle_repository.dart';
 import 'package:ecoleplus/features/medical/data/medical_api.dart';
 import 'package:ecoleplus/features/medical/domain/fiche_medicale.dart';
+import 'package:ecoleplus/features/photos/data/photos_repository.dart';
+import 'package:ecoleplus/features/photos/domain/traitement_photo.dart';
 import 'package:ecoleplus/features/programme/data/programme_repository.dart';
 import 'package:ecoleplus/features/programme/domain/programme.dart';
 import 'package:ecoleplus/features/school/data/school_repository.dart';
 import 'package:ecoleplus/features/students/data/students_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final String? url = Platform.environment['SUPABASE_URL'];
@@ -1157,6 +1160,65 @@ void mainA6() {
     await dir.engine.syncNow();
     await ens.close();
     await dir.close();
+  }, skip: skip);
+
+  test('phase 8 : photo déposée par le directeur, reçue par l’enseignante '
+      'de la classe, refusée à l’enseignant d’une autre classe ; aucun lien '
+      'public', () async {
+    final tmp = Directory.systemTemp.createTempSync('photos');
+    final dir = await connecte(
+      'directeur@ecole-test.local',
+      motDePasse,
+      Directory('${tmp.path}/dir')..createSync(),
+    );
+    final aicha =
+        await (dir.db.select(dir.db.students)..where(
+              (s) => s.id.equals('d0000000-0000-4000-8000-000000000001'),
+            ))
+            .getSingle();
+    final brute = img.encodeJpg(
+      img.Image(width: 900, height: 1200)..clear(img.ColorRgb8(120, 90, 60)),
+    );
+    final jpeg = await preparerPhoto(brute, Recadrage.tout);
+    await PhotosRepository(
+      dir.store,
+      mediaDir: dir.mediaDir,
+    ).enregistrerPhoto(aicha, jpeg);
+    await dir.engine.syncNow();
+    final chemin = (await (dir.db.select(
+      dir.db.students,
+    )..where((s) => s.id.equals(aicha.id))).getSingle()).photoPath!;
+    expect(
+      await dir.client.storage.from('ecole-medias').download(chemin),
+      hasLength(jpeg.length),
+    );
+
+    // Enseignante de CM1 A : la photo arrive sur son téléphone.
+    final ens1 = await connecte(
+      'enseignant1@ecole-test.local',
+      motDePasse,
+      Directory('${tmp.path}/ens1')..createSync(),
+    );
+    expect(File('${tmp.path}/ens1/$chemin').existsSync(), isTrue);
+
+    // Enseignant de CM2 A : refus.
+    final ens2 = await connecte('enseignant2@ecole-test.local');
+    await expectLater(
+      ens2.client.storage.from('ecole-medias').download(chemin),
+      throwsA(anything),
+    );
+
+    // Aucun lien public.
+    final url = dir.client.storage.from('ecole-medias').getPublicUrl(chemin);
+    final http = HttpClient();
+    final rep = await (await http.getUrl(Uri.parse(url))).close();
+    expect(rep.statusCode, isNot(200));
+    http.close();
+
+    await ens2.close();
+    await ens1.close();
+    await dir.close();
+    tmp.deleteSync(recursive: true);
   }, skip: skip);
 }
 

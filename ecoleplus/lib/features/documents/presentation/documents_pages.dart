@@ -99,6 +99,12 @@ class DocumentsPage extends ConsumerWidget {
               '/documents/choisir/${c.code}',
               icone: Icons.school_outlined,
             ),
+          ligne(
+            'Cartes scolaires',
+            '/cartes',
+            sousTitre: 'Avec photo et QR code, 10 par feuille A4',
+            icone: Icons.badge_outlined,
+          ),
           if (primaire)
             ligne(
               'Bulletins',

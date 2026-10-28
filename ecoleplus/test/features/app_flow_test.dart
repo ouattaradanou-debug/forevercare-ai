@@ -104,6 +104,11 @@ void main() {
 
     await tester.tap(find.text('Mon école'));
     await AppHarness.settle(tester);
+    await tester.scrollUntilVisible(
+      find.widgetWithText(TextField, 'Commune'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.enterText(
       find.widgetWithText(TextField, 'Commune'),
       'Commune modifiée hors ligne',

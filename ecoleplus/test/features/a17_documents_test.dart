@@ -80,7 +80,9 @@ void main() {
     await retour(tester);
     await retour(tester);
 
-    // Attestation de prise de service.
+    // Attestation de prise de service (en haut de la liste).
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await AppHarness.settle(tester);
     await tap(tester, find.text('Attestation de prise de service'));
     await tap(tester, find.text('ENSEIGNANT Un'));
     expect(

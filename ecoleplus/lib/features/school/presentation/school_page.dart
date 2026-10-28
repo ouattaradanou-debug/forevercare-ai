@@ -2,6 +2,7 @@ import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
+import 'package:ecoleplus/features/photos/presentation/photo_pages.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,6 +51,7 @@ class SchoolPage extends ConsumerWidget {
             initial: school.directorName,
             onSave: (v) => save('director_name', v),
           ),
+          LogoEcole(ecole: school),
           // Signature des attestations et certificats (A17).
           const SectionTitle('Signature des documents'),
           const Text(

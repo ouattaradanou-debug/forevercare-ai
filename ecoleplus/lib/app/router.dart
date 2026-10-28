@@ -5,6 +5,7 @@ import 'package:ecoleplus/features/auth/presentation/login_page.dart';
 import 'package:ecoleplus/features/auth/presentation/welcome_page.dart';
 import 'package:ecoleplus/features/backup/presentation/backup_page.dart';
 import 'package:ecoleplus/features/bulletins/presentation/bulletins_pages.dart';
+import 'package:ecoleplus/features/cartes/presentation/cartes_pages.dart';
 import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
 import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
 import 'package:ecoleplus/features/documents/presentation/documents_pages.dart';
@@ -186,6 +187,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           s.pathParameters['eleve']!,
         ),
       ),
+      GoRoute(path: '/cartes', builder: (_, _) => const CartesPage()),
       GoRoute(
         path: '/formulaires',
         builder: (_, _) => const FormulairesAnneePage(),

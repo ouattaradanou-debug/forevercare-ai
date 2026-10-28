@@ -94,3 +94,10 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H85 | Examen par année : l'année scolaire en cours (« 2025-2026 ») tient lieu de colonne « 20… » ; huit années au plus, comme le modèle | B5 | `ExamenAnnuel` |
 | H86 | Texte d'information des parents : **modèle proposé**, à faire valider (`docs/MEDICO_POINTS_JURIDIQUES.md`) | B5 | `texteInformationParents` |
 | H87 | Fiche B5 imprimée sur deux pages (recto-verso) ; pas de scan du modèle fourni : mise en page tirée de l'annexe B | B5 | `pdfB5` |
+| H88 | Photo d'identité 300 × 400 (3:4), JPEG, 50 Ko au plus (17 Ko en moyenne sur les essais) | Photos | `preparerPhoto` |
+| H89 | Photos prises par le directeur ou les délégués « élèves » / « registres » ; l'enseignant(e) les voit pour sa classe seulement | Photos | stockage `ecole-medias` |
+| H90 | Carte au format carte bancaire 85,6 × 54 mm, 10 par A4 (2 × 5), recto puis verso en miroir (recto-verso retourné sur le grand côté) ; impression à 100 % | Cartes | `pdfCartes` |
+| H91 | Contenu du QR code : « EP1- » + identifiant aléatoire de 32 caractères, un par élève et par année, gardé d'une impression à l'autre ; deux téléphones hors ligne imprimant la même carte peuvent produire deux identifiants (le dernier envoyé est gardé) | Cartes | `student_cards.qr_token` |
+| H92 | Identifiant imprimé : `student_code`, sinon « N° » du registre matricule | Cartes | `CartesRepository.cartes` |
+| H93 | Signature et cachet du directeur : à la main, dans le cadre du verso (pas d'image de signature, décision du porteur) | Cartes | `pdfCartes` |
+| H94 | Une photo remplacée ou retirée n'est pas effacée du serveur (à traiter avec la durée de conservation) | Photos | `PhotosRepository` |
