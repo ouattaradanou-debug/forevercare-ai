@@ -16300,6 +16300,17 @@ class OfficialForms extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _lockedVersionMeta = const VerificationMeta(
+    'lockedVersion',
+  );
+  late final GeneratedColumn<int> lockedVersion = GeneratedColumn<int>(
+    'locked_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -16358,6 +16369,7 @@ class OfficialForms extends Table
     signedPlace,
     signedOn,
     directorName,
+    lockedVersion,
     createdAt,
     updatedAt,
     deletedAt,
@@ -16470,6 +16482,15 @@ class OfficialForms extends Table
         ),
       );
     }
+    if (data.containsKey('locked_version')) {
+      context.handle(
+        _lockedVersionMeta,
+        lockedVersion.isAcceptableOrUnknown(
+          data['locked_version']!,
+          _lockedVersionMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -16553,6 +16574,10 @@ class OfficialForms extends Table
         DriftSqlType.string,
         data['${effectivePrefix}director_name'],
       ),
+      lockedVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}locked_version'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_at'],
@@ -16594,6 +16619,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
   final String? signedPlace;
   final String? signedOn;
   final String? directorName;
+  final int? lockedVersion;
   final String? createdAt;
   final String updatedAt;
   final String? deletedAt;
@@ -16611,6 +16637,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     this.signedPlace,
     this.signedOn,
     this.directorName,
+    this.lockedVersion,
     this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -16644,6 +16671,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     }
     if (!nullToAbsent || directorName != null) {
       map['director_name'] = Variable<String>(directorName);
+    }
+    if (!nullToAbsent || lockedVersion != null) {
+      map['locked_version'] = Variable<int>(lockedVersion);
     }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<String>(createdAt);
@@ -16686,6 +16716,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       directorName: directorName == null && nullToAbsent
           ? const Value.absent()
           : Value(directorName),
+      lockedVersion: lockedVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lockedVersion),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -16721,6 +16754,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       signedPlace: serializer.fromJson<String?>(json['signed_place']),
       signedOn: serializer.fromJson<String?>(json['signed_on']),
       directorName: serializer.fromJson<String?>(json['director_name']),
+      lockedVersion: serializer.fromJson<int?>(json['locked_version']),
       createdAt: serializer.fromJson<String?>(json['created_at']),
       updatedAt: serializer.fromJson<String>(json['updated_at']),
       deletedAt: serializer.fromJson<String?>(json['deleted_at']),
@@ -16743,6 +16777,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       'signed_place': serializer.toJson<String?>(signedPlace),
       'signed_on': serializer.toJson<String?>(signedOn),
       'director_name': serializer.toJson<String?>(directorName),
+      'locked_version': serializer.toJson<int?>(lockedVersion),
       'created_at': serializer.toJson<String?>(createdAt),
       'updated_at': serializer.toJson<String>(updatedAt),
       'deleted_at': serializer.toJson<String?>(deletedAt),
@@ -16763,6 +16798,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     Value<String?> signedPlace = const Value.absent(),
     Value<String?> signedOn = const Value.absent(),
     Value<String?> directorName = const Value.absent(),
+    Value<int?> lockedVersion = const Value.absent(),
     Value<String?> createdAt = const Value.absent(),
     String? updatedAt,
     Value<String?> deletedAt = const Value.absent(),
@@ -16786,6 +16822,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     signedPlace: signedPlace.present ? signedPlace.value : this.signedPlace,
     signedOn: signedOn.present ? signedOn.value : this.signedOn,
     directorName: directorName.present ? directorName.value : this.directorName,
+    lockedVersion: lockedVersion.present
+        ? lockedVersion.value
+        : this.lockedVersion,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -16817,6 +16856,9 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
       directorName: data.directorName.present
           ? data.directorName.value
           : this.directorName,
+      lockedVersion: data.lockedVersion.present
+          ? data.lockedVersion.value
+          : this.lockedVersion,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -16839,6 +16881,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
           ..write('signedPlace: $signedPlace, ')
           ..write('signedOn: $signedOn, ')
           ..write('directorName: $directorName, ')
+          ..write('lockedVersion: $lockedVersion, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -16861,6 +16904,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
     signedPlace,
     signedOn,
     directorName,
+    lockedVersion,
     createdAt,
     updatedAt,
     deletedAt,
@@ -16882,6 +16926,7 @@ class OfficialFormRow extends DataClass implements Insertable<OfficialFormRow> {
           other.signedPlace == this.signedPlace &&
           other.signedOn == this.signedOn &&
           other.directorName == this.directorName &&
+          other.lockedVersion == this.lockedVersion &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -16901,6 +16946,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
   final Value<String?> signedPlace;
   final Value<String?> signedOn;
   final Value<String?> directorName;
+  final Value<int?> lockedVersion;
   final Value<String?> createdAt;
   final Value<String> updatedAt;
   final Value<String?> deletedAt;
@@ -16919,6 +16965,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     this.signedPlace = const Value.absent(),
     this.signedOn = const Value.absent(),
     this.directorName = const Value.absent(),
+    this.lockedVersion = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -16938,6 +16985,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     this.signedPlace = const Value.absent(),
     this.signedOn = const Value.absent(),
     this.directorName = const Value.absent(),
+    this.lockedVersion = const Value.absent(),
     this.createdAt = const Value.absent(),
     required String updatedAt,
     this.deletedAt = const Value.absent(),
@@ -16961,6 +17009,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     Expression<String>? signedPlace,
     Expression<String>? signedOn,
     Expression<String>? directorName,
+    Expression<int>? lockedVersion,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
     Expression<String>? deletedAt,
@@ -16981,6 +17030,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
       if (signedPlace != null) 'signed_place': signedPlace,
       if (signedOn != null) 'signed_on': signedOn,
       if (directorName != null) 'director_name': directorName,
+      if (lockedVersion != null) 'locked_version': lockedVersion,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -17002,6 +17052,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     Value<String?>? signedPlace,
     Value<String?>? signedOn,
     Value<String?>? directorName,
+    Value<int?>? lockedVersion,
     Value<String?>? createdAt,
     Value<String>? updatedAt,
     Value<String?>? deletedAt,
@@ -17021,6 +17072,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
       signedPlace: signedPlace ?? this.signedPlace,
       signedOn: signedOn ?? this.signedOn,
       directorName: directorName ?? this.directorName,
+      lockedVersion: lockedVersion ?? this.lockedVersion,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -17068,6 +17120,9 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
     if (directorName.present) {
       map['director_name'] = Variable<String>(directorName.value);
     }
+    if (lockedVersion.present) {
+      map['locked_version'] = Variable<int>(lockedVersion.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
     }
@@ -17101,6 +17156,7 @@ class OfficialFormsCompanion extends UpdateCompanion<OfficialFormRow> {
           ..write('signedPlace: $signedPlace, ')
           ..write('signedOn: $signedOn, ')
           ..write('directorName: $directorName, ')
+          ..write('lockedVersion: $lockedVersion, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -24052,6 +24108,2185 @@ class IssuedDocumentsCompanion extends UpdateCompanion<IssuedDocumentRow> {
   }
 }
 
+class ActivityObjectives extends Table
+    with TableInfo<ActivityObjectives, ActivityObjectiveRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  ActivityObjectives(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _orderNoMeta = const VerificationMeta(
+    'orderNo',
+  );
+  late final GeneratedColumn<int> orderNo = GeneratedColumn<int>(
+    'order_no',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    schoolYearId,
+    orderNo,
+    label,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_objectives';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActivityObjectiveRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('order_no')) {
+      context.handle(
+        _orderNoMeta,
+        orderNo.isAcceptableOrUnknown(data['order_no']!, _orderNoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_orderNoMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ActivityObjectiveRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityObjectiveRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      orderNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}order_no'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  ActivityObjectives createAlias(String alias) {
+    return ActivityObjectives(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class ActivityObjectiveRow extends DataClass
+    implements Insertable<ActivityObjectiveRow> {
+  final String id;
+  final String schoolId;
+  final String schoolYearId;
+  final int orderNo;
+  final String label;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const ActivityObjectiveRow({
+    required this.id,
+    required this.schoolId,
+    required this.schoolYearId,
+    required this.orderNo,
+    required this.label,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    map['order_no'] = Variable<int>(orderNo);
+    map['label'] = Variable<String>(label);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  ActivityObjectivesCompanion toCompanion(bool nullToAbsent) {
+    return ActivityObjectivesCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      schoolYearId: Value(schoolYearId),
+      orderNo: Value(orderNo),
+      label: Value(label),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory ActivityObjectiveRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityObjectiveRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      orderNo: serializer.fromJson<int>(json['order_no']),
+      label: serializer.fromJson<String>(json['label']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'order_no': serializer.toJson<int>(orderNo),
+      'label': serializer.toJson<String>(label),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  ActivityObjectiveRow copyWith({
+    String? id,
+    String? schoolId,
+    String? schoolYearId,
+    int? orderNo,
+    String? label,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => ActivityObjectiveRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    orderNo: orderNo ?? this.orderNo,
+    label: label ?? this.label,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  ActivityObjectiveRow copyWithCompanion(ActivityObjectivesCompanion data) {
+    return ActivityObjectiveRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      orderNo: data.orderNo.present ? data.orderNo.value : this.orderNo,
+      label: data.label.present ? data.label.value : this.label,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityObjectiveRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('orderNo: $orderNo, ')
+          ..write('label: $label, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    schoolYearId,
+    orderNo,
+    label,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityObjectiveRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.orderNo == this.orderNo &&
+          other.label == this.label &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class ActivityObjectivesCompanion
+    extends UpdateCompanion<ActivityObjectiveRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> schoolYearId;
+  final Value<int> orderNo;
+  final Value<String> label;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const ActivityObjectivesCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.orderNo = const Value.absent(),
+    this.label = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ActivityObjectivesCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String schoolYearId,
+    required int orderNo,
+    required String label,
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       schoolYearId = Value(schoolYearId),
+       orderNo = Value(orderNo),
+       label = Value(label),
+       updatedAt = Value(updatedAt);
+  static Insertable<ActivityObjectiveRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? schoolYearId,
+    Expression<int>? orderNo,
+    Expression<String>? label,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (orderNo != null) 'order_no': orderNo,
+      if (label != null) 'label': label,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ActivityObjectivesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? schoolYearId,
+    Value<int>? orderNo,
+    Value<String>? label,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return ActivityObjectivesCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      orderNo: orderNo ?? this.orderNo,
+      label: label ?? this.label,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (orderNo.present) {
+      map['order_no'] = Variable<int>(orderNo.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityObjectivesCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('orderNo: $orderNo, ')
+          ..write('label: $label, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class ActivityLines extends Table
+    with TableInfo<ActivityLines, ActivityLineRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  ActivityLines(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _objectiveIdMeta = const VerificationMeta(
+    'objectiveId',
+  );
+  late final GeneratedColumn<String> objectiveId = GeneratedColumn<String>(
+    'objective_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  static const VerificationMeta _plannedActivityMeta = const VerificationMeta(
+    'plannedActivity',
+  );
+  late final GeneratedColumn<String> plannedActivity = GeneratedColumn<String>(
+    'planned_activity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deadlineOnMeta = const VerificationMeta(
+    'deadlineOn',
+  );
+  late final GeneratedColumn<String> deadlineOn = GeneratedColumn<String>(
+    'deadline_on',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _deadlineTextMeta = const VerificationMeta(
+    'deadlineText',
+  );
+  late final GeneratedColumn<String> deadlineText = GeneratedColumn<String>(
+    'deadline_text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _constraintTextMeta = const VerificationMeta(
+    'constraintText',
+  );
+  late final GeneratedColumn<String> constraintText = GeneratedColumn<String>(
+    'constraint_text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _expectedResultMeta = const VerificationMeta(
+    'expectedResult',
+  );
+  late final GeneratedColumn<String> expectedResult = GeneratedColumn<String>(
+    'expected_result',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _achievedResultMeta = const VerificationMeta(
+    'achievedResult',
+  );
+  late final GeneratedColumn<String> achievedResult = GeneratedColumn<String>(
+    'achieved_result',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _successRateMeta = const VerificationMeta(
+    'successRate',
+  );
+  late final GeneratedColumn<double> successRate = GeneratedColumn<double>(
+    'success_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    objectiveId,
+    sortOrder,
+    plannedActivity,
+    deadlineOn,
+    deadlineText,
+    constraintText,
+    expectedResult,
+    achievedResult,
+    successRate,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'activity_lines';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActivityLineRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('objective_id')) {
+      context.handle(
+        _objectiveIdMeta,
+        objectiveId.isAcceptableOrUnknown(
+          data['objective_id']!,
+          _objectiveIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_objectiveIdMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('planned_activity')) {
+      context.handle(
+        _plannedActivityMeta,
+        plannedActivity.isAcceptableOrUnknown(
+          data['planned_activity']!,
+          _plannedActivityMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_plannedActivityMeta);
+    }
+    if (data.containsKey('deadline_on')) {
+      context.handle(
+        _deadlineOnMeta,
+        deadlineOn.isAcceptableOrUnknown(data['deadline_on']!, _deadlineOnMeta),
+      );
+    }
+    if (data.containsKey('deadline_text')) {
+      context.handle(
+        _deadlineTextMeta,
+        deadlineText.isAcceptableOrUnknown(
+          data['deadline_text']!,
+          _deadlineTextMeta,
+        ),
+      );
+    }
+    if (data.containsKey('constraint_text')) {
+      context.handle(
+        _constraintTextMeta,
+        constraintText.isAcceptableOrUnknown(
+          data['constraint_text']!,
+          _constraintTextMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expected_result')) {
+      context.handle(
+        _expectedResultMeta,
+        expectedResult.isAcceptableOrUnknown(
+          data['expected_result']!,
+          _expectedResultMeta,
+        ),
+      );
+    }
+    if (data.containsKey('achieved_result')) {
+      context.handle(
+        _achievedResultMeta,
+        achievedResult.isAcceptableOrUnknown(
+          data['achieved_result']!,
+          _achievedResultMeta,
+        ),
+      );
+    }
+    if (data.containsKey('success_rate')) {
+      context.handle(
+        _successRateMeta,
+        successRate.isAcceptableOrUnknown(
+          data['success_rate']!,
+          _successRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ActivityLineRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActivityLineRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      objectiveId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}objective_id'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      plannedActivity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}planned_activity'],
+      )!,
+      deadlineOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deadline_on'],
+      ),
+      deadlineText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deadline_text'],
+      ),
+      constraintText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}constraint_text'],
+      ),
+      expectedResult: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}expected_result'],
+      ),
+      achievedResult: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}achieved_result'],
+      ),
+      successRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}success_rate'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  ActivityLines createAlias(String alias) {
+    return ActivityLines(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class ActivityLineRow extends DataClass implements Insertable<ActivityLineRow> {
+  final String id;
+  final String schoolId;
+  final String objectiveId;
+  final int sortOrder;
+  final String plannedActivity;
+  final String? deadlineOn;
+  final String? deadlineText;
+  final String? constraintText;
+  final String? expectedResult;
+  final String? achievedResult;
+  final double? successRate;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const ActivityLineRow({
+    required this.id,
+    required this.schoolId,
+    required this.objectiveId,
+    required this.sortOrder,
+    required this.plannedActivity,
+    this.deadlineOn,
+    this.deadlineText,
+    this.constraintText,
+    this.expectedResult,
+    this.achievedResult,
+    this.successRate,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['objective_id'] = Variable<String>(objectiveId);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['planned_activity'] = Variable<String>(plannedActivity);
+    if (!nullToAbsent || deadlineOn != null) {
+      map['deadline_on'] = Variable<String>(deadlineOn);
+    }
+    if (!nullToAbsent || deadlineText != null) {
+      map['deadline_text'] = Variable<String>(deadlineText);
+    }
+    if (!nullToAbsent || constraintText != null) {
+      map['constraint_text'] = Variable<String>(constraintText);
+    }
+    if (!nullToAbsent || expectedResult != null) {
+      map['expected_result'] = Variable<String>(expectedResult);
+    }
+    if (!nullToAbsent || achievedResult != null) {
+      map['achieved_result'] = Variable<String>(achievedResult);
+    }
+    if (!nullToAbsent || successRate != null) {
+      map['success_rate'] = Variable<double>(successRate);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  ActivityLinesCompanion toCompanion(bool nullToAbsent) {
+    return ActivityLinesCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      objectiveId: Value(objectiveId),
+      sortOrder: Value(sortOrder),
+      plannedActivity: Value(plannedActivity),
+      deadlineOn: deadlineOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deadlineOn),
+      deadlineText: deadlineText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deadlineText),
+      constraintText: constraintText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(constraintText),
+      expectedResult: expectedResult == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expectedResult),
+      achievedResult: achievedResult == null && nullToAbsent
+          ? const Value.absent()
+          : Value(achievedResult),
+      successRate: successRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(successRate),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory ActivityLineRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActivityLineRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      objectiveId: serializer.fromJson<String>(json['objective_id']),
+      sortOrder: serializer.fromJson<int>(json['sort_order']),
+      plannedActivity: serializer.fromJson<String>(json['planned_activity']),
+      deadlineOn: serializer.fromJson<String?>(json['deadline_on']),
+      deadlineText: serializer.fromJson<String?>(json['deadline_text']),
+      constraintText: serializer.fromJson<String?>(json['constraint_text']),
+      expectedResult: serializer.fromJson<String?>(json['expected_result']),
+      achievedResult: serializer.fromJson<String?>(json['achieved_result']),
+      successRate: serializer.fromJson<double?>(json['success_rate']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'objective_id': serializer.toJson<String>(objectiveId),
+      'sort_order': serializer.toJson<int>(sortOrder),
+      'planned_activity': serializer.toJson<String>(plannedActivity),
+      'deadline_on': serializer.toJson<String?>(deadlineOn),
+      'deadline_text': serializer.toJson<String?>(deadlineText),
+      'constraint_text': serializer.toJson<String?>(constraintText),
+      'expected_result': serializer.toJson<String?>(expectedResult),
+      'achieved_result': serializer.toJson<String?>(achievedResult),
+      'success_rate': serializer.toJson<double?>(successRate),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  ActivityLineRow copyWith({
+    String? id,
+    String? schoolId,
+    String? objectiveId,
+    int? sortOrder,
+    String? plannedActivity,
+    Value<String?> deadlineOn = const Value.absent(),
+    Value<String?> deadlineText = const Value.absent(),
+    Value<String?> constraintText = const Value.absent(),
+    Value<String?> expectedResult = const Value.absent(),
+    Value<String?> achievedResult = const Value.absent(),
+    Value<double?> successRate = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => ActivityLineRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    objectiveId: objectiveId ?? this.objectiveId,
+    sortOrder: sortOrder ?? this.sortOrder,
+    plannedActivity: plannedActivity ?? this.plannedActivity,
+    deadlineOn: deadlineOn.present ? deadlineOn.value : this.deadlineOn,
+    deadlineText: deadlineText.present ? deadlineText.value : this.deadlineText,
+    constraintText: constraintText.present
+        ? constraintText.value
+        : this.constraintText,
+    expectedResult: expectedResult.present
+        ? expectedResult.value
+        : this.expectedResult,
+    achievedResult: achievedResult.present
+        ? achievedResult.value
+        : this.achievedResult,
+    successRate: successRate.present ? successRate.value : this.successRate,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  ActivityLineRow copyWithCompanion(ActivityLinesCompanion data) {
+    return ActivityLineRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      objectiveId: data.objectiveId.present
+          ? data.objectiveId.value
+          : this.objectiveId,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      plannedActivity: data.plannedActivity.present
+          ? data.plannedActivity.value
+          : this.plannedActivity,
+      deadlineOn: data.deadlineOn.present
+          ? data.deadlineOn.value
+          : this.deadlineOn,
+      deadlineText: data.deadlineText.present
+          ? data.deadlineText.value
+          : this.deadlineText,
+      constraintText: data.constraintText.present
+          ? data.constraintText.value
+          : this.constraintText,
+      expectedResult: data.expectedResult.present
+          ? data.expectedResult.value
+          : this.expectedResult,
+      achievedResult: data.achievedResult.present
+          ? data.achievedResult.value
+          : this.achievedResult,
+      successRate: data.successRate.present
+          ? data.successRate.value
+          : this.successRate,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityLineRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('objectiveId: $objectiveId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('plannedActivity: $plannedActivity, ')
+          ..write('deadlineOn: $deadlineOn, ')
+          ..write('deadlineText: $deadlineText, ')
+          ..write('constraintText: $constraintText, ')
+          ..write('expectedResult: $expectedResult, ')
+          ..write('achievedResult: $achievedResult, ')
+          ..write('successRate: $successRate, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    objectiveId,
+    sortOrder,
+    plannedActivity,
+    deadlineOn,
+    deadlineText,
+    constraintText,
+    expectedResult,
+    achievedResult,
+    successRate,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActivityLineRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.objectiveId == this.objectiveId &&
+          other.sortOrder == this.sortOrder &&
+          other.plannedActivity == this.plannedActivity &&
+          other.deadlineOn == this.deadlineOn &&
+          other.deadlineText == this.deadlineText &&
+          other.constraintText == this.constraintText &&
+          other.expectedResult == this.expectedResult &&
+          other.achievedResult == this.achievedResult &&
+          other.successRate == this.successRate &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class ActivityLinesCompanion extends UpdateCompanion<ActivityLineRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> objectiveId;
+  final Value<int> sortOrder;
+  final Value<String> plannedActivity;
+  final Value<String?> deadlineOn;
+  final Value<String?> deadlineText;
+  final Value<String?> constraintText;
+  final Value<String?> expectedResult;
+  final Value<String?> achievedResult;
+  final Value<double?> successRate;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const ActivityLinesCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.objectiveId = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.plannedActivity = const Value.absent(),
+    this.deadlineOn = const Value.absent(),
+    this.deadlineText = const Value.absent(),
+    this.constraintText = const Value.absent(),
+    this.expectedResult = const Value.absent(),
+    this.achievedResult = const Value.absent(),
+    this.successRate = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ActivityLinesCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String objectiveId,
+    this.sortOrder = const Value.absent(),
+    required String plannedActivity,
+    this.deadlineOn = const Value.absent(),
+    this.deadlineText = const Value.absent(),
+    this.constraintText = const Value.absent(),
+    this.expectedResult = const Value.absent(),
+    this.achievedResult = const Value.absent(),
+    this.successRate = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       objectiveId = Value(objectiveId),
+       plannedActivity = Value(plannedActivity),
+       updatedAt = Value(updatedAt);
+  static Insertable<ActivityLineRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? objectiveId,
+    Expression<int>? sortOrder,
+    Expression<String>? plannedActivity,
+    Expression<String>? deadlineOn,
+    Expression<String>? deadlineText,
+    Expression<String>? constraintText,
+    Expression<String>? expectedResult,
+    Expression<String>? achievedResult,
+    Expression<double>? successRate,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (objectiveId != null) 'objective_id': objectiveId,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (plannedActivity != null) 'planned_activity': plannedActivity,
+      if (deadlineOn != null) 'deadline_on': deadlineOn,
+      if (deadlineText != null) 'deadline_text': deadlineText,
+      if (constraintText != null) 'constraint_text': constraintText,
+      if (expectedResult != null) 'expected_result': expectedResult,
+      if (achievedResult != null) 'achieved_result': achievedResult,
+      if (successRate != null) 'success_rate': successRate,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ActivityLinesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? objectiveId,
+    Value<int>? sortOrder,
+    Value<String>? plannedActivity,
+    Value<String?>? deadlineOn,
+    Value<String?>? deadlineText,
+    Value<String?>? constraintText,
+    Value<String?>? expectedResult,
+    Value<String?>? achievedResult,
+    Value<double?>? successRate,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return ActivityLinesCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      objectiveId: objectiveId ?? this.objectiveId,
+      sortOrder: sortOrder ?? this.sortOrder,
+      plannedActivity: plannedActivity ?? this.plannedActivity,
+      deadlineOn: deadlineOn ?? this.deadlineOn,
+      deadlineText: deadlineText ?? this.deadlineText,
+      constraintText: constraintText ?? this.constraintText,
+      expectedResult: expectedResult ?? this.expectedResult,
+      achievedResult: achievedResult ?? this.achievedResult,
+      successRate: successRate ?? this.successRate,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (objectiveId.present) {
+      map['objective_id'] = Variable<String>(objectiveId.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (plannedActivity.present) {
+      map['planned_activity'] = Variable<String>(plannedActivity.value);
+    }
+    if (deadlineOn.present) {
+      map['deadline_on'] = Variable<String>(deadlineOn.value);
+    }
+    if (deadlineText.present) {
+      map['deadline_text'] = Variable<String>(deadlineText.value);
+    }
+    if (constraintText.present) {
+      map['constraint_text'] = Variable<String>(constraintText.value);
+    }
+    if (expectedResult.present) {
+      map['expected_result'] = Variable<String>(expectedResult.value);
+    }
+    if (achievedResult.present) {
+      map['achieved_result'] = Variable<String>(achievedResult.value);
+    }
+    if (successRate.present) {
+      map['success_rate'] = Variable<double>(successRate.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActivityLinesCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('objectiveId: $objectiveId, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('plannedActivity: $plannedActivity, ')
+          ..write('deadlineOn: $deadlineOn, ')
+          ..write('deadlineText: $deadlineText, ')
+          ..write('constraintText: $constraintText, ')
+          ..write('expectedResult: $expectedResult, ')
+          ..write('achievedResult: $achievedResult, ')
+          ..write('successRate: $successRate, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class FormVersions extends Table with TableInfo<FormVersions, FormVersionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  FormVersions(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _formIdMeta = const VerificationMeta('formId');
+  late final GeneratedColumn<String> formId = GeneratedColumn<String>(
+    'form_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _versionNoMeta = const VerificationMeta(
+    'versionNo',
+  );
+  late final GeneratedColumn<int> versionNo = GeneratedColumn<int>(
+    'version_no',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _isFinalMeta = const VerificationMeta(
+    'isFinal',
+  );
+  late final GeneratedColumn<bool> isFinal = GeneratedColumn<bool>(
+    'is_final',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
+  static const VerificationMeta _isCertifiedCopyMeta = const VerificationMeta(
+    'isCertifiedCopy',
+  );
+  late final GeneratedColumn<bool> isCertifiedCopy = GeneratedColumn<bool>(
+    'is_certified_copy',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
+  static const VerificationMeta _snapshotMeta = const VerificationMeta(
+    'snapshot',
+  );
+  late final GeneratedColumn<String> snapshot = GeneratedColumn<String>(
+    'snapshot',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'{}\'',
+    defaultValue: const CustomExpression('\'{}\''),
+  );
+  static const VerificationMeta _pdfPathMeta = const VerificationMeta(
+    'pdfPath',
+  );
+  late final GeneratedColumn<String> pdfPath = GeneratedColumn<String>(
+    'pdf_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    formId,
+    versionNo,
+    isFinal,
+    isCertifiedCopy,
+    snapshot,
+    pdfPath,
+    createdBy,
+    createdAt,
+    updatedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'form_versions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FormVersionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('form_id')) {
+      context.handle(
+        _formIdMeta,
+        formId.isAcceptableOrUnknown(data['form_id']!, _formIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_formIdMeta);
+    }
+    if (data.containsKey('version_no')) {
+      context.handle(
+        _versionNoMeta,
+        versionNo.isAcceptableOrUnknown(data['version_no']!, _versionNoMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_versionNoMeta);
+    }
+    if (data.containsKey('is_final')) {
+      context.handle(
+        _isFinalMeta,
+        isFinal.isAcceptableOrUnknown(data['is_final']!, _isFinalMeta),
+      );
+    }
+    if (data.containsKey('is_certified_copy')) {
+      context.handle(
+        _isCertifiedCopyMeta,
+        isCertifiedCopy.isAcceptableOrUnknown(
+          data['is_certified_copy']!,
+          _isCertifiedCopyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('snapshot')) {
+      context.handle(
+        _snapshotMeta,
+        snapshot.isAcceptableOrUnknown(data['snapshot']!, _snapshotMeta),
+      );
+    }
+    if (data.containsKey('pdf_path')) {
+      context.handle(
+        _pdfPathMeta,
+        pdfPath.isAcceptableOrUnknown(data['pdf_path']!, _pdfPathMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FormVersionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FormVersionRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      formId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}form_id'],
+      )!,
+      versionNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version_no'],
+      )!,
+      isFinal: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_final'],
+      )!,
+      isCertifiedCopy: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_certified_copy'],
+      )!,
+      snapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}snapshot'],
+      )!,
+      pdfPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pdf_path'],
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  FormVersions createAlias(String alias) {
+    return FormVersions(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class FormVersionRow extends DataClass implements Insertable<FormVersionRow> {
+  final String id;
+  final String schoolId;
+  final String formId;
+  final int versionNo;
+  final bool isFinal;
+  final bool isCertifiedCopy;
+  final String snapshot;
+  final String? pdfPath;
+  final String? createdBy;
+  final String? createdAt;
+  final String updatedAt;
+  final String? syncedAt;
+  const FormVersionRow({
+    required this.id,
+    required this.schoolId,
+    required this.formId,
+    required this.versionNo,
+    required this.isFinal,
+    required this.isCertifiedCopy,
+    required this.snapshot,
+    this.pdfPath,
+    this.createdBy,
+    this.createdAt,
+    required this.updatedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['form_id'] = Variable<String>(formId);
+    map['version_no'] = Variable<int>(versionNo);
+    map['is_final'] = Variable<bool>(isFinal);
+    map['is_certified_copy'] = Variable<bool>(isCertifiedCopy);
+    map['snapshot'] = Variable<String>(snapshot);
+    if (!nullToAbsent || pdfPath != null) {
+      map['pdf_path'] = Variable<String>(pdfPath);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  FormVersionsCompanion toCompanion(bool nullToAbsent) {
+    return FormVersionsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      formId: Value(formId),
+      versionNo: Value(versionNo),
+      isFinal: Value(isFinal),
+      isCertifiedCopy: Value(isCertifiedCopy),
+      snapshot: Value(snapshot),
+      pdfPath: pdfPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pdfPath),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory FormVersionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FormVersionRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      formId: serializer.fromJson<String>(json['form_id']),
+      versionNo: serializer.fromJson<int>(json['version_no']),
+      isFinal: serializer.fromJson<bool>(json['is_final']),
+      isCertifiedCopy: serializer.fromJson<bool>(json['is_certified_copy']),
+      snapshot: serializer.fromJson<String>(json['snapshot']),
+      pdfPath: serializer.fromJson<String?>(json['pdf_path']),
+      createdBy: serializer.fromJson<String?>(json['created_by']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'form_id': serializer.toJson<String>(formId),
+      'version_no': serializer.toJson<int>(versionNo),
+      'is_final': serializer.toJson<bool>(isFinal),
+      'is_certified_copy': serializer.toJson<bool>(isCertifiedCopy),
+      'snapshot': serializer.toJson<String>(snapshot),
+      'pdf_path': serializer.toJson<String?>(pdfPath),
+      'created_by': serializer.toJson<String?>(createdBy),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  FormVersionRow copyWith({
+    String? id,
+    String? schoolId,
+    String? formId,
+    int? versionNo,
+    bool? isFinal,
+    bool? isCertifiedCopy,
+    String? snapshot,
+    Value<String?> pdfPath = const Value.absent(),
+    Value<String?> createdBy = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> syncedAt = const Value.absent(),
+  }) => FormVersionRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    formId: formId ?? this.formId,
+    versionNo: versionNo ?? this.versionNo,
+    isFinal: isFinal ?? this.isFinal,
+    isCertifiedCopy: isCertifiedCopy ?? this.isCertifiedCopy,
+    snapshot: snapshot ?? this.snapshot,
+    pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  FormVersionRow copyWithCompanion(FormVersionsCompanion data) {
+    return FormVersionRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      formId: data.formId.present ? data.formId.value : this.formId,
+      versionNo: data.versionNo.present ? data.versionNo.value : this.versionNo,
+      isFinal: data.isFinal.present ? data.isFinal.value : this.isFinal,
+      isCertifiedCopy: data.isCertifiedCopy.present
+          ? data.isCertifiedCopy.value
+          : this.isCertifiedCopy,
+      snapshot: data.snapshot.present ? data.snapshot.value : this.snapshot,
+      pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FormVersionRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('formId: $formId, ')
+          ..write('versionNo: $versionNo, ')
+          ..write('isFinal: $isFinal, ')
+          ..write('isCertifiedCopy: $isCertifiedCopy, ')
+          ..write('snapshot: $snapshot, ')
+          ..write('pdfPath: $pdfPath, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    formId,
+    versionNo,
+    isFinal,
+    isCertifiedCopy,
+    snapshot,
+    pdfPath,
+    createdBy,
+    createdAt,
+    updatedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FormVersionRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.formId == this.formId &&
+          other.versionNo == this.versionNo &&
+          other.isFinal == this.isFinal &&
+          other.isCertifiedCopy == this.isCertifiedCopy &&
+          other.snapshot == this.snapshot &&
+          other.pdfPath == this.pdfPath &&
+          other.createdBy == this.createdBy &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class FormVersionsCompanion extends UpdateCompanion<FormVersionRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> formId;
+  final Value<int> versionNo;
+  final Value<bool> isFinal;
+  final Value<bool> isCertifiedCopy;
+  final Value<String> snapshot;
+  final Value<String?> pdfPath;
+  final Value<String?> createdBy;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const FormVersionsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.formId = const Value.absent(),
+    this.versionNo = const Value.absent(),
+    this.isFinal = const Value.absent(),
+    this.isCertifiedCopy = const Value.absent(),
+    this.snapshot = const Value.absent(),
+    this.pdfPath = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FormVersionsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String formId,
+    required int versionNo,
+    this.isFinal = const Value.absent(),
+    this.isCertifiedCopy = const Value.absent(),
+    this.snapshot = const Value.absent(),
+    this.pdfPath = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       formId = Value(formId),
+       versionNo = Value(versionNo),
+       updatedAt = Value(updatedAt);
+  static Insertable<FormVersionRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? formId,
+    Expression<int>? versionNo,
+    Expression<bool>? isFinal,
+    Expression<bool>? isCertifiedCopy,
+    Expression<String>? snapshot,
+    Expression<String>? pdfPath,
+    Expression<String>? createdBy,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (formId != null) 'form_id': formId,
+      if (versionNo != null) 'version_no': versionNo,
+      if (isFinal != null) 'is_final': isFinal,
+      if (isCertifiedCopy != null) 'is_certified_copy': isCertifiedCopy,
+      if (snapshot != null) 'snapshot': snapshot,
+      if (pdfPath != null) 'pdf_path': pdfPath,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FormVersionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? formId,
+    Value<int>? versionNo,
+    Value<bool>? isFinal,
+    Value<bool>? isCertifiedCopy,
+    Value<String>? snapshot,
+    Value<String?>? pdfPath,
+    Value<String?>? createdBy,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return FormVersionsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      formId: formId ?? this.formId,
+      versionNo: versionNo ?? this.versionNo,
+      isFinal: isFinal ?? this.isFinal,
+      isCertifiedCopy: isCertifiedCopy ?? this.isCertifiedCopy,
+      snapshot: snapshot ?? this.snapshot,
+      pdfPath: pdfPath ?? this.pdfPath,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (formId.present) {
+      map['form_id'] = Variable<String>(formId.value);
+    }
+    if (versionNo.present) {
+      map['version_no'] = Variable<int>(versionNo.value);
+    }
+    if (isFinal.present) {
+      map['is_final'] = Variable<bool>(isFinal.value);
+    }
+    if (isCertifiedCopy.present) {
+      map['is_certified_copy'] = Variable<bool>(isCertifiedCopy.value);
+    }
+    if (snapshot.present) {
+      map['snapshot'] = Variable<String>(snapshot.value);
+    }
+    if (pdfPath.present) {
+      map['pdf_path'] = Variable<String>(pdfPath.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FormVersionsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('formId: $formId, ')
+          ..write('versionNo: $versionNo, ')
+          ..write('isFinal: $isFinal, ')
+          ..write('isCertifiedCopy: $isCertifiedCopy, ')
+          ..write('snapshot: $snapshot, ')
+          ..write('pdfPath: $pdfPath, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Outbox extends Table with TableInfo<Outbox, OutboxEntry> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -27071,6 +29306,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'CREATE INDEX report_cards_class ON report_cards (class_id)',
   );
   late final IssuedDocuments issuedDocuments = IssuedDocuments(this);
+  late final ActivityObjectives activityObjectives = ActivityObjectives(this);
+  late final ActivityLines activityLines = ActivityLines(this);
+  late final FormVersions formVersions = FormVersions(this);
+  late final Index activityLinesObjective = Index(
+    'activity_lines_objective',
+    'CREATE INDEX activity_lines_objective ON activity_lines (objective_id)',
+  );
   late final Index enrollmentsClass = Index(
     'enrollments_class',
     'CREATE INDEX enrollments_class ON enrollments (class_id)',
@@ -27125,6 +29367,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     scolarityCopyLog,
     reportCardsClass,
     issuedDocuments,
+    activityObjectives,
+    activityLines,
+    formVersions,
+    activityLinesObjective,
     enrollmentsClass,
     enrollmentsStudent,
     outbox,
@@ -34722,6 +36968,7 @@ typedef $OfficialFormsCreateCompanionBuilder = OfficialFormsCompanion Function({
   Value<String?> signedPlace,
   Value<String?> signedOn,
   Value<String?> directorName,
+  Value<int?> lockedVersion,
   Value<String?> createdAt,
   required String updatedAt,
   Value<String?> deletedAt,
@@ -34741,6 +36988,7 @@ typedef $OfficialFormsUpdateCompanionBuilder = OfficialFormsCompanion Function({
   Value<String?> signedPlace,
   Value<String?> signedOn,
   Value<String?> directorName,
+  Value<int?> lockedVersion,
   Value<String?> createdAt,
   Value<String> updatedAt,
   Value<String?> deletedAt,
@@ -34814,6 +37062,11 @@ class $OfficialFormsFilterComposer
 
   ColumnFilters<String> get directorName => $composableBuilder(
     column: $table.directorName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lockedVersion => $composableBuilder(
+    column: $table.lockedVersion,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -34907,6 +37160,11 @@ class $OfficialFormsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get lockedVersion => $composableBuilder(
+    column: $table.lockedVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -34985,6 +37243,11 @@ class $OfficialFormsAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get lockedVersion => $composableBuilder(
+    column: $table.lockedVersion,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -35041,6 +37304,7 @@ class $OfficialFormsTableManager
                 Value<String?> signedPlace = const Value.absent(),
                 Value<String?> signedOn = const Value.absent(),
                 Value<String?> directorName = const Value.absent(),
+                Value<int?> lockedVersion = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> deletedAt = const Value.absent(),
@@ -35059,6 +37323,7 @@ class $OfficialFormsTableManager
                 signedPlace: signedPlace,
                 signedOn: signedOn,
                 directorName: directorName,
+                lockedVersion: lockedVersion,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -35079,6 +37344,7 @@ class $OfficialFormsTableManager
                 Value<String?> signedPlace = const Value.absent(),
                 Value<String?> signedOn = const Value.absent(),
                 Value<String?> directorName = const Value.absent(),
+                Value<int?> lockedVersion = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 required String updatedAt,
                 Value<String?> deletedAt = const Value.absent(),
@@ -35097,6 +37363,7 @@ class $OfficialFormsTableManager
                 signedPlace: signedPlace,
                 signedOn: signedOn,
                 directorName: directorName,
+                lockedVersion: lockedVersion,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -38468,6 +40735,1052 @@ typedef $IssuedDocumentsProcessedTableManager =
       IssuedDocumentRow,
       PrefetchHooks Function()
     >;
+typedef $ActivityObjectivesCreateCompanionBuilder =
+    ActivityObjectivesCompanion Function({
+      required String id,
+      required String schoolId,
+      required String schoolYearId,
+      required int orderNo,
+      required String label,
+      Value<String?> createdAt,
+      required String updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $ActivityObjectivesUpdateCompanionBuilder =
+    ActivityObjectivesCompanion Function({
+      Value<String> id,
+      Value<String> schoolId,
+      Value<String> schoolYearId,
+      Value<int> orderNo,
+      Value<String> label,
+      Value<String?> createdAt,
+      Value<String> updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $ActivityObjectivesFilterComposer
+    extends Composer<_$AppDatabase, ActivityObjectives> {
+  $ActivityObjectivesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get orderNo => $composableBuilder(
+    column: $table.orderNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $ActivityObjectivesOrderingComposer
+    extends Composer<_$AppDatabase, ActivityObjectives> {
+  $ActivityObjectivesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get orderNo => $composableBuilder(
+    column: $table.orderNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $ActivityObjectivesAnnotationComposer
+    extends Composer<_$AppDatabase, ActivityObjectives> {
+  $ActivityObjectivesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get orderNo =>
+      $composableBuilder(column: $table.orderNo, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $ActivityObjectivesTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          ActivityObjectives,
+          ActivityObjectiveRow,
+          $ActivityObjectivesFilterComposer,
+          $ActivityObjectivesOrderingComposer,
+          $ActivityObjectivesAnnotationComposer,
+          $ActivityObjectivesCreateCompanionBuilder,
+          $ActivityObjectivesUpdateCompanionBuilder,
+          (
+            ActivityObjectiveRow,
+            BaseReferences<
+              _$AppDatabase,
+              ActivityObjectives,
+              ActivityObjectiveRow
+            >,
+          ),
+          ActivityObjectiveRow,
+          PrefetchHooks Function()
+        > {
+  $ActivityObjectivesTableManager(_$AppDatabase db, ActivityObjectives table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $ActivityObjectivesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $ActivityObjectivesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $ActivityObjectivesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<int> orderNo = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityObjectivesCompanion(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                orderNo: orderNo,
+                label: label,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String schoolYearId,
+                required int orderNo,
+                required String label,
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityObjectivesCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                orderNo: orderNo,
+                label: label,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<ActivityObjectives, ActivityObjectiveRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    ActivityObjectives,
+                    ActivityObjectiveRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $ActivityObjectivesProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      ActivityObjectives,
+      ActivityObjectiveRow,
+      $ActivityObjectivesFilterComposer,
+      $ActivityObjectivesOrderingComposer,
+      $ActivityObjectivesAnnotationComposer,
+      $ActivityObjectivesCreateCompanionBuilder,
+      $ActivityObjectivesUpdateCompanionBuilder,
+      (
+        ActivityObjectiveRow,
+        BaseReferences<_$AppDatabase, ActivityObjectives, ActivityObjectiveRow>,
+      ),
+      ActivityObjectiveRow,
+      PrefetchHooks Function()
+    >;
+typedef $ActivityLinesCreateCompanionBuilder = ActivityLinesCompanion Function({
+  required String id,
+  required String schoolId,
+  required String objectiveId,
+  Value<int> sortOrder,
+  required String plannedActivity,
+  Value<String?> deadlineOn,
+  Value<String?> deadlineText,
+  Value<String?> constraintText,
+  Value<String?> expectedResult,
+  Value<String?> achievedResult,
+  Value<double?> successRate,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $ActivityLinesUpdateCompanionBuilder = ActivityLinesCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> objectiveId,
+  Value<int> sortOrder,
+  Value<String> plannedActivity,
+  Value<String?> deadlineOn,
+  Value<String?> deadlineText,
+  Value<String?> constraintText,
+  Value<String?> expectedResult,
+  Value<String?> achievedResult,
+  Value<double?> successRate,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $ActivityLinesFilterComposer
+    extends Composer<_$AppDatabase, ActivityLines> {
+  $ActivityLinesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get objectiveId => $composableBuilder(
+    column: $table.objectiveId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get plannedActivity => $composableBuilder(
+    column: $table.plannedActivity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deadlineOn => $composableBuilder(
+    column: $table.deadlineOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deadlineText => $composableBuilder(
+    column: $table.deadlineText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get constraintText => $composableBuilder(
+    column: $table.constraintText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get expectedResult => $composableBuilder(
+    column: $table.expectedResult,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get achievedResult => $composableBuilder(
+    column: $table.achievedResult,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get successRate => $composableBuilder(
+    column: $table.successRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $ActivityLinesOrderingComposer
+    extends Composer<_$AppDatabase, ActivityLines> {
+  $ActivityLinesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get objectiveId => $composableBuilder(
+    column: $table.objectiveId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get plannedActivity => $composableBuilder(
+    column: $table.plannedActivity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deadlineOn => $composableBuilder(
+    column: $table.deadlineOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deadlineText => $composableBuilder(
+    column: $table.deadlineText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get constraintText => $composableBuilder(
+    column: $table.constraintText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get expectedResult => $composableBuilder(
+    column: $table.expectedResult,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get achievedResult => $composableBuilder(
+    column: $table.achievedResult,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get successRate => $composableBuilder(
+    column: $table.successRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $ActivityLinesAnnotationComposer
+    extends Composer<_$AppDatabase, ActivityLines> {
+  $ActivityLinesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get objectiveId => $composableBuilder(
+    column: $table.objectiveId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<String> get plannedActivity => $composableBuilder(
+    column: $table.plannedActivity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deadlineOn => $composableBuilder(
+    column: $table.deadlineOn,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deadlineText => $composableBuilder(
+    column: $table.deadlineText,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get constraintText => $composableBuilder(
+    column: $table.constraintText,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get expectedResult => $composableBuilder(
+    column: $table.expectedResult,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get achievedResult => $composableBuilder(
+    column: $table.achievedResult,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get successRate => $composableBuilder(
+    column: $table.successRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $ActivityLinesTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          ActivityLines,
+          ActivityLineRow,
+          $ActivityLinesFilterComposer,
+          $ActivityLinesOrderingComposer,
+          $ActivityLinesAnnotationComposer,
+          $ActivityLinesCreateCompanionBuilder,
+          $ActivityLinesUpdateCompanionBuilder,
+          (
+            ActivityLineRow,
+            BaseReferences<_$AppDatabase, ActivityLines, ActivityLineRow>,
+          ),
+          ActivityLineRow,
+          PrefetchHooks Function()
+        > {
+  $ActivityLinesTableManager(_$AppDatabase db, ActivityLines table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $ActivityLinesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $ActivityLinesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $ActivityLinesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> objectiveId = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<String> plannedActivity = const Value.absent(),
+                Value<String?> deadlineOn = const Value.absent(),
+                Value<String?> deadlineText = const Value.absent(),
+                Value<String?> constraintText = const Value.absent(),
+                Value<String?> expectedResult = const Value.absent(),
+                Value<String?> achievedResult = const Value.absent(),
+                Value<double?> successRate = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityLinesCompanion(
+                id: id,
+                schoolId: schoolId,
+                objectiveId: objectiveId,
+                sortOrder: sortOrder,
+                plannedActivity: plannedActivity,
+                deadlineOn: deadlineOn,
+                deadlineText: deadlineText,
+                constraintText: constraintText,
+                expectedResult: expectedResult,
+                achievedResult: achievedResult,
+                successRate: successRate,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String objectiveId,
+                Value<int> sortOrder = const Value.absent(),
+                required String plannedActivity,
+                Value<String?> deadlineOn = const Value.absent(),
+                Value<String?> deadlineText = const Value.absent(),
+                Value<String?> constraintText = const Value.absent(),
+                Value<String?> expectedResult = const Value.absent(),
+                Value<String?> achievedResult = const Value.absent(),
+                Value<double?> successRate = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ActivityLinesCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                objectiveId: objectiveId,
+                sortOrder: sortOrder,
+                plannedActivity: plannedActivity,
+                deadlineOn: deadlineOn,
+                deadlineText: deadlineText,
+                constraintText: constraintText,
+                expectedResult: expectedResult,
+                achievedResult: achievedResult,
+                successRate: successRate,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<ActivityLines, ActivityLineRow>(table),
+                  BaseReferences<_$AppDatabase, ActivityLines, ActivityLineRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $ActivityLinesProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      ActivityLines,
+      ActivityLineRow,
+      $ActivityLinesFilterComposer,
+      $ActivityLinesOrderingComposer,
+      $ActivityLinesAnnotationComposer,
+      $ActivityLinesCreateCompanionBuilder,
+      $ActivityLinesUpdateCompanionBuilder,
+      (
+        ActivityLineRow,
+        BaseReferences<_$AppDatabase, ActivityLines, ActivityLineRow>,
+      ),
+      ActivityLineRow,
+      PrefetchHooks Function()
+    >;
+typedef $FormVersionsCreateCompanionBuilder = FormVersionsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String formId,
+  required int versionNo,
+  Value<bool> isFinal,
+  Value<bool> isCertifiedCopy,
+  Value<String> snapshot,
+  Value<String?> pdfPath,
+  Value<String?> createdBy,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $FormVersionsUpdateCompanionBuilder = FormVersionsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> formId,
+  Value<int> versionNo,
+  Value<bool> isFinal,
+  Value<bool> isCertifiedCopy,
+  Value<String> snapshot,
+  Value<String?> pdfPath,
+  Value<String?> createdBy,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $FormVersionsFilterComposer
+    extends Composer<_$AppDatabase, FormVersions> {
+  $FormVersionsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get formId => $composableBuilder(
+    column: $table.formId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get versionNo => $composableBuilder(
+    column: $table.versionNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isFinal => $composableBuilder(
+    column: $table.isFinal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCertifiedCopy => $composableBuilder(
+    column: $table.isCertifiedCopy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get snapshot => $composableBuilder(
+    column: $table.snapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pdfPath => $composableBuilder(
+    column: $table.pdfPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $FormVersionsOrderingComposer
+    extends Composer<_$AppDatabase, FormVersions> {
+  $FormVersionsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get formId => $composableBuilder(
+    column: $table.formId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get versionNo => $composableBuilder(
+    column: $table.versionNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isFinal => $composableBuilder(
+    column: $table.isFinal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCertifiedCopy => $composableBuilder(
+    column: $table.isCertifiedCopy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get snapshot => $composableBuilder(
+    column: $table.snapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pdfPath => $composableBuilder(
+    column: $table.pdfPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $FormVersionsAnnotationComposer
+    extends Composer<_$AppDatabase, FormVersions> {
+  $FormVersionsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get formId =>
+      $composableBuilder(column: $table.formId, builder: (column) => column);
+
+  GeneratedColumn<int> get versionNo =>
+      $composableBuilder(column: $table.versionNo, builder: (column) => column);
+
+  GeneratedColumn<bool> get isFinal =>
+      $composableBuilder(column: $table.isFinal, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCertifiedCopy => $composableBuilder(
+    column: $table.isCertifiedCopy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get snapshot =>
+      $composableBuilder(column: $table.snapshot, builder: (column) => column);
+
+  GeneratedColumn<String> get pdfPath =>
+      $composableBuilder(column: $table.pdfPath, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $FormVersionsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          FormVersions,
+          FormVersionRow,
+          $FormVersionsFilterComposer,
+          $FormVersionsOrderingComposer,
+          $FormVersionsAnnotationComposer,
+          $FormVersionsCreateCompanionBuilder,
+          $FormVersionsUpdateCompanionBuilder,
+          (
+            FormVersionRow,
+            BaseReferences<_$AppDatabase, FormVersions, FormVersionRow>,
+          ),
+          FormVersionRow,
+          PrefetchHooks Function()
+        > {
+  $FormVersionsTableManager(_$AppDatabase db, FormVersions table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $FormVersionsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $FormVersionsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $FormVersionsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> formId = const Value.absent(),
+                Value<int> versionNo = const Value.absent(),
+                Value<bool> isFinal = const Value.absent(),
+                Value<bool> isCertifiedCopy = const Value.absent(),
+                Value<String> snapshot = const Value.absent(),
+                Value<String?> pdfPath = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FormVersionsCompanion(
+                id: id,
+                schoolId: schoolId,
+                formId: formId,
+                versionNo: versionNo,
+                isFinal: isFinal,
+                isCertifiedCopy: isCertifiedCopy,
+                snapshot: snapshot,
+                pdfPath: pdfPath,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String formId,
+                required int versionNo,
+                Value<bool> isFinal = const Value.absent(),
+                Value<bool> isCertifiedCopy = const Value.absent(),
+                Value<String> snapshot = const Value.absent(),
+                Value<String?> pdfPath = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FormVersionsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                formId: formId,
+                versionNo: versionNo,
+                isFinal: isFinal,
+                isCertifiedCopy: isCertifiedCopy,
+                snapshot: snapshot,
+                pdfPath: pdfPath,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<FormVersions, FormVersionRow>(table),
+                  BaseReferences<_$AppDatabase, FormVersions, FormVersionRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $FormVersionsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      FormVersions,
+      FormVersionRow,
+      $FormVersionsFilterComposer,
+      $FormVersionsOrderingComposer,
+      $FormVersionsAnnotationComposer,
+      $FormVersionsCreateCompanionBuilder,
+      $FormVersionsUpdateCompanionBuilder,
+      (
+        FormVersionRow,
+        BaseReferences<_$AppDatabase, FormVersions, FormVersionRow>,
+      ),
+      FormVersionRow,
+      PrefetchHooks Function()
+    >;
 typedef $OutboxCreateCompanionBuilder = OutboxCompanion Function({
   Value<int> id,
   required String targetTable,
@@ -40110,6 +43423,12 @@ class $AppDatabaseManager {
       $ScolarityCopyLogTableManager(_db, _db.scolarityCopyLog);
   $IssuedDocumentsTableManager get issuedDocuments =>
       $IssuedDocumentsTableManager(_db, _db.issuedDocuments);
+  $ActivityObjectivesTableManager get activityObjectives =>
+      $ActivityObjectivesTableManager(_db, _db.activityObjectives);
+  $ActivityLinesTableManager get activityLines =>
+      $ActivityLinesTableManager(_db, _db.activityLines);
+  $FormVersionsTableManager get formVersions =>
+      $FormVersionsTableManager(_db, _db.formVersions);
   $OutboxTableManager get outbox => $OutboxTableManager(_db, _db.outbox);
   $SyncCursorsTableManager get syncCursors =>
       $SyncCursorsTableManager(_db, _db.syncCursors);

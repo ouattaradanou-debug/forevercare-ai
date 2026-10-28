@@ -227,7 +227,7 @@ void main() {
   });
 
   test(
-    'base du téléphone : passage de la version 5 à la 7 sans perte',
+    'base du téléphone : passage de la version 5 à la 8 sans perte',
     () async {
       final dir = Directory.systemTemp.createTempSync('migration');
       final fichier = File('${dir.path}/ecole.db');
@@ -242,6 +242,9 @@ void main() {
         'report_cards',
         'scolarity_copy_log',
         'issued_documents',
+        'activity_objectives',
+        'activity_lines',
+        'form_versions',
       ]) {
         await db.customStatement('DROP TABLE $t');
       }
@@ -251,6 +254,7 @@ void main() {
         ('teachers', 'assignment_decision_number'),
         ('teachers', 'assignment_decision_date'),
         ('teachers', 'service_start_date'),
+        ('official_forms', 'locked_version'),
       ]) {
         await db.customStatement('ALTER TABLE $t DROP COLUMN $c');
       }

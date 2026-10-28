@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -119,6 +119,14 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(teachers, teachers.assignmentDecisionDate);
         await m.addColumn(teachers, teachers.serviceStartDate);
         await m.createTable(issuedDocuments);
+      }
+      if (from < 8) {
+        // Phase 5 : programme d'activités et bilan, versions.
+        await m.addColumn(officialForms, officialForms.lockedVersion);
+        await m.createTable(activityObjectives);
+        await m.createTable(activityLines);
+        await m.createTable(formVersions);
+        await m.createIndex(activityLinesObjective);
       }
     },
   );

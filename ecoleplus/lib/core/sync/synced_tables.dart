@@ -111,6 +111,12 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
     info: db.issuedDocuments,
   ),
   SyncedTable<OfficialFormRow>(name: 'official_forms', info: db.officialForms),
+  SyncedTable<ActivityObjectiveRow>(
+    name: 'activity_objectives',
+    info: db.activityObjectives,
+  ),
+  SyncedTable<ActivityLineRow>(name: 'activity_lines', info: db.activityLines),
+  SyncedTable<FormVersionRow>(name: 'form_versions', info: db.formVersions),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];
