@@ -46,7 +46,11 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
       ref.read(authApiProvider),
       ref.read(mediaDirProvider),
     ),
-    autresEnvois: () => ref.read(bibliothequeRepositoryProvider).envoyer(),
+    autresEnvois: () async {
+      final biblio = ref.read(bibliothequeRepositoryProvider);
+      await biblio.envoyer();
+      await biblio.reconcilier();
+    },
   );
   ref.onDispose(engine.dispose);
   return engine;

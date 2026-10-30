@@ -26,7 +26,14 @@ class Occupation {
 abstract interface class DocumentsEnLigne {
   Future<List<Trouvaille>> rechercher(String schoolId, String requete);
   Future<Occupation> occupation(String schoolId);
+
+  /// Efface définitivement un document de la corbeille : son fichier puis
+  /// sa fiche (Internet nécessaire).
+  Future<void> effacer(String documentId, String? cheminFichier);
 }
+
+const messageEffacementHorsLigne =
+    'Effacer définitivement : connexion à Internet nécessaire.';
 
 const messageRechercheHorsLigne =
     'Recherche dans le texte : connexion à Internet nécessaire. La recherche '
@@ -55,6 +62,25 @@ class SupabaseDocumentsEnLigne implements DocumentsEnLigne {
       throw UserMessage(e.message);
     } on Object {
       throw const UserMessage(messageRechercheHorsLigne);
+    }
+  }
+
+  @override
+  Future<void> effacer(String documentId, String? cheminFichier) async {
+    try {
+      if (cheminFichier != null) {
+        await client.storage.from('documents').remove([cheminFichier]);
+      }
+      await client.rpc<dynamic>(
+        'document_effacer',
+        params: {'p_doc': documentId},
+      );
+    } on PostgrestException catch (e) {
+      throw UserMessage(e.message);
+    } on StorageException catch (e) {
+      throw UserMessage('Effacement du fichier refusé : ${e.message}');
+    } on Object {
+      throw const UserMessage(messageEffacementHorsLigne);
     }
   }
 

@@ -32,6 +32,7 @@
 | A17 | ➕ Ajout demandé (27/10/2026) | **Documents du directeur réunis sous un seul bouton « Documents »**, rangés « Enseignants » / « Élèves » ; **4 nouveaux modèles** fournis par le porteur : attestation de prise de service (enseignant), certificat de scolarité, attestation de niveau, certificat de non redevance (élèves) — fiche ci-dessous | **Acceptée** (27/10/2026) : certificat de scolarité en **page entière ou demi-page au choix** ; **pas de numéro** ; non redevance : **avertissement** si impayés (quand les Finances existeront), le directeur décide ; 3e rubrique **« École »** (programme et bilan, phase 5) | 4 |
 | A18 | ➕ Ajout demandé (28/10/2026, test sur téléphone) | Documents : « **Camarade** » à la place de « Madame » / « Monsieur » ; grade du directeur plus visible dans « Mon école » (avec propositions) ; **aperçu des PDF qu'on peut agrandir** (deux doigts, boutons + et −) avant d'imprimer ou de partager | **Acceptée** (28/10/2026) — construite | 4 |
 | A20 | ➕ Ajout demandé (30/10/2026, test sur téléphone) | **« Archives » devient une commande à part** sur l'accueil (directeur et délégués « archives »), au lieu d'une ligne dans « Documents » — fiche ci-dessous | **Acceptée** (30/10/2026) — construite | 9 |
+| A21 | ➕ Ajout demandé (30/10/2026, test sur téléphone) | **« Effacer définitivement »** un document de la corbeille, sans attendre 30 jours ; et retrait automatique, sur les autres téléphones, des documents effacés ou devenus inaccessibles — fiche ci-dessous | **Acceptée** (30/10/2026) — construite | 9 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -217,4 +218,16 @@ Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 in
 * **Données** : aucune. **Serveur** : aucun changement.
 * **Fonctionne sur ordinateur** : oui.
 * **Effort** : XS. **Risques** : aucun.
+* **Décision** : demandée par le porteur le 30/10/2026, construite le jour même.
+
+## Fiche d'impact A21 — « Effacer définitivement » un document
+* **Demande du porteur (30/10/2026)** : pouvoir effacer tout de suite un document mis à la corbeille (par exemple un document réel ajouté par erreur sur le serveur de test).
+* **Ce qui change** :
+  * dans la corbeille, fiche du document → bouton rouge **« Effacer définitivement »** (directeur ; personne chargée des archives pour les archives), avec confirmation ; Internet nécessaire ;
+  * le **fichier est effacé du serveur** ; la fiche est marquée effacée (trace gardée dans le journal : qui, quand) ; le texte lu est effacé ;
+  * **sur les autres téléphones**, à la synchronisation suivante, le document disparaît (fiche et fichier gardé). Même chose, désormais, pour un document mis à la corbeille ou retiré à une classe : il disparaît du téléphone de l'enseignant (défaut trouvé en préparant A21 : il y restait).
+* **Données** : aucune nouvelle colonne. **Serveur** : fonction `document_effacer` et droit d'effacer le fichier (migration `20261101000400`).
+* **Sécurité** : un enseignant, un directeur d'une autre école ou un visiteur ne peuvent pas effacer (testé) ; un document hors corbeille ne peut pas être effacé.
+* **Fonctionne sur ordinateur** : oui.
+* **Effort** : S. **Risques** : effacement sans retour possible — d'où la corbeille obligatoire avant, et la confirmation.
 * **Décision** : demandée par le porteur le 30/10/2026, construite le jour même.

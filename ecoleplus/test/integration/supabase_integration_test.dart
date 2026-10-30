@@ -76,6 +76,9 @@ class ToggleRemote implements SyncRemote {
   Future<List<Map<String, dynamic>>> fetchAll(String t) =>
       _go(() => inner.fetchAll(t));
   @override
+  Future<Set<String>> identifiants(String t) =>
+      _go(() => inner.identifiants(t));
+  @override
   Future<Map<String, dynamic>?> fetchRow(String t, Map<String, Object?> k) =>
       _go(() => inner.fetchRow(t, k));
   @override
@@ -1188,6 +1191,85 @@ void mainA6() {
     await dir.engine.syncNow();
     await ens.close();
     await dir.close();
+  }, skip: skip);
+
+  test('A21 : document de la corbeille effacé définitivement (fichier et '
+      'fiche) ; il disparaît du téléphone de l’enseignante ; un enseignant ne '
+      'peut pas effacer', () async {
+    final tmp = Directory.systemTemp.createTempSync('effacer');
+    final dir = await connecte(
+      'directeur@ecole-test.local',
+      motDePasse,
+      Directory('${tmp.path}/dir')..createSync(),
+    );
+    final repo = BibliothequeRepository(
+      dir.store,
+      remote: dir.remote,
+      mediaDir: dir.mediaDir,
+    );
+    const ecole = '10000000-0000-4000-8000-000000000001';
+    final f = File('${tmp.path}/Rapport.pdf')
+      ..writeAsStringSync(
+        '%PDF-1.4 rapport ${DateTime.now().microsecondsSinceEpoch}',
+      );
+    final id = (await repo.ajouter(
+      schoolId: ecole,
+      espace: Espace.bibliotheque,
+      fichiers: [FichierChoisi('Rapport.pdf', f.path)],
+      fiche: const FicheDocument(commun: true),
+      gestionnaire: true,
+    )).ids.single;
+    await dir.engine.syncNow();
+    await repo.envoyer();
+    await dir.engine.syncNow();
+    final chemin = (await (dir.db.select(
+      dir.db.documents,
+    )..where((d) => d.id.equals(id))).getSingle()).storagePath!;
+
+    final ens1 = await connecte(
+      'enseignant1@ecole-test.local',
+      motDePasse,
+      Directory('${tmp.path}/ens1')..createSync(),
+    );
+    final repoEns = BibliothequeRepository(
+      ens1.store,
+      remote: ens1.remote,
+      mediaDir: ens1.mediaDir,
+    );
+    expect(
+      (await ens1.db.select(ens1.db.documents).get()).map((d) => d.id),
+      contains(id),
+    );
+
+    await repo.mettreALaCorbeille(id);
+    await dir.engine.syncNow();
+    // Un enseignant ne peut pas effacer.
+    await expectLater(
+      SupabaseDocumentsEnLigne(ens1.client).effacer(id, chemin),
+      throwsA(isA<UserMessage>()),
+    );
+    await SupabaseDocumentsEnLigne(dir.client).effacer(id, chemin);
+    await repo.oublier(id);
+    await expectLater(
+      dir.client.storage.from('documents').download(chemin),
+      throwsA(anything),
+    );
+    expect(
+      await dir.client.from('documents').select('id').eq('id', id),
+      isEmpty,
+    );
+
+    // Téléphone de l'enseignante : retiré à la synchronisation.
+    await ens1.engine.syncNow();
+    expect(await repoEns.reconcilier(), greaterThanOrEqualTo(1));
+    expect(
+      (await ens1.db.select(ens1.db.documents).get()).map((d) => d.id),
+      isNot(contains(id)),
+    );
+
+    await ens1.close();
+    await dir.close();
+    tmp.deleteSync(recursive: true);
   }, skip: skip);
 
   test(

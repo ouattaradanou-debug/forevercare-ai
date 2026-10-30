@@ -20,6 +20,10 @@ class FakeServer {
   /// Renvoie un code d'erreur SQL pour refuser un changement, sinon null.
   String? Function(String table, Map<String, dynamic> row)? rejectWith;
 
+  /// Lignes visibles par la personne connectée (droits du serveur) ; null :
+  /// toutes. Sert à simuler un document devenu inaccessible.
+  bool Function(String table, Map<String, dynamic> row)? visible;
+
   /// Message joint au refus (exception levée par une règle du serveur).
   String? rejectMessage;
 
@@ -150,6 +154,16 @@ class FakeRemote implements SyncRemote {
   Future<List<Map<String, dynamic>>> fetchAll(String table) async {
     _check();
     return [for (final r in server.table(table).values) Map.of(r)];
+  }
+
+  @override
+  Future<Set<String>> identifiants(String table) async {
+    _check();
+    return {
+      for (final r in server.table(table).values)
+        if (r['deleted_at'] == null && (server.visible?.call(table, r) ?? true))
+          '${r['id']}',
+    };
   }
 
   @override

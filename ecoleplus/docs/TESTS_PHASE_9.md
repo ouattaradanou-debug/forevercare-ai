@@ -80,11 +80,16 @@ pages), dont un **scan** (photo ou PDF d'une page imprimée).
    archivée » ; l'état passe à « Signé et archivé » ; le scan est dans les
    archives.
 
-## 7. Corbeille et espace
+## 7. Corbeille, effacement et espace
 1. Un document → « Mettre à la corbeille ». ✅ Il quitte la liste ;
    « Corbeille » → « Restaurer » le remet. Au bout de 30 jours, il est
    effacé du serveur.
-2. ✅ Le pourcentage utilisé augmente avec les ajouts. Si l'espace est
+2. Remettez-le à la corbeille → « Corbeille » → le document → **« Effacer
+   définitivement »** → « Effacer ». ✅ « Document effacé. » ; il n'est plus
+   dans la corbeille. En mode avion : « connexion à Internet nécessaire ».
+   ✅ Sur le téléphone de `enseignant1`, après « Synchroniser », il a
+   disparu aussi.
+3. ✅ Le pourcentage utilisé augmente avec les ajouts. Si l'espace est
    plein : « Document « … » — Espace plein : X Mo utilisés sur 300 Mo.
    Videz la corbeille ou demandez plus d'espace. » (dans « Synchroniser »),
    et le fichier n'est pas envoyé.

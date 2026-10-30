@@ -76,6 +76,10 @@ abstract interface class SyncRemote {
 
   Future<List<Map<String, dynamic>>> fetchAll(String table);
 
+  /// Identifiants des lignes encore visibles pour la personne connectée
+  /// (les autres ont été effacées, ou ne lui sont plus accessibles).
+  Future<Set<String>> identifiants(String table);
+
   Future<Map<String, dynamic>?> fetchRow(
     String table,
     Map<String, Object?> key,

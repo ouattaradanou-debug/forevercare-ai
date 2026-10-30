@@ -93,6 +93,21 @@ class SupabaseSyncRemote implements SyncRemote {
   });
 
   @override
+  Future<Set<String>> identifiants(String table) => _call(() async {
+    const page = 1000;
+    final ids = <String>{};
+    for (var debut = 0; ; debut += page) {
+      final rows = await client
+          .from(table)
+          .select('id')
+          .order('id')
+          .range(debut, debut + page - 1);
+      ids.addAll([for (final r in rows) '${r['id']}']);
+      if (rows.length < page) return ids;
+    }
+  });
+
+  @override
   Future<Map<String, dynamic>?> fetchRow(
     String table,
     Map<String, Object?> key,

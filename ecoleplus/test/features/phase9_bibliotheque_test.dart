@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/sync/sync_engine.dart';
 import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
+import 'package:ecoleplus/features/bibliotheque/data/documents_en_ligne.dart';
 import 'package:ecoleplus/features/bibliotheque/domain/document.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,6 +69,7 @@ Future<void> ajouterCommun(WidgetTester tester) async {
 }
 
 void main() {
+  testsEffacement();
   testWidgets('50 fichiers ajoutés hors ligne : catalogue tout de suite '
       'utilisable ; envoi coupé en cours de route puis repris, sans doublon '
       'ni fichier abîmé ; le même lot ajouté une 2e fois est reconnu', (
@@ -350,6 +352,59 @@ void main() {
       find.textContaining('jamais utilisées par l’assistant IA'),
       findsOne,
     );
+    await h.dispose(tester);
+  });
+}
+
+void testsEffacement() {
+  testWidgets('A21 : effacer définitivement depuis la corbeille : Internet '
+      'nécessaire, puis effacé du serveur et du téléphone', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    final source = Directory('${h.mediaDir.parent.path}/eff_${h.hashCode}');
+    h.fichiersChoisis = fichiersDeTest(source, 1, taille: 3000);
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await ouvrirBibliotheque(tester);
+    await ajouterCommun(tester);
+    await accueil(tester);
+    await h.synchroniser(tester);
+    await calme(tester);
+    final d = (await h.db.select(h.db.documents).get()).single;
+    expect(h.server.files.keys, contains('documents/${d.storagePath}'));
+
+    // À la corbeille, puis « Effacer définitivement » (pas avant).
+    await ouvrirBibliotheque(tester);
+    await tap(tester, find.byKey(Key('document-${d.id}')));
+    expect(find.byKey(const Key('effacer-document')), findsNothing);
+    await tap(tester, find.byKey(const Key('corbeille-document')));
+    await tap(
+      tester,
+      find.widgetWithText(FilledButton, 'Mettre à la corbeille'),
+    );
+    await calme(tester);
+    await tap(tester, find.text('Corbeille'));
+    await tap(tester, find.byKey(Key('document-${d.id}')));
+
+    // Sans Internet : message, rien n'est effacé.
+    h.online = false;
+    await tap(tester, find.byKey(const Key('effacer-document')));
+    await tap(tester, find.widgetWithText(FilledButton, 'Effacer'));
+    expect(find.text(messageEffacementHorsLigne), findsOneWidget);
+    expect(await h.db.select(h.db.documents).get(), hasLength(1));
+    await AppHarness.settle(tester);
+
+    h.online = true;
+    await tap(tester, find.byKey(const Key('effacer-document')));
+    await tap(tester, find.widgetWithText(FilledButton, 'Effacer'));
+    await calme(tester);
+    expect(await h.db.select(h.db.documents).get(), isEmpty);
+    expect(await h.db.select(h.db.documentFiles).get(), isEmpty);
+    expect(
+      h.server.files.keys.where((k) => k.startsWith('documents/')),
+      isEmpty,
+    );
+    expect(h.server.tables['documents']![d.id]!['deleted_at'], isNotNull);
+    expect(find.text('Aucun document.'), findsOneWidget);
     await h.dispose(tester);
   });
 }

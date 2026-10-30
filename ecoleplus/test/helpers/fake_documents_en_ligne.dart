@@ -30,6 +30,20 @@ class FakeDocumentsEnLigne implements DocumentsEnLigne {
   }
 
   @override
+  Future<void> effacer(String documentId, String? cheminFichier) async {
+    if (!enLigne) throw const UserMessage(messageEffacementHorsLigne);
+    final d = server.tables['documents']![documentId]!;
+    if (d['trashed_at'] == null) {
+      throw const UserMessage('Mettez d’abord le document à la corbeille.');
+    }
+    if (cheminFichier != null) server.files.remove('documents/$cheminFichier');
+    server.seed('documents', {
+      ...d,
+      'deleted_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
+  @override
   Future<Occupation> occupation(String schoolId) async {
     if (!enLigne) throw const UserMessage(messageRechercheHorsLigne);
     final docs = server.tables['documents']?.values ?? const [];

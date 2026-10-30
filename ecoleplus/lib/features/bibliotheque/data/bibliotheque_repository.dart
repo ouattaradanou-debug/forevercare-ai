@@ -100,7 +100,11 @@ class BibliothequeRepository {
               ))
               .getSingleOrNull();
       if (existe != null) {
-        doublons.add(existe.title);
+        doublons.add(
+          existe.trashedAt == null
+              ? existe.title
+              : '${existe.title} (dans la corbeille)',
+        );
         ids.add(existe.id);
         continue;
       }
@@ -336,6 +340,32 @@ class BibliothequeRepository {
       libere += f.sizeBytes;
     }
     return libere;
+  }
+
+  /// Retire un document de ce téléphone seulement : fiche, fichier, envoi
+  /// en attente (effacé sur le serveur, ou plus accessible).
+  Future<void> oublier(String id) async {
+    await _retirerEnvoi(id);
+    await _oublierFichier(id);
+    await store.deleteLocal(store.table('documents'), {'id': id});
+  }
+
+  /// Après une synchronisation : retire du téléphone les documents que le
+  /// serveur ne montre plus à cette personne (effacés définitivement, mis à
+  /// la corbeille pour un enseignant, droits retirés).
+  Future<int> reconcilier() async {
+    final visibles = await remote.identifiants('documents');
+    final t = store.table('documents');
+    var retires = 0;
+    for (final d in await db.select(db.documents).get()) {
+      if (d.syncedAt == null || visibles.contains(d.id)) continue;
+      if (await store.hasPending('documents', t.encodeKey({'id': d.id}))) {
+        continue;
+      }
+      await oublier(d.id);
+      retires++;
+    }
+    return retires;
   }
 
   // -------------------------------- Fiche --------------------------------

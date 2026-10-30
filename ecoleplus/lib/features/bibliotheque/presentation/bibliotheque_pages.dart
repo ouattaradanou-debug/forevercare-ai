@@ -875,6 +875,42 @@ class FicheDocumentPage extends ConsumerWidget {
               label: const Text('Restaurer'),
               onPressed: () => repo.restaurer(d.id),
             ),
+          if (gere && d.enCorbeille) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: const Key('effacer-document'),
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+              icon: const Icon(Icons.delete_forever),
+              label: const Text('Effacer définitivement'),
+              onPressed: () async {
+                final ok = await confirmer(
+                  context,
+                  titre: 'Effacer définitivement ?',
+                  message:
+                      '« ${d.title} » sera effacé du serveur et de tous les '
+                      'téléphones. Impossible de revenir en arrière.',
+                  bouton: 'Effacer',
+                );
+                if (!ok || !context.mounted) return;
+                final fait = await avecMessage(context, () async {
+                  // La mise à la corbeille doit d'abord être connue du
+                  // serveur.
+                  await ref.read(syncEngineProvider).syncNow();
+                  await ref
+                      .read(documentsEnLigneProvider)
+                      .effacer(d.id, d.storagePath);
+                  await repo.oublier(d.id);
+                  return true;
+                });
+                if ((fait ?? false) && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Document effacé.')),
+                  );
+                  context.pop();
+                }
+              },
+            ),
+          ],
           if ((gere || modifiable) && !d.enCorbeille)
             OutlinedButton.icon(
               key: const Key('corbeille-document'),
