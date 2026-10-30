@@ -923,7 +923,8 @@ CREATE TABLE payments (
   reverses_payment_id TEXT,
   reversal_reason TEXT,
   created_at TEXT,
-  updated_at TEXT NOT NULL,
+  -- Absente sur le serveur (ajout seul) : vide pour les lignes reçues.
+  updated_at TEXT NOT NULL DEFAULT '',
   synced_at TEXT
 ) AS PaymentRow;
 
@@ -944,7 +945,8 @@ CREATE TABLE expenses (
   reversal_reason TEXT,
   created_by TEXT,
   created_at TEXT,
-  updated_at TEXT NOT NULL,
+  -- Absente sur le serveur (ajout seul) : vide pour les lignes reçues.
+  updated_at TEXT NOT NULL DEFAULT '',
   synced_at TEXT
 ) AS ExpenseRow;
 
@@ -956,7 +958,8 @@ CREATE TABLE cash_closings (
   closed_by TEXT,
   notes TEXT,
   created_at TEXT,
-  updated_at TEXT NOT NULL,
+  -- Absente sur le serveur (ajout seul) : vide pour les lignes reçues.
+  updated_at TEXT NOT NULL DEFAULT '',
   synced_at TEXT
 ) AS CashClosingRow;
 

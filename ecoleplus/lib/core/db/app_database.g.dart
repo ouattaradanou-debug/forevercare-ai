@@ -40146,8 +40146,9 @@ class Payments extends Table with TableInfo<Payments, PaymentRow> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'\'',
+    defaultValue: const CustomExpression('\'\''),
   );
   static const VerificationMeta _syncedAtMeta = const VerificationMeta(
     'syncedAt',
@@ -40337,8 +40338,6 @@ class Payments extends Table with TableInfo<Payments, PaymentRow> {
         _updatedAtMeta,
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
     }
     if (data.containsKey('synced_at')) {
       context.handle(
@@ -40466,6 +40465,8 @@ class PaymentRow extends DataClass implements Insertable<PaymentRow> {
   final String? reversesPaymentId;
   final String? reversalReason;
   final String? createdAt;
+
+  /// Absente sur le serveur (ajout seul) : vide pour les lignes reçues.
   final String updatedAt;
   final String? syncedAt;
   const PaymentRow({
@@ -40856,7 +40857,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
     this.reversesPaymentId = const Value.absent(),
     this.reversalReason = const Value.absent(),
     this.createdAt = const Value.absent(),
-    required String updatedAt,
+    this.updatedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -40868,8 +40869,7 @@ class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
        paidAt = Value(paidAt),
        deviceId = Value(deviceId),
        deviceSeq = Value(deviceSeq),
-       receiptNumber = Value(receiptNumber),
-       updatedAt = Value(updatedAt);
+       receiptNumber = Value(receiptNumber);
   static Insertable<PaymentRow> custom({
     Expression<String>? id,
     Expression<String>? schoolId,
@@ -41247,8 +41247,9 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'\'',
+    defaultValue: const CustomExpression('\'\''),
   );
   static const VerificationMeta _syncedAtMeta = const VerificationMeta(
     'syncedAt',
@@ -41425,8 +41426,6 @@ class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
         _updatedAtMeta,
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
     }
     if (data.containsKey('synced_at')) {
       context.handle(
@@ -41544,6 +41543,8 @@ class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
   final String? reversalReason;
   final String? createdBy;
   final String? createdAt;
+
+  /// Absente sur le serveur (ajout seul) : vide pour les lignes reçues.
   final String updatedAt;
   final String? syncedAt;
   const ExpenseRow({
@@ -41908,7 +41909,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
     this.reversalReason = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.createdAt = const Value.absent(),
-    required String updatedAt,
+    this.updatedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -41919,8 +41920,7 @@ class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
        amount = Value(amount),
        spentOn = Value(spentOn),
        deviceId = Value(deviceId),
-       deviceSeq = Value(deviceSeq),
-       updatedAt = Value(updatedAt);
+       deviceSeq = Value(deviceSeq);
   static Insertable<ExpenseRow> custom({
     Expression<String>? id,
     Expression<String>? schoolId,
@@ -42185,8 +42185,9 @@ class CashClosings extends Table with TableInfo<CashClosings, CashClosingRow> {
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'\'',
+    defaultValue: const CustomExpression('\'\''),
   );
   static const VerificationMeta _syncedAtMeta = const VerificationMeta(
     'syncedAt',
@@ -42281,8 +42282,6 @@ class CashClosings extends Table with TableInfo<CashClosings, CashClosingRow> {
         _updatedAtMeta,
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
-    } else if (isInserting) {
-      context.missing(_updatedAtMeta);
     }
     if (data.containsKey('synced_at')) {
       context.handle(
@@ -42355,6 +42354,8 @@ class CashClosingRow extends DataClass implements Insertable<CashClosingRow> {
   final String? closedBy;
   final String? notes;
   final String? createdAt;
+
+  /// Absente sur le serveur (ajout seul) : vide pour les lignes reçues.
   final String updatedAt;
   final String? syncedAt;
   const CashClosingRow({
@@ -42559,14 +42560,13 @@ class CashClosingsCompanion extends UpdateCompanion<CashClosingRow> {
     this.closedBy = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
-    required String updatedAt,
+    this.updatedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        schoolId = Value(schoolId),
        periodMonth = Value(periodMonth),
-       closingBalance = Value(closingBalance),
-       updatedAt = Value(updatedAt);
+       closingBalance = Value(closingBalance);
   static Insertable<CashClosingRow> custom({
     Expression<String>? id,
     Expression<String>? schoolId,
@@ -61997,7 +61997,7 @@ typedef $PaymentsCreateCompanionBuilder = PaymentsCompanion Function({
   Value<String?> reversesPaymentId,
   Value<String?> reversalReason,
   Value<String?> createdAt,
-  required String updatedAt,
+  Value<String> updatedAt,
   Value<String?> syncedAt,
   Value<int> rowid,
 });
@@ -62414,7 +62414,7 @@ class $PaymentsTableManager
                 Value<String?> reversesPaymentId = const Value.absent(),
                 Value<String?> reversalReason = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
-                required String updatedAt,
+                Value<String> updatedAt = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PaymentsCompanion.insert(
@@ -62488,7 +62488,7 @@ typedef $ExpensesCreateCompanionBuilder = ExpensesCompanion Function({
   Value<String?> reversalReason,
   Value<String?> createdBy,
   Value<String?> createdAt,
-  required String updatedAt,
+  Value<String> updatedAt,
   Value<String?> syncedAt,
   Value<int> rowid,
 });
@@ -62871,7 +62871,7 @@ class $ExpensesTableManager
                 Value<String?> reversalReason = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
-                required String updatedAt,
+                Value<String> updatedAt = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ExpensesCompanion.insert(
@@ -62934,7 +62934,7 @@ typedef $CashClosingsCreateCompanionBuilder = CashClosingsCompanion Function({
   Value<String?> closedBy,
   Value<String?> notes,
   Value<String?> createdAt,
-  required String updatedAt,
+  Value<String> updatedAt,
   Value<String?> syncedAt,
   Value<int> rowid,
 });
@@ -63164,7 +63164,7 @@ class $CashClosingsTableManager
                 Value<String?> closedBy = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
-                required String updatedAt,
+                Value<String> updatedAt = const Value.absent(),
                 Value<String?> syncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CashClosingsCompanion.insert(

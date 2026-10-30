@@ -22,6 +22,7 @@ import 'package:ecoleplus/features/bibliotheque/domain/document.dart';
 import 'package:ecoleplus/features/bulletins/data/bulletins_repository.dart';
 import 'package:ecoleplus/features/documents/data/documents_repository.dart';
 import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
+import 'package:ecoleplus/features/finances/data/finances_repository.dart';
 import 'package:ecoleplus/features/forms/data/fiche_scolarite_repository.dart';
 import 'package:ecoleplus/features/grades/data/grades_repository.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
@@ -1192,6 +1193,150 @@ void mainA6() {
     await ens.close();
     await dir.close();
   }, skip: skip);
+
+  test(
+    'phase 10 : encaissements hors ligne sur deux téléphones (directeur '
+    'et secrétaire) : numéros uniques, aucun doublon ; reçu inaltérable ; '
+    'justificatif privé ; enseignant sans aucune donnée financière',
+    () async {
+      final tmp = Directory.systemTemp.createTempSync('finances');
+      final dir = await connecte(
+        'directeur@ecole-test.local',
+        motDePasse,
+        Directory('${tmp.path}/dir')..createSync(),
+      );
+      final sec = await connecte(
+        'secretaire@ecole-test.local',
+        motDePasse,
+        Directory('${tmp.path}/sec')..createSync(),
+      );
+      const ecole = '10000000-0000-4000-8000-000000000001';
+      const annee = '20000000-0000-4000-8000-000000002025';
+      const aicha = 'd0000000-0000-4000-8000-000000000001';
+      FinancesRepository repo(Phone p) =>
+          FinancesRepository(p.store, remote: p.remote, mediaDir: p.mediaDir);
+      final rDir = repo(dir);
+      final rSec = repo(sec);
+
+      dir.online = false;
+      sec.online = false;
+      Future<PaymentRow> payer(FinancesRepository r, int m) => r.encaisser(
+        schoolId: ecole,
+        yearId: annee,
+        studentId: aicha,
+        rubric: 'scolarite',
+        feeItemId: null,
+        montant: m,
+        mode: 'especes',
+      );
+      final d1 = await payer(rDir, 1000);
+      final d2 = await payer(rDir, 2000);
+      final s1 = await payer(rSec, 3000);
+      final s2 = await payer(rSec, 4000);
+      final numeros = {
+        for (final x in [d1, d2, s1, s2]) x.receiptNumber,
+      };
+      expect(numeros, hasLength(4));
+      final depense = await rSec.depenser(
+        schoolId: ecole,
+        yearId: annee,
+        categorie: 'fournitures',
+        libelle: 'Cahiers',
+        montant: 2500,
+        date: '2025-10-07',
+        mode: 'especes',
+        justificatif: (Uint8List.fromList(List.filled(2048, 7)), 'image/jpeg'),
+      );
+
+      dir.online = true;
+      sec.online = true;
+      await sec.engine.syncNow();
+      await dir.engine.syncNow();
+      await sec.engine.syncNow();
+      // Nouvel envoi des mêmes écritures : refus silencieux (déjà reçues).
+      await dir.engine.syncNow();
+      final serveur = await dir.client
+          .from('payments')
+          .select('receipt_number')
+          .inFilter('id', [d1.id, d2.id, s1.id, s2.id]);
+      expect(serveur, hasLength(4));
+      expect({for (final r in serveur) r['receipt_number']}, numeros);
+      for (final p in [dir, sec]) {
+        final ids = {
+          for (final x in await p.db.select(p.db.payments).get()) x.id,
+        };
+        expect(ids, containsAll([d1.id, d2.id, s1.id, s2.id]));
+      }
+      expect(await dir.db.select(dir.db.outbox).get(), isEmpty);
+
+      // Justificatif dans le compartiment privé ; lu par le directeur.
+      final img = await dir.client.storage
+          .from('finances')
+          .download(depense.justificationPath!);
+      expect(img, hasLength(2048));
+
+      // Reçu inaltérable, même par l'API du directeur.
+      await dir.client.from('payments').update({'amount': 1}).eq('id', d1.id);
+      final relu = await dir.client
+          .from('payments')
+          .select('amount')
+          .eq('id', d1.id)
+          .single();
+      expect(relu['amount'], 1000);
+      await dir.client.from('payments').delete().eq('id', d1.id);
+      expect(
+        await dir.client.from('payments').select('id').eq('id', d1.id),
+        hasLength(1),
+      );
+      // Numéro falsifié (série d'un autre téléphone) : refusé.
+      final rep = await dir.client.rpc<dynamic>(
+        'sync_push',
+        params: {
+          'p_changes': [
+            {
+              'change_id': 1,
+              'table': 'payments',
+              'row': {
+                'id': '77700000-0000-4000-8000-000000000001',
+                'school_id': ecole,
+                'school_year_id': annee,
+                'rubric': 'autre',
+                'amount': 100,
+                'method': 'especes',
+                'paid_at': DateTime.now().toUtc().toIso8601String(),
+                'device_id': s1.deviceId,
+                'device_seq': 99,
+                'receipt_number': s1.receiptNumber.replaceAll(
+                  RegExp(r'\d{5}$'),
+                  '00099',
+                ),
+              },
+            },
+          ],
+        },
+      );
+      final statut = (rep as List<dynamic>).cast<Map<String, dynamic>>();
+    expect(statut.single['status'], 'rejete');
+
+      // Enseignante : rien, ni sur son téléphone ni par l'API.
+      final ens = await connecte('enseignant1@ecole-test.local');
+      expect(await ens.db.select(ens.db.payments).get(), isEmpty);
+      expect(await ens.db.select(ens.db.expenses).get(), isEmpty);
+      expect(await ens.client.from('payments').select('id'), isEmpty);
+      await expectLater(
+        ens.client.storage
+            .from('finances')
+            .download(depense.justificationPath!),
+        throwsA(anything),
+      );
+
+      await ens.close();
+      await sec.close();
+      await dir.close();
+      tmp.deleteSync(recursive: true);
+    },
+    skip: skip,
+  );
 
   test('A21 : document de la corbeille effacé définitivement (fichier et '
       'fiche) ; il disparaît du téléphone de l’enseignante ; un enseignant ne '
