@@ -361,6 +361,8 @@ class AppHarness {
       200,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.ensureVisible(find.text(bouton));
+    await tester.pump();
     await tester.tap(find.text(bouton));
   }
 
