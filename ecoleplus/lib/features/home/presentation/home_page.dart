@@ -184,6 +184,9 @@ List<Widget> _boutonsEcole(
         primaire ? 'Notes et classement' : 'Évaluations (maternelle)',
         '/notes',
       ),
+    // Finances (phase 10) : directeur et délégué « finances » seulement.
+    if (droits.contains('finances'))
+      bouton(Icons.payments_outlined, 'Finances', '/finances'),
     bouton(Icons.local_library_outlined, 'Bibliothèque', '/bibliotheque'),
     // Commande à part (A20) : directeur et délégués « archives ».
     if (droits.contains('archives'))

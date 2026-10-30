@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:ecoleplus/features/finances/domain/finances.dart';
+
 /// Une ligne du journal d'activité telle qu'affichée au directeur.
 class EvenementJournal {
   const new({required this.phrase, required this.securite});
@@ -11,6 +13,10 @@ class EvenementJournal {
 }
 
 const _objets = {
+  'fee_items': 'la grille des frais',
+  'fee_installments': 'l’échéancier des frais',
+  'discounts': 'une remise',
+  'student_discounts': 'la remise d’un élève',
   'schools': 'les informations de l’école',
   'school_years': 'une année scolaire',
   'admin_headers': 'les en-têtes administratifs',
@@ -124,6 +130,26 @@ EvenementJournal decrireEvenement({
       phrase: '$acteur a délivré $titre',
       securite: false,
     );
+  }
+  // Finances (phase 10) : chaque écriture est tracée avec son numéro.
+  if (table == 'payments' || table == 'expenses' || table == 'cash_closings') {
+    final v = d['valeurs'] as Map<String, dynamic>? ?? const {};
+    final montant = (v['amount'] as num?)?.toInt() ?? 0;
+    final phrase = switch (table) {
+      'payments' when v['reverses_payment_id'] != null =>
+        'a annulé ${fcfa(-montant)} (reçu ${v['receipt_number']} : '
+            '${v['reversal_reason']})',
+      'payments' => 'a encaissé ${fcfa(montant)} (reçu ${v['receipt_number']})',
+      'expenses' when v['reverses_expense_id'] != null =>
+        'a annulé une dépense de ${fcfa(-montant)} '
+            '(${v['reversal_reason']})',
+      'expenses' =>
+        'a enregistré une dépense de ${fcfa(montant)} (${v['label']})',
+      _ =>
+        'a clôturé la caisse du mois (solde '
+            '${fcfa((v['closing_balance'] as num?)?.toInt() ?? 0)})',
+    };
+    return EvenementJournal(phrase: '$acteur $phrase', securite: false);
   }
   if (table == 'school_modules') {
     final valeurs = d['valeurs'] as Map<String, dynamic>? ?? const {};

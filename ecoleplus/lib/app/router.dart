@@ -12,6 +12,8 @@ import 'package:ecoleplus/features/cartes/presentation/cartes_pages.dart';
 import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
 import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
 import 'package:ecoleplus/features/documents/presentation/documents_pages.dart';
+import 'package:ecoleplus/features/finances/presentation/finances_gestion_pages.dart';
+import 'package:ecoleplus/features/finances/presentation/finances_pages.dart';
 import 'package:ecoleplus/features/forms/presentation/apercu_pdf_page.dart';
 import 'package:ecoleplus/features/forms/presentation/fiche_scolarite_page.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
@@ -283,6 +285,55 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/document/:id',
         builder: (_, s) => FicheDocumentPage(s.pathParameters['id']!),
+      ),
+      GoRoute(path: '/finances', builder: (_, _) => const FinancesPage()),
+      GoRoute(
+        path: '/finances/encaisser',
+        builder: (_, s) =>
+            EncaissementPage(eleveId: s.uri.queryParameters['eleve']),
+      ),
+      GoRoute(
+        path: '/finances/recu/:id',
+        builder: (_, s) => RecuPage(s.pathParameters['id']!),
+      ),
+      GoRoute(path: '/finances/recus', builder: (_, _) => const RecusPage()),
+      GoRoute(
+        path: '/finances/eleves',
+        builder: (_, _) => const ElevesFinancesPage(),
+      ),
+      GoRoute(
+        path: '/finances/eleve/:id',
+        builder: (_, s) => SituationElevePage(s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/finances/impayes',
+        builder: (_, _) => const ImpayesPage(),
+      ),
+      GoRoute(path: '/finances/grille', builder: (_, _) => const GrillePage()),
+      GoRoute(
+        path: '/finances/grille/:id',
+        builder: (_, s) => LigneFraisPage(s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/finances/remises',
+        builder: (_, _) => const RemisesPage(),
+      ),
+      GoRoute(
+        path: '/finances/depenses',
+        builder: (_, _) => const DepensesPage(),
+      ),
+      GoRoute(
+        path: '/finances/depense/nouvelle',
+        builder: (_, _) => const NouvelleDepensePage(),
+      ),
+      GoRoute(
+        path: '/finances/depense/:id',
+        builder: (_, s) => DepensePage(s.pathParameters['id']!),
+      ),
+      GoRoute(path: '/finances/caisse', builder: (_, _) => const CaissePage()),
+      GoRoute(
+        path: '/finances/rapports',
+        builder: (_, _) => const RapportsFinancesPage(),
       ),
       GoRoute(path: '/notes', builder: (_, _) => const NotesPage()),
       GoRoute(path: '/mentions', builder: (_, _) => const MentionsPage()),
