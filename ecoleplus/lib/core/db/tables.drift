@@ -842,3 +842,123 @@ CREATE TABLE app_lock (
   failed_attempts INTEGER NOT NULL DEFAULT 0,
   blocked_until TEXT
 ) AS AppLockRow;
+
+-- ---------------- Phase 10 : finances (hors cantine) ----------------
+-- Montants en FCFA (entiers). Grille, échéancier, remises : modifiables.
+-- Encaissements, dépenses, clôtures : en AJOUT SEUL (jamais modifiés ni
+-- supprimés ; une erreur se corrige par une annulation motivée).
+
+CREATE TABLE fee_items (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  rubric TEXT NOT NULL,
+  label TEXT NOT NULL,
+  -- null = tous les niveaux ; class_id renseigné = tarif propre à la classe.
+  level_code TEXT,
+  class_id TEXT,
+  billing_period TEXT NOT NULL DEFAULT 'unique',
+  amount INTEGER NOT NULL,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS FeeItemRow;
+
+CREATE TABLE fee_installments (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  fee_item_id TEXT NOT NULL,
+  label TEXT NOT NULL,
+  due_on TEXT,
+  amount INTEGER NOT NULL,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS FeeInstallmentRow;
+
+CREATE TABLE discounts (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  label TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  value REAL NOT NULL,
+  rubric TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS DiscountRow;
+
+CREATE TABLE student_discounts (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  discount_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  fee_item_id TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS StudentDiscountRow;
+
+CREATE TABLE payments (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  student_id TEXT,
+  rubric TEXT NOT NULL,
+  fee_item_id TEXT,
+  amount INTEGER NOT NULL,
+  method TEXT NOT NULL,
+  reference TEXT,
+  payer_name TEXT,
+  paid_at TEXT NOT NULL,
+  received_by TEXT,
+  device_id TEXT NOT NULL,
+  device_seq INTEGER NOT NULL,
+  receipt_number TEXT NOT NULL,
+  reverses_payment_id TEXT,
+  reversal_reason TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  synced_at TEXT
+) AS PaymentRow;
+
+CREATE TABLE expenses (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  category TEXT NOT NULL,
+  label TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  spent_on TEXT NOT NULL,
+  method TEXT,
+  justification_path TEXT,
+  device_id TEXT NOT NULL,
+  device_seq INTEGER NOT NULL,
+  voucher_number TEXT,
+  reverses_expense_id TEXT,
+  reversal_reason TEXT,
+  created_by TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  synced_at TEXT
+) AS ExpenseRow;
+
+CREATE TABLE cash_closings (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  period_month TEXT NOT NULL,
+  closing_balance INTEGER NOT NULL,
+  closed_by TEXT,
+  notes TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  synced_at TEXT
+) AS CashClosingRow;
+
+CREATE INDEX payments_student ON payments (student_id, school_year_id);
+CREATE INDEX payments_device ON payments (device_id, school_year_id, device_seq);

@@ -37342,6 +37342,5337 @@ class AppLockCompanion extends UpdateCompanion<AppLockRow> {
   }
 }
 
+class FeeItems extends Table with TableInfo<FeeItems, FeeItemRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  FeeItems(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _rubricMeta = const VerificationMeta('rubric');
+  late final GeneratedColumn<String> rubric = GeneratedColumn<String>(
+    'rubric',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _levelCodeMeta = const VerificationMeta(
+    'levelCode',
+  );
+  late final GeneratedColumn<String> levelCode = GeneratedColumn<String>(
+    'level_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _classIdMeta = const VerificationMeta(
+    'classId',
+  );
+  late final GeneratedColumn<String> classId = GeneratedColumn<String>(
+    'class_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _billingPeriodMeta = const VerificationMeta(
+    'billingPeriod',
+  );
+  late final GeneratedColumn<String> billingPeriod = GeneratedColumn<String>(
+    'billing_period',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'unique\'',
+    defaultValue: const CustomExpression('\'unique\''),
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    schoolYearId,
+    rubric,
+    label,
+    levelCode,
+    classId,
+    billingPeriod,
+    amount,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fee_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FeeItemRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('rubric')) {
+      context.handle(
+        _rubricMeta,
+        rubric.isAcceptableOrUnknown(data['rubric']!, _rubricMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rubricMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('level_code')) {
+      context.handle(
+        _levelCodeMeta,
+        levelCode.isAcceptableOrUnknown(data['level_code']!, _levelCodeMeta),
+      );
+    }
+    if (data.containsKey('class_id')) {
+      context.handle(
+        _classIdMeta,
+        classId.isAcceptableOrUnknown(data['class_id']!, _classIdMeta),
+      );
+    }
+    if (data.containsKey('billing_period')) {
+      context.handle(
+        _billingPeriodMeta,
+        billingPeriod.isAcceptableOrUnknown(
+          data['billing_period']!,
+          _billingPeriodMeta,
+        ),
+      );
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FeeItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FeeItemRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      rubric: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rubric'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      levelCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}level_code'],
+      ),
+      classId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}class_id'],
+      ),
+      billingPeriod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}billing_period'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  FeeItems createAlias(String alias) {
+    return FeeItems(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class FeeItemRow extends DataClass implements Insertable<FeeItemRow> {
+  final String id;
+  final String schoolId;
+  final String schoolYearId;
+  final String rubric;
+  final String label;
+
+  /// null = tous les niveaux ; class_id renseigné = tarif propre à la classe.
+  final String? levelCode;
+  final String? classId;
+  final String billingPeriod;
+  final int amount;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const FeeItemRow({
+    required this.id,
+    required this.schoolId,
+    required this.schoolYearId,
+    required this.rubric,
+    required this.label,
+    this.levelCode,
+    this.classId,
+    required this.billingPeriod,
+    required this.amount,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    map['rubric'] = Variable<String>(rubric);
+    map['label'] = Variable<String>(label);
+    if (!nullToAbsent || levelCode != null) {
+      map['level_code'] = Variable<String>(levelCode);
+    }
+    if (!nullToAbsent || classId != null) {
+      map['class_id'] = Variable<String>(classId);
+    }
+    map['billing_period'] = Variable<String>(billingPeriod);
+    map['amount'] = Variable<int>(amount);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  FeeItemsCompanion toCompanion(bool nullToAbsent) {
+    return FeeItemsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      schoolYearId: Value(schoolYearId),
+      rubric: Value(rubric),
+      label: Value(label),
+      levelCode: levelCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(levelCode),
+      classId: classId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(classId),
+      billingPeriod: Value(billingPeriod),
+      amount: Value(amount),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory FeeItemRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FeeItemRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      rubric: serializer.fromJson<String>(json['rubric']),
+      label: serializer.fromJson<String>(json['label']),
+      levelCode: serializer.fromJson<String?>(json['level_code']),
+      classId: serializer.fromJson<String?>(json['class_id']),
+      billingPeriod: serializer.fromJson<String>(json['billing_period']),
+      amount: serializer.fromJson<int>(json['amount']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'rubric': serializer.toJson<String>(rubric),
+      'label': serializer.toJson<String>(label),
+      'level_code': serializer.toJson<String?>(levelCode),
+      'class_id': serializer.toJson<String?>(classId),
+      'billing_period': serializer.toJson<String>(billingPeriod),
+      'amount': serializer.toJson<int>(amount),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  FeeItemRow copyWith({
+    String? id,
+    String? schoolId,
+    String? schoolYearId,
+    String? rubric,
+    String? label,
+    Value<String?> levelCode = const Value.absent(),
+    Value<String?> classId = const Value.absent(),
+    String? billingPeriod,
+    int? amount,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => FeeItemRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    rubric: rubric ?? this.rubric,
+    label: label ?? this.label,
+    levelCode: levelCode.present ? levelCode.value : this.levelCode,
+    classId: classId.present ? classId.value : this.classId,
+    billingPeriod: billingPeriod ?? this.billingPeriod,
+    amount: amount ?? this.amount,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  FeeItemRow copyWithCompanion(FeeItemsCompanion data) {
+    return FeeItemRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      rubric: data.rubric.present ? data.rubric.value : this.rubric,
+      label: data.label.present ? data.label.value : this.label,
+      levelCode: data.levelCode.present ? data.levelCode.value : this.levelCode,
+      classId: data.classId.present ? data.classId.value : this.classId,
+      billingPeriod: data.billingPeriod.present
+          ? data.billingPeriod.value
+          : this.billingPeriod,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeeItemRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('rubric: $rubric, ')
+          ..write('label: $label, ')
+          ..write('levelCode: $levelCode, ')
+          ..write('classId: $classId, ')
+          ..write('billingPeriod: $billingPeriod, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    schoolYearId,
+    rubric,
+    label,
+    levelCode,
+    classId,
+    billingPeriod,
+    amount,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FeeItemRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.rubric == this.rubric &&
+          other.label == this.label &&
+          other.levelCode == this.levelCode &&
+          other.classId == this.classId &&
+          other.billingPeriod == this.billingPeriod &&
+          other.amount == this.amount &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class FeeItemsCompanion extends UpdateCompanion<FeeItemRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> schoolYearId;
+  final Value<String> rubric;
+  final Value<String> label;
+  final Value<String?> levelCode;
+  final Value<String?> classId;
+  final Value<String> billingPeriod;
+  final Value<int> amount;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const FeeItemsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.rubric = const Value.absent(),
+    this.label = const Value.absent(),
+    this.levelCode = const Value.absent(),
+    this.classId = const Value.absent(),
+    this.billingPeriod = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FeeItemsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String schoolYearId,
+    required String rubric,
+    required String label,
+    this.levelCode = const Value.absent(),
+    this.classId = const Value.absent(),
+    this.billingPeriod = const Value.absent(),
+    required int amount,
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       schoolYearId = Value(schoolYearId),
+       rubric = Value(rubric),
+       label = Value(label),
+       amount = Value(amount),
+       updatedAt = Value(updatedAt);
+  static Insertable<FeeItemRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? schoolYearId,
+    Expression<String>? rubric,
+    Expression<String>? label,
+    Expression<String>? levelCode,
+    Expression<String>? classId,
+    Expression<String>? billingPeriod,
+    Expression<int>? amount,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (rubric != null) 'rubric': rubric,
+      if (label != null) 'label': label,
+      if (levelCode != null) 'level_code': levelCode,
+      if (classId != null) 'class_id': classId,
+      if (billingPeriod != null) 'billing_period': billingPeriod,
+      if (amount != null) 'amount': amount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FeeItemsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? schoolYearId,
+    Value<String>? rubric,
+    Value<String>? label,
+    Value<String?>? levelCode,
+    Value<String?>? classId,
+    Value<String>? billingPeriod,
+    Value<int>? amount,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return FeeItemsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      rubric: rubric ?? this.rubric,
+      label: label ?? this.label,
+      levelCode: levelCode ?? this.levelCode,
+      classId: classId ?? this.classId,
+      billingPeriod: billingPeriod ?? this.billingPeriod,
+      amount: amount ?? this.amount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (rubric.present) {
+      map['rubric'] = Variable<String>(rubric.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (levelCode.present) {
+      map['level_code'] = Variable<String>(levelCode.value);
+    }
+    if (classId.present) {
+      map['class_id'] = Variable<String>(classId.value);
+    }
+    if (billingPeriod.present) {
+      map['billing_period'] = Variable<String>(billingPeriod.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeeItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('rubric: $rubric, ')
+          ..write('label: $label, ')
+          ..write('levelCode: $levelCode, ')
+          ..write('classId: $classId, ')
+          ..write('billingPeriod: $billingPeriod, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class FeeInstallments extends Table
+    with TableInfo<FeeInstallments, FeeInstallmentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  FeeInstallments(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _feeItemIdMeta = const VerificationMeta(
+    'feeItemId',
+  );
+  late final GeneratedColumn<String> feeItemId = GeneratedColumn<String>(
+    'fee_item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _dueOnMeta = const VerificationMeta('dueOn');
+  late final GeneratedColumn<String> dueOn = GeneratedColumn<String>(
+    'due_on',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    feeItemId,
+    label,
+    dueOn,
+    amount,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fee_installments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FeeInstallmentRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('fee_item_id')) {
+      context.handle(
+        _feeItemIdMeta,
+        feeItemId.isAcceptableOrUnknown(data['fee_item_id']!, _feeItemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_feeItemIdMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('due_on')) {
+      context.handle(
+        _dueOnMeta,
+        dueOn.isAcceptableOrUnknown(data['due_on']!, _dueOnMeta),
+      );
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FeeInstallmentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FeeInstallmentRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      feeItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fee_item_id'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      dueOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}due_on'],
+      ),
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  FeeInstallments createAlias(String alias) {
+    return FeeInstallments(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class FeeInstallmentRow extends DataClass
+    implements Insertable<FeeInstallmentRow> {
+  final String id;
+  final String schoolId;
+  final String feeItemId;
+  final String label;
+  final String? dueOn;
+  final int amount;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const FeeInstallmentRow({
+    required this.id,
+    required this.schoolId,
+    required this.feeItemId,
+    required this.label,
+    this.dueOn,
+    required this.amount,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['fee_item_id'] = Variable<String>(feeItemId);
+    map['label'] = Variable<String>(label);
+    if (!nullToAbsent || dueOn != null) {
+      map['due_on'] = Variable<String>(dueOn);
+    }
+    map['amount'] = Variable<int>(amount);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  FeeInstallmentsCompanion toCompanion(bool nullToAbsent) {
+    return FeeInstallmentsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      feeItemId: Value(feeItemId),
+      label: Value(label),
+      dueOn: dueOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueOn),
+      amount: Value(amount),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory FeeInstallmentRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FeeInstallmentRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      feeItemId: serializer.fromJson<String>(json['fee_item_id']),
+      label: serializer.fromJson<String>(json['label']),
+      dueOn: serializer.fromJson<String?>(json['due_on']),
+      amount: serializer.fromJson<int>(json['amount']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'fee_item_id': serializer.toJson<String>(feeItemId),
+      'label': serializer.toJson<String>(label),
+      'due_on': serializer.toJson<String?>(dueOn),
+      'amount': serializer.toJson<int>(amount),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  FeeInstallmentRow copyWith({
+    String? id,
+    String? schoolId,
+    String? feeItemId,
+    String? label,
+    Value<String?> dueOn = const Value.absent(),
+    int? amount,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => FeeInstallmentRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    feeItemId: feeItemId ?? this.feeItemId,
+    label: label ?? this.label,
+    dueOn: dueOn.present ? dueOn.value : this.dueOn,
+    amount: amount ?? this.amount,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  FeeInstallmentRow copyWithCompanion(FeeInstallmentsCompanion data) {
+    return FeeInstallmentRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      feeItemId: data.feeItemId.present ? data.feeItemId.value : this.feeItemId,
+      label: data.label.present ? data.label.value : this.label,
+      dueOn: data.dueOn.present ? data.dueOn.value : this.dueOn,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeeInstallmentRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('feeItemId: $feeItemId, ')
+          ..write('label: $label, ')
+          ..write('dueOn: $dueOn, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    feeItemId,
+    label,
+    dueOn,
+    amount,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FeeInstallmentRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.feeItemId == this.feeItemId &&
+          other.label == this.label &&
+          other.dueOn == this.dueOn &&
+          other.amount == this.amount &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class FeeInstallmentsCompanion extends UpdateCompanion<FeeInstallmentRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> feeItemId;
+  final Value<String> label;
+  final Value<String?> dueOn;
+  final Value<int> amount;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const FeeInstallmentsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.feeItemId = const Value.absent(),
+    this.label = const Value.absent(),
+    this.dueOn = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FeeInstallmentsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String feeItemId,
+    required String label,
+    this.dueOn = const Value.absent(),
+    required int amount,
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       feeItemId = Value(feeItemId),
+       label = Value(label),
+       amount = Value(amount),
+       updatedAt = Value(updatedAt);
+  static Insertable<FeeInstallmentRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? feeItemId,
+    Expression<String>? label,
+    Expression<String>? dueOn,
+    Expression<int>? amount,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (feeItemId != null) 'fee_item_id': feeItemId,
+      if (label != null) 'label': label,
+      if (dueOn != null) 'due_on': dueOn,
+      if (amount != null) 'amount': amount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FeeInstallmentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? feeItemId,
+    Value<String>? label,
+    Value<String?>? dueOn,
+    Value<int>? amount,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return FeeInstallmentsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      feeItemId: feeItemId ?? this.feeItemId,
+      label: label ?? this.label,
+      dueOn: dueOn ?? this.dueOn,
+      amount: amount ?? this.amount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (feeItemId.present) {
+      map['fee_item_id'] = Variable<String>(feeItemId.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (dueOn.present) {
+      map['due_on'] = Variable<String>(dueOn.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeeInstallmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('feeItemId: $feeItemId, ')
+          ..write('label: $label, ')
+          ..write('dueOn: $dueOn, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class Discounts extends Table with TableInfo<Discounts, DiscountRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Discounts(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  late final GeneratedColumn<double> value = GeneratedColumn<double>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _rubricMeta = const VerificationMeta('rubric');
+  late final GeneratedColumn<String> rubric = GeneratedColumn<String>(
+    'rubric',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    label,
+    kind,
+    value,
+    rubric,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'discounts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DiscountRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('rubric')) {
+      context.handle(
+        _rubricMeta,
+        rubric.isAcceptableOrUnknown(data['rubric']!, _rubricMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DiscountRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DiscountRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}value'],
+      )!,
+      rubric: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rubric'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  Discounts createAlias(String alias) {
+    return Discounts(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class DiscountRow extends DataClass implements Insertable<DiscountRow> {
+  final String id;
+  final String schoolId;
+  final String label;
+  final String kind;
+  final double value;
+  final String? rubric;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const DiscountRow({
+    required this.id,
+    required this.schoolId,
+    required this.label,
+    required this.kind,
+    required this.value,
+    this.rubric,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['label'] = Variable<String>(label);
+    map['kind'] = Variable<String>(kind);
+    map['value'] = Variable<double>(value);
+    if (!nullToAbsent || rubric != null) {
+      map['rubric'] = Variable<String>(rubric);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  DiscountsCompanion toCompanion(bool nullToAbsent) {
+    return DiscountsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      label: Value(label),
+      kind: Value(kind),
+      value: Value(value),
+      rubric: rubric == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rubric),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory DiscountRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DiscountRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      label: serializer.fromJson<String>(json['label']),
+      kind: serializer.fromJson<String>(json['kind']),
+      value: serializer.fromJson<double>(json['value']),
+      rubric: serializer.fromJson<String?>(json['rubric']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'label': serializer.toJson<String>(label),
+      'kind': serializer.toJson<String>(kind),
+      'value': serializer.toJson<double>(value),
+      'rubric': serializer.toJson<String?>(rubric),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  DiscountRow copyWith({
+    String? id,
+    String? schoolId,
+    String? label,
+    String? kind,
+    double? value,
+    Value<String?> rubric = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => DiscountRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    label: label ?? this.label,
+    kind: kind ?? this.kind,
+    value: value ?? this.value,
+    rubric: rubric.present ? rubric.value : this.rubric,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  DiscountRow copyWithCompanion(DiscountsCompanion data) {
+    return DiscountRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      label: data.label.present ? data.label.value : this.label,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      value: data.value.present ? data.value.value : this.value,
+      rubric: data.rubric.present ? data.rubric.value : this.rubric,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiscountRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('label: $label, ')
+          ..write('kind: $kind, ')
+          ..write('value: $value, ')
+          ..write('rubric: $rubric, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    label,
+    kind,
+    value,
+    rubric,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DiscountRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.label == this.label &&
+          other.kind == this.kind &&
+          other.value == this.value &&
+          other.rubric == this.rubric &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class DiscountsCompanion extends UpdateCompanion<DiscountRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> label;
+  final Value<String> kind;
+  final Value<double> value;
+  final Value<String?> rubric;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const DiscountsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.label = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.value = const Value.absent(),
+    this.rubric = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DiscountsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String label,
+    required String kind,
+    required double value,
+    this.rubric = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       label = Value(label),
+       kind = Value(kind),
+       value = Value(value),
+       updatedAt = Value(updatedAt);
+  static Insertable<DiscountRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? label,
+    Expression<String>? kind,
+    Expression<double>? value,
+    Expression<String>? rubric,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (label != null) 'label': label,
+      if (kind != null) 'kind': kind,
+      if (value != null) 'value': value,
+      if (rubric != null) 'rubric': rubric,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DiscountsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? label,
+    Value<String>? kind,
+    Value<double>? value,
+    Value<String?>? rubric,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return DiscountsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      label: label ?? this.label,
+      kind: kind ?? this.kind,
+      value: value ?? this.value,
+      rubric: rubric ?? this.rubric,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<double>(value.value);
+    }
+    if (rubric.present) {
+      map['rubric'] = Variable<String>(rubric.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiscountsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('label: $label, ')
+          ..write('kind: $kind, ')
+          ..write('value: $value, ')
+          ..write('rubric: $rubric, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class StudentDiscounts extends Table
+    with TableInfo<StudentDiscounts, StudentDiscountRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  StudentDiscounts(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _discountIdMeta = const VerificationMeta(
+    'discountId',
+  );
+  late final GeneratedColumn<String> discountId = GeneratedColumn<String>(
+    'discount_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _feeItemIdMeta = const VerificationMeta(
+    'feeItemId',
+  );
+  late final GeneratedColumn<String> feeItemId = GeneratedColumn<String>(
+    'fee_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    studentId,
+    discountId,
+    schoolYearId,
+    feeItemId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'student_discounts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StudentDiscountRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_studentIdMeta);
+    }
+    if (data.containsKey('discount_id')) {
+      context.handle(
+        _discountIdMeta,
+        discountId.isAcceptableOrUnknown(data['discount_id']!, _discountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_discountIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('fee_item_id')) {
+      context.handle(
+        _feeItemIdMeta,
+        feeItemId.isAcceptableOrUnknown(data['fee_item_id']!, _feeItemIdMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StudentDiscountRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StudentDiscountRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      )!,
+      discountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discount_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      feeItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fee_item_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  StudentDiscounts createAlias(String alias) {
+    return StudentDiscounts(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class StudentDiscountRow extends DataClass
+    implements Insertable<StudentDiscountRow> {
+  final String id;
+  final String schoolId;
+  final String studentId;
+  final String discountId;
+  final String schoolYearId;
+  final String? feeItemId;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const StudentDiscountRow({
+    required this.id,
+    required this.schoolId,
+    required this.studentId,
+    required this.discountId,
+    required this.schoolYearId,
+    this.feeItemId,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['student_id'] = Variable<String>(studentId);
+    map['discount_id'] = Variable<String>(discountId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    if (!nullToAbsent || feeItemId != null) {
+      map['fee_item_id'] = Variable<String>(feeItemId);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  StudentDiscountsCompanion toCompanion(bool nullToAbsent) {
+    return StudentDiscountsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      studentId: Value(studentId),
+      discountId: Value(discountId),
+      schoolYearId: Value(schoolYearId),
+      feeItemId: feeItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(feeItemId),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory StudentDiscountRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StudentDiscountRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      studentId: serializer.fromJson<String>(json['student_id']),
+      discountId: serializer.fromJson<String>(json['discount_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      feeItemId: serializer.fromJson<String?>(json['fee_item_id']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'student_id': serializer.toJson<String>(studentId),
+      'discount_id': serializer.toJson<String>(discountId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'fee_item_id': serializer.toJson<String?>(feeItemId),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  StudentDiscountRow copyWith({
+    String? id,
+    String? schoolId,
+    String? studentId,
+    String? discountId,
+    String? schoolYearId,
+    Value<String?> feeItemId = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => StudentDiscountRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    studentId: studentId ?? this.studentId,
+    discountId: discountId ?? this.discountId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    feeItemId: feeItemId.present ? feeItemId.value : this.feeItemId,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  StudentDiscountRow copyWithCompanion(StudentDiscountsCompanion data) {
+    return StudentDiscountRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      discountId: data.discountId.present
+          ? data.discountId.value
+          : this.discountId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      feeItemId: data.feeItemId.present ? data.feeItemId.value : this.feeItemId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StudentDiscountRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('discountId: $discountId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('feeItemId: $feeItemId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    studentId,
+    discountId,
+    schoolYearId,
+    feeItemId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StudentDiscountRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.studentId == this.studentId &&
+          other.discountId == this.discountId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.feeItemId == this.feeItemId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class StudentDiscountsCompanion extends UpdateCompanion<StudentDiscountRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> studentId;
+  final Value<String> discountId;
+  final Value<String> schoolYearId;
+  final Value<String?> feeItemId;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const StudentDiscountsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.discountId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.feeItemId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StudentDiscountsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String studentId,
+    required String discountId,
+    required String schoolYearId,
+    this.feeItemId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       studentId = Value(studentId),
+       discountId = Value(discountId),
+       schoolYearId = Value(schoolYearId),
+       updatedAt = Value(updatedAt);
+  static Insertable<StudentDiscountRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? studentId,
+    Expression<String>? discountId,
+    Expression<String>? schoolYearId,
+    Expression<String>? feeItemId,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (studentId != null) 'student_id': studentId,
+      if (discountId != null) 'discount_id': discountId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (feeItemId != null) 'fee_item_id': feeItemId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StudentDiscountsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? studentId,
+    Value<String>? discountId,
+    Value<String>? schoolYearId,
+    Value<String?>? feeItemId,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return StudentDiscountsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      studentId: studentId ?? this.studentId,
+      discountId: discountId ?? this.discountId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      feeItemId: feeItemId ?? this.feeItemId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (discountId.present) {
+      map['discount_id'] = Variable<String>(discountId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (feeItemId.present) {
+      map['fee_item_id'] = Variable<String>(feeItemId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StudentDiscountsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('studentId: $studentId, ')
+          ..write('discountId: $discountId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('feeItemId: $feeItemId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class Payments extends Table with TableInfo<Payments, PaymentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Payments(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _rubricMeta = const VerificationMeta('rubric');
+  late final GeneratedColumn<String> rubric = GeneratedColumn<String>(
+    'rubric',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _feeItemIdMeta = const VerificationMeta(
+    'feeItemId',
+  );
+  late final GeneratedColumn<String> feeItemId = GeneratedColumn<String>(
+    'fee_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _methodMeta = const VerificationMeta('method');
+  late final GeneratedColumn<String> method = GeneratedColumn<String>(
+    'method',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _referenceMeta = const VerificationMeta(
+    'reference',
+  );
+  late final GeneratedColumn<String> reference = GeneratedColumn<String>(
+    'reference',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _payerNameMeta = const VerificationMeta(
+    'payerName',
+  );
+  late final GeneratedColumn<String> payerName = GeneratedColumn<String>(
+    'payer_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _paidAtMeta = const VerificationMeta('paidAt');
+  late final GeneratedColumn<String> paidAt = GeneratedColumn<String>(
+    'paid_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _receivedByMeta = const VerificationMeta(
+    'receivedBy',
+  );
+  late final GeneratedColumn<String> receivedBy = GeneratedColumn<String>(
+    'received_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deviceSeqMeta = const VerificationMeta(
+    'deviceSeq',
+  );
+  late final GeneratedColumn<int> deviceSeq = GeneratedColumn<int>(
+    'device_seq',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _receiptNumberMeta = const VerificationMeta(
+    'receiptNumber',
+  );
+  late final GeneratedColumn<String> receiptNumber = GeneratedColumn<String>(
+    'receipt_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _reversesPaymentIdMeta = const VerificationMeta(
+    'reversesPaymentId',
+  );
+  late final GeneratedColumn<String> reversesPaymentId =
+      GeneratedColumn<String>(
+        'reverses_payment_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
+  static const VerificationMeta _reversalReasonMeta = const VerificationMeta(
+    'reversalReason',
+  );
+  late final GeneratedColumn<String> reversalReason = GeneratedColumn<String>(
+    'reversal_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    schoolYearId,
+    studentId,
+    rubric,
+    feeItemId,
+    amount,
+    method,
+    reference,
+    payerName,
+    paidAt,
+    receivedBy,
+    deviceId,
+    deviceSeq,
+    receiptNumber,
+    reversesPaymentId,
+    reversalReason,
+    createdAt,
+    updatedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'payments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PaymentRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    }
+    if (data.containsKey('rubric')) {
+      context.handle(
+        _rubricMeta,
+        rubric.isAcceptableOrUnknown(data['rubric']!, _rubricMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rubricMeta);
+    }
+    if (data.containsKey('fee_item_id')) {
+      context.handle(
+        _feeItemIdMeta,
+        feeItemId.isAcceptableOrUnknown(data['fee_item_id']!, _feeItemIdMeta),
+      );
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('method')) {
+      context.handle(
+        _methodMeta,
+        method.isAcceptableOrUnknown(data['method']!, _methodMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_methodMeta);
+    }
+    if (data.containsKey('reference')) {
+      context.handle(
+        _referenceMeta,
+        reference.isAcceptableOrUnknown(data['reference']!, _referenceMeta),
+      );
+    }
+    if (data.containsKey('payer_name')) {
+      context.handle(
+        _payerNameMeta,
+        payerName.isAcceptableOrUnknown(data['payer_name']!, _payerNameMeta),
+      );
+    }
+    if (data.containsKey('paid_at')) {
+      context.handle(
+        _paidAtMeta,
+        paidAt.isAcceptableOrUnknown(data['paid_at']!, _paidAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_paidAtMeta);
+    }
+    if (data.containsKey('received_by')) {
+      context.handle(
+        _receivedByMeta,
+        receivedBy.isAcceptableOrUnknown(data['received_by']!, _receivedByMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('device_seq')) {
+      context.handle(
+        _deviceSeqMeta,
+        deviceSeq.isAcceptableOrUnknown(data['device_seq']!, _deviceSeqMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceSeqMeta);
+    }
+    if (data.containsKey('receipt_number')) {
+      context.handle(
+        _receiptNumberMeta,
+        receiptNumber.isAcceptableOrUnknown(
+          data['receipt_number']!,
+          _receiptNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_receiptNumberMeta);
+    }
+    if (data.containsKey('reverses_payment_id')) {
+      context.handle(
+        _reversesPaymentIdMeta,
+        reversesPaymentId.isAcceptableOrUnknown(
+          data['reverses_payment_id']!,
+          _reversesPaymentIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reversal_reason')) {
+      context.handle(
+        _reversalReasonMeta,
+        reversalReason.isAcceptableOrUnknown(
+          data['reversal_reason']!,
+          _reversalReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PaymentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PaymentRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      ),
+      rubric: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rubric'],
+      )!,
+      feeItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fee_item_id'],
+      ),
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      method: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}method'],
+      )!,
+      reference: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference'],
+      ),
+      payerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payer_name'],
+      ),
+      paidAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}paid_at'],
+      )!,
+      receivedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}received_by'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      deviceSeq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}device_seq'],
+      )!,
+      receiptNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}receipt_number'],
+      )!,
+      reversesPaymentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reverses_payment_id'],
+      ),
+      reversalReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reversal_reason'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  Payments createAlias(String alias) {
+    return Payments(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class PaymentRow extends DataClass implements Insertable<PaymentRow> {
+  final String id;
+  final String schoolId;
+  final String schoolYearId;
+  final String? studentId;
+  final String rubric;
+  final String? feeItemId;
+  final int amount;
+  final String method;
+  final String? reference;
+  final String? payerName;
+  final String paidAt;
+  final String? receivedBy;
+  final String deviceId;
+  final int deviceSeq;
+  final String receiptNumber;
+  final String? reversesPaymentId;
+  final String? reversalReason;
+  final String? createdAt;
+  final String updatedAt;
+  final String? syncedAt;
+  const PaymentRow({
+    required this.id,
+    required this.schoolId,
+    required this.schoolYearId,
+    this.studentId,
+    required this.rubric,
+    this.feeItemId,
+    required this.amount,
+    required this.method,
+    this.reference,
+    this.payerName,
+    required this.paidAt,
+    this.receivedBy,
+    required this.deviceId,
+    required this.deviceSeq,
+    required this.receiptNumber,
+    this.reversesPaymentId,
+    this.reversalReason,
+    this.createdAt,
+    required this.updatedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    if (!nullToAbsent || studentId != null) {
+      map['student_id'] = Variable<String>(studentId);
+    }
+    map['rubric'] = Variable<String>(rubric);
+    if (!nullToAbsent || feeItemId != null) {
+      map['fee_item_id'] = Variable<String>(feeItemId);
+    }
+    map['amount'] = Variable<int>(amount);
+    map['method'] = Variable<String>(method);
+    if (!nullToAbsent || reference != null) {
+      map['reference'] = Variable<String>(reference);
+    }
+    if (!nullToAbsent || payerName != null) {
+      map['payer_name'] = Variable<String>(payerName);
+    }
+    map['paid_at'] = Variable<String>(paidAt);
+    if (!nullToAbsent || receivedBy != null) {
+      map['received_by'] = Variable<String>(receivedBy);
+    }
+    map['device_id'] = Variable<String>(deviceId);
+    map['device_seq'] = Variable<int>(deviceSeq);
+    map['receipt_number'] = Variable<String>(receiptNumber);
+    if (!nullToAbsent || reversesPaymentId != null) {
+      map['reverses_payment_id'] = Variable<String>(reversesPaymentId);
+    }
+    if (!nullToAbsent || reversalReason != null) {
+      map['reversal_reason'] = Variable<String>(reversalReason);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  PaymentsCompanion toCompanion(bool nullToAbsent) {
+    return PaymentsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      schoolYearId: Value(schoolYearId),
+      studentId: studentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(studentId),
+      rubric: Value(rubric),
+      feeItemId: feeItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(feeItemId),
+      amount: Value(amount),
+      method: Value(method),
+      reference: reference == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reference),
+      payerName: payerName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payerName),
+      paidAt: Value(paidAt),
+      receivedBy: receivedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receivedBy),
+      deviceId: Value(deviceId),
+      deviceSeq: Value(deviceSeq),
+      receiptNumber: Value(receiptNumber),
+      reversesPaymentId: reversesPaymentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reversesPaymentId),
+      reversalReason: reversalReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reversalReason),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory PaymentRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PaymentRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      studentId: serializer.fromJson<String?>(json['student_id']),
+      rubric: serializer.fromJson<String>(json['rubric']),
+      feeItemId: serializer.fromJson<String?>(json['fee_item_id']),
+      amount: serializer.fromJson<int>(json['amount']),
+      method: serializer.fromJson<String>(json['method']),
+      reference: serializer.fromJson<String?>(json['reference']),
+      payerName: serializer.fromJson<String?>(json['payer_name']),
+      paidAt: serializer.fromJson<String>(json['paid_at']),
+      receivedBy: serializer.fromJson<String?>(json['received_by']),
+      deviceId: serializer.fromJson<String>(json['device_id']),
+      deviceSeq: serializer.fromJson<int>(json['device_seq']),
+      receiptNumber: serializer.fromJson<String>(json['receipt_number']),
+      reversesPaymentId: serializer.fromJson<String?>(
+        json['reverses_payment_id'],
+      ),
+      reversalReason: serializer.fromJson<String?>(json['reversal_reason']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'student_id': serializer.toJson<String?>(studentId),
+      'rubric': serializer.toJson<String>(rubric),
+      'fee_item_id': serializer.toJson<String?>(feeItemId),
+      'amount': serializer.toJson<int>(amount),
+      'method': serializer.toJson<String>(method),
+      'reference': serializer.toJson<String?>(reference),
+      'payer_name': serializer.toJson<String?>(payerName),
+      'paid_at': serializer.toJson<String>(paidAt),
+      'received_by': serializer.toJson<String?>(receivedBy),
+      'device_id': serializer.toJson<String>(deviceId),
+      'device_seq': serializer.toJson<int>(deviceSeq),
+      'receipt_number': serializer.toJson<String>(receiptNumber),
+      'reverses_payment_id': serializer.toJson<String?>(reversesPaymentId),
+      'reversal_reason': serializer.toJson<String?>(reversalReason),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  PaymentRow copyWith({
+    String? id,
+    String? schoolId,
+    String? schoolYearId,
+    Value<String?> studentId = const Value.absent(),
+    String? rubric,
+    Value<String?> feeItemId = const Value.absent(),
+    int? amount,
+    String? method,
+    Value<String?> reference = const Value.absent(),
+    Value<String?> payerName = const Value.absent(),
+    String? paidAt,
+    Value<String?> receivedBy = const Value.absent(),
+    String? deviceId,
+    int? deviceSeq,
+    String? receiptNumber,
+    Value<String?> reversesPaymentId = const Value.absent(),
+    Value<String?> reversalReason = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> syncedAt = const Value.absent(),
+  }) => PaymentRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    studentId: studentId.present ? studentId.value : this.studentId,
+    rubric: rubric ?? this.rubric,
+    feeItemId: feeItemId.present ? feeItemId.value : this.feeItemId,
+    amount: amount ?? this.amount,
+    method: method ?? this.method,
+    reference: reference.present ? reference.value : this.reference,
+    payerName: payerName.present ? payerName.value : this.payerName,
+    paidAt: paidAt ?? this.paidAt,
+    receivedBy: receivedBy.present ? receivedBy.value : this.receivedBy,
+    deviceId: deviceId ?? this.deviceId,
+    deviceSeq: deviceSeq ?? this.deviceSeq,
+    receiptNumber: receiptNumber ?? this.receiptNumber,
+    reversesPaymentId: reversesPaymentId.present
+        ? reversesPaymentId.value
+        : this.reversesPaymentId,
+    reversalReason: reversalReason.present
+        ? reversalReason.value
+        : this.reversalReason,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  PaymentRow copyWithCompanion(PaymentsCompanion data) {
+    return PaymentRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      rubric: data.rubric.present ? data.rubric.value : this.rubric,
+      feeItemId: data.feeItemId.present ? data.feeItemId.value : this.feeItemId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      method: data.method.present ? data.method.value : this.method,
+      reference: data.reference.present ? data.reference.value : this.reference,
+      payerName: data.payerName.present ? data.payerName.value : this.payerName,
+      paidAt: data.paidAt.present ? data.paidAt.value : this.paidAt,
+      receivedBy: data.receivedBy.present
+          ? data.receivedBy.value
+          : this.receivedBy,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      deviceSeq: data.deviceSeq.present ? data.deviceSeq.value : this.deviceSeq,
+      receiptNumber: data.receiptNumber.present
+          ? data.receiptNumber.value
+          : this.receiptNumber,
+      reversesPaymentId: data.reversesPaymentId.present
+          ? data.reversesPaymentId.value
+          : this.reversesPaymentId,
+      reversalReason: data.reversalReason.present
+          ? data.reversalReason.value
+          : this.reversalReason,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PaymentRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('studentId: $studentId, ')
+          ..write('rubric: $rubric, ')
+          ..write('feeItemId: $feeItemId, ')
+          ..write('amount: $amount, ')
+          ..write('method: $method, ')
+          ..write('reference: $reference, ')
+          ..write('payerName: $payerName, ')
+          ..write('paidAt: $paidAt, ')
+          ..write('receivedBy: $receivedBy, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deviceSeq: $deviceSeq, ')
+          ..write('receiptNumber: $receiptNumber, ')
+          ..write('reversesPaymentId: $reversesPaymentId, ')
+          ..write('reversalReason: $reversalReason, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    schoolYearId,
+    studentId,
+    rubric,
+    feeItemId,
+    amount,
+    method,
+    reference,
+    payerName,
+    paidAt,
+    receivedBy,
+    deviceId,
+    deviceSeq,
+    receiptNumber,
+    reversesPaymentId,
+    reversalReason,
+    createdAt,
+    updatedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PaymentRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.studentId == this.studentId &&
+          other.rubric == this.rubric &&
+          other.feeItemId == this.feeItemId &&
+          other.amount == this.amount &&
+          other.method == this.method &&
+          other.reference == this.reference &&
+          other.payerName == this.payerName &&
+          other.paidAt == this.paidAt &&
+          other.receivedBy == this.receivedBy &&
+          other.deviceId == this.deviceId &&
+          other.deviceSeq == this.deviceSeq &&
+          other.receiptNumber == this.receiptNumber &&
+          other.reversesPaymentId == this.reversesPaymentId &&
+          other.reversalReason == this.reversalReason &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class PaymentsCompanion extends UpdateCompanion<PaymentRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> schoolYearId;
+  final Value<String?> studentId;
+  final Value<String> rubric;
+  final Value<String?> feeItemId;
+  final Value<int> amount;
+  final Value<String> method;
+  final Value<String?> reference;
+  final Value<String?> payerName;
+  final Value<String> paidAt;
+  final Value<String?> receivedBy;
+  final Value<String> deviceId;
+  final Value<int> deviceSeq;
+  final Value<String> receiptNumber;
+  final Value<String?> reversesPaymentId;
+  final Value<String?> reversalReason;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const PaymentsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.rubric = const Value.absent(),
+    this.feeItemId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.method = const Value.absent(),
+    this.reference = const Value.absent(),
+    this.payerName = const Value.absent(),
+    this.paidAt = const Value.absent(),
+    this.receivedBy = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.deviceSeq = const Value.absent(),
+    this.receiptNumber = const Value.absent(),
+    this.reversesPaymentId = const Value.absent(),
+    this.reversalReason = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PaymentsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String schoolYearId,
+    this.studentId = const Value.absent(),
+    required String rubric,
+    this.feeItemId = const Value.absent(),
+    required int amount,
+    required String method,
+    this.reference = const Value.absent(),
+    this.payerName = const Value.absent(),
+    required String paidAt,
+    this.receivedBy = const Value.absent(),
+    required String deviceId,
+    required int deviceSeq,
+    required String receiptNumber,
+    this.reversesPaymentId = const Value.absent(),
+    this.reversalReason = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       schoolYearId = Value(schoolYearId),
+       rubric = Value(rubric),
+       amount = Value(amount),
+       method = Value(method),
+       paidAt = Value(paidAt),
+       deviceId = Value(deviceId),
+       deviceSeq = Value(deviceSeq),
+       receiptNumber = Value(receiptNumber),
+       updatedAt = Value(updatedAt);
+  static Insertable<PaymentRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? schoolYearId,
+    Expression<String>? studentId,
+    Expression<String>? rubric,
+    Expression<String>? feeItemId,
+    Expression<int>? amount,
+    Expression<String>? method,
+    Expression<String>? reference,
+    Expression<String>? payerName,
+    Expression<String>? paidAt,
+    Expression<String>? receivedBy,
+    Expression<String>? deviceId,
+    Expression<int>? deviceSeq,
+    Expression<String>? receiptNumber,
+    Expression<String>? reversesPaymentId,
+    Expression<String>? reversalReason,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (studentId != null) 'student_id': studentId,
+      if (rubric != null) 'rubric': rubric,
+      if (feeItemId != null) 'fee_item_id': feeItemId,
+      if (amount != null) 'amount': amount,
+      if (method != null) 'method': method,
+      if (reference != null) 'reference': reference,
+      if (payerName != null) 'payer_name': payerName,
+      if (paidAt != null) 'paid_at': paidAt,
+      if (receivedBy != null) 'received_by': receivedBy,
+      if (deviceId != null) 'device_id': deviceId,
+      if (deviceSeq != null) 'device_seq': deviceSeq,
+      if (receiptNumber != null) 'receipt_number': receiptNumber,
+      if (reversesPaymentId != null) 'reverses_payment_id': reversesPaymentId,
+      if (reversalReason != null) 'reversal_reason': reversalReason,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PaymentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? schoolYearId,
+    Value<String?>? studentId,
+    Value<String>? rubric,
+    Value<String?>? feeItemId,
+    Value<int>? amount,
+    Value<String>? method,
+    Value<String?>? reference,
+    Value<String?>? payerName,
+    Value<String>? paidAt,
+    Value<String?>? receivedBy,
+    Value<String>? deviceId,
+    Value<int>? deviceSeq,
+    Value<String>? receiptNumber,
+    Value<String?>? reversesPaymentId,
+    Value<String?>? reversalReason,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return PaymentsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      studentId: studentId ?? this.studentId,
+      rubric: rubric ?? this.rubric,
+      feeItemId: feeItemId ?? this.feeItemId,
+      amount: amount ?? this.amount,
+      method: method ?? this.method,
+      reference: reference ?? this.reference,
+      payerName: payerName ?? this.payerName,
+      paidAt: paidAt ?? this.paidAt,
+      receivedBy: receivedBy ?? this.receivedBy,
+      deviceId: deviceId ?? this.deviceId,
+      deviceSeq: deviceSeq ?? this.deviceSeq,
+      receiptNumber: receiptNumber ?? this.receiptNumber,
+      reversesPaymentId: reversesPaymentId ?? this.reversesPaymentId,
+      reversalReason: reversalReason ?? this.reversalReason,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (rubric.present) {
+      map['rubric'] = Variable<String>(rubric.value);
+    }
+    if (feeItemId.present) {
+      map['fee_item_id'] = Variable<String>(feeItemId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (method.present) {
+      map['method'] = Variable<String>(method.value);
+    }
+    if (reference.present) {
+      map['reference'] = Variable<String>(reference.value);
+    }
+    if (payerName.present) {
+      map['payer_name'] = Variable<String>(payerName.value);
+    }
+    if (paidAt.present) {
+      map['paid_at'] = Variable<String>(paidAt.value);
+    }
+    if (receivedBy.present) {
+      map['received_by'] = Variable<String>(receivedBy.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (deviceSeq.present) {
+      map['device_seq'] = Variable<int>(deviceSeq.value);
+    }
+    if (receiptNumber.present) {
+      map['receipt_number'] = Variable<String>(receiptNumber.value);
+    }
+    if (reversesPaymentId.present) {
+      map['reverses_payment_id'] = Variable<String>(reversesPaymentId.value);
+    }
+    if (reversalReason.present) {
+      map['reversal_reason'] = Variable<String>(reversalReason.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PaymentsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('studentId: $studentId, ')
+          ..write('rubric: $rubric, ')
+          ..write('feeItemId: $feeItemId, ')
+          ..write('amount: $amount, ')
+          ..write('method: $method, ')
+          ..write('reference: $reference, ')
+          ..write('payerName: $payerName, ')
+          ..write('paidAt: $paidAt, ')
+          ..write('receivedBy: $receivedBy, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deviceSeq: $deviceSeq, ')
+          ..write('receiptNumber: $receiptNumber, ')
+          ..write('reversesPaymentId: $reversesPaymentId, ')
+          ..write('reversalReason: $reversalReason, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class Expenses extends Table with TableInfo<Expenses, ExpenseRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  Expenses(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _spentOnMeta = const VerificationMeta(
+    'spentOn',
+  );
+  late final GeneratedColumn<String> spentOn = GeneratedColumn<String>(
+    'spent_on',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _methodMeta = const VerificationMeta('method');
+  late final GeneratedColumn<String> method = GeneratedColumn<String>(
+    'method',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _justificationPathMeta = const VerificationMeta(
+    'justificationPath',
+  );
+  late final GeneratedColumn<String> justificationPath =
+      GeneratedColumn<String>(
+        'justification_path',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deviceSeqMeta = const VerificationMeta(
+    'deviceSeq',
+  );
+  late final GeneratedColumn<int> deviceSeq = GeneratedColumn<int>(
+    'device_seq',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _voucherNumberMeta = const VerificationMeta(
+    'voucherNumber',
+  );
+  late final GeneratedColumn<String> voucherNumber = GeneratedColumn<String>(
+    'voucher_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _reversesExpenseIdMeta = const VerificationMeta(
+    'reversesExpenseId',
+  );
+  late final GeneratedColumn<String> reversesExpenseId =
+      GeneratedColumn<String>(
+        'reverses_expense_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
+  static const VerificationMeta _reversalReasonMeta = const VerificationMeta(
+    'reversalReason',
+  );
+  late final GeneratedColumn<String> reversalReason = GeneratedColumn<String>(
+    'reversal_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    schoolYearId,
+    category,
+    label,
+    amount,
+    spentOn,
+    method,
+    justificationPath,
+    deviceId,
+    deviceSeq,
+    voucherNumber,
+    reversesExpenseId,
+    reversalReason,
+    createdBy,
+    createdAt,
+    updatedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'expenses';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ExpenseRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('spent_on')) {
+      context.handle(
+        _spentOnMeta,
+        spentOn.isAcceptableOrUnknown(data['spent_on']!, _spentOnMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_spentOnMeta);
+    }
+    if (data.containsKey('method')) {
+      context.handle(
+        _methodMeta,
+        method.isAcceptableOrUnknown(data['method']!, _methodMeta),
+      );
+    }
+    if (data.containsKey('justification_path')) {
+      context.handle(
+        _justificationPathMeta,
+        justificationPath.isAcceptableOrUnknown(
+          data['justification_path']!,
+          _justificationPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('device_seq')) {
+      context.handle(
+        _deviceSeqMeta,
+        deviceSeq.isAcceptableOrUnknown(data['device_seq']!, _deviceSeqMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceSeqMeta);
+    }
+    if (data.containsKey('voucher_number')) {
+      context.handle(
+        _voucherNumberMeta,
+        voucherNumber.isAcceptableOrUnknown(
+          data['voucher_number']!,
+          _voucherNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reverses_expense_id')) {
+      context.handle(
+        _reversesExpenseIdMeta,
+        reversesExpenseId.isAcceptableOrUnknown(
+          data['reverses_expense_id']!,
+          _reversesExpenseIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reversal_reason')) {
+      context.handle(
+        _reversalReasonMeta,
+        reversalReason.isAcceptableOrUnknown(
+          data['reversal_reason']!,
+          _reversalReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ExpenseRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ExpenseRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      spentOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}spent_on'],
+      )!,
+      method: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}method'],
+      ),
+      justificationPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}justification_path'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      deviceSeq: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}device_seq'],
+      )!,
+      voucherNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}voucher_number'],
+      ),
+      reversesExpenseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reverses_expense_id'],
+      ),
+      reversalReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reversal_reason'],
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  Expenses createAlias(String alias) {
+    return Expenses(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class ExpenseRow extends DataClass implements Insertable<ExpenseRow> {
+  final String id;
+  final String schoolId;
+  final String schoolYearId;
+  final String category;
+  final String label;
+  final int amount;
+  final String spentOn;
+  final String? method;
+  final String? justificationPath;
+  final String deviceId;
+  final int deviceSeq;
+  final String? voucherNumber;
+  final String? reversesExpenseId;
+  final String? reversalReason;
+  final String? createdBy;
+  final String? createdAt;
+  final String updatedAt;
+  final String? syncedAt;
+  const ExpenseRow({
+    required this.id,
+    required this.schoolId,
+    required this.schoolYearId,
+    required this.category,
+    required this.label,
+    required this.amount,
+    required this.spentOn,
+    this.method,
+    this.justificationPath,
+    required this.deviceId,
+    required this.deviceSeq,
+    this.voucherNumber,
+    this.reversesExpenseId,
+    this.reversalReason,
+    this.createdBy,
+    this.createdAt,
+    required this.updatedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    map['category'] = Variable<String>(category);
+    map['label'] = Variable<String>(label);
+    map['amount'] = Variable<int>(amount);
+    map['spent_on'] = Variable<String>(spentOn);
+    if (!nullToAbsent || method != null) {
+      map['method'] = Variable<String>(method);
+    }
+    if (!nullToAbsent || justificationPath != null) {
+      map['justification_path'] = Variable<String>(justificationPath);
+    }
+    map['device_id'] = Variable<String>(deviceId);
+    map['device_seq'] = Variable<int>(deviceSeq);
+    if (!nullToAbsent || voucherNumber != null) {
+      map['voucher_number'] = Variable<String>(voucherNumber);
+    }
+    if (!nullToAbsent || reversesExpenseId != null) {
+      map['reverses_expense_id'] = Variable<String>(reversesExpenseId);
+    }
+    if (!nullToAbsent || reversalReason != null) {
+      map['reversal_reason'] = Variable<String>(reversalReason);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  ExpensesCompanion toCompanion(bool nullToAbsent) {
+    return ExpensesCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      schoolYearId: Value(schoolYearId),
+      category: Value(category),
+      label: Value(label),
+      amount: Value(amount),
+      spentOn: Value(spentOn),
+      method: method == null && nullToAbsent
+          ? const Value.absent()
+          : Value(method),
+      justificationPath: justificationPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(justificationPath),
+      deviceId: Value(deviceId),
+      deviceSeq: Value(deviceSeq),
+      voucherNumber: voucherNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(voucherNumber),
+      reversesExpenseId: reversesExpenseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reversesExpenseId),
+      reversalReason: reversalReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reversalReason),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory ExpenseRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ExpenseRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      category: serializer.fromJson<String>(json['category']),
+      label: serializer.fromJson<String>(json['label']),
+      amount: serializer.fromJson<int>(json['amount']),
+      spentOn: serializer.fromJson<String>(json['spent_on']),
+      method: serializer.fromJson<String?>(json['method']),
+      justificationPath: serializer.fromJson<String?>(
+        json['justification_path'],
+      ),
+      deviceId: serializer.fromJson<String>(json['device_id']),
+      deviceSeq: serializer.fromJson<int>(json['device_seq']),
+      voucherNumber: serializer.fromJson<String?>(json['voucher_number']),
+      reversesExpenseId: serializer.fromJson<String?>(
+        json['reverses_expense_id'],
+      ),
+      reversalReason: serializer.fromJson<String?>(json['reversal_reason']),
+      createdBy: serializer.fromJson<String?>(json['created_by']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'category': serializer.toJson<String>(category),
+      'label': serializer.toJson<String>(label),
+      'amount': serializer.toJson<int>(amount),
+      'spent_on': serializer.toJson<String>(spentOn),
+      'method': serializer.toJson<String?>(method),
+      'justification_path': serializer.toJson<String?>(justificationPath),
+      'device_id': serializer.toJson<String>(deviceId),
+      'device_seq': serializer.toJson<int>(deviceSeq),
+      'voucher_number': serializer.toJson<String?>(voucherNumber),
+      'reverses_expense_id': serializer.toJson<String?>(reversesExpenseId),
+      'reversal_reason': serializer.toJson<String?>(reversalReason),
+      'created_by': serializer.toJson<String?>(createdBy),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  ExpenseRow copyWith({
+    String? id,
+    String? schoolId,
+    String? schoolYearId,
+    String? category,
+    String? label,
+    int? amount,
+    String? spentOn,
+    Value<String?> method = const Value.absent(),
+    Value<String?> justificationPath = const Value.absent(),
+    String? deviceId,
+    int? deviceSeq,
+    Value<String?> voucherNumber = const Value.absent(),
+    Value<String?> reversesExpenseId = const Value.absent(),
+    Value<String?> reversalReason = const Value.absent(),
+    Value<String?> createdBy = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> syncedAt = const Value.absent(),
+  }) => ExpenseRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    category: category ?? this.category,
+    label: label ?? this.label,
+    amount: amount ?? this.amount,
+    spentOn: spentOn ?? this.spentOn,
+    method: method.present ? method.value : this.method,
+    justificationPath: justificationPath.present
+        ? justificationPath.value
+        : this.justificationPath,
+    deviceId: deviceId ?? this.deviceId,
+    deviceSeq: deviceSeq ?? this.deviceSeq,
+    voucherNumber: voucherNumber.present
+        ? voucherNumber.value
+        : this.voucherNumber,
+    reversesExpenseId: reversesExpenseId.present
+        ? reversesExpenseId.value
+        : this.reversesExpenseId,
+    reversalReason: reversalReason.present
+        ? reversalReason.value
+        : this.reversalReason,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  ExpenseRow copyWithCompanion(ExpensesCompanion data) {
+    return ExpenseRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      category: data.category.present ? data.category.value : this.category,
+      label: data.label.present ? data.label.value : this.label,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      spentOn: data.spentOn.present ? data.spentOn.value : this.spentOn,
+      method: data.method.present ? data.method.value : this.method,
+      justificationPath: data.justificationPath.present
+          ? data.justificationPath.value
+          : this.justificationPath,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      deviceSeq: data.deviceSeq.present ? data.deviceSeq.value : this.deviceSeq,
+      voucherNumber: data.voucherNumber.present
+          ? data.voucherNumber.value
+          : this.voucherNumber,
+      reversesExpenseId: data.reversesExpenseId.present
+          ? data.reversesExpenseId.value
+          : this.reversesExpenseId,
+      reversalReason: data.reversalReason.present
+          ? data.reversalReason.value
+          : this.reversalReason,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExpenseRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('category: $category, ')
+          ..write('label: $label, ')
+          ..write('amount: $amount, ')
+          ..write('spentOn: $spentOn, ')
+          ..write('method: $method, ')
+          ..write('justificationPath: $justificationPath, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deviceSeq: $deviceSeq, ')
+          ..write('voucherNumber: $voucherNumber, ')
+          ..write('reversesExpenseId: $reversesExpenseId, ')
+          ..write('reversalReason: $reversalReason, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    schoolYearId,
+    category,
+    label,
+    amount,
+    spentOn,
+    method,
+    justificationPath,
+    deviceId,
+    deviceSeq,
+    voucherNumber,
+    reversesExpenseId,
+    reversalReason,
+    createdBy,
+    createdAt,
+    updatedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ExpenseRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.category == this.category &&
+          other.label == this.label &&
+          other.amount == this.amount &&
+          other.spentOn == this.spentOn &&
+          other.method == this.method &&
+          other.justificationPath == this.justificationPath &&
+          other.deviceId == this.deviceId &&
+          other.deviceSeq == this.deviceSeq &&
+          other.voucherNumber == this.voucherNumber &&
+          other.reversesExpenseId == this.reversesExpenseId &&
+          other.reversalReason == this.reversalReason &&
+          other.createdBy == this.createdBy &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class ExpensesCompanion extends UpdateCompanion<ExpenseRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> schoolYearId;
+  final Value<String> category;
+  final Value<String> label;
+  final Value<int> amount;
+  final Value<String> spentOn;
+  final Value<String?> method;
+  final Value<String?> justificationPath;
+  final Value<String> deviceId;
+  final Value<int> deviceSeq;
+  final Value<String?> voucherNumber;
+  final Value<String?> reversesExpenseId;
+  final Value<String?> reversalReason;
+  final Value<String?> createdBy;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const ExpensesCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.category = const Value.absent(),
+    this.label = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.spentOn = const Value.absent(),
+    this.method = const Value.absent(),
+    this.justificationPath = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.deviceSeq = const Value.absent(),
+    this.voucherNumber = const Value.absent(),
+    this.reversesExpenseId = const Value.absent(),
+    this.reversalReason = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ExpensesCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String schoolYearId,
+    required String category,
+    required String label,
+    required int amount,
+    required String spentOn,
+    this.method = const Value.absent(),
+    this.justificationPath = const Value.absent(),
+    required String deviceId,
+    required int deviceSeq,
+    this.voucherNumber = const Value.absent(),
+    this.reversesExpenseId = const Value.absent(),
+    this.reversalReason = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       schoolYearId = Value(schoolYearId),
+       category = Value(category),
+       label = Value(label),
+       amount = Value(amount),
+       spentOn = Value(spentOn),
+       deviceId = Value(deviceId),
+       deviceSeq = Value(deviceSeq),
+       updatedAt = Value(updatedAt);
+  static Insertable<ExpenseRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? schoolYearId,
+    Expression<String>? category,
+    Expression<String>? label,
+    Expression<int>? amount,
+    Expression<String>? spentOn,
+    Expression<String>? method,
+    Expression<String>? justificationPath,
+    Expression<String>? deviceId,
+    Expression<int>? deviceSeq,
+    Expression<String>? voucherNumber,
+    Expression<String>? reversesExpenseId,
+    Expression<String>? reversalReason,
+    Expression<String>? createdBy,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (category != null) 'category': category,
+      if (label != null) 'label': label,
+      if (amount != null) 'amount': amount,
+      if (spentOn != null) 'spent_on': spentOn,
+      if (method != null) 'method': method,
+      if (justificationPath != null) 'justification_path': justificationPath,
+      if (deviceId != null) 'device_id': deviceId,
+      if (deviceSeq != null) 'device_seq': deviceSeq,
+      if (voucherNumber != null) 'voucher_number': voucherNumber,
+      if (reversesExpenseId != null) 'reverses_expense_id': reversesExpenseId,
+      if (reversalReason != null) 'reversal_reason': reversalReason,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ExpensesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? schoolYearId,
+    Value<String>? category,
+    Value<String>? label,
+    Value<int>? amount,
+    Value<String>? spentOn,
+    Value<String?>? method,
+    Value<String?>? justificationPath,
+    Value<String>? deviceId,
+    Value<int>? deviceSeq,
+    Value<String?>? voucherNumber,
+    Value<String?>? reversesExpenseId,
+    Value<String?>? reversalReason,
+    Value<String?>? createdBy,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return ExpensesCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      category: category ?? this.category,
+      label: label ?? this.label,
+      amount: amount ?? this.amount,
+      spentOn: spentOn ?? this.spentOn,
+      method: method ?? this.method,
+      justificationPath: justificationPath ?? this.justificationPath,
+      deviceId: deviceId ?? this.deviceId,
+      deviceSeq: deviceSeq ?? this.deviceSeq,
+      voucherNumber: voucherNumber ?? this.voucherNumber,
+      reversesExpenseId: reversesExpenseId ?? this.reversesExpenseId,
+      reversalReason: reversalReason ?? this.reversalReason,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (spentOn.present) {
+      map['spent_on'] = Variable<String>(spentOn.value);
+    }
+    if (method.present) {
+      map['method'] = Variable<String>(method.value);
+    }
+    if (justificationPath.present) {
+      map['justification_path'] = Variable<String>(justificationPath.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (deviceSeq.present) {
+      map['device_seq'] = Variable<int>(deviceSeq.value);
+    }
+    if (voucherNumber.present) {
+      map['voucher_number'] = Variable<String>(voucherNumber.value);
+    }
+    if (reversesExpenseId.present) {
+      map['reverses_expense_id'] = Variable<String>(reversesExpenseId.value);
+    }
+    if (reversalReason.present) {
+      map['reversal_reason'] = Variable<String>(reversalReason.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExpensesCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('category: $category, ')
+          ..write('label: $label, ')
+          ..write('amount: $amount, ')
+          ..write('spentOn: $spentOn, ')
+          ..write('method: $method, ')
+          ..write('justificationPath: $justificationPath, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('deviceSeq: $deviceSeq, ')
+          ..write('voucherNumber: $voucherNumber, ')
+          ..write('reversesExpenseId: $reversesExpenseId, ')
+          ..write('reversalReason: $reversalReason, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class CashClosings extends Table with TableInfo<CashClosings, CashClosingRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  CashClosings(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _periodMonthMeta = const VerificationMeta(
+    'periodMonth',
+  );
+  late final GeneratedColumn<String> periodMonth = GeneratedColumn<String>(
+    'period_month',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _closingBalanceMeta = const VerificationMeta(
+    'closingBalance',
+  );
+  late final GeneratedColumn<int> closingBalance = GeneratedColumn<int>(
+    'closing_balance',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _closedByMeta = const VerificationMeta(
+    'closedBy',
+  );
+  late final GeneratedColumn<String> closedBy = GeneratedColumn<String>(
+    'closed_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    periodMonth,
+    closingBalance,
+    closedBy,
+    notes,
+    createdAt,
+    updatedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cash_closings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CashClosingRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('period_month')) {
+      context.handle(
+        _periodMonthMeta,
+        periodMonth.isAcceptableOrUnknown(
+          data['period_month']!,
+          _periodMonthMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_periodMonthMeta);
+    }
+    if (data.containsKey('closing_balance')) {
+      context.handle(
+        _closingBalanceMeta,
+        closingBalance.isAcceptableOrUnknown(
+          data['closing_balance']!,
+          _closingBalanceMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_closingBalanceMeta);
+    }
+    if (data.containsKey('closed_by')) {
+      context.handle(
+        _closedByMeta,
+        closedBy.isAcceptableOrUnknown(data['closed_by']!, _closedByMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CashClosingRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CashClosingRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      periodMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_month'],
+      )!,
+      closingBalance: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}closing_balance'],
+      )!,
+      closedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closed_by'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  CashClosings createAlias(String alias) {
+    return CashClosings(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class CashClosingRow extends DataClass implements Insertable<CashClosingRow> {
+  final String id;
+  final String schoolId;
+  final String periodMonth;
+  final int closingBalance;
+  final String? closedBy;
+  final String? notes;
+  final String? createdAt;
+  final String updatedAt;
+  final String? syncedAt;
+  const CashClosingRow({
+    required this.id,
+    required this.schoolId,
+    required this.periodMonth,
+    required this.closingBalance,
+    this.closedBy,
+    this.notes,
+    this.createdAt,
+    required this.updatedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['period_month'] = Variable<String>(periodMonth);
+    map['closing_balance'] = Variable<int>(closingBalance);
+    if (!nullToAbsent || closedBy != null) {
+      map['closed_by'] = Variable<String>(closedBy);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  CashClosingsCompanion toCompanion(bool nullToAbsent) {
+    return CashClosingsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      periodMonth: Value(periodMonth),
+      closingBalance: Value(closingBalance),
+      closedBy: closedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedBy),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory CashClosingRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CashClosingRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      periodMonth: serializer.fromJson<String>(json['period_month']),
+      closingBalance: serializer.fromJson<int>(json['closing_balance']),
+      closedBy: serializer.fromJson<String?>(json['closed_by']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'period_month': serializer.toJson<String>(periodMonth),
+      'closing_balance': serializer.toJson<int>(closingBalance),
+      'closed_by': serializer.toJson<String?>(closedBy),
+      'notes': serializer.toJson<String?>(notes),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  CashClosingRow copyWith({
+    String? id,
+    String? schoolId,
+    String? periodMonth,
+    int? closingBalance,
+    Value<String?> closedBy = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> syncedAt = const Value.absent(),
+  }) => CashClosingRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    periodMonth: periodMonth ?? this.periodMonth,
+    closingBalance: closingBalance ?? this.closingBalance,
+    closedBy: closedBy.present ? closedBy.value : this.closedBy,
+    notes: notes.present ? notes.value : this.notes,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  CashClosingRow copyWithCompanion(CashClosingsCompanion data) {
+    return CashClosingRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      periodMonth: data.periodMonth.present
+          ? data.periodMonth.value
+          : this.periodMonth,
+      closingBalance: data.closingBalance.present
+          ? data.closingBalance.value
+          : this.closingBalance,
+      closedBy: data.closedBy.present ? data.closedBy.value : this.closedBy,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CashClosingRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('periodMonth: $periodMonth, ')
+          ..write('closingBalance: $closingBalance, ')
+          ..write('closedBy: $closedBy, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    periodMonth,
+    closingBalance,
+    closedBy,
+    notes,
+    createdAt,
+    updatedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CashClosingRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.periodMonth == this.periodMonth &&
+          other.closingBalance == this.closingBalance &&
+          other.closedBy == this.closedBy &&
+          other.notes == this.notes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class CashClosingsCompanion extends UpdateCompanion<CashClosingRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> periodMonth;
+  final Value<int> closingBalance;
+  final Value<String?> closedBy;
+  final Value<String?> notes;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const CashClosingsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.periodMonth = const Value.absent(),
+    this.closingBalance = const Value.absent(),
+    this.closedBy = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CashClosingsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String periodMonth,
+    required int closingBalance,
+    this.closedBy = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       periodMonth = Value(periodMonth),
+       closingBalance = Value(closingBalance),
+       updatedAt = Value(updatedAt);
+  static Insertable<CashClosingRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? periodMonth,
+    Expression<int>? closingBalance,
+    Expression<String>? closedBy,
+    Expression<String>? notes,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (periodMonth != null) 'period_month': periodMonth,
+      if (closingBalance != null) 'closing_balance': closingBalance,
+      if (closedBy != null) 'closed_by': closedBy,
+      if (notes != null) 'notes': notes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CashClosingsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? periodMonth,
+    Value<int>? closingBalance,
+    Value<String?>? closedBy,
+    Value<String?>? notes,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return CashClosingsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      periodMonth: periodMonth ?? this.periodMonth,
+      closingBalance: closingBalance ?? this.closingBalance,
+      closedBy: closedBy ?? this.closedBy,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (periodMonth.present) {
+      map['period_month'] = Variable<String>(periodMonth.value);
+    }
+    if (closingBalance.present) {
+      map['closing_balance'] = Variable<int>(closingBalance.value);
+    }
+    if (closedBy.present) {
+      map['closed_by'] = Variable<String>(closedBy.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CashClosingsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('periodMonth: $periodMonth, ')
+          ..write('closingBalance: $closingBalance, ')
+          ..write('closedBy: $closedBy, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -37433,6 +42764,21 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final FileUploads fileUploads = FileUploads(this);
   late final DeviceIdentity deviceIdentity = DeviceIdentity(this);
   late final AppLock appLock = AppLock(this);
+  late final FeeItems feeItems = FeeItems(this);
+  late final FeeInstallments feeInstallments = FeeInstallments(this);
+  late final Discounts discounts = Discounts(this);
+  late final StudentDiscounts studentDiscounts = StudentDiscounts(this);
+  late final Payments payments = Payments(this);
+  late final Expenses expenses = Expenses(this);
+  late final CashClosings cashClosings = CashClosings(this);
+  late final Index paymentsStudent = Index(
+    'payments_student',
+    'CREATE INDEX payments_student ON payments (student_id, school_year_id)',
+  );
+  late final Index paymentsDevice = Index(
+    'payments_device',
+    'CREATE INDEX payments_device ON payments (device_id, school_year_id, device_seq)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -37498,6 +42844,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     fileUploads,
     deviceIdentity,
     appLock,
+    feeItems,
+    feeInstallments,
+    discounts,
+    studentDiscounts,
+    payments,
+    expenses,
+    cashClosings,
+    paymentsStudent,
+    paymentsDevice,
   ];
 }
 
@@ -55364,6 +60719,2500 @@ typedef $AppLockProcessedTableManager =
       AppLockRow,
       PrefetchHooks Function()
     >;
+typedef $FeeItemsCreateCompanionBuilder = FeeItemsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String schoolYearId,
+  required String rubric,
+  required String label,
+  Value<String?> levelCode,
+  Value<String?> classId,
+  Value<String> billingPeriod,
+  required int amount,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $FeeItemsUpdateCompanionBuilder = FeeItemsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> schoolYearId,
+  Value<String> rubric,
+  Value<String> label,
+  Value<String?> levelCode,
+  Value<String?> classId,
+  Value<String> billingPeriod,
+  Value<int> amount,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $FeeItemsFilterComposer extends Composer<_$AppDatabase, FeeItems> {
+  $FeeItemsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rubric => $composableBuilder(
+    column: $table.rubric,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get levelCode => $composableBuilder(
+    column: $table.levelCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get billingPeriod => $composableBuilder(
+    column: $table.billingPeriod,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $FeeItemsOrderingComposer extends Composer<_$AppDatabase, FeeItems> {
+  $FeeItemsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rubric => $composableBuilder(
+    column: $table.rubric,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get levelCode => $composableBuilder(
+    column: $table.levelCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get billingPeriod => $composableBuilder(
+    column: $table.billingPeriod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $FeeItemsAnnotationComposer extends Composer<_$AppDatabase, FeeItems> {
+  $FeeItemsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rubric =>
+      $composableBuilder(column: $table.rubric, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get levelCode =>
+      $composableBuilder(column: $table.levelCode, builder: (column) => column);
+
+  GeneratedColumn<String> get classId =>
+      $composableBuilder(column: $table.classId, builder: (column) => column);
+
+  GeneratedColumn<String> get billingPeriod => $composableBuilder(
+    column: $table.billingPeriod,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $FeeItemsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          FeeItems,
+          FeeItemRow,
+          $FeeItemsFilterComposer,
+          $FeeItemsOrderingComposer,
+          $FeeItemsAnnotationComposer,
+          $FeeItemsCreateCompanionBuilder,
+          $FeeItemsUpdateCompanionBuilder,
+          (FeeItemRow, BaseReferences<_$AppDatabase, FeeItems, FeeItemRow>),
+          FeeItemRow,
+          PrefetchHooks Function()
+        > {
+  $FeeItemsTableManager(_$AppDatabase db, FeeItems table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $FeeItemsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $FeeItemsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $FeeItemsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String> rubric = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String?> levelCode = const Value.absent(),
+                Value<String?> classId = const Value.absent(),
+                Value<String> billingPeriod = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FeeItemsCompanion(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                rubric: rubric,
+                label: label,
+                levelCode: levelCode,
+                classId: classId,
+                billingPeriod: billingPeriod,
+                amount: amount,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String schoolYearId,
+                required String rubric,
+                required String label,
+                Value<String?> levelCode = const Value.absent(),
+                Value<String?> classId = const Value.absent(),
+                Value<String> billingPeriod = const Value.absent(),
+                required int amount,
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FeeItemsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                rubric: rubric,
+                label: label,
+                levelCode: levelCode,
+                classId: classId,
+                billingPeriod: billingPeriod,
+                amount: amount,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<FeeItems, FeeItemRow>(table),
+                  BaseReferences<_$AppDatabase, FeeItems, FeeItemRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $FeeItemsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      FeeItems,
+      FeeItemRow,
+      $FeeItemsFilterComposer,
+      $FeeItemsOrderingComposer,
+      $FeeItemsAnnotationComposer,
+      $FeeItemsCreateCompanionBuilder,
+      $FeeItemsUpdateCompanionBuilder,
+      (FeeItemRow, BaseReferences<_$AppDatabase, FeeItems, FeeItemRow>),
+      FeeItemRow,
+      PrefetchHooks Function()
+    >;
+typedef $FeeInstallmentsCreateCompanionBuilder =
+    FeeInstallmentsCompanion Function({
+      required String id,
+      required String schoolId,
+      required String feeItemId,
+      required String label,
+      Value<String?> dueOn,
+      required int amount,
+      Value<String?> createdAt,
+      required String updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $FeeInstallmentsUpdateCompanionBuilder =
+    FeeInstallmentsCompanion Function({
+      Value<String> id,
+      Value<String> schoolId,
+      Value<String> feeItemId,
+      Value<String> label,
+      Value<String?> dueOn,
+      Value<int> amount,
+      Value<String?> createdAt,
+      Value<String> updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $FeeInstallmentsFilterComposer
+    extends Composer<_$AppDatabase, FeeInstallments> {
+  $FeeInstallmentsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get feeItemId => $composableBuilder(
+    column: $table.feeItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dueOn => $composableBuilder(
+    column: $table.dueOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $FeeInstallmentsOrderingComposer
+    extends Composer<_$AppDatabase, FeeInstallments> {
+  $FeeInstallmentsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get feeItemId => $composableBuilder(
+    column: $table.feeItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dueOn => $composableBuilder(
+    column: $table.dueOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $FeeInstallmentsAnnotationComposer
+    extends Composer<_$AppDatabase, FeeInstallments> {
+  $FeeInstallmentsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get feeItemId =>
+      $composableBuilder(column: $table.feeItemId, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get dueOn =>
+      $composableBuilder(column: $table.dueOn, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $FeeInstallmentsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          FeeInstallments,
+          FeeInstallmentRow,
+          $FeeInstallmentsFilterComposer,
+          $FeeInstallmentsOrderingComposer,
+          $FeeInstallmentsAnnotationComposer,
+          $FeeInstallmentsCreateCompanionBuilder,
+          $FeeInstallmentsUpdateCompanionBuilder,
+          (
+            FeeInstallmentRow,
+            BaseReferences<_$AppDatabase, FeeInstallments, FeeInstallmentRow>,
+          ),
+          FeeInstallmentRow,
+          PrefetchHooks Function()
+        > {
+  $FeeInstallmentsTableManager(_$AppDatabase db, FeeInstallments table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $FeeInstallmentsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $FeeInstallmentsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $FeeInstallmentsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> feeItemId = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String?> dueOn = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FeeInstallmentsCompanion(
+                id: id,
+                schoolId: schoolId,
+                feeItemId: feeItemId,
+                label: label,
+                dueOn: dueOn,
+                amount: amount,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String feeItemId,
+                required String label,
+                Value<String?> dueOn = const Value.absent(),
+                required int amount,
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FeeInstallmentsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                feeItemId: feeItemId,
+                label: label,
+                dueOn: dueOn,
+                amount: amount,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<FeeInstallments, FeeInstallmentRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    FeeInstallments,
+                    FeeInstallmentRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $FeeInstallmentsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      FeeInstallments,
+      FeeInstallmentRow,
+      $FeeInstallmentsFilterComposer,
+      $FeeInstallmentsOrderingComposer,
+      $FeeInstallmentsAnnotationComposer,
+      $FeeInstallmentsCreateCompanionBuilder,
+      $FeeInstallmentsUpdateCompanionBuilder,
+      (
+        FeeInstallmentRow,
+        BaseReferences<_$AppDatabase, FeeInstallments, FeeInstallmentRow>,
+      ),
+      FeeInstallmentRow,
+      PrefetchHooks Function()
+    >;
+typedef $DiscountsCreateCompanionBuilder = DiscountsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String label,
+  required String kind,
+  required double value,
+  Value<String?> rubric,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $DiscountsUpdateCompanionBuilder = DiscountsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> label,
+  Value<String> kind,
+  Value<double> value,
+  Value<String?> rubric,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $DiscountsFilterComposer extends Composer<_$AppDatabase, Discounts> {
+  $DiscountsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rubric => $composableBuilder(
+    column: $table.rubric,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $DiscountsOrderingComposer extends Composer<_$AppDatabase, Discounts> {
+  $DiscountsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rubric => $composableBuilder(
+    column: $table.rubric,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $DiscountsAnnotationComposer extends Composer<_$AppDatabase, Discounts> {
+  $DiscountsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<double> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<String> get rubric =>
+      $composableBuilder(column: $table.rubric, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $DiscountsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          Discounts,
+          DiscountRow,
+          $DiscountsFilterComposer,
+          $DiscountsOrderingComposer,
+          $DiscountsAnnotationComposer,
+          $DiscountsCreateCompanionBuilder,
+          $DiscountsUpdateCompanionBuilder,
+          (DiscountRow, BaseReferences<_$AppDatabase, Discounts, DiscountRow>),
+          DiscountRow,
+          PrefetchHooks Function()
+        > {
+  $DiscountsTableManager(_$AppDatabase db, Discounts table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $DiscountsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $DiscountsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $DiscountsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<double> value = const Value.absent(),
+                Value<String?> rubric = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DiscountsCompanion(
+                id: id,
+                schoolId: schoolId,
+                label: label,
+                kind: kind,
+                value: value,
+                rubric: rubric,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String label,
+                required String kind,
+                required double value,
+                Value<String?> rubric = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DiscountsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                label: label,
+                kind: kind,
+                value: value,
+                rubric: rubric,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<Discounts, DiscountRow>(table),
+                  BaseReferences<_$AppDatabase, Discounts, DiscountRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $DiscountsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      Discounts,
+      DiscountRow,
+      $DiscountsFilterComposer,
+      $DiscountsOrderingComposer,
+      $DiscountsAnnotationComposer,
+      $DiscountsCreateCompanionBuilder,
+      $DiscountsUpdateCompanionBuilder,
+      (DiscountRow, BaseReferences<_$AppDatabase, Discounts, DiscountRow>),
+      DiscountRow,
+      PrefetchHooks Function()
+    >;
+typedef $StudentDiscountsCreateCompanionBuilder =
+    StudentDiscountsCompanion Function({
+      required String id,
+      required String schoolId,
+      required String studentId,
+      required String discountId,
+      required String schoolYearId,
+      Value<String?> feeItemId,
+      Value<String?> createdAt,
+      required String updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $StudentDiscountsUpdateCompanionBuilder =
+    StudentDiscountsCompanion Function({
+      Value<String> id,
+      Value<String> schoolId,
+      Value<String> studentId,
+      Value<String> discountId,
+      Value<String> schoolYearId,
+      Value<String?> feeItemId,
+      Value<String?> createdAt,
+      Value<String> updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $StudentDiscountsFilterComposer
+    extends Composer<_$AppDatabase, StudentDiscounts> {
+  $StudentDiscountsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discountId => $composableBuilder(
+    column: $table.discountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get feeItemId => $composableBuilder(
+    column: $table.feeItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $StudentDiscountsOrderingComposer
+    extends Composer<_$AppDatabase, StudentDiscounts> {
+  $StudentDiscountsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discountId => $composableBuilder(
+    column: $table.discountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get feeItemId => $composableBuilder(
+    column: $table.feeItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $StudentDiscountsAnnotationComposer
+    extends Composer<_$AppDatabase, StudentDiscounts> {
+  $StudentDiscountsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get discountId => $composableBuilder(
+    column: $table.discountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get feeItemId =>
+      $composableBuilder(column: $table.feeItemId, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $StudentDiscountsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          StudentDiscounts,
+          StudentDiscountRow,
+          $StudentDiscountsFilterComposer,
+          $StudentDiscountsOrderingComposer,
+          $StudentDiscountsAnnotationComposer,
+          $StudentDiscountsCreateCompanionBuilder,
+          $StudentDiscountsUpdateCompanionBuilder,
+          (
+            StudentDiscountRow,
+            BaseReferences<_$AppDatabase, StudentDiscounts, StudentDiscountRow>,
+          ),
+          StudentDiscountRow,
+          PrefetchHooks Function()
+        > {
+  $StudentDiscountsTableManager(_$AppDatabase db, StudentDiscounts table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $StudentDiscountsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $StudentDiscountsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $StudentDiscountsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> studentId = const Value.absent(),
+                Value<String> discountId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String?> feeItemId = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StudentDiscountsCompanion(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                discountId: discountId,
+                schoolYearId: schoolYearId,
+                feeItemId: feeItemId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String studentId,
+                required String discountId,
+                required String schoolYearId,
+                Value<String?> feeItemId = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StudentDiscountsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                studentId: studentId,
+                discountId: discountId,
+                schoolYearId: schoolYearId,
+                feeItemId: feeItemId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<StudentDiscounts, StudentDiscountRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    StudentDiscounts,
+                    StudentDiscountRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $StudentDiscountsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      StudentDiscounts,
+      StudentDiscountRow,
+      $StudentDiscountsFilterComposer,
+      $StudentDiscountsOrderingComposer,
+      $StudentDiscountsAnnotationComposer,
+      $StudentDiscountsCreateCompanionBuilder,
+      $StudentDiscountsUpdateCompanionBuilder,
+      (
+        StudentDiscountRow,
+        BaseReferences<_$AppDatabase, StudentDiscounts, StudentDiscountRow>,
+      ),
+      StudentDiscountRow,
+      PrefetchHooks Function()
+    >;
+typedef $PaymentsCreateCompanionBuilder = PaymentsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String schoolYearId,
+  Value<String?> studentId,
+  required String rubric,
+  Value<String?> feeItemId,
+  required int amount,
+  required String method,
+  Value<String?> reference,
+  Value<String?> payerName,
+  required String paidAt,
+  Value<String?> receivedBy,
+  required String deviceId,
+  required int deviceSeq,
+  required String receiptNumber,
+  Value<String?> reversesPaymentId,
+  Value<String?> reversalReason,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $PaymentsUpdateCompanionBuilder = PaymentsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> schoolYearId,
+  Value<String?> studentId,
+  Value<String> rubric,
+  Value<String?> feeItemId,
+  Value<int> amount,
+  Value<String> method,
+  Value<String?> reference,
+  Value<String?> payerName,
+  Value<String> paidAt,
+  Value<String?> receivedBy,
+  Value<String> deviceId,
+  Value<int> deviceSeq,
+  Value<String> receiptNumber,
+  Value<String?> reversesPaymentId,
+  Value<String?> reversalReason,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $PaymentsFilterComposer extends Composer<_$AppDatabase, Payments> {
+  $PaymentsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rubric => $composableBuilder(
+    column: $table.rubric,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get feeItemId => $composableBuilder(
+    column: $table.feeItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get method => $composableBuilder(
+    column: $table.method,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reference => $composableBuilder(
+    column: $table.reference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payerName => $composableBuilder(
+    column: $table.payerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paidAt => $composableBuilder(
+    column: $table.paidAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get receivedBy => $composableBuilder(
+    column: $table.receivedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deviceSeq => $composableBuilder(
+    column: $table.deviceSeq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get receiptNumber => $composableBuilder(
+    column: $table.receiptNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reversesPaymentId => $composableBuilder(
+    column: $table.reversesPaymentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reversalReason => $composableBuilder(
+    column: $table.reversalReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $PaymentsOrderingComposer extends Composer<_$AppDatabase, Payments> {
+  $PaymentsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rubric => $composableBuilder(
+    column: $table.rubric,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get feeItemId => $composableBuilder(
+    column: $table.feeItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get method => $composableBuilder(
+    column: $table.method,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reference => $composableBuilder(
+    column: $table.reference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payerName => $composableBuilder(
+    column: $table.payerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paidAt => $composableBuilder(
+    column: $table.paidAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get receivedBy => $composableBuilder(
+    column: $table.receivedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deviceSeq => $composableBuilder(
+    column: $table.deviceSeq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get receiptNumber => $composableBuilder(
+    column: $table.receiptNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reversesPaymentId => $composableBuilder(
+    column: $table.reversesPaymentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reversalReason => $composableBuilder(
+    column: $table.reversalReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $PaymentsAnnotationComposer extends Composer<_$AppDatabase, Payments> {
+  $PaymentsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get rubric =>
+      $composableBuilder(column: $table.rubric, builder: (column) => column);
+
+  GeneratedColumn<String> get feeItemId =>
+      $composableBuilder(column: $table.feeItemId, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get method =>
+      $composableBuilder(column: $table.method, builder: (column) => column);
+
+  GeneratedColumn<String> get reference =>
+      $composableBuilder(column: $table.reference, builder: (column) => column);
+
+  GeneratedColumn<String> get payerName =>
+      $composableBuilder(column: $table.payerName, builder: (column) => column);
+
+  GeneratedColumn<String> get paidAt =>
+      $composableBuilder(column: $table.paidAt, builder: (column) => column);
+
+  GeneratedColumn<String> get receivedBy => $composableBuilder(
+    column: $table.receivedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<int> get deviceSeq =>
+      $composableBuilder(column: $table.deviceSeq, builder: (column) => column);
+
+  GeneratedColumn<String> get receiptNumber => $composableBuilder(
+    column: $table.receiptNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reversesPaymentId => $composableBuilder(
+    column: $table.reversesPaymentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reversalReason => $composableBuilder(
+    column: $table.reversalReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $PaymentsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          Payments,
+          PaymentRow,
+          $PaymentsFilterComposer,
+          $PaymentsOrderingComposer,
+          $PaymentsAnnotationComposer,
+          $PaymentsCreateCompanionBuilder,
+          $PaymentsUpdateCompanionBuilder,
+          (PaymentRow, BaseReferences<_$AppDatabase, Payments, PaymentRow>),
+          PaymentRow,
+          PrefetchHooks Function()
+        > {
+  $PaymentsTableManager(_$AppDatabase db, Payments table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $PaymentsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $PaymentsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $PaymentsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String?> studentId = const Value.absent(),
+                Value<String> rubric = const Value.absent(),
+                Value<String?> feeItemId = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<String> method = const Value.absent(),
+                Value<String?> reference = const Value.absent(),
+                Value<String?> payerName = const Value.absent(),
+                Value<String> paidAt = const Value.absent(),
+                Value<String?> receivedBy = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<int> deviceSeq = const Value.absent(),
+                Value<String> receiptNumber = const Value.absent(),
+                Value<String?> reversesPaymentId = const Value.absent(),
+                Value<String?> reversalReason = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PaymentsCompanion(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                studentId: studentId,
+                rubric: rubric,
+                feeItemId: feeItemId,
+                amount: amount,
+                method: method,
+                reference: reference,
+                payerName: payerName,
+                paidAt: paidAt,
+                receivedBy: receivedBy,
+                deviceId: deviceId,
+                deviceSeq: deviceSeq,
+                receiptNumber: receiptNumber,
+                reversesPaymentId: reversesPaymentId,
+                reversalReason: reversalReason,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String schoolYearId,
+                Value<String?> studentId = const Value.absent(),
+                required String rubric,
+                Value<String?> feeItemId = const Value.absent(),
+                required int amount,
+                required String method,
+                Value<String?> reference = const Value.absent(),
+                Value<String?> payerName = const Value.absent(),
+                required String paidAt,
+                Value<String?> receivedBy = const Value.absent(),
+                required String deviceId,
+                required int deviceSeq,
+                required String receiptNumber,
+                Value<String?> reversesPaymentId = const Value.absent(),
+                Value<String?> reversalReason = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PaymentsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                studentId: studentId,
+                rubric: rubric,
+                feeItemId: feeItemId,
+                amount: amount,
+                method: method,
+                reference: reference,
+                payerName: payerName,
+                paidAt: paidAt,
+                receivedBy: receivedBy,
+                deviceId: deviceId,
+                deviceSeq: deviceSeq,
+                receiptNumber: receiptNumber,
+                reversesPaymentId: reversesPaymentId,
+                reversalReason: reversalReason,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<Payments, PaymentRow>(table),
+                  BaseReferences<_$AppDatabase, Payments, PaymentRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $PaymentsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      Payments,
+      PaymentRow,
+      $PaymentsFilterComposer,
+      $PaymentsOrderingComposer,
+      $PaymentsAnnotationComposer,
+      $PaymentsCreateCompanionBuilder,
+      $PaymentsUpdateCompanionBuilder,
+      (PaymentRow, BaseReferences<_$AppDatabase, Payments, PaymentRow>),
+      PaymentRow,
+      PrefetchHooks Function()
+    >;
+typedef $ExpensesCreateCompanionBuilder = ExpensesCompanion Function({
+  required String id,
+  required String schoolId,
+  required String schoolYearId,
+  required String category,
+  required String label,
+  required int amount,
+  required String spentOn,
+  Value<String?> method,
+  Value<String?> justificationPath,
+  required String deviceId,
+  required int deviceSeq,
+  Value<String?> voucherNumber,
+  Value<String?> reversesExpenseId,
+  Value<String?> reversalReason,
+  Value<String?> createdBy,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $ExpensesUpdateCompanionBuilder = ExpensesCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> schoolYearId,
+  Value<String> category,
+  Value<String> label,
+  Value<int> amount,
+  Value<String> spentOn,
+  Value<String?> method,
+  Value<String?> justificationPath,
+  Value<String> deviceId,
+  Value<int> deviceSeq,
+  Value<String?> voucherNumber,
+  Value<String?> reversesExpenseId,
+  Value<String?> reversalReason,
+  Value<String?> createdBy,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $ExpensesFilterComposer extends Composer<_$AppDatabase, Expenses> {
+  $ExpensesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get spentOn => $composableBuilder(
+    column: $table.spentOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get method => $composableBuilder(
+    column: $table.method,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get justificationPath => $composableBuilder(
+    column: $table.justificationPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deviceSeq => $composableBuilder(
+    column: $table.deviceSeq,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get voucherNumber => $composableBuilder(
+    column: $table.voucherNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reversesExpenseId => $composableBuilder(
+    column: $table.reversesExpenseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reversalReason => $composableBuilder(
+    column: $table.reversalReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $ExpensesOrderingComposer extends Composer<_$AppDatabase, Expenses> {
+  $ExpensesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get spentOn => $composableBuilder(
+    column: $table.spentOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get method => $composableBuilder(
+    column: $table.method,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get justificationPath => $composableBuilder(
+    column: $table.justificationPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deviceSeq => $composableBuilder(
+    column: $table.deviceSeq,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get voucherNumber => $composableBuilder(
+    column: $table.voucherNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reversesExpenseId => $composableBuilder(
+    column: $table.reversesExpenseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reversalReason => $composableBuilder(
+    column: $table.reversalReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $ExpensesAnnotationComposer extends Composer<_$AppDatabase, Expenses> {
+  $ExpensesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get spentOn =>
+      $composableBuilder(column: $table.spentOn, builder: (column) => column);
+
+  GeneratedColumn<String> get method =>
+      $composableBuilder(column: $table.method, builder: (column) => column);
+
+  GeneratedColumn<String> get justificationPath => $composableBuilder(
+    column: $table.justificationPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<int> get deviceSeq =>
+      $composableBuilder(column: $table.deviceSeq, builder: (column) => column);
+
+  GeneratedColumn<String> get voucherNumber => $composableBuilder(
+    column: $table.voucherNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reversesExpenseId => $composableBuilder(
+    column: $table.reversesExpenseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reversalReason => $composableBuilder(
+    column: $table.reversalReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $ExpensesTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          Expenses,
+          ExpenseRow,
+          $ExpensesFilterComposer,
+          $ExpensesOrderingComposer,
+          $ExpensesAnnotationComposer,
+          $ExpensesCreateCompanionBuilder,
+          $ExpensesUpdateCompanionBuilder,
+          (ExpenseRow, BaseReferences<_$AppDatabase, Expenses, ExpenseRow>),
+          ExpenseRow,
+          PrefetchHooks Function()
+        > {
+  $ExpensesTableManager(_$AppDatabase db, Expenses table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $ExpensesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $ExpensesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $ExpensesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<String> spentOn = const Value.absent(),
+                Value<String?> method = const Value.absent(),
+                Value<String?> justificationPath = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<int> deviceSeq = const Value.absent(),
+                Value<String?> voucherNumber = const Value.absent(),
+                Value<String?> reversesExpenseId = const Value.absent(),
+                Value<String?> reversalReason = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExpensesCompanion(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                category: category,
+                label: label,
+                amount: amount,
+                spentOn: spentOn,
+                method: method,
+                justificationPath: justificationPath,
+                deviceId: deviceId,
+                deviceSeq: deviceSeq,
+                voucherNumber: voucherNumber,
+                reversesExpenseId: reversesExpenseId,
+                reversalReason: reversalReason,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String schoolYearId,
+                required String category,
+                required String label,
+                required int amount,
+                required String spentOn,
+                Value<String?> method = const Value.absent(),
+                Value<String?> justificationPath = const Value.absent(),
+                required String deviceId,
+                required int deviceSeq,
+                Value<String?> voucherNumber = const Value.absent(),
+                Value<String?> reversesExpenseId = const Value.absent(),
+                Value<String?> reversalReason = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExpensesCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                category: category,
+                label: label,
+                amount: amount,
+                spentOn: spentOn,
+                method: method,
+                justificationPath: justificationPath,
+                deviceId: deviceId,
+                deviceSeq: deviceSeq,
+                voucherNumber: voucherNumber,
+                reversesExpenseId: reversesExpenseId,
+                reversalReason: reversalReason,
+                createdBy: createdBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<Expenses, ExpenseRow>(table),
+                  BaseReferences<_$AppDatabase, Expenses, ExpenseRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $ExpensesProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      Expenses,
+      ExpenseRow,
+      $ExpensesFilterComposer,
+      $ExpensesOrderingComposer,
+      $ExpensesAnnotationComposer,
+      $ExpensesCreateCompanionBuilder,
+      $ExpensesUpdateCompanionBuilder,
+      (ExpenseRow, BaseReferences<_$AppDatabase, Expenses, ExpenseRow>),
+      ExpenseRow,
+      PrefetchHooks Function()
+    >;
+typedef $CashClosingsCreateCompanionBuilder = CashClosingsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String periodMonth,
+  required int closingBalance,
+  Value<String?> closedBy,
+  Value<String?> notes,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $CashClosingsUpdateCompanionBuilder = CashClosingsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> periodMonth,
+  Value<int> closingBalance,
+  Value<String?> closedBy,
+  Value<String?> notes,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $CashClosingsFilterComposer
+    extends Composer<_$AppDatabase, CashClosings> {
+  $CashClosingsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodMonth => $composableBuilder(
+    column: $table.periodMonth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get closingBalance => $composableBuilder(
+    column: $table.closingBalance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $CashClosingsOrderingComposer
+    extends Composer<_$AppDatabase, CashClosings> {
+  $CashClosingsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get periodMonth => $composableBuilder(
+    column: $table.periodMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get closingBalance => $composableBuilder(
+    column: $table.closingBalance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $CashClosingsAnnotationComposer
+    extends Composer<_$AppDatabase, CashClosings> {
+  $CashClosingsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get periodMonth => $composableBuilder(
+    column: $table.periodMonth,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get closingBalance => $composableBuilder(
+    column: $table.closingBalance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get closedBy =>
+      $composableBuilder(column: $table.closedBy, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $CashClosingsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          CashClosings,
+          CashClosingRow,
+          $CashClosingsFilterComposer,
+          $CashClosingsOrderingComposer,
+          $CashClosingsAnnotationComposer,
+          $CashClosingsCreateCompanionBuilder,
+          $CashClosingsUpdateCompanionBuilder,
+          (
+            CashClosingRow,
+            BaseReferences<_$AppDatabase, CashClosings, CashClosingRow>,
+          ),
+          CashClosingRow,
+          PrefetchHooks Function()
+        > {
+  $CashClosingsTableManager(_$AppDatabase db, CashClosings table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $CashClosingsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $CashClosingsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $CashClosingsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> periodMonth = const Value.absent(),
+                Value<int> closingBalance = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CashClosingsCompanion(
+                id: id,
+                schoolId: schoolId,
+                periodMonth: periodMonth,
+                closingBalance: closingBalance,
+                closedBy: closedBy,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String periodMonth,
+                required int closingBalance,
+                Value<String?> closedBy = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CashClosingsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                periodMonth: periodMonth,
+                closingBalance: closingBalance,
+                closedBy: closedBy,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<CashClosings, CashClosingRow>(table),
+                  BaseReferences<_$AppDatabase, CashClosings, CashClosingRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $CashClosingsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      CashClosings,
+      CashClosingRow,
+      $CashClosingsFilterComposer,
+      $CashClosingsOrderingComposer,
+      $CashClosingsAnnotationComposer,
+      $CashClosingsCreateCompanionBuilder,
+      $CashClosingsUpdateCompanionBuilder,
+      (
+        CashClosingRow,
+        BaseReferences<_$AppDatabase, CashClosings, CashClosingRow>,
+      ),
+      CashClosingRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -55466,4 +63315,18 @@ class $AppDatabaseManager {
   $DeviceIdentityTableManager get deviceIdentity =>
       $DeviceIdentityTableManager(_db, _db.deviceIdentity);
   $AppLockTableManager get appLock => $AppLockTableManager(_db, _db.appLock);
+  $FeeItemsTableManager get feeItems =>
+      $FeeItemsTableManager(_db, _db.feeItems);
+  $FeeInstallmentsTableManager get feeInstallments =>
+      $FeeInstallmentsTableManager(_db, _db.feeInstallments);
+  $DiscountsTableManager get discounts =>
+      $DiscountsTableManager(_db, _db.discounts);
+  $StudentDiscountsTableManager get studentDiscounts =>
+      $StudentDiscountsTableManager(_db, _db.studentDiscounts);
+  $PaymentsTableManager get payments =>
+      $PaymentsTableManager(_db, _db.payments);
+  $ExpensesTableManager get expenses =>
+      $ExpensesTableManager(_db, _db.expenses);
+  $CashClosingsTableManager get cashClosings =>
+      $CashClosingsTableManager(_db, _db.cashClosings);
 }

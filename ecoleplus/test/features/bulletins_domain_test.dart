@@ -227,7 +227,7 @@ void main() {
   });
 
   test(
-    'base du téléphone : passage de la version 5 à la 11 sans perte',
+    'base du téléphone : passage de la version 5 à la 12 sans perte',
     () async {
       final dir = Directory.systemTemp.createTempSync('migration');
       final fichier = File('${dir.path}/ecole.db');
@@ -256,6 +256,13 @@ void main() {
         'documents',
         'document_uploads',
         'document_files',
+        'fee_items',
+        'fee_installments',
+        'discounts',
+        'student_discounts',
+        'payments',
+        'expenses',
+        'cash_closings',
       ]) {
         await db.customStatement('DROP TABLE $t');
       }
@@ -292,6 +299,7 @@ void main() {
             ),
           );
       expect(await db.select(db.reportCards).get(), hasLength(1));
+      expect(await db.select(db.payments).get(), isEmpty);
       await db.close();
       dir.deleteSync(recursive: true);
     },

@@ -141,6 +141,20 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
   SyncedTable<CardTemplateRow>(name: 'card_templates', info: db.cardTemplates),
   SyncedTable<StudentCardRow>(name: 'student_cards', info: db.studentCards),
   SyncedTable<DocumentRow>(name: 'documents', info: db.documents),
+  // Phase 10 : finances (l'ordre compte : la grille avant les encaissements).
+  SyncedTable<FeeItemRow>(name: 'fee_items', info: db.feeItems),
+  SyncedTable<FeeInstallmentRow>(
+    name: 'fee_installments',
+    info: db.feeInstallments,
+  ),
+  SyncedTable<DiscountRow>(name: 'discounts', info: db.discounts),
+  SyncedTable<StudentDiscountRow>(
+    name: 'student_discounts',
+    info: db.studentDiscounts,
+  ),
+  SyncedTable<PaymentRow>(name: 'payments', info: db.payments),
+  SyncedTable<ExpenseRow>(name: 'expenses', info: db.expenses),
+  SyncedTable<CashClosingRow>(name: 'cash_closings', info: db.cashClosings),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];
