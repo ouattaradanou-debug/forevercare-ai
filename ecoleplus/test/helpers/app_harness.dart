@@ -14,6 +14,7 @@ import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
 import 'package:ecoleplus/features/bibliotheque/presentation/bibliotheque_pages.dart';
+import 'package:ecoleplus/features/finances/presentation/finances_pages.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
 import 'package:ecoleplus/features/grades/presentation/classement_page.dart';
 import 'package:ecoleplus/features/import/presentation/import_page.dart';
@@ -48,6 +49,9 @@ class AppHarness {
 
   /// Recherche dans le texte et espace utilisé (serveur simulé).
   late final FakeDocumentsEnLigne enLigne;
+
+  /// Textes partagés (relances préparées) : jamais envoyés tout seuls.
+  final List<String> textesPartages = [];
 
   /// Documents ouverts dans l'application de lecture du téléphone (chemin).
   final List<String> fichiersOuverts = [];
@@ -296,6 +300,9 @@ class AppHarness {
             (octets, nom, type) async => fichiersSortis[nom] = octets,
           ),
           documentsEnLigneProvider.overrideWithValue(enLigne),
+          partagerTexteProvider.overrideWithValue(
+            (texte) async => textesPartages.add(texte),
+          ),
           ouvrirFichierProvider.overrideWithValue((chemin, type) async {
             if (lecteurInstalle) fichiersOuverts.add(chemin);
             return lecteurInstalle;
