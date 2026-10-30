@@ -72,12 +72,16 @@ void main() {
       'Documents',
       'Mon école',
       'Personnes et droits',
+      'Bibliothèque',
+      'Archives',
       'Sécurité',
     ]) {
+      await AppHarness.toucherVisible(tester, b);
       expect(find.text(b), findsOneWidget);
     }
-    // Années, options et sauvegarde sont dans « Mon école » (8 boutons au
-    // plus sur l'accueil).
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await AppHarness.settle(tester);
+    // Années, options et sauvegarde sont dans « Mon école ».
     await AppHarness.ouvrirDansMonEcole(tester, 'Sauvegarde');
     expect(find.text('Sauvegarde'), findsWidgets);
     expect(find.text('Tout est synchronisé'), findsOneWidget);

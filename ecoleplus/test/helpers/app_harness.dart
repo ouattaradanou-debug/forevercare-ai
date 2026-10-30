@@ -364,6 +364,14 @@ class AppHarness {
     await tester.tap(find.text(bouton));
   }
 
+  /// Fait défiler l'accueil jusqu'au bouton, sans le toucher.
+  static Future<void> toucherVisible(WidgetTester tester, String bouton) =>
+      tester.scrollUntilVisible(
+        find.text(bouton),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+
   /// Ouvre un écran rangé dans « Mon école » (années, options, sauvegarde).
   static Future<void> ouvrirDansMonEcole(
     WidgetTester tester,

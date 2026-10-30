@@ -67,9 +67,7 @@ void main() {
       hasLength(200),
     );
     expect(
-      server.tables['documents']!.values.where(
-        (d) => d['uploaded_at'] != null,
-      ),
+      server.tables['documents']!.values.where((d) => d['uploaded_at'] != null),
       hasLength(200),
     );
     // ignore: avoid_print, mesures reprises dans TESTS_PHASE_9.md.

@@ -176,8 +176,7 @@ List<Widget> _boutonsEcole(
     // Délégués « formulaires » (B1, B3, B6, B7) et « cartes ».
     if (registres ||
         droits.contains('formulaires') ||
-        droits.contains('cartes') ||
-        droits.contains('archives'))
+        droits.contains('cartes'))
       bouton(Icons.folder_copy_outlined, 'Documents', '/documents'),
     if (notes)
       bouton(
@@ -186,6 +185,9 @@ List<Widget> _boutonsEcole(
         '/notes',
       ),
     bouton(Icons.local_library_outlined, 'Bibliothèque', '/bibliotheque'),
+    // Commande à part (A20) : directeur et délégués « archives ».
+    if (droits.contains('archives'))
+      bouton(Icons.inventory_2_outlined, 'Archives', '/archives'),
   ];
 }
 

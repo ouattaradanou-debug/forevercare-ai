@@ -263,6 +263,7 @@ void main() {
     h.fichiersChoisis = fichiersDeTest(source, 1, taille: 3000);
     await h.pump(tester);
     await h.login(tester, '70 11 22 33');
+    expect(find.text('Archives'), findsNothing, reason: 'enseignant');
     await ouvrirBibliotheque(tester);
     await tapLong(tester, find.text('Ajouter des documents'));
     await calme(tester);
@@ -329,8 +330,10 @@ void main() {
     final f = (await h.db.select(h.db.officialForms).get()).single;
     expect(f.status, 'signe_archive');
     expect(f.signedScanDocumentId, d.id);
-    await retour(tester);
-    await tap(tester, find.text('Archives administratives'));
+    await accueil(tester);
+    // Commande à part sur l'accueil (A20), plus dans « Documents ».
+    await AppHarness.toucher(tester, 'Archives');
+    await AppHarness.settle(tester);
     expect(find.text('B1 2025-2026 — copie signée'), findsOneWidget);
     expect(
       find.textContaining('jamais utilisées par l’assistant IA'),

@@ -67,12 +67,13 @@ pages), dont un **scan** (photo ou PDF d'une page imprimée).
    (bas de la bibliothèque) permet aussi « sans validation » ou « Non ».
 
 ## 6. Archives administratives
-1. Directeur → « Documents » → « Archives administratives ». ✅ Rappel :
+1. Directeur → bouton **« Archives »** de l'accueil (commande à part, plus
+   dans « Documents »). ✅ Rappel :
    réservées au directeur et aux personnes désignées, **jamais utilisées
    par l'assistant IA**.
 2. Ajoutez un procès-verbal scanné. ✅ Fiche : « Jamais utilisé par
    l'assistant IA (archives) ».
-3. `enseignant1` / `enseignant2`. ✅ Aucun bouton « Archives » ; un mot du
+3. `enseignant1` / `enseignant2`. ✅ Aucun bouton « Archives » sur l'accueil ; un mot du
    procès-verbal n'est jamais trouvé par la recherche.
 4. Formulaire **B1** (ou B3, B6, B7) imprimé et signé : « Archiver la copie
    signée (scan PDF ou photo) » → choisissez le scan. ✅ « Copie signée

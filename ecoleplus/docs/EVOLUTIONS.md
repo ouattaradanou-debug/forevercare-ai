@@ -31,6 +31,7 @@
 | A16 | ➕ Ajout demandé (27/10/2026) | **Version ordinateur (Windows)** de l'application, mêmes données et même serveur que le téléphone — fiche ci-dessous | **Acceptée** (27/10/2026) — à construire à la fin ; dès maintenant, pas de choix réservé au téléphone | Fin |
 | A17 | ➕ Ajout demandé (27/10/2026) | **Documents du directeur réunis sous un seul bouton « Documents »**, rangés « Enseignants » / « Élèves » ; **4 nouveaux modèles** fournis par le porteur : attestation de prise de service (enseignant), certificat de scolarité, attestation de niveau, certificat de non redevance (élèves) — fiche ci-dessous | **Acceptée** (27/10/2026) : certificat de scolarité en **page entière ou demi-page au choix** ; **pas de numéro** ; non redevance : **avertissement** si impayés (quand les Finances existeront), le directeur décide ; 3e rubrique **« École »** (programme et bilan, phase 5) | 4 |
 | A18 | ➕ Ajout demandé (28/10/2026, test sur téléphone) | Documents : « **Camarade** » à la place de « Madame » / « Monsieur » ; grade du directeur plus visible dans « Mon école » (avec propositions) ; **aperçu des PDF qu'on peut agrandir** (deux doigts, boutons + et −) avant d'imprimer ou de partager | **Acceptée** (28/10/2026) — construite | 4 |
+| A20 | ➕ Ajout demandé (30/10/2026, test sur téléphone) | **« Archives » devient une commande à part** sur l'accueil (directeur et délégués « archives »), au lieu d'une ligne dans « Documents » — fiche ci-dessous | **Acceptée** (30/10/2026) — construite | 9 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -208,3 +209,12 @@ Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 in
 * **Fonctionne sur ordinateur** : oui.
 * **Effort** : S. **Risques** : très faibles ; les teintes restent lisibles en photocopie noir et blanc.
 * **Décision** : demandée par le porteur le 28/10/2026, construite le jour même.
+
+## Fiche d'impact A20 — « Archives », commande à part entière
+* **Demande du porteur (30/10/2026)** : dissocier les archives administratives du bouton « Documents ».
+* **Ce qui change** : un bouton **« Archives »** sur l'accueil, visible par le directeur et par les délégués ayant le droit « archives » ; la ligne « Archives administratives » disparaît de « Documents ». Un délégué qui n'a que le droit « archives » n'a plus de bouton « Documents » (il n'en avait pas l'usage).
+* **Inchangé** : contenu, droits (jamais visibles par un enseignant, jamais utilisées par l'IA), « Archiver la copie signée » sur les pages des formulaires B1, B3, B6, B7.
+* **Données** : aucune. **Serveur** : aucun changement.
+* **Fonctionne sur ordinateur** : oui.
+* **Effort** : XS. **Risques** : aucun.
+* **Décision** : demandée par le porteur le 30/10/2026, construite le jour même.
