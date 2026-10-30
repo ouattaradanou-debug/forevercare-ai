@@ -32,7 +32,7 @@ class TestDevice {
 
   void advance(Duration d) => time = time.add(d);
 
-  Future<void> initSession() => db
+  Future<void> initSession({String deviceId = 'd', String? serie}) => db
       .into(db.localSession)
       .insert(
         LocalSessionCompanion.insert(
@@ -42,7 +42,8 @@ class TestDevice {
           schoolId: 's',
           role: 'directeur',
           displayName: 'D',
-          deviceId: 'd',
+          deviceId: deviceId,
+          deviceSeries: Value(serie),
           lastSyncAt: const Value(null),
         ),
       );
