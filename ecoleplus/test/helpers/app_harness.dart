@@ -49,6 +49,13 @@ class AppHarness {
   /// Recherche dans le texte et espace utilisé (serveur simulé).
   late final FakeDocumentsEnLigne enLigne;
 
+  /// Documents ouverts dans l'application de lecture du téléphone (chemin).
+  final List<String> fichiersOuverts = [];
+
+  /// Une application de lecture est installée (sinon : proposition de
+  /// partager).
+  bool lecteurInstalle = true;
+
   /// Fichiers renvoyés par « Ajouter des documents » (vide : annulé).
   List<FichierChoisi> fichiersChoisis = const [];
 
@@ -289,6 +296,10 @@ class AppHarness {
             (octets, nom, type) async => fichiersSortis[nom] = octets,
           ),
           documentsEnLigneProvider.overrideWithValue(enLigne),
+          ouvrirFichierProvider.overrideWithValue((chemin, type) async {
+            if (lecteurInstalle) fichiersOuverts.add(chemin);
+            return lecteurInstalle;
+          }),
           choisirFichiersProvider.overrideWithValue(
             () async => fichiersChoisis,
           ),

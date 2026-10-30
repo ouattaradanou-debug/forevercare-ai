@@ -225,14 +225,16 @@ void main() {
     await voir(tester, find.text('Ouvrir'));
     final chrono = Stopwatch()..start();
     await tester.tap(find.text('Ouvrir'));
-    while (h.fichiersSortis.isEmpty && chrono.elapsed.inSeconds < 10) {
+    while (h.fichiersOuverts.isEmpty && chrono.elapsed.inSeconds < 10) {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 20)),
       );
       await tester.pump();
     }
     chrono.stop();
-    expect(h.fichiersSortis.keys, ['Fiche_001.txt']);
+    // Ouvert dans l'application de lecture du téléphone (pas « Partager »).
+    expect(h.fichiersOuverts.single, endsWith('/fiche_001.txt'));
+    expect(h.fichiersSortis, isEmpty);
     expect(chrono.elapsedMilliseconds, lessThan(3000));
     // ignore: avoid_print, mesure affichée dans le rapport de la phase.
     print('Ouverture du document épinglé : ${chrono.elapsedMilliseconds} ms');
@@ -251,6 +253,15 @@ void main() {
     }
     expect(message, findsOne);
     await AppHarness.settle(tester);
+    await retour(tester);
+
+    // Aucune application de lecture : message clair, « Partager » proposé.
+    h.lecteurInstalle = false;
+    await tap(tester, find.byKey(Key('document-${un.id}')));
+    await tapLong(tester, find.text('Ouvrir'));
+    expect(find.text('Aucune application pour l’ouvrir'), findsOneWidget);
+    await tapLong(tester, find.widgetWithText(FilledButton, 'Partager'));
+    expect(h.fichiersSortis.keys, ['Fiche_001.txt']);
     await h.dispose(tester);
   });
 

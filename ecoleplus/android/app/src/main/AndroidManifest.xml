@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Synchronisation avec le serveur (jamais bloquante : tout marche hors ligne). -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -7,6 +8,13 @@
     <!-- Dictée vocale : micro seulement sur action explicite ; aucun
          enregistrement audio n'est conservé. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- Ouverture des documents de la bibliothèque dans l'application de
+         lecture du téléphone : aucun accès aux photos, vidéos ou fichiers
+         du téléphone n'est nécessaire (retirés du paquet open_filex). -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:node="remove"/>
 
     <!-- A10 : pas de copie automatique dans le cloud de Google (données
          d'élèves ; la clé de la base, gardée par le Keystore, ne serait de

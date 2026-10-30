@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:open_filex/open_filex.dart';
 
 /// Part envoyée, en pour cent.
 int pourcentEnvoi(DocumentUploadRow e) =>
@@ -86,7 +87,7 @@ bool gereEspace(WidgetRef ref, Espace e) {
 }
 
 /// Ouvre un document : aperçu des PDF et des images dans l'application,
-/// sinon « Ouvrir avec… » (Word, Excel…).
+/// sinon dans l'application de lecture du téléphone (Word, Excel…).
 Future<void> ouvrirDocument(
   BuildContext context,
   WidgetRef ref,
@@ -124,13 +125,33 @@ Future<void> ouvrirDocument(
       ),
     );
   } else {
-    await ref.read(sortieFichierProvider)(
-      octets,
-      nom,
-      d.mimeType ?? 'application/octet-stream',
+    final type = d.mimeType ?? 'application/octet-stream';
+    if (await ref.read(ouvrirFichierProvider)(f.path, type)) return;
+    // Aucune application de lecture pour ce type de fichier.
+    if (!context.mounted) return;
+    final partager = await confirmer(
+      context,
+      titre: 'Aucune application pour l’ouvrir',
+      message:
+          'Ce téléphone n’a pas d’application pour lire ce type de fichier '
+          '($nom). Installez par exemple WPS Office ou Microsoft Word, ou '
+          'partagez le fichier.',
+      bouton: 'Partager',
     );
+    if (partager) await ref.read(sortieFichierProvider)(octets, nom, type);
   }
 });
+
+/// Ouvre un fichier du téléphone dans l'application de lecture choisie
+/// par le téléphone (Word, WPS Office, Excel…) ; faux si aucune ne sait le
+/// lire. Remplacé dans les tests.
+final ouvrirFichierProvider =
+    Provider<Future<bool> Function(String chemin, String type)>(
+      (ref) =>
+          (chemin, type) async =>
+              (await OpenFilex.open(chemin, type: type)).type ==
+              ResultType.done,
+    );
 
 /// Bibliothèque pédagogique ou archives administratives.
 class BibliothequePage extends ConsumerStatefulWidget {
