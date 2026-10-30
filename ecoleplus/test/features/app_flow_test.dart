@@ -253,6 +253,8 @@ void main() {
 
     // A11 : déconnexion, puis connexion avec le numéro du directeur.
     await tester.scrollUntilVisible(find.text('Se déconnecter'), 200);
+    await tester.ensureVisible(find.text('Se déconnecter'));
+    await tester.pump();
     await tester.tap(find.text('Se déconnecter'));
     await AppHarness.settle(tester);
     await tester.tap(find.widgetWithText(FilledButton, 'Se déconnecter'));

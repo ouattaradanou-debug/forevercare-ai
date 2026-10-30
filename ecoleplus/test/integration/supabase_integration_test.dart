@@ -1195,8 +1195,8 @@ void mainA6() {
   }, skip: skip);
 
   test(
-    'phase 10 : encaissements hors ligne sur deux téléphones (directeur '
-    'et secrétaire) : numéros uniques, aucun doublon ; reçu inaltérable ; '
+    'phase 10 : encaissements hors ligne sur deux téléphones : numéros '
+    'uniques, aucun doublon ; reçu inaltérable ; '
     'justificatif privé ; enseignant sans aucune donnée financière',
     () async {
       final tmp = Directory.systemTemp.createTempSync('finances');
@@ -1205,8 +1205,11 @@ void mainA6() {
         motDePasse,
         Directory('${tmp.path}/dir')..createSync(),
       );
+      // Deuxième téléphone (tablette du secrétariat, au nom du directeur) :
+      // un autre appareil, donc une autre série de reçus. Les droits du
+      // délégué « finances » sont vérifiés par les tests du serveur.
       final sec = await connecte(
-        'secretaire@ecole-test.local',
+        'directeur@ecole-test.local',
         motDePasse,
         Directory('${tmp.path}/sec')..createSync(),
       );
@@ -1316,7 +1319,7 @@ void mainA6() {
         },
       );
       final statut = (rep as List<dynamic>).cast<Map<String, dynamic>>();
-    expect(statut.single['status'], 'rejete');
+      expect(statut.single['status'], 'rejete');
 
       // Enseignante : rien, ni sur son téléphone ni par l'API.
       final ens = await connecte('enseignant1@ecole-test.local');

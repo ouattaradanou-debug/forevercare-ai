@@ -225,6 +225,9 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
   final _recherche = TextEditingController();
   bool _occupe = false;
 
+  /// Recette sans élève (fonds de caisse, don, location…).
+  bool get _sansEleve => _eleve == '';
+
   @override
   void initState() {
     super.initState();
@@ -256,7 +259,7 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
           .encaisser(
             schoolId: ecole.id,
             yearId: annee.id,
-            studentId: _eleve,
+            studentId: _sansEleve ? null : _eleve,
             rubric: _rubrique,
             feeItemId: _ligne,
             montant: montant,
@@ -286,7 +289,19 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if (eleve == null) ...[
+          if (_sansEleve)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.savings_outlined),
+                title: const Text('Recette sans élève'),
+                subtitle: const Text('Fonds de caisse, don, location…'),
+                trailing: TextButton(
+                  onPressed: () => setState(() => _eleve = null),
+                  child: const Text('Changer'),
+                ),
+              ),
+            )
+          else if (eleve == null) ...[
             const Text('Pour quel élève ?'),
             const SizedBox(height: 6),
             TextField(
@@ -315,7 +330,9 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
                 _eleve = '';
                 _rubrique = 'autre';
               }),
-              child: const Text('Recette sans élève (don, location…)'),
+              child: const Text(
+                'Recette sans élève (fonds de caisse, don, location…)',
+              ),
             ),
           ] else ...[
             Card(

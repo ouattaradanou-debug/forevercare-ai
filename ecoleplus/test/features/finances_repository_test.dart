@@ -203,4 +203,52 @@ void main() {
     await t.close();
     tmp.deleteSync(recursive: true);
   });
+
+  test('rapprochement de la journée fictive du guide de test : 33 500 FCFA '
+      'en espèces', () async {
+    final server = FakeServer();
+    final tmp = Directory.systemTemp.createTempSync('finances4');
+    final t = TestDevice(server);
+    final r = await telephone(t, 'dA', 'A', tmp);
+    Future<PaymentRow> payer(
+      int m, {
+      String? eleve = 'e1',
+      String mode = 'especes',
+      String? ref,
+    }) => r.encaisser(
+      schoolId: 's',
+      yearId: 'a',
+      studentId: eleve,
+      rubric: eleve == null ? 'autre' : 'scolarite',
+      feeItemId: null,
+      montant: m,
+      mode: mode,
+      reference: ref,
+    );
+    await payer(20000, eleve: null);
+    await payer(10000);
+    await payer(5000, eleve: 'e2', mode: 'orange_money', ref: 'OM-1');
+    final clarisse = await payer(7500, eleve: 'e3');
+    await r.depenser(
+      schoolId: 's',
+      yearId: 'a',
+      categorie: 'fournitures',
+      libelle: 'Craies',
+      montant: 1500,
+      date: t.time.toIso8601String().substring(0, 10),
+      mode: 'especes',
+    );
+    await r.annuler(clarisse, 'Erreur de montant');
+    await payer(5000, eleve: 'e3');
+    final j = journalCaisse(
+      paiements: await t.db.select(t.db.payments).get(),
+      depenses: await t.db.select(t.db.expenses).get(),
+      nomEleve: (_) => '',
+    );
+    expect(j, hasLength(7));
+    expect(solde(j, mode: 'especes'), 33500);
+    expect(solde(j), 38500, reason: 'avec le Mobile Money');
+    await t.close();
+    tmp.deleteSync(recursive: true);
+  });
 }

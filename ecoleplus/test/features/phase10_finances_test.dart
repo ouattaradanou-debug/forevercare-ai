@@ -105,10 +105,21 @@ void main() {
       ..imageChoisie = photoDeTest(2);
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
+    // Fonds de caisse du matin : recette sans élève.
+    await ouvrirFinances(tester);
+    await tap(tester, find.text('Encaisser'));
+    await tap(tester, find.textContaining('Recette sans élève'));
+    await tester.enterText(find.byKey(const Key('montant')), '2000');
+    await tapLong(tester, find.text('Encaisser et faire le reçu'));
+    expect(find.text('R2526-A-00001'), findsOneWidget);
+    await accueil(tester);
+    final fonds = (await h.db.select(h.db.payments).get()).single;
+    expect((fonds.studentId, fonds.rubric), (null, 'autre'));
+
     await ouvrirFinances(tester);
     await tap(tester, find.text('Encaisser'));
     await tap(tester, find.byKey(const Key('choisir-e-1')));
-    await tester.enterText(find.byKey(const Key('montant')), '7000');
+    await tester.enterText(find.byKey(const Key('montant')), '5000');
     await tapLong(tester, find.text('Encaisser et faire le reçu'));
     await accueil(tester);
 

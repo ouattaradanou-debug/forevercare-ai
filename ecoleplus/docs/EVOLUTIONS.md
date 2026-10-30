@@ -7,6 +7,7 @@
 | E2 | Décision de démarrage | Supabase local (CLI) ; IA configurable par variables d'environnement via Edge Function ; barème sur 10 par matière ; émulateur seulement ; aucun module optionnel actif ; quota bibliothèque 5 Go | Défauts acceptés | 0 |
 | E3 | Décision du porteur (21/10/2026) | Règle de l'élève absent **paramétrable par école** (`schools.absent_rule`). Valeur de départ : l'élève absent n'a pas de note (affiché « Abs. ») et la composition manquante n'est pas comptée à zéro | Acceptée — à confirmer avec un directeur avant la phase 3 | 1 (paramètre), 3 (calcul) |
 | E4 | Choix technique (phase 1) | Connexion par numéro de téléphone **sans SMS** : le numéro sert d'identifiant avec un mot de passe ; mot de passe oublié par e-mail (code à 6 chiffres) ou réinitialisé par le directeur | Appliqué — à valider | 1 |
+| E5 | Décisions du porteur (30/10/2026, phase 10) | Reçus : **une série par téléphone** ; justificatifs : **caméra + galerie** (sur ordinateur : « Choisir une image » / « Fichier PDF ») ; grille **par niveau, ajustable par classe** ; option 10.7 (impayés liés aux bulletins ou cartes) **non construite** | Acceptées | 10 |
 | P1 | Annexe C | Reprise du programme d'activités de l'année précédente + bibliothèque d'objectifs | Reportée (V2) | — |
 | P2 | Annexe C | Rappels d'échéances du programme d'activités | Reportée (V2) | — |
 | P3 | Annexe C | Numérisation de documents par la caméra | Reportée (V2) | — |
