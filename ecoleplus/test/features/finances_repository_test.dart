@@ -111,19 +111,7 @@ void main() {
       )..where((p) => p.id.equals(a2.id))).getSingle();
       expect((origine.amount, origine.receiptNumber), (5000, 'R2526-A-00002'));
 
-      // Mobile Money sans référence : refusé ; montant nul : refusé.
-      await expectLater(
-        ra.encaisser(
-          schoolId: 's',
-          yearId: 'a',
-          studentId: 'e1',
-          rubric: 'scolarite',
-          feeItemId: null,
-          montant: 1000,
-          mode: 'orange_money',
-        ),
-        throwsA(isA<UserMessage>()),
-      );
+      // Montant nul : refusé (la référence est facultative depuis A23).
       await expectLater(payer(ra, 0), throwsA(isA<UserMessage>()));
       await a.close();
       await b.close();
@@ -251,4 +239,144 @@ void main() {
     await t.close();
     tmp.deleteSync(recursive: true);
   });
+
+  test(
+    'A23 : un reçu pour plusieurs rubriques ; plafond = reste dû ; '
+    'rubrique « en une fois » ; annulation qui rétablit les soldes',
+    () async {
+      final server = FakeServer();
+      final tmp = Directory.systemTemp.createTempSync('finances5');
+      final t = TestDevice(server);
+      final r = await telephone(t, 'dA', 'A', tmp);
+      final scol = await r.enregistrerFrais(
+        {
+          'school_id': 's',
+          'school_year_id': 'a',
+          'rubric': 'scolarite',
+          'label': 'Scolarité',
+          'class_id': 'c1',
+        },
+        const [
+          ('1er versement', 10000, null),
+          ('2e versement', 8000, '2099-01-15'),
+          ('3e versement', 7000, '2099-04-15'),
+        ],
+      );
+      await r.enregistrerFrais(
+        {
+          'school_id': 's',
+          'school_year_id': 'a',
+          'rubric': 'assurance',
+          'label': 'Assurance',
+          'class_id': 'c1',
+          'payment_terms': 'integral',
+        },
+        const [('Assurance', 1500, null)],
+      );
+      Future<SituationEleve> sit() async => situation(
+        studentId: 'e1',
+        lignes: fraisApplicables(
+          await t.db.select(t.db.feeItems).get(),
+          niveau: null,
+          classe: 'c1',
+        ),
+        tranches: await t.db.select(t.db.feeInstallments).get(),
+        remises: const [],
+        paiements: await t.db.select(t.db.payments).get(),
+        allocations: await t.db.select(t.db.paymentAllocations).get(),
+        aujourdhui: '2026-11-03',
+      );
+      var s = await sit();
+      expect(s.du, 26500);
+      expect(s.versements.map((v) => v.libelle), [
+        '1er versement',
+        '2e versement',
+        '3e versement',
+        'Assurance',
+      ]);
+      VersementSituation v(String l) =>
+          s.versements.firstWhere((x) => x.libelle == l);
+
+      Future<PaymentRow> payer(List<(VersementSituation, int)> choix) =>
+          r.encaisserRubriques(
+            schoolId: 's',
+            yearId: 'a',
+            studentId: 'e1',
+            choix: choix,
+            mode: 'autre',
+            libelleMode: 'Wave',
+            payeur: 'Mme TEST',
+            telephone: '70 00 00 00',
+          );
+      // Plus que le reste dû : refusé ; « en une fois » : montant exact.
+      await expectLater(
+        payer([(v('1er versement'), 12000)]),
+        throwsA(isA<UserMessage>()),
+      );
+      await expectLater(
+        payer([(v('Assurance'), 500)]),
+        throwsA(isA<UserMessage>()),
+      );
+      final recu = await payer([
+        (v('1er versement'), 10000),
+        (v('Assurance'), 1500),
+        (v('2e versement'), 3000),
+      ]);
+      expect(
+        (recu.amount, recu.rubric, recu.methodLabel),
+        (14500, 'plusieurs', 'Wave'),
+      );
+      expect(
+        (await t.db.select(t.db.paymentAllocations).get()).map(
+          (a) => (a.label, a.amount),
+        ),
+        [
+          ('Scolarité — 1er versement', 10000),
+          ('Assurance', 1500),
+          ('Scolarité — 2e versement', 3000),
+        ],
+      );
+      s = await sit();
+      expect(v('1er versement').statut, Statut.paye);
+      expect(v('Assurance').statut, Statut.paye);
+      expect(
+        (v('2e versement').statut, v('2e versement').reste),
+        (Statut.partiel, 5000),
+      );
+      expect(v('3e versement').statut, Statut.impaye);
+      expect((s.paye, s.reste, s.impaye), (14500, 12000, 0));
+      // Déjà payé : nouvel encaissement refusé.
+      await expectLater(
+        payer([(v('Assurance'), 1500)]),
+        throwsA(isA<UserMessage>()),
+      );
+
+      // Annulation : détail opposé, soldes rétablis ; reçu d'origine intact.
+      final ann = await r.annuler(recu, 'Erreur de rubrique');
+      expect(
+        (ann.amount, ann.methodLabel, ann.payerPhone),
+        (-14500, 'Wave', '70 00 00 00'),
+      );
+      s = await sit();
+      expect((s.paye, s.reste), (0, 26500));
+      // Le frais modifié ensuite ne change pas le détail des anciens reçus.
+      await r.enregistrerFrais(
+        {
+          'id': scol,
+          'school_id': 's',
+          'school_year_id': 'a',
+          'rubric': 'scolarite',
+          'label': 'Frais de scolarité',
+          'class_id': 'c1',
+        },
+        const [('1er versement', 12000, null)],
+      );
+      final d = await (t.db.select(
+        t.db.paymentAllocations,
+      )..where((a) => a.paymentId.equals(recu.id))).get();
+      expect(d.first.label, 'Scolarité — 1er versement');
+      await t.close();
+      tmp.deleteSync(recursive: true);
+    },
+  );
 }

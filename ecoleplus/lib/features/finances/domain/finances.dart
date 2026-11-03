@@ -16,6 +16,10 @@ const rubriquesParDefaut = {
 /// Rubrique toujours disponible (recette sans élève, don…), jamais retirée.
 const rubriqueAutre = 'autre';
 
+/// Rubrique d'un reçu qui règle plusieurs rubriques (le détail est dans
+/// payment_allocations).
+const rubriquePlusieurs = 'plusieurs';
+
 /// Code d'une nouvelle rubrique tiré de son libellé : « Frais d'examen » →
 /// « frais_d_examen ».
 String codeRubrique(String libelle) {
@@ -35,15 +39,18 @@ String sansAccentsRubrique(String s) {
   }).join();
 }
 
-/// Modes de paiement (10.2).
+/// Modes de paiement (A23) ; « Autre » se précise (Wave, Coris Money…).
 const modesPaiement = {
   'especes': 'Espèces',
   'orange_money': 'Orange Money',
   'moov_money': 'Moov Money',
-  'coris_money': 'Coris Money',
-  'virement': 'Virement',
+  'virement': 'Virement bancaire',
   'cheque': 'Chèque',
+  'autre': 'Autre',
 };
+
+/// Modes des anciens reçus (toujours lisibles).
+const _anciensModes = {'coris_money': 'Coris Money'};
 
 /// Catégories de dépenses proposées (texte libre possible).
 const categoriesDepenses = {
@@ -60,8 +67,12 @@ const categoriesDepenses = {
 String libelleRubrique(String code, [Map<String, String>? noms]) =>
     noms?[code] ??
     rubriquesParDefaut[code] ??
+    (code == rubriquePlusieurs ? 'Plusieurs rubriques' : null) ??
     (code == rubriqueAutre ? 'Autre' : code.replaceAll('_', ' '));
-String libelleMode(String code) => modesPaiement[code] ?? code;
+String libelleMode(String code, [String? precise]) =>
+    code == 'autre' && (precise ?? '').isNotEmpty
+    ? precise!
+    : modesPaiement[code] ?? _anciensModes[code] ?? code;
 String libelleCategorie(String code) => categoriesDepenses[code] ?? code;
 
 /// « 25 000 FCFA » (espace fine insécable entre les milliers).
@@ -148,31 +159,80 @@ int reduction(
   return math.min(total, ligne.amount);
 }
 
+/// Statut d'un versement ou d'une rubrique (couleurs discrètes à l'écran).
+enum Statut { paye, partiel, impaye }
+
+/// Un versement d'une ligne de la grille (A23) : le 1er, 2e, 3e versement
+/// de la scolarité, ou la rubrique entière quand elle n'a pas de versements.
+class VersementSituation {
+  const new({
+    required this.ligne,
+    required this.libelle,
+    required this.montant,
+    required this.du,
+    required this.paye,
+    required this.echu,
+    this.tranche,
+    this.debut,
+    this.echeance,
+  });
+  final FeeItemRow ligne;
+
+  /// null : la rubrique n'a pas de versements (un seul paiement).
+  final FeeInstallmentRow? tranche;
+  final String libelle;
+
+  /// Montant prévu (avant remise).
+  final int montant;
+
+  /// Dû après remise (répartie au prorata des versements).
+  final int du;
+  final int paye;
+  final String? debut;
+
+  /// Date limite ; null : à l'inscription (dû tout de suite).
+  final String? echeance;
+
+  /// Date limite passée (ou à l'inscription).
+  final bool echu;
+
+  int get reste => math.max(0, du - paye);
+  int get impaye => echu ? reste : 0;
+  bool get partielAutorise => ligne.paymentTerms != 'integral';
+  Statut get statut => reste == 0
+      ? Statut.paye
+      : paye > 0
+      ? Statut.partiel
+      : Statut.impaye;
+
+  /// Identifiant stable (case à cocher, détail du reçu).
+  String get cle => tranche?.id ?? ligne.id;
+}
+
 /// Situation d'un élève pour une ligne de la grille.
 class LigneSituation {
   const new({
     required this.ligne,
-    required this.du,
     required this.reduction,
-    required this.paye,
-    required this.echu,
+    required this.versements,
   });
   final FeeItemRow ligne;
+  final int reduction;
+  final List<VersementSituation> versements;
 
   /// Montant dû après remise.
-  final int du;
-  final int reduction;
+  int get du => versements.fold(0, (s, v) => s + v.du);
 
   /// Encaissé net (annulations déduites).
-  final int paye;
+  int get paye => versements.fold(0, (s, v) => s + v.paye);
 
-  /// Dû à la date du jour selon l'échéancier (après remise).
-  final int echu;
+  /// Dû à la date du jour selon les dates limites (après remise).
+  int get echu => versements.where((v) => v.echu).fold(0, (s, v) => s + v.du);
 
   int get reste => math.max(0, du - paye);
 
   /// Retard : échu et pas encore payé.
-  int get impaye => math.max(0, math.min(echu, du) - paye);
+  int get impaye => versements.fold(0, (s, v) => s + v.impaye);
 
   /// Payé au-delà du dû (à rembourser ou à reporter).
   int get tropPercu => math.max(0, paye - du);
@@ -196,6 +256,12 @@ class SituationEleve {
   int get reste => lignes.fold(0, (s, l) => s + l.reste);
   int get impaye => lignes.fold(0, (s, l) => s + l.impaye);
   bool get aJour => impaye == 0;
+
+  /// Tous les versements, dans l'ordre de la grille (tableau
+  /// d'encaissement).
+  List<VersementSituation> get versements => [
+    for (final l in lignes) ...l.versements,
+  ];
 }
 
 /// Montant dû à une date selon l'échéancier (tranches échues), après
@@ -218,7 +284,9 @@ int echuA(
   return math.min(du, (brut * du / ligne.amount).round());
 }
 
-/// Calcule la situation d'un élève.
+/// Calcule la situation d'un élève. Le détail des reçus ([allocations])
+/// indique le versement réglé ; un reçu sans détail (avant A23) est imputé
+/// aux versements de sa ligne dans l'ordre.
 SituationEleve situation({
   required String studentId,
   required List<FeeItemRow> lignes,
@@ -226,40 +294,135 @@ SituationEleve situation({
   required List<(DiscountRow, StudentDiscountRow)> remises,
   required List<PaymentRow> paiements,
   required String aujourdhui,
+  List<PaymentAllocationRow> allocations = const [],
 }) {
-  final siens = [
+  final siens = {
     for (final p in paiements)
-      if (p.studentId == studentId) p,
-  ];
-  final parLigne = <String, int>{};
-  var autres = 0;
-  for (final p in siens) {
-    final f = p.feeItemId;
-    if (f != null && lignes.any((l) => l.id == f)) {
-      parLigne[f] = (parLigne[f] ?? 0) + p.amount;
-    } else {
-      autres += p.amount;
+      if (p.studentId == studentId) p.id: p,
+  };
+  final parPaiement = <String, List<PaymentAllocationRow>>{};
+  for (final a in allocations) {
+    if (siens.containsKey(a.paymentId)) {
+      (parPaiement[a.paymentId] ??= []).add(a);
     }
   }
+  final idsLignes = {for (final l in lignes) l.id};
+  final parTranche = <String, int>{};
+  final parLigne = <String, int>{};
+  var autres = 0;
+  for (final p in siens.values) {
+    final detail = parPaiement[p.id];
+    if (detail == null) {
+      final f = p.feeItemId;
+      if (f != null && idsLignes.contains(f)) {
+        parLigne[f] = (parLigne[f] ?? 0) + p.amount;
+      } else {
+        autres += p.amount;
+      }
+      continue;
+    }
+    for (final a in detail) {
+      final f = a.feeItemId;
+      if (f == null || !idsLignes.contains(f)) {
+        autres += a.amount;
+      } else if (a.installmentId != null) {
+        parTranche[a.installmentId!] =
+            (parTranche[a.installmentId!] ?? 0) + a.amount;
+      } else {
+        parLigne[f] = (parLigne[f] ?? 0) + a.amount;
+      }
+    }
+  }
+  final miennes = [
+    for (final r in remises)
+      if (r.$2.studentId == studentId) r,
+  ];
   return SituationEleve(
     studentId: studentId,
     autresRecettes: autres,
     lignes: [
       for (final l in lignes)
-        () {
-          final red = reduction(l, [
-            for (final r in remises)
-              if (r.$2.studentId == studentId) r,
-          ]);
-          final du = l.amount - red;
-          return LigneSituation(
-            ligne: l,
-            du: du,
-            reduction: red,
-            paye: parLigne[l.id] ?? 0,
-            echu: echuA(l, du, tranches, aujourdhui),
-          );
-        }(),
+        _ligneSituation(
+          l,
+          reduction(l, miennes),
+          [
+            for (final t in tranches)
+              if (t.feeItemId == l.id && t.deletedAt == null) t,
+          ],
+          parTranche,
+          parLigne[l.id] ?? 0,
+          aujourdhui,
+        ),
+    ],
+  );
+}
+
+LigneSituation _ligneSituation(
+  FeeItemRow l,
+  int red,
+  List<FeeInstallmentRow> tranches,
+  Map<String, int> parTranche,
+  int sansDetail,
+  String aujourdhui,
+) {
+  bool echu(String? d) => d == null || d.compareTo(aujourdhui) <= 0;
+  if (tranches.isEmpty) {
+    return LigneSituation(
+      ligne: l,
+      reduction: red,
+      versements: [
+        VersementSituation(
+          ligne: l,
+          libelle: l.label,
+          montant: l.amount,
+          du: l.amount - red,
+          paye: sansDetail,
+          echu: true,
+        ),
+      ],
+    );
+  }
+  // Remise répartie au prorata ; l'arrondi va au dernier versement.
+  final brut = tranches.fold<int>(0, (s, t) => s + t.amount);
+  var reste = red;
+  final dus = <int>[];
+  for (final (i, t) in tranches.indexed) {
+    final part = i == tranches.length - 1
+        ? reste
+        : (brut == 0 ? 0 : (red * t.amount / brut).floor());
+    reste -= part;
+    dus.add(t.amount - part);
+  }
+  // Paiements sans détail : imputés aux versements dans l'ordre.
+  var aImputer = sansDetail;
+  final payes = <int>[];
+  for (final (i, t) in tranches.indexed) {
+    var p = parTranche[t.id] ?? 0;
+    if (aImputer != 0) {
+      final place = i == tranches.length - 1
+          ? aImputer
+          : math.min(aImputer, math.max(0, dus[i] - p));
+      p += place;
+      aImputer -= place;
+    }
+    payes.add(p);
+  }
+  return LigneSituation(
+    ligne: l,
+    reduction: red,
+    versements: [
+      for (final (i, t) in tranches.indexed)
+        VersementSituation(
+          ligne: l,
+          tranche: t,
+          libelle: t.label,
+          montant: t.amount,
+          du: dus[i],
+          paye: payes[i],
+          debut: t.startsOn,
+          echeance: t.dueOn,
+          echu: echu(t.dueOn),
+        ),
     ],
   );
 }

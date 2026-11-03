@@ -340,11 +340,6 @@ class FinancesRepository {
     if (montant <= 0) {
       throw const UserMessage('Le montant doit être supérieur à zéro.');
     }
-    if (mode != 'especes' && (reference ?? '').trim().isEmpty) {
-      throw UserMessage(
-        'Indiquez la référence du paiement (${libelleMode(mode)}).',
-      );
-    }
     return await _ecrirePaiement(
       schoolId: schoolId,
       yearId: yearId,
@@ -380,6 +375,9 @@ class FinancesRepository {
     if (deja != null) {
       throw UserMessage('Ce reçu est déjà annulé (${deja.receiptNumber}).');
     }
+    final detail = await (db.select(
+      db.paymentAllocations,
+    )..where((a) => a.paymentId.equals(recu.id))).get();
     return await _ecrirePaiement(
       schoolId: recu.schoolId,
       yearId: recu.schoolYearId,
@@ -389,18 +387,133 @@ class FinancesRepository {
         'fee_item_id': recu.feeItemId,
         'amount': -recu.amount,
         'method': recu.method,
+        'method_label': recu.methodLabel,
         'reference': recu.reference,
         'payer_name': recu.payerName,
+        'payer_phone': recu.payerPhone,
         'reverses_payment_id': recu.id,
         'reversal_reason': motif.trim(),
       },
+      // Détail opposé, rubrique par rubrique.
+      detail: [
+        for (final a in detail)
+          {
+            'fee_item_id': a.feeItemId,
+            'installment_id': a.installmentId,
+            'rubric': a.rubric,
+            'label': a.label,
+            'amount': -a.amount,
+          },
+      ],
     );
+  }
+
+  /// Encaisse en une seule opération plusieurs rubriques ou versements
+  /// (A23) : un seul reçu, détaillé ligne par ligne. Jamais plus que le
+  /// reste dû ; une rubrique « en une fois » se règle en entier.
+  Future<PaymentRow> encaisserRubriques({
+    required String schoolId,
+    required String yearId,
+    required String studentId,
+    required List<(VersementSituation, int)> choix,
+    required String mode,
+    String? libelleMode,
+    String? reference,
+    String? payeur,
+    String? telephone,
+  }) async {
+    final utiles = [
+      for (final c in choix)
+        if (c.$2 != 0) c,
+    ];
+    if (utiles.isEmpty) {
+      throw const UserMessage('Cochez au moins une rubrique à encaisser.');
+    }
+    for (final (v, m) in utiles) {
+      if (m < 0) {
+        throw const UserMessage('Un montant ne peut pas être négatif.');
+      }
+      if (v.reste == 0) {
+        throw UserMessage('« ${v.libelle} » est déjà payé.');
+      }
+      if (m > v.reste) {
+        throw UserMessage(
+          '« ${v.libelle} » : ${fcfa(m)} dépasse le reste dû '
+          '(${fcfa(v.reste)}).',
+        );
+      }
+      if (!v.partielAutorise && m != v.reste) {
+        throw UserMessage(
+          '« ${v.libelle} » se règle en une fois : ${fcfa(v.reste)}.',
+        );
+      }
+    }
+    if (mode == 'autre' && (libelleMode ?? '').trim().isEmpty) {
+      throw const UserMessage('Précisez le mode de paiement.');
+    }
+    String? propre(String? t) => (t ?? '').trim().isEmpty ? null : t!.trim();
+    final rubriques = {for (final (v, _) in utiles) v.ligne.rubric};
+    final lignes = {for (final (v, _) in utiles) v.ligne.id};
+    return await _ecrirePaiement(
+      schoolId: schoolId,
+      yearId: yearId,
+      champs: {
+        'student_id': studentId,
+        'rubric': rubriques.length == 1 ? rubriques.single : 'plusieurs',
+        'fee_item_id': lignes.length == 1 ? lignes.single : null,
+        'amount': utiles.fold<int>(0, (s, c) => s + c.$2),
+        'method': mode,
+        'method_label': mode == 'autre' ? propre(libelleMode) : null,
+        'reference': propre(reference),
+        'payer_name': propre(payeur),
+        'payer_phone': propre(telephone),
+      },
+      detail: [
+        for (final (v, m) in utiles)
+          {
+            'fee_item_id': v.ligne.id,
+            'installment_id': v.tranche?.id,
+            'rubric': v.ligne.rubric,
+            // Libellé figé : « Scolarité — 1er versement ».
+            'label': v.tranche == null || v.libelle == v.ligne.label
+                ? v.ligne.label
+                : '${v.ligne.label} — ${v.libelle}',
+            'amount': m,
+          },
+      ],
+    );
+  }
+
+  /// Détail d'un reçu (A23).
+  Stream<List<PaymentAllocationRow>> watchDetails(String yearId) {
+    final q = db.select(db.paymentAllocations).join([
+      innerJoin(
+        db.payments,
+        db.payments.id.equalsExp(db.paymentAllocations.paymentId),
+      ),
+    ])..where(db.payments.schoolYearId.equals(yearId));
+    return q.watch().map(
+      (rows) => [for (final r in rows) r.readTable(db.paymentAllocations)],
+    );
+  }
+
+  /// Modes « Autre » déjà utilisés (proposés de nouveau).
+  Future<List<String>> modesLibres() async {
+    final q = db.selectOnly(db.payments, distinct: true)
+      ..addColumns([db.payments.methodLabel])
+      ..where(db.payments.methodLabel.isNotNull());
+    return [
+      for (final r in await q.get())
+        if ((r.read(db.payments.methodLabel) ?? '').isNotEmpty)
+          r.read(db.payments.methodLabel)!,
+    ]..sort();
   }
 
   Future<PaymentRow> _ecrirePaiement({
     required String schoolId,
     required String yearId,
     required Map<String, Object?> champs,
+    List<Map<String, Object?>> detail = const [],
   }) async {
     final s = await _session();
     final annee = await _annee(yearId);
@@ -429,6 +542,15 @@ class FinancesRepository {
         'receipt_number': numeroRecu(annee.label, s.deviceSeries!, n),
         'created_at': store.clock.nowIso(),
       });
+      for (final d in detail) {
+        await store.save('payment_allocations', {
+          'id': _uuid.v4(),
+          'school_id': schoolId,
+          'payment_id': id,
+          ...d,
+          'created_at': store.clock.nowIso(),
+        });
+      }
     });
     return await (db.select(
       db.payments,

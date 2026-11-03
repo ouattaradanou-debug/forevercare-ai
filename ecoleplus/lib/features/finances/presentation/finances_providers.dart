@@ -64,6 +64,13 @@ final StreamProviderFamily<List<PaymentRow>, String> paiementsProvider =
           ref.watch(financesRepositoryProvider).watchPaiements(yearId),
     );
 
+/// Détail des reçus de l'année (A23).
+final StreamProviderFamily<List<PaymentAllocationRow>, String> detailsProvider =
+    StreamProvider.family(
+      (ref, yearId) =>
+          ref.watch(financesRepositoryProvider).watchDetails(yearId),
+    );
+
 final StreamProviderFamily<PaymentRow?, String> paiementProvider =
     StreamProvider.family(
       (ref, id) => ref.watch(financesRepositoryProvider).watchPaiement(id),
@@ -100,7 +107,9 @@ final ProviderFamily<List<LigneEleve>?, (String, String)> situationsProvider =
       final tranches = ref.watch(tranchesProvider).value;
       final remises = ref.watch(attributionsProvider(yearId)).value;
       final paiements = ref.watch(paiementsProvider(yearId)).value;
-      if (eleves == null ||
+      final details = ref.watch(detailsProvider(yearId)).value;
+      if (details == null ||
+          eleves == null ||
           grille == null ||
           tranches == null ||
           remises == null ||
@@ -122,6 +131,7 @@ final ProviderFamily<List<LigneEleve>?, (String, String)> situationsProvider =
               tranches: tranches,
               remises: remises,
               paiements: paiements,
+              allocations: details,
               aujourdhui: jour,
             ),
           ),
