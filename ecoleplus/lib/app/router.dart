@@ -13,6 +13,7 @@ import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
 import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
 import 'package:ecoleplus/features/documents/presentation/documents_pages.dart';
 import 'package:ecoleplus/features/finances/presentation/finances_gestion_pages.dart';
+import 'package:ecoleplus/features/finances/presentation/finances_grille_page.dart';
 import 'package:ecoleplus/features/finances/presentation/finances_pages.dart';
 import 'package:ecoleplus/features/forms/presentation/apercu_pdf_page.dart';
 import 'package:ecoleplus/features/forms/presentation/fiche_scolarite_page.dart';
@@ -309,14 +310,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/finances/impayes',
         builder: (_, _) => const ImpayesPage(),
       ),
-      GoRoute(path: '/finances/grille', builder: (_, _) => const GrillePage()),
       GoRoute(
-        path: '/finances/grille/:id',
-        builder: (_, s) => LigneFraisPage(s.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/finances/rubriques',
-        builder: (_, _) => const RubriquesPage(),
+        path: '/finances/grille',
+        builder: (_, _) => const GrilleFraisPage(),
       ),
       GoRoute(
         path: '/finances/remises',

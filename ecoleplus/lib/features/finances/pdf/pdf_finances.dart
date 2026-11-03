@@ -408,3 +408,175 @@ Future<Uint8List> pdfRapportFinances(PolicesPdf polices, RapportFinances r) {
   );
   return doc.save();
 }
+
+/// Une ligne du récapitulatif des frais : rubrique (ou versement de la
+/// scolarité), montant, modalité, période.
+class LigneRecap {
+  const new(
+    this.rubrique,
+    this.montant,
+    this.modalite,
+    this.periode, {
+    this.versement = false,
+  });
+  final String rubrique;
+  final int montant;
+  final String modalite;
+  final String periode;
+
+  /// Versement de la scolarité (affiché en retrait sous « Scolarité »).
+  final bool versement;
+}
+
+/// Récapitulatif des frais d'une classe.
+class RecapClasse {
+  const new({
+    required this.classe,
+    required this.lignes,
+    required this.totalScolarite,
+    required this.totalAutres,
+    this.observations,
+  });
+  final String classe;
+  final List<LigneRecap> lignes;
+  final int totalScolarite;
+  final int totalAutres;
+  final String? observations;
+  int get total => totalScolarite + totalAutres;
+}
+
+/// Récapitulatif des frais scolaires (une page par classe), à imprimer
+/// ou à partager aux parents (WhatsApp).
+Future<Uint8List> pdfRecapFrais(
+  PolicesPdf polices, {
+  required String ecole,
+  required String anneeScolaire,
+  required List<RecapClasse> classes,
+  String? commune,
+  String? telephone,
+  Uint8List? logo,
+}) {
+  final doc = pw.Document(theme: polices.theme);
+  const bleu = PdfColor.fromInt(0xFF1F4E79);
+  const gras = pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10);
+  const normal = pw.TextStyle(fontSize: 10);
+  for (final c in classes) {
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(36),
+        build: (_) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+          children: [
+            pw.Row(
+              children: [
+                if (logo != null)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(right: 12),
+                    child: pw.Image(pw.MemoryImage(logo), width: 56),
+                  ),
+                pw.Expanded(
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        ecole.toUpperCase(),
+                        style: gras.copyWith(fontSize: 14, color: bleu),
+                      ),
+                      if ((commune ?? '').isNotEmpty) pw.Text(commune!),
+                      if ((telephone ?? '').isNotEmpty)
+                        pw.Text('Tél. $telephone'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 16),
+            pw.Container(
+              padding: const pw.EdgeInsets.symmetric(vertical: 8),
+              color: PdfColors.blue50,
+              child: pw.Column(
+                children: [
+                  pw.Text(
+                    'FRAIS SCOLAIRES — ${c.classe}',
+                    style: gras.copyWith(fontSize: 15, color: bleu),
+                  ),
+                  pw.Text('Année scolaire $anneeScolaire', style: normal),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 14),
+            pw.Table(
+              border: bordureTableau(),
+              columnWidths: const {
+                0: pw.FlexColumnWidth(2.4),
+                1: pw.FlexColumnWidth(1.3),
+                2: pw.FlexColumnWidth(1.4),
+                3: pw.FlexColumnWidth(2.2),
+              },
+              children: [
+                ligneEntete(const [
+                  'Rubrique',
+                  'Montant (FCFA)',
+                  'Modalité',
+                  'Période / date limite',
+                ], gras),
+                for (final (i, l) in c.lignes.indexed)
+                  pw.TableRow(
+                    decoration: fondLigne(i),
+                    verticalAlignment: pw.TableCellVerticalAlignment.middle,
+                    children: [
+                      caseTableau(
+                        l.versement ? '    ${l.rubrique}' : l.rubrique,
+                        l.versement ? normal : gras,
+                        centre: false,
+                      ),
+                      caseTableau(fcfa(l.montant), normal, centre: true),
+                      caseTableau(l.modalite, normal, centre: true),
+                      caseTableau(l.periode, normal, centre: true),
+                    ],
+                  ),
+              ],
+            ),
+            pw.SizedBox(height: 14),
+            pw.Table(
+              border: bordureTableau(),
+              columnWidths: const {
+                0: pw.FlexColumnWidth(3),
+                1: pw.FlexColumnWidth(1.4),
+              },
+              children: [
+                for (final (t, m, fort) in [
+                  ('Total de la scolarité', c.totalScolarite, false),
+                  ('Total des autres rubriques', c.totalAutres, false),
+                  ('MONTANT TOTAL À PAYER PAR ÉLÈVE', c.total, true),
+                ])
+                  pw.TableRow(
+                    decoration: fort ? fondEntete : null,
+                    children: [
+                      caseTableau(t, fort ? gras : normal, centre: false),
+                      caseTableau(fcfa(m), fort ? gras : normal, centre: true),
+                    ],
+                  ),
+              ],
+            ),
+            if ((c.observations ?? '').isNotEmpty) ...[
+              pw.SizedBox(height: 14),
+              pw.Text('Observations', style: gras),
+              pw.SizedBox(height: 4),
+              pw.Text(c.observations!, style: normal),
+            ],
+            pw.Spacer(),
+            pw.Text(
+              'Montants en francs CFA. Chaque versement donne lieu à un reçu '
+              'numéroté. Pour toute question, adressez-vous au secrétariat '
+              'de l’école.',
+              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  return doc.save();
+}

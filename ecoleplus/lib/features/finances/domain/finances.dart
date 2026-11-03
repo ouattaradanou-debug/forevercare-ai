@@ -102,14 +102,13 @@ String _aa(String annee) =>
 
 /// Lignes de la grille qui s'appliquent à un élève : celles de sa classe ;
 /// puis celles de son niveau ; puis celles de tous les niveaux. Une ligne
-/// de classe remplace la ligne de même rubrique et même libellé de son
-/// niveau (tarif ajusté pour une classe).
+/// de classe remplace, pour sa rubrique, les lignes du niveau et de tous
+/// les niveaux (A23 : chaque classe a son propre paramétrage).
 List<FeeItemRow> fraisApplicables(
   List<FeeItemRow> grille, {
   required String? niveau,
   required String? classe,
 }) {
-  String cle(FeeItemRow f) => '${f.rubric}|${f.label.trim().toLowerCase()}';
   final actives = grille.where((f) => f.deletedAt == null).toList();
   final deClasse = [
     for (final f in actives)
@@ -123,10 +122,18 @@ List<FeeItemRow> fraisApplicables(
     for (final f in actives)
       if (f.classId == null && f.levelCode == null) f,
   ];
-  final vues = <String>{};
-  final out = <FeeItemRow>[];
-  for (final f in [...deClasse, ...deNiveau, ...generales]) {
-    if (vues.add(cle(f))) out.add(f);
+  final pris = {for (final f in deClasse) f.rubric};
+  final out = [...deClasse];
+  final duNiveau = <String>{};
+  for (final f in deNiveau) {
+    if (!pris.contains(f.rubric)) {
+      out.add(f);
+      duNiveau.add(f.rubric);
+    }
+  }
+  pris.addAll(duNiveau);
+  for (final f in generales) {
+    if (!pris.contains(f.rubric)) out.add(f);
   }
   return out;
 }

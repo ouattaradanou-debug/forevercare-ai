@@ -64,6 +64,11 @@ final StreamProviderFamily<List<PaymentRow>, String> paiementsProvider =
           ref.watch(financesRepositoryProvider).watchPaiements(yearId),
     );
 
+final StreamProviderFamily<List<FeeNoteRow>, String> notesFraisProvider =
+    StreamProvider.family(
+      (ref, yearId) => ref.watch(financesRepositoryProvider).watchNotes(yearId),
+    );
+
 /// Détail des reçus de l'année (A23).
 final StreamProviderFamily<List<PaymentAllocationRow>, String> detailsProvider =
     StreamProvider.family(

@@ -10,6 +10,16 @@ import 'package:ecoleplus/features/finances/domain/finances.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
+/// Un versement d'un frais : libellé, montant, période « du … au … »
+/// (dates ISO ; [fin] null : à l'inscription).
+class Versement {
+  const new(this.libelle, this.montant, {this.debut, this.fin});
+  final String libelle;
+  final int montant;
+  final String? debut;
+  final String? fin;
+}
+
 /// Finances (module 10) : grille, encaissements numérotés hors ligne,
 /// annulations motivées, dépenses avec justificatif, clôtures. Les
 /// encaissements et dépenses ne sont jamais modifiés ni supprimés.
@@ -205,21 +215,24 @@ class FinancesRepository {
   }
 
   /// Enregistre un frais et ses versements (jusqu'à trois, chacun avec sa
-  /// date limite ; le 1er peut être « à l'inscription », sans date). Le
-  /// montant du frais est la somme des versements.
+  /// période « du … au … » ; sans date : à l'inscription, dû tout de
+  /// suite). Le montant du frais est la somme des versements. Avec
+  /// [autoriserZero], un frais à 0 (rubrique non due pour cette classe)
+  /// est enregistré sans versement.
   Future<String> enregistrerFrais(
     Map<String, Object?> champs,
-    List<(String, int, String?)> versements,
-  ) async {
+    List<Versement> versements, {
+    bool autoriserZero = false,
+  }) async {
     final utiles = [
       for (final v in versements)
-        if (v.$2 > 0) v,
+        if (v.montant > 0) v,
     ];
-    if (utiles.isEmpty) {
+    if (utiles.isEmpty && !autoriserZero) {
       throw const UserMessage('Indiquez le montant d’au moins un versement.');
     }
     final id = (champs['id'] as String?) ?? _uuid.v4();
-    final total = utiles.fold<int>(0, (s, v) => s + v.$2);
+    final total = utiles.fold<int>(0, (s, v) => s + v.montant);
     await db.transaction(() async {
       await store.save('fee_items', {
         ...champs,
@@ -231,19 +244,21 @@ class FinancesRepository {
         db.feeInstallments,
       )..where((t) => t.feeItemId.equals(id) & t.deletedAt.isNull())).get();
       final gardees = <String>{};
-      for (final (i, (libelle, montant, echeance)) in utiles.indexed) {
+      for (final (i, v) in utiles.indexed) {
         final tid = _uuid.v5(Namespace.url.value, 'ecoleplus:versement:$id:$i');
         gardees.add(tid);
         await store.save('fee_installments', {
           'id': tid,
           'school_id': champs['school_id'],
           'fee_item_id': id,
-          'label': libelle,
-          'amount': montant,
-          'due_on': echeance,
+          'label': v.libelle,
+          'amount': v.montant,
+          'starts_on': v.debut,
+          'due_on': v.fin,
           'deleted_at': null,
         });
       }
+
       for (final t in anciennes) {
         if (!gardees.contains(t.id)) {
           await store.save('fee_installments', {
@@ -483,6 +498,47 @@ class FinancesRepository {
       ],
     );
   }
+
+  /// Observations du récapitulatif des frais (une par classe).
+  Stream<List<FeeNoteRow>> watchNotes(String yearId) =>
+      (db.select(
+            db.feeNotes,
+          )..where((n) => n.schoolYearId.equals(yearId) & n.deletedAt.isNull()))
+          .watch();
+
+  Future<void> enregistrerNote({
+    required String schoolId,
+    required String yearId,
+    required String classId,
+    required String texte,
+  }) => store.save('fee_notes', {
+    'id': _uuid.v5(Namespace.url.value, 'ecoleplus:note:$yearId:$classId'),
+    'school_id': schoolId,
+    'school_year_id': yearId,
+    'class_id': classId,
+    'notes': texte.trim().isEmpty ? null : texte.trim(),
+  });
+
+  /// Nombre de reçus qui ont réglé ces frais (avertissement avant retrait).
+  Future<int> recusSurFrais(Iterable<String> feeItemIds) async {
+    final ids = feeItemIds.toList();
+    if (ids.isEmpty) return 0;
+    final detail = await (db.select(
+      db.paymentAllocations,
+    )..where((a) => a.feeItemId.isIn(ids))).get();
+    final anciens = await (db.select(
+      db.payments,
+    )..where((x) => x.feeItemId.isIn(ids))).get();
+    return {
+      for (final a in detail) a.paymentId,
+      for (final x in anciens) x.id,
+    }.length;
+  }
+
+  /// Identifiant du frais d'une rubrique pour une classe (le même sur tous
+  /// les téléphones).
+  static String idFraisClasse(String yearId, String classId, String code) =>
+      _uuid.v5(Namespace.url.value, 'ecoleplus:frais:$yearId:$classId:$code');
 
   /// Détail d'un reçu (A23).
   Stream<List<PaymentAllocationRow>> watchDetails(String yearId) {

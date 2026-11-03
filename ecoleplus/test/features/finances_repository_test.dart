@@ -257,9 +257,9 @@ void main() {
           'class_id': 'c1',
         },
         const [
-          ('1er versement', 10000, null),
-          ('2e versement', 8000, '2099-01-15'),
-          ('3e versement', 7000, '2099-04-15'),
+          Versement('1er versement', 10000),
+          Versement('2e versement', 8000, fin: '2099-01-15'),
+          Versement('3e versement', 7000, fin: '2099-04-15'),
         ],
       );
       await r.enregistrerFrais(
@@ -271,7 +271,7 @@ void main() {
           'class_id': 'c1',
           'payment_terms': 'integral',
         },
-        const [('Assurance', 1500, null)],
+        const [Versement('Assurance', 1500)],
       );
       Future<SituationEleve> sit() async => situation(
         studentId: 'e1',
@@ -369,7 +369,7 @@ void main() {
           'label': 'Frais de scolarité',
           'class_id': 'c1',
         },
-        const [('1er versement', 12000, null)],
+        const [Versement('1er versement', 12000)],
       );
       final d = await (t.db.select(
         t.db.paymentAllocations,
