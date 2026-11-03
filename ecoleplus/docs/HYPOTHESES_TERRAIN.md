@@ -117,3 +117,5 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H108 | Relance : texte préparé et modifiable, partagé par la personne (WhatsApp, SMS…), jamais envoyé automatiquement ; numéros des parents de la fiche élève | Finances | `preparerRelance` |
 | H109 | Pas de lien entre impayés et remise des bulletins ou cartes (option 10.7 non construite, décision du porteur) | Finances | — |
 | H110 | Justificatif de dépense : photo (caméra, galerie) ou PDF ; jamais téléchargé automatiquement sur les autres téléphones (à la demande, Internet nécessaire) | Finances | compartiment `finances` |
+| H111 | Grille : jusqu'à trois versements par frais (montant et date limite) ; le 1er « à l'inscription » est dû tout de suite ; la demande du porteur indiquait « à l'inscription » pour les trois (à confirmer) | Finances | `LigneFraisPage`, `enregistrerFrais` |
+| H112 | Rubriques propres à l'école ; une rubrique utilisée par un frais ne se retire pas ; son code ne change jamais (reçus déjà faits) | Finances | `fee_rubrics` |

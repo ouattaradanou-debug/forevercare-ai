@@ -315,6 +315,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => LigneFraisPage(s.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/finances/rubriques',
+        builder: (_, _) => const RubriquesPage(),
+      ),
+      GoRoute(
         path: '/finances/remises',
         builder: (_, _) => const RemisesPage(),
       ),

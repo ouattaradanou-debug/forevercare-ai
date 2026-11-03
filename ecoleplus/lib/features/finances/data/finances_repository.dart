@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:drift/drift.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
@@ -95,6 +96,165 @@ class FinancesRepository {
           .watch();
 
   // ---------------------------- Paramétrage -----------------------------
+
+  /// Rubriques de l'école (A22), dans l'ordre choisi.
+  Stream<List<FeeRubricRow>> watchRubriques(String schoolId) =>
+      (db.select(db.feeRubrics)
+            ..where((r) => r.schoolId.equals(schoolId) & r.deletedAt.isNull())
+            ..orderBy([
+              (r) => OrderingTerm.asc(r.sortOrder),
+              (r) => OrderingTerm.asc(r.label),
+            ]))
+          .watch();
+
+  /// Crée les rubriques proposées si l'école ne les a pas encore (même
+  /// identifiant sur tous les téléphones : jamais de doublon). Une rubrique
+  /// retirée par l'école n'est pas recréée.
+  Future<void> assurerRubriques(String schoolId) async {
+    final existantes = {
+      for (final r in await (db.select(
+        db.feeRubrics,
+      )..where((r) => r.schoolId.equals(schoolId))).get())
+        r.code,
+    };
+    var ordre = 0;
+    for (final MapEntry(key: code, value: libelle)
+        in rubriquesParDefaut.entries) {
+      ordre += 10;
+      if (existantes.contains(code)) continue;
+      await store.save('fee_rubrics', {
+        'id': _idRubrique(schoolId, code),
+        'school_id': schoolId,
+        'code': code,
+        'label': libelle,
+        'sort_order': ordre,
+      });
+    }
+  }
+
+  static String _idRubrique(String schoolId, String code) =>
+      _uuid.v5(Namespace.url.value, 'ecoleplus:rubrique:$schoolId:$code');
+
+  /// Nouvelle rubrique ; renvoie son code.
+  Future<String> ajouterRubrique(String schoolId, String libelle) async {
+    final nom = libelle.trim();
+    if (nom.isEmpty) throw const UserMessage('Indiquez le nom de la rubrique.');
+    final toutes = await (db.select(
+      db.feeRubrics,
+    )..where((r) => r.schoolId.equals(schoolId))).get();
+    final actives = toutes.where((r) => r.deletedAt == null);
+    if (actives.any((r) => r.label.toLowerCase() == nom.toLowerCase())) {
+      throw UserMessage('La rubrique « $nom » existe déjà.');
+    }
+    // Une rubrique retirée puis ajoutée de nouveau reprend son code.
+    final base = codeRubrique(nom);
+    final retiree = toutes
+        .where((r) => r.deletedAt != null && r.code == base)
+        .firstOrNull;
+    if (retiree != null) {
+      await store.save('fee_rubrics', {
+        'id': retiree.id,
+        'label': nom,
+        'deleted_at': null,
+      });
+      return retiree.code;
+    }
+    final pris = {for (final r in toutes) r.code};
+    var code = base;
+    for (var i = 2; pris.contains(code); i++) {
+      code = '${base.length > 36 ? base.substring(0, 36) : base}_$i';
+    }
+    final ordre = toutes.fold<int>(0, (m, r) => math.max(m, r.sortOrder)) + 10;
+    await store.save('fee_rubrics', {
+      'id': _idRubrique(schoolId, code),
+      'school_id': schoolId,
+      'code': code,
+      'label': nom,
+      'sort_order': ordre,
+    });
+    return code;
+  }
+
+  Future<void> renommerRubrique(String id, String libelle) async {
+    if (libelle.trim().isEmpty) {
+      throw const UserMessage('Indiquez le nom de la rubrique.');
+    }
+    await store.save('fee_rubrics', {'id': id, 'label': libelle.trim()});
+  }
+
+  /// Retire une rubrique (impossible tant qu'un frais l'utilise).
+  Future<void> retirerRubrique(FeeRubricRow r) async {
+    final utilisee =
+        await (db.select(db.feeItems)..where(
+              (f) =>
+                  f.schoolId.equals(r.schoolId) &
+                  f.rubric.equals(r.code) &
+                  f.deletedAt.isNull(),
+            ))
+            .get();
+    if (utilisee.isNotEmpty) {
+      throw UserMessage(
+        'La rubrique « ${r.label} » est utilisée par '
+        '${utilisee.length} frais de la grille : retirez d’abord ces frais.',
+      );
+    }
+    await store.save('fee_rubrics', {
+      'id': r.id,
+      'deleted_at': store.clock.nowIso(),
+    });
+  }
+
+  /// Enregistre un frais et ses versements (jusqu'à trois, chacun avec sa
+  /// date limite ; le 1er peut être « à l'inscription », sans date). Le
+  /// montant du frais est la somme des versements.
+  Future<String> enregistrerFrais(
+    Map<String, Object?> champs,
+    List<(String, int, String?)> versements,
+  ) async {
+    final utiles = [
+      for (final v in versements)
+        if (v.$2 > 0) v,
+    ];
+    if (utiles.isEmpty) {
+      throw const UserMessage('Indiquez le montant d’au moins un versement.');
+    }
+    final id = (champs['id'] as String?) ?? _uuid.v4();
+    final total = utiles.fold<int>(0, (s, v) => s + v.$2);
+    await db.transaction(() async {
+      await store.save('fee_items', {
+        ...champs,
+        'id': id,
+        'amount': total,
+        'billing_period': 'unique',
+      });
+      final anciennes = await (db.select(
+        db.feeInstallments,
+      )..where((t) => t.feeItemId.equals(id) & t.deletedAt.isNull())).get();
+      final gardees = <String>{};
+      for (final (i, (libelle, montant, echeance)) in utiles.indexed) {
+        final tid = _uuid.v5(Namespace.url.value, 'ecoleplus:versement:$id:$i');
+        gardees.add(tid);
+        await store.save('fee_installments', {
+          'id': tid,
+          'school_id': champs['school_id'],
+          'fee_item_id': id,
+          'label': libelle,
+          'amount': montant,
+          'due_on': echeance,
+          'deleted_at': null,
+        });
+      }
+      for (final t in anciennes) {
+        if (!gardees.contains(t.id)) {
+          await store.save('fee_installments', {
+            'id': t.id,
+            'deleted_at': store.clock.nowIso(),
+          });
+        }
+      }
+    });
+    return id;
+  }
 
   Future<String> enregistrerLigne(Map<String, Object?> champs) async {
     final id = (champs['id'] as String?) ?? _uuid.v4();

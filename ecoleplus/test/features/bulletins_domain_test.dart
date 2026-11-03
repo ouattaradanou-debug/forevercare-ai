@@ -227,7 +227,7 @@ void main() {
   });
 
   test(
-    'base du téléphone : passage de la version 5 à la 12 sans perte',
+    'base du téléphone : passage de la version 5 à la 13 sans perte',
     () async {
       final dir = Directory.systemTemp.createTempSync('migration');
       final fichier = File('${dir.path}/ecole.db');
@@ -263,6 +263,7 @@ void main() {
         'payments',
         'expenses',
         'cash_closings',
+        'fee_rubrics',
       ]) {
         await db.customStatement('DROP TABLE $t');
       }

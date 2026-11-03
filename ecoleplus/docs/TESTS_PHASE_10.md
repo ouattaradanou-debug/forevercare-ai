@@ -11,15 +11,23 @@ Comptes (mot de passe `motdepasse-test`) :
 constater.
 
 ## 1. Grille des frais (directeur)
-1. Accueil → **« Finances »** → « Grille des frais » → « Ajouter un frais » :
-   rubrique « Scolarité », 25 000, niveau **CM1** → « Enregistrer ».
-2. Touchez la ligne → « Ajouter une tranche » : 10 000 avant le
-   01/10/2025 ; puis 15 000 avant le 15/01/2026. ✅ « Total des tranches :
-   25 000 FCFA ».
-3. Ajoutez « Inscription », 5 000, « Tous les niveaux ».
-4. (Facultatif) Tarif ajusté : « Scolarité », 30 000, **classe CM1 B**. ✅ Les
+1. Accueil → **« Finances »** → « Grille des frais » → « Rubriques (ajouter,
+   renommer, retirer) ». ✅ Inscription, Scolarité, Cotisation, Fournitures,
+   **Carte scolaire**, **Assurance**. Ajoutez « Frais d'examen » ; retirez
+   une rubrique inutile. Retour.
+2. « Ajouter un frais » : rubrique « Scolarité », niveau **CM1**,
+   **1er versement** 10 000 « payé à l'inscription », **2e versement**
+   8 000 avant le 15/01/2027, **3e versement** 7 000 avant le 15/04/2027.
+   ✅ « Total pour l'année : 25 000 FCFA » ; sans date limite pour le 2e ou
+   le 3e : message clair. « Enregistrer ». ✅ « Scolarité • 25 000 FCFA •
+   … • 3 versements ».
+3. Retirer une rubrique **utilisée** par un frais. ✅ Refusé : « … est
+   utilisée par 1 frais de la grille ».
+4. Ajoutez « Inscription », 5 000, un seul versement à l'inscription,
+   « Tous les niveaux ».
+5. (Facultatif) Tarif ajusté : « Scolarité », 30 000, **classe CM1 B**. ✅ Les
    élèves de CM1 B doivent 30 000, ceux de CM1 A 25 000.
-5. « Remises » → « Nouvelle remise » : « Fratrie », 10 %, sur
+6. « Remises » → « Nouvelle remise » : « Fratrie », 10 %, sur
    « Scolarité ». Puis « Situation des élèves » → un élève → touchez
    « Fratrie ». ✅ Son dû baisse de 2 500.
 

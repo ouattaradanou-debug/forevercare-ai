@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -175,6 +175,10 @@ class AppDatabase extends _$AppDatabase {
         }
         await m.createIndex(paymentsStudent);
         await m.createIndex(paymentsDevice);
+      }
+      if (from < 13) {
+        // A22 : rubriques de frais de l'école.
+        await m.createTable(feeRubrics);
       }
     },
   );

@@ -965,3 +965,16 @@ CREATE TABLE cash_closings (
 
 CREATE INDEX payments_student ON payments (student_id, school_year_id);
 CREATE INDEX payments_device ON payments (device_id, school_year_id, device_seq);
+
+-- A22 : rubriques de frais de l'école (modifiables).
+CREATE TABLE fee_rubrics (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  code TEXT NOT NULL,
+  label TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS FeeRubricRow;

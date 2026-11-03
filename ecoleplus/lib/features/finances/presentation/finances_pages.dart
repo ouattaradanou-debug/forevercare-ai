@@ -471,7 +471,9 @@ Future<DonneesRecu> donneesRecu(WidgetRef ref, PaymentRow x) async {
     montant: x.amount,
     mode: libelleMode(x.method),
     reference: x.reference,
-    rubrique: ligne?.label ?? libelleRubrique(x.rubric),
+    rubrique:
+        ligne?.label ??
+        libelleRubrique(x.rubric, ref.read(nomsRubriquesProvider)),
     eleve: eleve?.nom,
     classe: eleve?.classe,
     payeur: x.payerName,
@@ -700,6 +702,7 @@ class _RecusState extends ConsumerState<RecusPage> {
     if (c == null) return _chargement('Reçus');
     final (ecole, annee) = c;
     final paiements = ref.watch(paiementsProvider(annee.id)).value ?? const [];
+    final rubriques = ref.watch(nomsRubriquesProvider);
     final noms = {
       for (final l
           in ref.watch(situationsProvider((ecole.id, annee.id))) ??
@@ -739,7 +742,7 @@ class _RecusState extends ConsumerState<RecusPage> {
                 title: Text('${x.receiptNumber} • ${fcfa(x.amount)}'),
                 subtitle: Text(
                   '${dateHeure(x.paidAt)} • '
-                  '${noms[x.studentId] ?? libelleRubrique(x.rubric)}'
+                  '${noms[x.studentId] ?? libelleRubrique(x.rubric, rubriques)}'
                   '${x.syncedAt == null ? ' • à envoyer' : ''}',
                 ),
                 onTap: () => context.push('/finances/recu/${x.id}'),
@@ -950,7 +953,7 @@ class SituationElevePage extends ConsumerWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(r.label),
-              subtitle: Text(texteRemise(r)),
+              subtitle: Text(texteRemise(r, ref.watch(nomsRubriquesProvider))),
               trailing: IconButton(
                 tooltip: 'Retirer la remise',
                 icon: const Icon(Icons.close),
@@ -997,13 +1000,13 @@ int _somme(List<LigneEleve> l, int Function(LigneEleve) f) =>
     l.fold(0, (s, x) => s + f(x));
 
 /// « 10 % sur Scolarité », « 5 000 FCFA sur tous les frais ».
-String texteRemise(DiscountRow r) {
+String texteRemise(DiscountRow r, [Map<String, String>? rubriques]) {
   final v = r.kind == 'pourcentage'
       ? '${r.value.toStringAsFixed(r.value % 1 == 0 ? 0 : 1)} %'
       : fcfa(r.value.round());
   return r.rubric == null
       ? '$v sur tous les frais'
-      : '$v sur ${libelleRubrique(r.rubric!)}';
+      : '$v sur ${libelleRubrique(r.rubric!, rubriques)}';
 }
 
 /// Texte de relance : modifiable, puis partagé (WhatsApp, SMS…) par la

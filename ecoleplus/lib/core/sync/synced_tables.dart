@@ -142,6 +142,7 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
   SyncedTable<StudentCardRow>(name: 'student_cards', info: db.studentCards),
   SyncedTable<DocumentRow>(name: 'documents', info: db.documents),
   // Phase 10 : finances (l'ordre compte : la grille avant les encaissements).
+  SyncedTable<FeeRubricRow>(name: 'fee_rubrics', info: db.feeRubrics),
   SyncedTable<FeeItemRow>(name: 'fee_items', info: db.feeItems),
   SyncedTable<FeeInstallmentRow>(
     name: 'fee_installments',

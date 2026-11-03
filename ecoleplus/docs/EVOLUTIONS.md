@@ -34,6 +34,7 @@
 | A18 | ➕ Ajout demandé (28/10/2026, test sur téléphone) | Documents : « **Camarade** » à la place de « Madame » / « Monsieur » ; grade du directeur plus visible dans « Mon école » (avec propositions) ; **aperçu des PDF qu'on peut agrandir** (deux doigts, boutons + et −) avant d'imprimer ou de partager | **Acceptée** (28/10/2026) — construite | 4 |
 | A20 | ➕ Ajout demandé (30/10/2026, test sur téléphone) | **« Archives » devient une commande à part** sur l'accueil (directeur et délégués « archives »), au lieu d'une ligne dans « Documents » — fiche ci-dessous | **Acceptée** (30/10/2026) — construite | 9 |
 | A21 | ➕ Ajout demandé (30/10/2026, test sur téléphone) | **« Effacer définitivement »** un document de la corbeille, sans attendre 30 jours ; et retrait automatique, sur les autres téléphones, des documents effacés ou devenus inaccessibles — fiche ci-dessous | **Acceptée** (30/10/2026) — construite | 9 |
+| A22 | ➕ Ajout demandé (03/11/2026, test sur téléphone) | Grille des frais : **trois versements** (montant et date limite de chacun, le 1er « à l'inscription ») ; rubriques **Carte scolaire** et **Assurance** ajoutées ; l'école peut **ajouter, renommer ou retirer** des rubriques — fiche ci-dessous | **Acceptée** (03/11/2026) — construite | 10 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -232,3 +233,16 @@ Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 in
 * **Fonctionne sur ordinateur** : oui.
 * **Effort** : S. **Risques** : effacement sans retour possible — d'où la corbeille obligatoire avant, et la confirmation.
 * **Décision** : demandée par le porteur le 30/10/2026, construite le jour même.
+
+## Fiche d'impact A22 — Trois versements et rubriques de l'école
+* **Demande du porteur (03/11/2026)** : sur la grille des frais, trois versements avec une date limite (période butoir) ; ajouter les rubriques « Carte scolaire » et « Assurance » ; pouvoir ajouter ou supprimer des rubriques.
+* **Ce qui change** :
+  * fiche d'un frais : **1er, 2e et 3e versement**, chacun avec son montant et sa **date limite** ; le 1er peut être « payé à l'inscription » (dû tout de suite) ; un versement laissé vide est ignoré (un seul versement possible) ; le **total de l'année** est la somme des versements ;
+  * un versement est « en retard » quand sa date limite est passée et qu'il n'est pas payé (même règle qu'avant) ;
+  * rubriques proposées : Inscription, Scolarité, Cotisation, Fournitures, **Carte scolaire**, **Assurance** ; page « Rubriques » : ajouter, renommer, retirer ; « Autre » reste toujours disponible ;
+  * une rubrique **utilisée par un frais** ne peut pas être retirée (message clair) ; une rubrique retirée reste lisible sur les reçus déjà faits.
+* **Interprétation** : la demande écrivait « à l'inscription » pour les trois versements (copie probable) ; seul le 1er est « à l'inscription » par défaut, les deux autres ont une date limite — à confirmer.
+* **Données** : table `fee_rubrics` (synchronisée, droits « finances ») ; fin de la liste fixe des rubriques sur le serveur (migration `20261103000100`) ; base du téléphone v13.
+* **Fonctionne sur ordinateur** : oui.
+* **Effort** : S. **Risques** : faibles ; les reçus déjà faits ne changent pas.
+* **Décision** : demandée par le porteur le 03/11/2026, construite le jour même.

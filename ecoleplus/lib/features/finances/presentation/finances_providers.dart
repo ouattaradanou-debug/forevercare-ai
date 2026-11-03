@@ -26,6 +26,24 @@ final StreamProviderFamily<List<FeeItemRow>, String> grilleProvider =
           ref.watch(financesRepositoryProvider).watchGrille(yearId),
     );
 
+final StreamProviderFamily<List<FeeRubricRow>, String> rubriquesProvider =
+    StreamProvider.family(
+      (ref, schoolId) =>
+          ref.watch(financesRepositoryProvider).watchRubriques(schoolId),
+    );
+
+/// Libellés des rubriques de l'école connectée (code → libellé).
+final Provider<Map<String, String>> nomsRubriquesProvider = Provider((ref) {
+  final s = ref.watch(sessionProvider).value;
+  if (s == null) return const {};
+  return {
+    for (final r
+        in ref.watch(rubriquesProvider(s.schoolId)).value ??
+            const <FeeRubricRow>[])
+      r.code: r.label,
+  };
+});
+
 final StreamProvider<List<FeeInstallmentRow>> tranchesProvider = StreamProvider(
   (ref) => ref.watch(financesRepositoryProvider).watchTranches(),
 );

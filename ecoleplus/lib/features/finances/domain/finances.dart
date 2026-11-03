@@ -2,14 +2,38 @@ import 'dart:math' as math;
 
 import 'package:ecoleplus/core/db/app_database.dart';
 
-/// Rubriques de la grille (la cantine arrive avec la phase 11).
-const rubriques = {
+/// Rubriques proposées à chaque école (A22 : l'école peut en ajouter, les
+/// renommer ou les retirer ; la cantine arrive avec la phase 11).
+const rubriquesParDefaut = {
   'inscription': 'Inscription',
   'scolarite': 'Scolarité',
   'cotisation': 'Cotisation',
   'fournitures': 'Fournitures',
-  'autre': 'Autre',
+  'carte_scolaire': 'Carte scolaire',
+  'assurance': 'Assurance',
 };
+
+/// Rubrique toujours disponible (recette sans élève, don…), jamais retirée.
+const rubriqueAutre = 'autre';
+
+/// Code d'une nouvelle rubrique tiré de son libellé : « Frais d'examen » →
+/// « frais_d_examen ».
+String codeRubrique(String libelle) {
+  final s = sansAccentsRubrique(libelle.trim().toLowerCase())
+      .replaceAll(RegExp('[^a-z0-9]+'), '_')
+      .replaceAll(RegExp(r'^_+|_+$'), '');
+  final c = s.length > 40 ? s.substring(0, 40) : s;
+  return c.length < 2 || c == rubriqueAutre ? 'r_$c' : c;
+}
+
+String sansAccentsRubrique(String s) {
+  const a = 'àâäéèêëîïôöùûüçœ';
+  const b = 'aaaeeeeiioouuuco';
+  return s.split('').map((c) {
+    final i = a.indexOf(c);
+    return i < 0 ? c : b[i];
+  }).join();
+}
 
 /// Modes de paiement (10.2).
 const modesPaiement = {
@@ -32,7 +56,11 @@ const categoriesDepenses = {
   'autre': 'Autre',
 };
 
-String libelleRubrique(String code) => rubriques[code] ?? code;
+/// Libellé d'une rubrique : celui de l'école ([noms]), sinon celui proposé.
+String libelleRubrique(String code, [Map<String, String>? noms]) =>
+    noms?[code] ??
+    rubriquesParDefaut[code] ??
+    (code == rubriqueAutre ? 'Autre' : code.replaceAll('_', ' '));
 String libelleMode(String code) => modesPaiement[code] ?? code;
 String libelleCategorie(String code) => categoriesDepenses[code] ?? code;
 
@@ -355,6 +383,7 @@ List<MouvementCaisse> journalCaisse({
   required List<ExpenseRow> depenses,
   required String Function(String? studentId) nomEleve,
   String? mois,
+  Map<String, String>? rubriques,
 }) {
   bool dans(String date) => mois == null || date.startsWith(mois);
   final out = <MouvementCaisse>[
@@ -365,7 +394,8 @@ List<MouvementCaisse> journalCaisse({
           numero: p.receiptNumber,
           libelle: p.estAnnulation
               ? 'Annulation : ${p.reversalReason ?? ''}'
-              : '${libelleRubrique(p.rubric)} — ${nomEleve(p.studentId)}',
+              : '${libelleRubrique(p.rubric, rubriques)} — '
+                    '${nomEleve(p.studentId)}',
           montant: p.amount,
           mode: p.method,
           annulation: p.estAnnulation,

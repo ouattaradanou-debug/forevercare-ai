@@ -52,15 +52,41 @@ class ChampMontant extends StatelessWidget {
 // Grille des frais
 // ----------------------------------------------------------------------
 
-class GrillePage extends ConsumerWidget {
+/// Libellés des rubriques de l'école (A22), avec « Autre ».
+Map<String, String> nomsRubriques(List<FeeRubricRow> r) => {
+  for (final x in r) x.code: x.label,
+  rubriqueAutre: 'Autre',
+};
+
+class GrillePage extends ConsumerStatefulWidget {
   const new({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GrillePage> createState() => _GrilleState();
+}
+
+class _GrilleState extends ConsumerState<GrillePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Rubriques proposées créées à la première ouverture (A22).
+    final c = ref.read(sessionProvider).value;
+    if (c != null) {
+      unawaited(
+        ref.read(financesRepositoryProvider).assurerRubriques(c.schoolId),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final c = contexteFinances(ref);
     if (c == null) return _chargement('Grille des frais');
-    final (_, annee) = c;
+    final (ecole, annee) = c;
     final grille = ref.watch(grilleProvider(annee.id)).value ?? const [];
+    final noms = nomsRubriques(
+      ref.watch(rubriquesProvider(ecole.id)).value ?? const [],
+    );
     final classes = {
       for (final k
           in ref.watch(classesProvider(annee.id)).value ?? const <ClassRow>[])
@@ -92,9 +118,8 @@ class GrillePage extends ConsumerWidget {
                 key: Key('frais-${f.id}'),
                 title: Text('${f.label} • ${fcfa(f.amount)}'),
                 subtitle: Text(
-                  '${libelleRubrique(f.rubric)} • ${pourQui(f)} • '
-                  '${tranches.where((t) => t.feeItemId == f.id).length} '
-                  'tranche(s)',
+                  '${libelleRubrique(f.rubric, noms)} • ${pourQui(f)} • '
+                  '${_texteVersements(_nb(tranches, f.id))}',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/finances/grille/${f.id}'),
@@ -107,17 +132,51 @@ class GrillePage extends ConsumerWidget {
             label: 'Ajouter un frais',
             onPressed: () => context.push('/finances/grille/nouveau'),
           ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            key: const Key('gerer-rubriques'),
+            icon: const Icon(Icons.label_outline),
+            label: const Text('Rubriques (ajouter, renommer, retirer)'),
+            onPressed: () => context.push('/finances/rubriques'),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Création ou modification d'une ligne de la grille, avec son échéancier.
+int _nb(List<FeeInstallmentRow> t, String id) =>
+    t.where((x) => x.feeItemId == id).length;
+
+String _texteVersements(int n) => switch (n) {
+  0 => 'un seul versement',
+  1 => '1 versement',
+  _ => '$n versements',
+};
+
+/// Libellés des versements (A22).
+const libellesVersements = ['1er versement', '2e versement', '3e versement'];
+
+/// Un versement en cours de saisie : montant et date limite.
+class _Versement {
+  final montant = TextEditingController();
+  final date = TextEditingController();
+
+  /// 1er versement : payé à l'inscription (sans date limite).
+  bool aLInscription = false;
+
+  void dispose() {
+    montant.dispose();
+    date.dispose();
+  }
+}
+
+/// Création ou modification d'un frais de la grille, avec ses trois
+/// versements (montant et date limite de chacun).
 class LigneFraisPage extends ConsumerStatefulWidget {
   const new(this.id, {super.key});
 
-  /// « nouveau » pour une nouvelle ligne.
+  /// « nouveau » pour un nouveau frais.
   final String id;
 
   @override
@@ -126,7 +185,7 @@ class LigneFraisPage extends ConsumerStatefulWidget {
 
 class _LigneFraisState extends ConsumerState<LigneFraisPage> {
   final _libelle = TextEditingController();
-  final _montant = TextEditingController();
+  final _versements = [_Versement(), _Versement(), _Versement()];
   String _rubrique = 'scolarite';
   String? _niveau;
   String? _classe;
@@ -135,32 +194,72 @@ class _LigneFraisState extends ConsumerState<LigneFraisPage> {
   bool get _nouveau => widget.id == 'nouveau';
 
   @override
+  void initState() {
+    super.initState();
+    _versements.first.aLInscription = true;
+    for (final v in _versements) {
+      v.montant.addListener(() => setState(() {}));
+    }
+  }
+
+  @override
   void dispose() {
     _libelle.dispose();
-    _montant.dispose();
+    for (final v in _versements) {
+      v.dispose();
+    }
     super.dispose();
   }
 
-  void _charger(FeeItemRow? f) {
+  void _charger(FeeItemRow? f, List<FeeInstallmentRow> tranches) {
     if (_charge) return;
     _charge = true;
     if (f == null) {
-      _libelle.text = rubriques[_rubrique]!;
+      _libelle.text = 'Scolarité';
       return;
     }
     _libelle.text = f.label;
-    _montant.text = '${f.amount}';
     _rubrique = f.rubric;
     _niveau = f.levelCode;
     _classe = f.classId;
+    if (tranches.isEmpty) {
+      _versements.first
+        ..montant.text = '${f.amount}'
+        ..aLInscription = true;
+      return;
+    }
+    for (final (i, t) in tranches.take(3).indexed) {
+      final v = _versements[i]
+        ..montant.text = '${t.amount}'
+        ..aLInscription = t.dueOn == null && i == 0;
+      v.date.text = t.dueOn == null ? '' : dateCourte(t.dueOn!);
+    }
   }
 
+  int get _total =>
+      _versements.fold(0, (s, v) => s + (lireMontant(v.montant.text) ?? 0));
+
   Future<void> _enregistrer(SchoolRow ecole, SchoolYearRow annee) async {
-    final montant = lireMontant(_montant.text);
     final ok = await avecMessage(context, () async {
       if (_libelle.text.trim().isEmpty) throw manque('le libellé');
-      if (montant == null) throw manque('le montant');
-      await ref.read(financesRepositoryProvider).enregistrerLigne({
+      final versements = <(String, int, String?)>[];
+      for (final (i, v) in _versements.indexed) {
+        final m = lireMontant(v.montant.text) ?? 0;
+        if (m == 0) continue;
+        String? echeance;
+        if (!(i == 0 && v.aLInscription)) {
+          final d = _lireDate(v.date.text);
+          if (d == null) {
+            throw UserMessage(
+              '${libellesVersements[i]} : indiquez la date limite '
+              '(jj/mm/aaaa).',
+            );
+          }
+          echeance = AutoSaveDateField.iso(d);
+        }
+        versements.add((libellesVersements[i], m, echeance));
+      }
+      await ref.read(financesRepositoryProvider).enregistrerFrais({
         if (!_nouveau) 'id': widget.id,
         'school_id': ecole.id,
         'school_year_id': annee.id,
@@ -168,9 +267,7 @@ class _LigneFraisState extends ConsumerState<LigneFraisPage> {
         'label': _libelle.text.trim(),
         'level_code': _classe == null ? _niveau : null,
         'class_id': _classe,
-        'billing_period': 'unique',
-        'amount': montant,
-      });
+      }, versements);
       return true;
     });
     if ((ok ?? false) && mounted) context.pop();
@@ -182,18 +279,26 @@ class _LigneFraisState extends ConsumerState<LigneFraisPage> {
     if (c == null) return _chargement('Frais');
     final (ecole, annee) = c;
     final grille = ref.watch(grilleProvider(annee.id)).value;
-    if (grille == null) return _chargement('Frais');
+    final toutes = ref.watch(tranchesProvider).value;
+    final rubriques = ref.watch(rubriquesProvider(ecole.id)).value;
+    if (grille == null || toutes == null || rubriques == null) {
+      return _chargement('Frais');
+    }
     final f = grille.where((x) => x.id == widget.id).firstOrNull;
-    _charger(f);
+    _charger(f, [
+      for (final t in toutes)
+        if (t.feeItemId == widget.id) t,
+    ]);
+    final noms = nomsRubriques(rubriques);
+    final options = {
+      for (final r in rubriques) r.code: r.label,
+      // Rubrique d'un frais existant, retirée depuis : reste affichée.
+      if (!noms.containsKey(_rubrique) || _rubrique == rubriqueAutre)
+        _rubrique: libelleRubrique(_rubrique, noms),
+    };
     final niveaux = ref.watch(levelsProvider).value ?? const <LevelRow>[];
     final classes =
         ref.watch(classesProvider(annee.id)).value ?? const <ClassRow>[];
-    final tranches = [
-      for (final t
-          in ref.watch(tranchesProvider).value ?? const <FeeInstallmentRow>[])
-        if (t.feeItemId == widget.id) t,
-    ];
-    final totalTranches = tranches.fold<int>(0, (s, t) => s + t.amount);
     final repo = ref.read(financesRepositoryProvider);
     return EcoleScaffold(
       title: _nouveau ? 'Nouveau frais' : 'Frais : ${f?.label ?? ''}',
@@ -203,14 +308,19 @@ class _LigneFraisState extends ConsumerState<LigneFraisPage> {
           ChoiceField(
             label: 'Rubrique',
             value: _rubrique,
-            options: rubriques,
+            options: options,
             onChanged: (v) => setState(() {
-              final ancien = rubriques[_rubrique];
-              _rubrique = v ?? 'scolarite';
-              if (_libelle.text == ancien) {
-                _libelle.text = rubriques[_rubrique]!;
+              final ancien = libelleRubrique(_rubrique, noms);
+              _rubrique = v ?? _rubrique;
+              if (_libelle.text == ancien || _libelle.text.isEmpty) {
+                _libelle.text = libelleRubrique(_rubrique, noms);
               }
             }),
+          ),
+          TextButton.icon(
+            icon: const Icon(Icons.label_outline),
+            label: const Text('Ajouter ou retirer une rubrique'),
+            onPressed: () => context.push('/finances/rubriques'),
           ),
           TextField(
             key: const Key('libelle-frais'),
@@ -220,11 +330,60 @@ class _LigneFraisState extends ConsumerState<LigneFraisPage> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 12),
-          ChampMontant(
-            key: const Key('montant-frais'),
-            controller: _montant,
-            label: 'Montant pour l’année (FCFA)',
+          const SectionTitle('Versements'),
+          for (final (i, v) in _versements.indexed) ...[
+            Text(
+              libellesVersements[i],
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: ChampMontant(
+                    key: Key('montant-versement-${i + 1}'),
+                    controller: v.montant,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: i == 0 && v.aLInscription
+                      ? const Padding(
+                          padding: EdgeInsets.only(top: 14),
+                          child: Text('À l’inscription'),
+                        )
+                      : TextField(
+                          key: Key('date-versement-${i + 1}'),
+                          controller: v.date,
+                          keyboardType: TextInputType.datetime,
+                          decoration: const InputDecoration(
+                            labelText: 'Date limite (jj/mm/aaaa)',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                ),
+              ],
+            ),
+            if (i == 0)
+              CheckboxListTile(
+                key: const Key('versement-inscription'),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: const Text('Payé à l’inscription'),
+                value: v.aLInscription,
+                onChanged: (x) => setState(() => v.aLInscription = x ?? false),
+              ),
+            const SizedBox(height: 10),
+          ],
+          Text(
+            'Total pour l’année : ${fcfa(_total)}',
+            key: const Key('total-frais'),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const Text(
+            'Laissez vide un versement inutile (par exemple : un seul '
+            'versement à l’inscription).',
           ),
           const SizedBox(height: 12),
           const Text('Pour qui ?'),
@@ -273,35 +432,6 @@ class _LigneFraisState extends ConsumerState<LigneFraisPage> {
             onPressed: () => _enregistrer(ecole, annee),
           ),
           if (!_nouveau && f != null) ...[
-            const SectionTitle('Échéancier (tranches)'),
-            Text(
-              tranches.isEmpty
-                  ? 'Sans tranche : tout est dû dès maintenant.'
-                  : 'Total des tranches : ${fcfa(totalTranches)}'
-                        '${totalTranches == f.amount ? '' : ' ⚠ différent du '
-                                  'montant ${fcfa(f.amount)}'}',
-            ),
-            for (final t in tranches)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text('${t.label} • ${fcfa(t.amount)}'),
-                subtitle: Text(
-                  t.dueOn == null
-                      ? 'Sans date'
-                      : 'Avant le ${dateCourte(t.dueOn!)}',
-                ),
-                trailing: IconButton(
-                  tooltip: 'Retirer la tranche',
-                  icon: const Icon(Icons.close),
-                  onPressed: () => repo.retirerTranche(t.id),
-                ),
-              ),
-            OutlinedButton.icon(
-              key: const Key('ajouter-tranche'),
-              icon: const Icon(Icons.add),
-              label: const Text('Ajouter une tranche'),
-              onPressed: () => _ajouterTranche(context, f, tranches.length),
-            ),
             const SizedBox(height: 24),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
@@ -327,70 +457,151 @@ class _LigneFraisState extends ConsumerState<LigneFraisPage> {
       ),
     );
   }
+}
 
-  Future<void> _ajouterTranche(
-    BuildContext context,
-    FeeItemRow f,
-    int deja,
-  ) async {
-    final libelle = TextEditingController(text: 'Tranche ${deja + 1}');
-    final montant = TextEditingController();
-    final date = TextEditingController();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Nouvelle tranche'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: libelle,
-              decoration: const InputDecoration(labelText: 'Libellé'),
-            ),
-            ChampMontant(
-              key: const Key('montant-tranche'),
-              controller: montant,
-            ),
-            TextField(
-              key: const Key('date-tranche'),
-              controller: date,
-              keyboardType: TextInputType.datetime,
-              decoration: const InputDecoration(
-                labelText: 'À payer avant le (jj/mm/aaaa)',
+/// Rubriques de l'école (A22) : ajouter, renommer, retirer.
+class RubriquesPage extends ConsumerStatefulWidget {
+  const new({super.key});
+
+  @override
+  ConsumerState<RubriquesPage> createState() => _RubriquesState();
+}
+
+class _RubriquesState extends ConsumerState<RubriquesPage> {
+  @override
+  void initState() {
+    super.initState();
+    final c = ref.read(sessionProvider).value;
+    if (c != null) {
+      unawaited(
+        ref.read(financesRepositoryProvider).assurerRubriques(c.schoolId),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final session = ref.watch(sessionProvider).value;
+    if (session == null) return _chargement('Rubriques');
+    final rubriques =
+        ref.watch(rubriquesProvider(session.schoolId)).value ?? const [];
+    final repo = ref.read(financesRepositoryProvider);
+    return EcoleScaffold(
+      title: 'Rubriques des frais',
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text(
+            'Les rubriques servent à classer les frais et les recettes '
+            '(reçus, rapports). « Autre » est toujours disponible.',
+          ),
+          const SizedBox(height: 8),
+          for (final r in rubriques)
+            Card(
+              child: ListTile(
+                key: Key('rubrique-${r.code}'),
+                title: Text(r.label),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Renommer',
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () async {
+                        final t = await demanderNom(
+                          context,
+                          titre: 'Renommer la rubrique',
+                          initial: r.label,
+                        );
+                        if (t != null && context.mounted) {
+                          await avecMessage(
+                            context,
+                            () => repo.renommerRubrique(r.id, t),
+                          );
+                        }
+                      },
+                    ),
+                    IconButton(
+                      key: Key('retirer-rubrique-${r.code}'),
+                      tooltip: 'Retirer',
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () async {
+                        final ok = await confirmer(
+                          context,
+                          titre: 'Retirer « ${r.label} » ?',
+                          message:
+                              'Elle ne sera plus proposée. Les reçus déjà '
+                              'faits gardent leur rubrique.',
+                          bouton: 'Retirer',
+                        );
+                        if (ok && context.mounted) {
+                          await avecMessage(
+                            context,
+                            () => repo.retirerRubrique(r),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Ajouter'),
+          const SizedBox(height: 12),
+          BigButton(
+            icon: Icons.add,
+            label: 'Ajouter une rubrique',
+            onPressed: () async {
+              final t = await demanderNom(
+                context,
+                titre: 'Nouvelle rubrique',
+                initial: '',
+              );
+              if (t != null && context.mounted) {
+                await avecMessage(
+                  context,
+                  () => repo.ajouterRubrique(session.schoolId, t),
+                );
+              }
+            },
           ),
         ],
       ),
     );
-    if (!(ok ?? false) || !context.mounted) return;
-    await avecMessage(context, () async {
-      final m = lireMontant(montant.text);
-      if (m == null) throw manque('le montant de la tranche');
-      final lue = _lireDate(date.text);
-      if (date.text.trim().isNotEmpty && lue == null) {
-        throw const UserMessage('Date à écrire jj/mm/aaaa.');
-      }
-      final d = lue == null ? null : AutoSaveDateField.iso(lue);
-      await ref.read(financesRepositoryProvider).enregistrerTranche({
-        'school_id': f.schoolId,
-        'fee_item_id': f.id,
-        'label': libelle.text.trim().isEmpty ? 'Tranche' : libelle.text.trim(),
-        'amount': m,
-        'due_on': d,
-      });
-    });
   }
+}
+
+/// Demande un nom (rubrique).
+Future<String?> demanderNom(
+  BuildContext context, {
+  required String titre,
+  required String initial,
+}) {
+  final c = TextEditingController(text: initial);
+  return showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(titre),
+      content: TextField(
+        key: const Key('nom-rubrique'),
+        controller: c,
+        autofocus: true,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: const InputDecoration(
+          labelText: 'Nom (ex. Frais d’examen)',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, c.text.trim()),
+          child: const Text('Valider'),
+        ),
+      ],
+    ),
+  );
 }
 
 DateTime? _lireDate(String t) {
@@ -432,7 +643,9 @@ class RemisesPage extends ConsumerWidget {
             Card(
               child: ListTile(
                 title: Text(r.label),
-                subtitle: Text(texteRemise(r)),
+                subtitle: Text(
+                  texteRemise(r, ref.watch(nomsRubriquesProvider)),
+                ),
                 trailing: IconButton(
                   tooltip: 'Retirer',
                   icon: const Icon(Icons.delete_outline),
@@ -456,6 +669,11 @@ class RemisesPage extends ConsumerWidget {
     WidgetRef ref,
     String schoolId,
   ) async {
+    final noms = {
+      for (final r in await ref.read(rubriquesProvider(schoolId).future))
+        r.code: r.label,
+    };
+    if (!context.mounted) return;
     final libelle = TextEditingController(text: 'Fratrie');
     final valeur = TextEditingController();
     var kind = 'pourcentage';
@@ -494,7 +712,7 @@ class RemisesPage extends ConsumerWidget {
                 ChoiceField(
                   label: 'Sur',
                   value: rubrique ?? 'tout',
-                  options: const {'tout': 'Tous les frais', ...rubriques},
+                  options: {'tout': 'Tous les frais', ...noms},
                   onChanged: (v) =>
                       setState(() => rubrique = v == 'tout' ? null : v),
                 ),
@@ -892,6 +1110,7 @@ class _CaisseState extends ConsumerState<CaissePage> {
     };
     final tout = journalCaisse(
       paiements: paiements,
+      rubriques: ref.read(nomsRubriquesProvider),
       depenses: depenses,
       nomEleve: (id) => noms[id] ?? '',
     );
@@ -1041,7 +1260,7 @@ class _RapportsState extends ConsumerState<RapportsFinancesPage> {
     bool dans(String d) => _mois == null || d.startsWith(_mois!);
     final recettes = <String, (int, int)>{};
     for (final x in paiements.where((x) => dans(x.paidAt))) {
-      final k = libelleRubrique(x.rubric);
+      final k = libelleRubrique(x.rubric, ref.read(nomsRubriquesProvider));
       final (e, a) = recettes[k] ?? (0, 0);
       recettes[k] = x.amount >= 0 ? (e + x.amount, a) : (e, a + x.amount);
     }
@@ -1061,6 +1280,7 @@ class _RapportsState extends ConsumerState<RapportsFinancesPage> {
     }
     final journal = journalCaisse(
       paiements: paiements,
+      rubriques: ref.read(nomsRubriquesProvider),
       depenses: depenses,
       nomEleve: (_) => '',
     );
@@ -1123,6 +1343,7 @@ class _RapportsState extends ConsumerState<RapportsFinancesPage> {
     };
     final journal = journalCaisse(
       paiements: paiements,
+      rubriques: ref.read(nomsRubriquesProvider),
       depenses: depenses,
       nomEleve: (id) => noms[id] ?? '',
       mois: _mois,

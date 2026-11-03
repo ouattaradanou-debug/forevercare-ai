@@ -22,20 +22,53 @@ void main() {
     await h.login(tester, 'directeur@ecole-test.local');
     h.online = false;
 
-    // Grille : scolarité du CM1, une tranche déjà échue.
+    // Grille (A22) : scolarité du CM1 en trois versements ; le 1er à
+    // l'inscription (donc déjà dû), les deux autres plus tard.
     await ouvrirFinances(tester);
     await tap(tester, find.text('Grille des frais'));
     await tap(tester, find.text('Ajouter un frais'));
-    await tester.enterText(find.byKey(const Key('montant-frais')), '25000');
+    await tester.enterText(
+      find.byKey(const Key('montant-versement-1')),
+      '10000',
+    );
+    await tester.enterText(
+      find.byKey(const Key('montant-versement-2')),
+      '8000',
+    );
+    await tester.enterText(
+      find.byKey(const Key('date-versement-2')),
+      '15/01/2099',
+    );
+    await tester.enterText(
+      find.byKey(const Key('montant-versement-3')),
+      '7000',
+    );
+    await AppHarness.settle(tester);
+    expect(find.text('Total pour l’année : ${fcfa(25000)}'), findsOneWidget);
     await tap(tester, find.widgetWithText(ChoiceChip, 'CM1'));
+    // Date limite du 3e versement oubliée : message clair.
+    await tap(tester, find.text('Enregistrer'));
+    expect(
+      find.textContaining('3e versement : indiquez la date limite'),
+      findsOne,
+    );
+    await AppHarness.settle(tester);
+    await tester.enterText(
+      find.byKey(const Key('date-versement-3')),
+      '15/04/2099',
+    );
     await tap(tester, find.text('Enregistrer'));
     expect(find.text('Scolarité • ${fcfa(25000)}'), findsOneWidget);
-    await tap(tester, find.text('Scolarité • ${fcfa(25000)}'));
-    await tap(tester, find.byKey(const Key('ajouter-tranche')));
-    await tester.enterText(find.byKey(const Key('montant-tranche')), '10000');
-    await tester.enterText(find.byKey(const Key('date-tranche')), '01/10/2025');
-    await tap(tester, find.widgetWithText(FilledButton, 'Ajouter'));
-    expect(find.textContaining('Tranche 1 • ${fcfa(10000)}'), findsOneWidget);
+    expect(find.textContaining('3 versements'), findsOneWidget);
+    final tr = await h.db.select(h.db.feeInstallments).get();
+    expect(
+      [for (final t in tr) (t.label, t.amount, t.dueOn)],
+      [
+        ('1er versement', 10000, null),
+        ('2e versement', 8000, '2099-01-15'),
+        ('3e versement', 7000, '2099-04-15'),
+      ],
+    );
     await accueil(tester);
 
     // Encaissement : 10 000 pour TEST Aïcha (CM1 A).
@@ -163,6 +196,73 @@ void main() {
     expect(find.text('Finances'), findsNothing);
     await voir(tester, find.text('Bibliothèque'));
     expect(find.text('Finances'), findsNothing);
+    await h.dispose(tester);
+  });
+
+  testWidgets('A22 : rubriques proposées (dont Carte scolaire et '
+      'Assurance), ajout, retrait ; une rubrique utilisée ne se retire pas', (
+    tester,
+  ) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await ouvrirFinances(tester);
+    await tap(tester, find.text('Grille des frais'));
+    await tap(tester, find.byKey(const Key('gerer-rubriques')));
+    for (final r in [
+      'Inscription',
+      'Scolarité',
+      'Cotisation',
+      'Fournitures',
+      'Carte scolaire',
+      'Assurance',
+    ]) {
+      expect(find.text(r), findsOneWidget, reason: r);
+    }
+
+    // Nouvelle rubrique.
+    await tap(tester, find.text('Ajouter une rubrique'));
+    await tester.enterText(
+      find.byKey(const Key('nom-rubrique')),
+      'Frais d’examen',
+    );
+    await tap(tester, find.widgetWithText(FilledButton, 'Valider'));
+    expect(find.text('Frais d’examen'), findsOneWidget);
+
+    // Retrait d'une rubrique inutilisée.
+    await tap(tester, find.byKey(const Key('retirer-rubrique-assurance')));
+    await tap(tester, find.widgetWithText(FilledButton, 'Retirer'));
+    expect(find.text('Assurance'), findsNothing);
+    await retour(tester);
+
+    // Un frais dans la nouvelle rubrique.
+    await tap(tester, find.text('Ajouter un frais'));
+    await tap(tester, find.widgetWithText(ChoiceChip, 'Frais d’examen'));
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('libelle-frais')))
+          .controller!
+          .text,
+      'Frais d’examen',
+    );
+    await tester.enterText(
+      find.byKey(const Key('montant-versement-1')),
+      '2000',
+    );
+    await tap(tester, find.text('Enregistrer'));
+    expect(find.text('Frais d’examen • ${fcfa(2000)}'), findsOneWidget);
+
+    // Elle est utilisée : retrait refusé, avec un message clair.
+    await tap(tester, find.byKey(const Key('gerer-rubriques')));
+    await tap(tester, find.byKey(const Key('retirer-rubrique-frais_d_examen')));
+    await tap(tester, find.widgetWithText(FilledButton, 'Retirer'));
+    expect(find.textContaining('est utilisée par 1 frais'), findsOneWidget);
+    expect(find.text('Frais d’examen'), findsOneWidget);
+    final rubriques = await h.db.select(h.db.feeRubrics).get();
+    expect(
+      rubriques.where((r) => r.deletedAt == null).map((r) => r.code),
+      containsAll(['carte_scolaire', 'frais_d_examen']),
+    );
     await h.dispose(tester);
   });
 }
