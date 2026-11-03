@@ -859,6 +859,8 @@ CREATE TABLE fee_items (
   class_id TEXT,
   billing_period TEXT NOT NULL DEFAULT 'unique',
   amount INTEGER NOT NULL,
+  -- A23 : « integral » (en une fois) ou « partiel » (acomptes autorisés).
+  payment_terms TEXT NOT NULL DEFAULT 'partiel',
   created_at TEXT,
   updated_at TEXT NOT NULL,
   deleted_at TEXT,
@@ -871,6 +873,8 @@ CREATE TABLE fee_installments (
   fee_item_id TEXT NOT NULL,
   label TEXT NOT NULL,
   due_on TEXT,
+  -- A23 : début de la période de paiement (facultatif).
+  starts_on TEXT,
   amount INTEGER NOT NULL,
   created_at TEXT,
   updated_at TEXT NOT NULL,
@@ -915,6 +919,9 @@ CREATE TABLE payments (
   method TEXT NOT NULL,
   reference TEXT,
   payer_name TEXT,
+  payer_phone TEXT,
+  -- A23 : mode « autre » précisé (texte libre).
+  method_label TEXT,
   paid_at TEXT NOT NULL,
   received_by TEXT,
   device_id TEXT NOT NULL,
@@ -978,3 +985,34 @@ CREATE TABLE fee_rubrics (
   deleted_at TEXT,
   synced_at TEXT
 ) AS FeeRubricRow;
+
+-- A23 : détail d'un reçu (une ligne par rubrique ou versement réglé) ;
+-- libellé et rubrique figés au moment de l'encaissement. Ajout seul.
+CREATE TABLE payment_allocations (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  payment_id TEXT NOT NULL,
+  fee_item_id TEXT,
+  installment_id TEXT,
+  rubric TEXT,
+  label TEXT,
+  amount INTEGER NOT NULL,
+  created_at TEXT,
+  updated_at TEXT NOT NULL DEFAULT '',
+  synced_at TEXT
+) AS PaymentAllocationRow;
+
+CREATE INDEX payment_allocations_payment ON payment_allocations (payment_id);
+
+-- A23 : observations du récapitulatif des frais (par classe).
+CREATE TABLE fee_notes (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  class_id TEXT,
+  notes TEXT,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS FeeNoteRow;

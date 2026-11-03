@@ -21,6 +21,7 @@ FeeItemRow ligne(
   classId: classe,
   billingPeriod: 'unique',
   amount: montant,
+  paymentTerms: 'partiel',
   updatedAt: _t,
 );
 

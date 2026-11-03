@@ -154,8 +154,13 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
     info: db.studentDiscounts,
   ),
   SyncedTable<PaymentRow>(name: 'payments', info: db.payments),
+  SyncedTable<PaymentAllocationRow>(
+    name: 'payment_allocations',
+    info: db.paymentAllocations,
+  ),
   SyncedTable<ExpenseRow>(name: 'expenses', info: db.expenses),
   SyncedTable<CashClosingRow>(name: 'cash_closings', info: db.cashClosings),
+  SyncedTable<FeeNoteRow>(name: 'fee_notes', info: db.feeNotes),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];
