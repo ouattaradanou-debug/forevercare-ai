@@ -122,16 +122,31 @@ final ProviderFamily<List<LigneEleve>?, (String, String)> situationsProvider =
         return null;
       }
       final jour = ref.watch(aujourdhuiProvider);
+      // Ordre de la grille : scolarité d'abord, puis l'ordre des rubriques
+      // de l'école (A23).
+      final ordre = {
+        for (final (i, r)
+            in (ref.watch(rubriquesProvider(schoolId)).value ??
+                    const <FeeRubricRow>[])
+                .indexed)
+          r.code: i,
+      };
+      int rang(FeeItemRow f) =>
+          f.rubric == 'scolarite' ? -1 : ordre[f.rubric] ?? 999;
+      List<FeeItemRow> trier(List<FeeItemRow> l) =>
+          l..sort((a, b) => rang(a).compareTo(rang(b)));
       return [
         for (final e in eleves)
           LigneEleve(
             e,
             situation(
               studentId: e.eleve.id,
-              lignes: fraisApplicables(
-                grille,
-                niveau: e.inscription?.levelCode ?? e.classe?.levelCode,
-                classe: e.classe?.id,
+              lignes: trier(
+                fraisApplicables(
+                  grille,
+                  niveau: e.inscription?.levelCode ?? e.classe?.levelCode,
+                  classe: e.classe?.id,
+                ),
               ),
               tranches: tranches,
               remises: remises,

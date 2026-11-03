@@ -119,3 +119,8 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H110 | Justificatif de dépense : photo (caméra, galerie) ou PDF ; jamais téléchargé automatiquement sur les autres téléphones (à la demande, Internet nécessaire) | Finances | compartiment `finances` |
 | H111 | Grille : jusqu'à trois versements par frais (montant et date limite) ; le 1er « à l'inscription » est dû tout de suite ; la demande du porteur indiquait « à l'inscription » pour les trois (à confirmer) | Finances | `LigneFraisPage`, `enregistrerFrais` |
 | H112 | Rubriques propres à l'école ; une rubrique utilisée par un frais ne se retire pas ; son code ne change jamais (reçus déjà faits) | Finances | `fee_rubrics` |
+| H113 | Modalités d'une rubrique : « En une fois » (le reste dû en entier) ou « Paiement partiel autorisé » (par défaut) | Finances | `fee_items.payment_terms` |
+| H114 | Période d'un versement : « du … au … » (début facultatif) ; la date « au » sert au calcul des retards ; sans période : à l'inscription (dû tout de suite) | Finances | `fee_installments.starts_on`, `due_on` |
+| H115 | Un reçu peut régler plusieurs rubriques ; son détail (libellé, montant) est figé : une modification des frais ne change pas les anciens reçus | Finances | `payment_allocations` |
+| H116 | Mode « Autre » : texte libre (ex. Wave, Coris Money), proposé de nouveau ensuite ; référence et téléphone du payeur facultatifs | Finances | `payments.method_label` |
+| H117 | Rubriques proposées : Scolarité, Cotisation, Assurance, Carte scolaire, Fournitures (« Inscription » n'est plus proposée : le 1er versement de scolarité est payé à l'inscription) | Finances | `rubriquesParDefaut` |

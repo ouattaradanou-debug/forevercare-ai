@@ -5,13 +5,15 @@ import 'package:ecoleplus/core/db/app_database.dart';
 /// Rubriques proposées à chaque école (A22 : l'école peut en ajouter, les
 /// renommer ou les retirer ; la cantine arrive avec la phase 11).
 const rubriquesParDefaut = {
-  'inscription': 'Inscription',
   'scolarite': 'Scolarité',
   'cotisation': 'Cotisation',
-  'fournitures': 'Fournitures',
-  'carte_scolaire': 'Carte scolaire',
   'assurance': 'Assurance',
+  'carte_scolaire': 'Carte scolaire',
+  'fournitures': 'Fournitures',
 };
+
+/// Rubriques des anciennes grilles (toujours lisibles).
+const _anciennesRubriques = {'inscription': 'Inscription'};
 
 /// Rubrique toujours disponible (recette sans élève, don…), jamais retirée.
 const rubriqueAutre = 'autre';
@@ -67,6 +69,7 @@ const categoriesDepenses = {
 String libelleRubrique(String code, [Map<String, String>? noms]) =>
     noms?[code] ??
     rubriquesParDefaut[code] ??
+    _anciennesRubriques[code] ??
     (code == rubriquePlusieurs ? 'Plusieurs rubriques' : null) ??
     (code == rubriqueAutre ? 'Autre' : code.replaceAll('_', ' '));
 String libelleMode(String code, [String? precise]) =>

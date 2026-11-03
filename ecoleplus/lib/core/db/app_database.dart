@@ -181,11 +181,15 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(feeRubrics);
       }
       if (from < 14) {
-        // A23 : reçu détaillé, modalités, périodes, modes libres.
-        await m.addColumn(feeItems, feeItems.paymentTerms);
-        await m.addColumn(feeInstallments, feeInstallments.startsOn);
-        await m.addColumn(payments, payments.payerPhone);
-        await m.addColumn(payments, payments.methodLabel);
+        // A23 : reçu détaillé, modalités, périodes, modes libres. Les
+        // tables des finances créées juste au-dessus (téléphone venant
+        // d'avant la v12) ont déjà ces colonnes.
+        if (from >= 12) {
+          await m.addColumn(feeItems, feeItems.paymentTerms);
+          await m.addColumn(feeInstallments, feeInstallments.startsOn);
+          await m.addColumn(payments, payments.payerPhone);
+          await m.addColumn(payments, payments.methodLabel);
+        }
         await m.createTable(paymentAllocations);
         await m.createIndex(paymentAllocationsPayment);
         await m.createTable(feeNotes);

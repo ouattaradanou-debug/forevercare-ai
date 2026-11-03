@@ -10,42 +10,50 @@ Comptes (mot de passe `motdepasse-test`) :
 **Données fictives uniquement.** Montants en FCFA. ✅ = ce que vous devez
 constater.
 
-## 1. Grille des frais (directeur)
-1. Accueil → **« Finances »** → « Grille des frais » → « Rubriques (ajouter,
-   renommer, retirer) ». ✅ Inscription, Scolarité, Cotisation, Fournitures,
-   **Carte scolaire**, **Assurance**. Ajoutez « Frais d'examen » ; retirez
-   une rubrique inutile. Retour.
-2. « Ajouter un frais » : rubrique « Scolarité », niveau **CM1**,
-   **1er versement** 10 000 « payé à l'inscription », **2e versement**
-   8 000 avant le 15/01/2027, **3e versement** 7 000 avant le 15/04/2027.
-   ✅ « Total pour l'année : 25 000 FCFA » ; sans date limite pour le 2e ou
-   le 3e : message clair. « Enregistrer ». ✅ « Scolarité • 25 000 FCFA •
-   … • 3 versements ».
-3. Retirer une rubrique **utilisée** par un frais. ✅ Refusé : « … est
-   utilisée par 1 frais de la grille ».
-4. Ajoutez « Inscription », 5 000, un seul versement à l'inscription,
-   « Tous les niveaux ».
-5. (Facultatif) Tarif ajusté : « Scolarité », 30 000, **classe CM1 B**. ✅ Les
-   élèves de CM1 B doivent 30 000, ceux de CM1 A 25 000.
-6. « Remises » → « Nouvelle remise » : « Fratrie », 10 %, sur
-   « Scolarité ». Puis « Situation des élèves » → un élève → touchez
-   « Fratrie ». ✅ Son dû baisse de 2 500.
+## 1. Grille des frais (directeur) — une seule grille (A23)
+1. Accueil → **« Finances »** → « Grille des frais ». En haut, cochez
+   **CM1 A** et **CE1 A** (ou « Toutes »).
+2. **Scolarité** : 1er versement 10 000 « À l'inscription » ; 2e versement
+   8 000 du 01/12/2026 au 15/01/2027 ; 3e versement 7 000 au 15/04/2027.
+   ✅ « Scolarité » affiche **25 000 FCFA**, calculé (non modifiable).
+3. **Assurance** 1 500 « En une fois » ; **Carte scolaire** 500.
+   ✅ Totaux : scolarité 25 000 ; autres 2 000 ; **total par élève
+   27 000** — mis à jour à chaque chiffre tapé.
+4. Observations : « Tenue obligatoire. » → « Enregistrer pour les 2
+   classes ». ✅ Message ; sans date limite pour le 2e ou le 3e versement :
+   message clair.
+5. Décochez tout, cochez **CE1 A** seule : Assurance 2 000 → « Enregistrer ».
+   Cochez CM1 A seule. ✅ Assurance toujours 1 500 (chaque classe garde son
+   paramétrage).
+6. « + Ajouter une rubrique » (ex. « Frais d'examen », 2 000) ; « Supprimer
+   une rubrique » (classes cochées ou toute l'école). ✅ Avertissement si des
+   reçus existent déjà : ils restent valables.
+7. Cochez les deux classes → « **Imprimer le récapitulatif** » ou
+   « **Partager sur WhatsApp** » → « un document regroupant » ou « un
+   document par classe ». ✅ Logo et nom de l'école, année, classe, tableau
+   des rubriques et des trois versements avec leurs périodes, total à payer,
+   observations.
+8. « Remises » → « Fratrie », 10 % sur « Scolarité » ; « Situation des
+   élèves » → un élève → « Fratrie ». ✅ Son dû baisse de 2 500.
 
-## 2. Encaisser sans Internet (critère du GO)
-1. Mode avion. « Encaisser » → TEST Aïcha → « Scolarité (reste …) » →
-   10 000 → Espèces → « Encaisser et faire le reçu ».
-   ✅ Numéro **définitif** affiché tout de suite (ex. « R2526-C-00001 » :
-   la lettre est celle de votre téléphone) ; « Pas encore envoyé ».
-2. « Partager le reçu (WhatsApp…) ». ✅ Reçu PDF A5 : école, numéro, date,
-   élève et classe, objet, montant en chiffres **et en lettres**, mode,
-   « Reste à payer », cadre « Cachet et signature ».
-3. Mobile Money : sans référence. ✅ Refusé : « Indiquez la référence du
-   paiement (Orange Money) ».
-4. **Deuxième téléphone** (secrétaire), aussi en mode avion : encaissez
-   deux paiements. ✅ Ses numéros ont une autre lettre.
-5. Réseau rétabli sur les deux, « Synchroniser » sur chacun.
-   ✅ « Reçus » : tous les reçus des deux téléphones, chacun une seule fois,
-   aucun numéro en double.
+## 2. Encaisser en un tableau (critère du GO)
+1. Mode avion. « Encaisser » → classe **CM1 A** → tapez « aïc » → TEST
+   Aïcha. ✅ Nom, classe, **total des frais, déjà payé, reste à payer**.
+2. Tableau : cochez **1er versement** (✅ 10 000 proposé), **2e versement**
+   (tapez 3 000 ; essayez 9 000 : ✅ « Max 8 000 FCFA »), **Assurance**
+   (✅ 1 500, non modifiable : « En une fois »).
+3. Mode « Autre » → « Wave » ; payeur ; téléphone (facultatif) →
+   « Encaisser 14 500 FCFA ». ✅ Récapitulatif (élève, classe, rubriques,
+   montants, total, mode, payeur, date) → « **VALIDER L'ENCAISSEMENT** ».
+4. ✅ Reçu **R2526-…** tout de suite (numéro définitif sans Internet) :
+   « Partager par WhatsApp », « Imprimer », « **Télécharger en PDF** ».
+   Le PDF détaille les rubriques réglées, le total, le mode, le payeur et
+   le **reste à payer (12 000)**.
+5. Encaisser de nouveau pour TEST Aïcha. ✅ Assurance « **Payé** » (non
+   cochable) ; 2e versement « **Partiel** », reste 5 000 ; 3e « **Impayé** ».
+6. **Deuxième téléphone** (secrétaire), aussi en mode avion : encaissez
+   pour un autre élève. ✅ Numéros d'une autre lettre. Réseau rétabli,
+   « Synchroniser » sur les deux : ✅ tous les reçus, une seule fois chacun.
 
 ## 3. Un reçu ne se modifie jamais (critère du GO)
 1. Ouvrez un reçu. ✅ Aucun champ modifiable, aucun bouton « Supprimer ».

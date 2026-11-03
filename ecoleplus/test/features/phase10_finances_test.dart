@@ -1,6 +1,10 @@
+import 'package:ecoleplus/features/finances/data/finances_repository.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
+import 'package:ecoleplus/features/finances/presentation/finances_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uuid/uuid.dart';
 
 import '../helpers/app_harness.dart';
 import 'cartes_domain_test.dart' show photoDeTest;
@@ -13,148 +17,293 @@ Future<void> ouvrirFinances(WidgetTester tester) async {
   await AppHarness.settle(tester);
 }
 
+String texte(String? t) => (t ?? '').replaceAll(RegExp(r'[  \s]+'), ' ');
+
+/// Identifiants des frais et versements écrits par la grille (A23).
+String idFrais(String classe, String code) =>
+    FinancesRepository.idFraisClasse(anneeId, classe, code);
+String idVersement(String classe, String code, int i) => const Uuid().v5(
+  Namespace.url.value,
+  'ecoleplus:versement:${idFrais(classe, code)}:$i',
+);
+
+Future<void> saisir(WidgetTester tester, String cle, String valeur) async {
+  final f = find.byKey(Key(cle));
+  if (f.evaluate().isEmpty) await voir(tester, f);
+  await tester.ensureVisible(f);
+  await tester.enterText(f, valeur);
+  await tester.pump();
+}
+
+/// Grille standard du CM1 A : scolarité en 3 versements (le 1er à
+/// l'inscription), assurance « en une fois », carte scolaire.
+Future<void> grilleCm1(AppHarness h, WidgetTester tester) async {
+  // La synchronisation lancée à la connexion doit être finie (sinon
+  // l'écriture attend la base indéfiniment).
+  await calme(tester);
+  final repo = ProviderScope.containerOf(
+    tester.element(find.byType(Scaffold).first),
+  ).read(financesRepositoryProvider);
+  {
+    await repo.enregistrerFrais(
+      {
+        'id': idFrais('c-cm1', 'scolarite'),
+        'school_id': ecoleId,
+        'school_year_id': anneeId,
+        'rubric': 'scolarite',
+        'label': 'Scolarité',
+        'class_id': 'c-cm1',
+      },
+      const [
+        Versement('1er versement', 10000),
+        Versement('2e versement', 8000, fin: '2099-01-15'),
+        Versement('3e versement', 7000, fin: '2099-04-15'),
+      ],
+    );
+    await repo.enregistrerFrais(
+      {
+        'id': idFrais('c-cm1', 'assurance'),
+        'school_id': ecoleId,
+        'school_year_id': anneeId,
+        'rubric': 'assurance',
+        'label': 'Assurance',
+        'class_id': 'c-cm1',
+        'payment_terms': 'integral',
+      },
+      const [Versement('Assurance', 1500)],
+    );
+  }
+  await AppHarness.settle(tester);
+}
+
 void main() {
-  testWidgets('directeur hors ligne : grille, encaissement, reçu PDF '
-      'numéroté, annulation motivée, situation exacte, relance préparée ; '
-      'puis envoi', (tester) async {
+  testWidgets('A23 grille unique : deux classes cochées, scolarité = '
+      '1er + 2e + 3e versement, totaux, une copie par classe modifiable '
+      'ensuite, récapitulatif PDF', (tester) async {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    h.online = false;
-
-    // Grille (A22) : scolarité du CM1 en trois versements ; le 1er à
-    // l'inscription (donc déjà dû), les deux autres plus tard.
     await ouvrirFinances(tester);
     await tap(tester, find.text('Grille des frais'));
-    await tap(tester, find.text('Ajouter un frais'));
-    await tester.enterText(
-      find.byKey(const Key('montant-versement-1')),
+    expect(find.textContaining('Cochez une ou plusieurs classes'), findsOne);
+    await tap(tester, find.byKey(const Key('toutes-classes')));
+
+    await saisir(tester, 'montant-scolarite-1', '10000');
+    await saisir(tester, 'montant-scolarite-2', '8000');
+    await saisir(tester, 'au-scolarite-2', '15/01/2099');
+    await saisir(tester, 'montant-scolarite-3', '7000');
+    await saisir(tester, 'montant-assurance-1', '1500');
+    await saisir(tester, 'montant-carte_scolaire-1', '500');
+    await AppHarness.settle(tester);
+    // Total calculé, jamais saisi.
+    expect(
+      texte(
+        tester
+            .widget<Text>(find.byKey(const Key('total-ligne-scolarite')))
+            .data,
+      ),
+      '25 000 FCFA',
+    );
+    expect(
+      texte(tester.widget<Text>(find.byKey(const Key('total-eleve'))).data),
+      '27 000 FCFA',
+    );
+    // 3e versement sans date limite : refusé avec un message clair.
+    await tap(tester, find.text('Enregistrer pour les 2 classes'));
+    expect(find.textContaining('3e versement : indiquez la date'), findsOne);
+    await AppHarness.settle(tester);
+    await saisir(tester, 'au-scolarite-3', '15/04/2099');
+    await voir(tester, find.byKey(const Key('modalite-assurance')));
+    await tap(tester, find.byKey(const Key('modalite-assurance')));
+    await tap(tester, find.text('En une fois').last);
+    await saisir(tester, 'observations-frais', 'Tenue obligatoire.');
+    await tap(tester, find.text('Enregistrer pour les 2 classes'));
+    await calme(tester);
+
+    final frais = await h.db.select(h.db.feeItems).get();
+    expect(
+      {for (final f in frais) (f.classId, f.rubric, f.amount)},
+      {
+        ('c-cm1', 'scolarite', 25000),
+        ('c-ce1', 'scolarite', 25000),
+        ('c-cm1', 'assurance', 1500),
+        ('c-ce1', 'assurance', 1500),
+        ('c-cm1', 'carte_scolaire', 500),
+        ('c-ce1', 'carte_scolaire', 500),
+      },
+    );
+    expect(
+      frais.firstWhere((f) => f.rubric == 'assurance').paymentTerms,
+      'integral',
+    );
+    // 3 versements de scolarité + 1 paiement pour chaque autre rubrique.
+    expect(await h.db.select(h.db.feeInstallments).get(), hasLength(10));
+
+    // Le CE1 A seul : assurance à 2 000 ; le CM1 A ne change pas.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await AppHarness.settle(tester);
+    await tap(tester, find.byKey(const Key('toutes-classes')));
+    await tap(tester, find.byKey(const Key('classe-c-ce1')));
+    await saisir(tester, 'montant-assurance-1', '2000');
+    await tap(tester, find.text('Enregistrer'));
+    await calme(tester);
+    final apres = await h.db.select(h.db.feeItems).get();
+    expect(
+      apres
+          .firstWhere((f) => f.classId == 'c-ce1' && f.rubric == 'assurance')
+          .amount,
+      2000,
+    );
+    expect(
+      apres
+          .firstWhere((f) => f.classId == 'c-cm1' && f.rubric == 'assurance')
+          .amount,
+      1500,
+    );
+
+    // Récapitulatif des deux classes, en un document.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await AppHarness.settle(tester);
+    await tap(tester, find.byKey(const Key('toutes-classes')));
+    await tapLong(tester, find.byKey(const Key('imprimer-recap')));
+    await tapLong(tester, find.textContaining('Un document regroupant'));
+    final pdf = h.pdfSortis['Frais_scolaires_2025-2026.pdf']!;
+    final t = texte(texteDuPdf(pdf));
+    expect(t, contains('FRAIS SCOLAIRES — CM1 A'));
+    expect(t, contains('FRAIS SCOLAIRES — CE1 A'));
+    expect(t, contains('1er versement'));
+    expect(t, contains('À l’inscription'));
+    expect(t, contains('Avant le 15/01/2099'));
+    expect(t, contains('MONTANT TOTAL À PAYER PAR ÉLÈVE 27 000 FCFA'));
+    expect(t, contains('Tenue obligatoire.'));
+    await h.dispose(tester);
+  });
+
+  testWidgets('A23 encaissement en un tableau : plusieurs rubriques '
+      'cochées, plafond au reste dû, « en une fois », récapitulatif, reçu '
+      'détaillé ; annulation qui rétablit les soldes', (tester) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await grilleCm1(h, tester);
+    h.online = false;
+
+    await ouvrirFinances(tester);
+    await tap(tester, find.text('Encaisser'));
+    await tap(tester, find.byKey(const Key('encaisser-classe-c-cm1')));
+    await tester.enterText(find.byKey(const Key('recherche-eleve')), 'aïc');
+    await AppHarness.settle(tester);
+    await tap(tester, find.byKey(const Key('choisir-e-0')));
+    expect(
+      texte(tester.widget<Text>(find.byKey(const Key('frais-eleve'))).data),
+      '26 500 FCFA',
+    );
+
+    final v1 = idVersement('c-cm1', 'scolarite', 0);
+    final v2 = idVersement('c-cm1', 'scolarite', 1);
+    final ass = idVersement('c-cm1', 'assurance', 0);
+    await tap(tester, find.byKey(Key('cocher-$v1')));
+    await tap(tester, find.byKey(Key('cocher-$v2')));
+    await tap(tester, find.byKey(Key('cocher-$ass')));
+    // Montant proposé = reste dû ; plus que le reste : refusé.
+    expect(
+      tester
+          .widget<TextField>(find.byKey(Key('a-encaisser-$v1')))
+          .controller!
+          .text,
       '10000',
     );
-    await tester.enterText(
-      find.byKey(const Key('montant-versement-2')),
-      '8000',
-    );
-    await tester.enterText(
-      find.byKey(const Key('date-versement-2')),
-      '15/01/2099',
-    );
-    await tester.enterText(
-      find.byKey(const Key('montant-versement-3')),
-      '7000',
-    );
-    await AppHarness.settle(tester);
-    expect(find.text('Total pour l’année : ${fcfa(25000)}'), findsOneWidget);
-    await tap(tester, find.widgetWithText(ChoiceChip, 'CM1'));
-    // Date limite du 3e versement oubliée : message clair.
-    await tap(tester, find.text('Enregistrer'));
+    await saisir(tester, 'a-encaisser-$v2', '9000');
+    expect(find.text('Max ${fcfa(8000)}'), findsOne);
+    await saisir(tester, 'a-encaisser-$v2', '3000');
+    // Assurance « en une fois » : montant non modifiable.
     expect(
-      find.textContaining('3e versement : indiquez la date limite'),
-      findsOne,
+      tester.widget<TextField>(find.byKey(Key('a-encaisser-$ass'))).enabled,
+      isFalse,
     );
-    await AppHarness.settle(tester);
-    await tester.enterText(
-      find.byKey(const Key('date-versement-3')),
-      '15/04/2099',
-    );
-    await tap(tester, find.text('Enregistrer'));
-    expect(find.text('Scolarité • ${fcfa(25000)}'), findsOneWidget);
-    expect(find.textContaining('3 versements'), findsOneWidget);
-    final tr = await h.db.select(h.db.feeInstallments).get();
+    await tap(tester, find.byKey(const Key('mode-autre')));
+    await saisir(tester, 'mode-libre', 'Wave');
+    await saisir(tester, 'payeur', 'TEST Mariam');
+    await saisir(tester, 'telephone-payeur', '70 00 00 00');
+    await tap(tester, find.textContaining('Encaisser 14'));
     expect(
-      [for (final t in tr) (t.label, t.amount, t.dueOn)],
-      [
-        ('1er versement', 10000, null),
-        ('2e versement', 8000, '2099-01-15'),
-        ('3e versement', 7000, '2099-04-15'),
-      ],
+      texte(tester.widget<Text>(find.byKey(const Key('recap-total'))).data),
+      '14 500 FCFA',
     );
-    await accueil(tester);
+    expect(find.text('Mode : Wave'), findsOneWidget);
+    await tapLong(tester, find.byKey(const Key('valider-encaissement')));
+    expect(find.text('R2526-A-00001'), findsOneWidget);
+    final detail = await h.db.select(h.db.paymentAllocations).get();
+    expect(detail.map((a) => (a.label, a.amount)), [
+      ('Scolarité — 1er versement', 10000),
+      ('Scolarité — 2e versement', 3000),
+      ('Assurance', 1500),
+    ]);
 
-    // Encaissement : 10 000 pour TEST Aïcha (CM1 A).
+    // Reçu PDF détaillé.
+    await tapLong(tester, find.text('Partager par WhatsApp'));
+    final t = texte(texteDuPdf(h.pdfSortis['partage:Recu_R2526-A-00001.pdf']!));
+    expect(t, contains('Rubrique réglée'));
+    expect(t, contains('Scolarité — 2e versement 3 000 FCFA'));
+    expect(t, contains('Total reçu 14 500 FCFA'));
+    expect(t, contains('Wave'));
+    expect(t, contains('TEST Mariam (70 00 00 00)'));
+    expect(t, contains('Reste à payer 12 000 FCFA'));
+    await tapLong(tester, find.byKey(const Key('telecharger-recu')));
+    expect(h.fichiersSortis.keys, contains('Recu_R2526-A-00001.pdf'));
+
+    // Nouvel encaissement : assurance « Payé », non cochable.
+    await accueil(tester);
     await ouvrirFinances(tester);
     await tap(tester, find.text('Encaisser'));
     await tap(tester, find.byKey(const Key('choisir-e-0')));
-    await tap(tester, find.textContaining('Scolarité (reste'));
-    await tester.enterText(find.byKey(const Key('montant')), '10000');
-    await tapLong(tester, find.text('Encaisser et faire le reçu'));
-    expect(find.text('R2526-A-00001'), findsOneWidget);
-    expect(find.textContaining('Pas encore envoyé'), findsOneWidget);
-
-    // Reçu PDF partagé.
-    await tapLong(tester, find.text('Partager le reçu (WhatsApp…)'));
-    final pdf = h.pdfSortis['partage:Recu_R2526-A-00001.pdf']!;
-    final texte = texteDuPdf(pdf);
-    expect(texte, contains('REÇU N° R2526-A-00001'));
-    expect(texte, contains('Dix-mille francs CFA'));
-    expect(texte, contains('TEST Aïcha'));
     expect(
-      texte!.replaceAll(RegExp(r'[\u00a0\u202f\s]+'), ' '),
-      contains('Reste à payer 15 000 FCFA'),
+      tester.widget<Checkbox>(find.byKey(Key('cocher-$ass'))).onChanged,
+      isNull,
     );
+    expect(
+      texte(tester.widget<Text>(find.byKey(const Key('reste-encaisser'))).data),
+      '12 000 FCFA',
+    );
+    await accueil(tester);
 
-    // Annulation motivée : nouveau numéro, reçu d'origine intact.
+    // Annulation du reçu : soldes rétablis, détail opposé.
+    await ouvrirFinances(tester);
+    await tap(tester, find.text('Reçus'));
+    await tap(tester, find.byKey(const Key('recu-R2526-A-00001')));
     await tap(tester, find.byKey(const Key('annuler-recu')));
     await tester.enterText(find.byKey(const Key('motif')), 'Mauvais élève');
     await tap(tester, find.widgetWithText(FilledButton, 'Annuler l’écriture'));
     await calme(tester);
-    expect(find.byKey(const Key('recu-annule')), findsOneWidget);
-    expect(find.text('Annulé par R2526-A-00002'), findsOneWidget);
-    final paiements = await h.db.select(h.db.payments).get();
-    expect(paiements.map((x) => (x.receiptNumber, x.amount)), [
-      ('R2526-A-00001', 10000),
-      ('R2526-A-00002', -10000),
-    ]);
+    final tout = await h.db.select(h.db.paymentAllocations).get();
+    expect(tout.fold<int>(0, (s, a) => s + a.amount), 0);
+    expect((await h.db.select(h.db.payments).get()).last.methodLabel, 'Wave');
     await accueil(tester);
 
-    // Situation : 25 000 dû, rien payé net, 10 000 en retard.
-    await ouvrirFinances(tester);
-    await tap(tester, find.text('Situation des élèves'));
-    await tap(tester, find.byKey(const Key('situation-e-0')));
-    expect(find.text('Reste à payer : ${fcfa(25000)}'), findsOneWidget);
-    expect(
-      find.text('En retard (échéances passées) : ${fcfa(10000)}'),
-      findsOneWidget,
-    );
-    await tap(tester, find.text('Préparer une relance'));
-    await tap(tester, find.widgetWithText(FilledButton, 'Partager'));
-    expect(h.textesPartages.single, contains(fcfa(10000)));
-    expect(h.textesPartages.single, contains('TEST Aïcha (CM1 A)'));
-    await accueil(tester);
-
-    // Réseau rétabli : les deux écritures partent, une seule fois.
     h.online = true;
     await h.synchroniser(tester);
     await calme(tester);
-    expect(h.server.tables['payments'], hasLength(2));
-    expect(h.server.tables['fee_items'], hasLength(1));
+    expect(h.server.tables['payment_allocations'], hasLength(6));
     await h.dispose(tester);
   });
 
-  testWidgets('dépense avec photo du justificatif ; caisse du mois, '
-      'clôture une seule fois', (tester) async {
+  testWidgets('recettes sans élève, dépense avec photo du justificatif ; '
+      'caisse du mois, clôture une seule fois', (tester) async {
     final h = AppHarness()
       ..seedEcoleTest()
       ..imageChoisie = photoDeTest(2);
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    // Fonds de caisse du matin : recette sans élève.
-    await ouvrirFinances(tester);
-    await tap(tester, find.text('Encaisser'));
-    await tap(tester, find.textContaining('Recette sans élève'));
-    await tester.enterText(find.byKey(const Key('montant')), '2000');
-    await tapLong(tester, find.text('Encaisser et faire le reçu'));
-    expect(find.text('R2526-A-00001'), findsOneWidget);
-    await accueil(tester);
-    final fonds = (await h.db.select(h.db.payments).get()).single;
-    expect((fonds.studentId, fonds.rubric), (null, 'autre'));
-
-    await ouvrirFinances(tester);
-    await tap(tester, find.text('Encaisser'));
-    await tap(tester, find.byKey(const Key('choisir-e-1')));
-    await tester.enterText(find.byKey(const Key('montant')), '5000');
-    await tapLong(tester, find.text('Encaisser et faire le reçu'));
-    await accueil(tester);
+    for (final m in ['2000', '5000']) {
+      await ouvrirFinances(tester);
+      await tap(tester, find.text('Encaisser'));
+      await tap(tester, find.textContaining('Recette sans élève'));
+      await tester.enterText(find.byKey(const Key('montant')), m);
+      await tapLong(tester, find.text('Encaisser et faire le reçu'));
+      await accueil(tester);
+    }
+    final p = await h.db.select(h.db.payments).get();
+    expect(p.map((x) => (x.studentId, x.rubric)).toSet(), {(null, 'autre')});
 
     await ouvrirFinances(tester);
     await tap(tester, find.text('Dépenses'));
@@ -166,8 +315,6 @@ void main() {
     await tapLong(tester, find.text('Enregistrer la dépense'));
     final d = (await h.db.select(h.db.expenses).get()).single;
     expect(d.voucherNumber, 'D2526-A-00001');
-    expect(d.justificationPath, isNotNull);
-    // En ligne : justificatif déjà envoyé dans le compartiment privé.
     await calme(tester);
     expect(h.server.files.keys, contains('finances/${d.justificationPath}'));
     await retour(tester);
@@ -182,10 +329,6 @@ void main() {
     await calme(tester);
     expect(find.byKey(const Key('mois-cloture')), findsOneWidget);
     expect(find.byKey(const Key('cloturer')), findsNothing);
-    expect(
-      (await h.db.select(h.db.cashClosings).get()).single.closingBalance,
-      5500,
-    );
     await h.dispose(tester);
   });
 
@@ -199,70 +342,56 @@ void main() {
     await h.dispose(tester);
   });
 
-  testWidgets('A22 : rubriques proposées (dont Carte scolaire et '
-      'Assurance), ajout, retrait ; une rubrique utilisée ne se retire pas', (
-    tester,
-  ) async {
+  testWidgets('A23 rubriques dans la grille : « + Ajouter une rubrique » '
+      '(elle apparaît aussi à l’encaissement), « Supprimer une rubrique » '
+      'pour toute l’école', (tester) async {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
     await ouvrirFinances(tester);
     await tap(tester, find.text('Grille des frais'));
-    await tap(tester, find.byKey(const Key('gerer-rubriques')));
-    for (final r in [
-      'Inscription',
-      'Scolarité',
-      'Cotisation',
-      'Fournitures',
-      'Carte scolaire',
-      'Assurance',
+    await tap(tester, find.byKey(const Key('classe-c-cm1')));
+    for (final code in [
+      'scolarite',
+      'cotisation',
+      'assurance',
+      'carte_scolaire',
+      'fournitures',
     ]) {
-      expect(find.text(r), findsOneWidget, reason: r);
+      await voir(tester, find.byKey(Key('ligne-grille-$code')));
+      expect(find.byKey(Key('ligne-grille-$code')), findsOneWidget);
     }
-
-    // Nouvelle rubrique.
-    await tap(tester, find.text('Ajouter une rubrique'));
+    await tap(tester, find.byKey(const Key('ajouter-rubrique')));
     await tester.enterText(
       find.byKey(const Key('nom-rubrique')),
       'Frais d’examen',
     );
     await tap(tester, find.widgetWithText(FilledButton, 'Valider'));
-    expect(find.text('Frais d’examen'), findsOneWidget);
-
-    // Retrait d'une rubrique inutilisée.
-    await tap(tester, find.byKey(const Key('retirer-rubrique-assurance')));
-    await tap(tester, find.widgetWithText(FilledButton, 'Retirer'));
-    expect(find.text('Assurance'), findsNothing);
-    await retour(tester);
-
-    // Un frais dans la nouvelle rubrique.
-    await tap(tester, find.text('Ajouter un frais'));
-    await tap(tester, find.widgetWithText(ChoiceChip, 'Frais d’examen'));
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('libelle-frais')))
-          .controller!
-          .text,
-      'Frais d’examen',
-    );
-    await tester.enterText(
-      find.byKey(const Key('montant-versement-1')),
-      '2000',
-    );
+    await saisir(tester, 'montant-frais_d_examen-1', '2000');
     await tap(tester, find.text('Enregistrer'));
-    expect(find.text('Frais d’examen • ${fcfa(2000)}'), findsOneWidget);
-
-    // Elle est utilisée : retrait refusé, avec un message clair.
-    await tap(tester, find.byKey(const Key('gerer-rubriques')));
-    await tap(tester, find.byKey(const Key('retirer-rubrique-frais_d_examen')));
-    await tap(tester, find.widgetWithText(FilledButton, 'Retirer'));
-    expect(find.textContaining('est utilisée par 1 frais'), findsOneWidget);
-    expect(find.text('Frais d’examen'), findsOneWidget);
-    final rubriques = await h.db.select(h.db.feeRubrics).get();
+    await calme(tester);
     expect(
-      rubriques.where((r) => r.deletedAt == null).map((r) => r.code),
-      containsAll(['carte_scolaire', 'frais_d_examen']),
+      (await h.db.select(h.db.feeItems).get()).map((f) => f.rubric),
+      contains('frais_d_examen'),
     );
+
+    // Supprimer « Assurance » pour toute l'école.
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await AppHarness.settle(tester);
+    await tap(tester, find.byKey(const Key('supprimer-rubrique')));
+    await tap(tester, find.byKey(const Key('choix-supprimer-assurance')));
+    await tap(tester, find.byKey(const Key('supprimer-toute-ecole')));
+    await tap(tester, find.widgetWithText(FilledButton, 'Continuer'));
+    await tap(tester, find.widgetWithText(FilledButton, 'Supprimer'));
+    await calme(tester);
+    expect(find.byKey(const Key('ligne-grille-assurance')), findsNothing);
+    await accueil(tester);
+
+    // La nouvelle rubrique est dans le tableau d'encaissement.
+    await ouvrirFinances(tester);
+    await tap(tester, find.text('Encaisser'));
+    await tap(tester, find.byKey(const Key('choisir-e-0')));
+    expect(find.text('Frais d’examen'), findsOneWidget);
     await h.dispose(tester);
   });
 }

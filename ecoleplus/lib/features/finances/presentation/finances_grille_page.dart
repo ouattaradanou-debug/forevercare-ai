@@ -77,7 +77,10 @@ class _RubriqueSaisie {
   new(this.code, this.libelle)
     : versements = code == 'scolarite'
           ? [for (final l in libellesVersements) _VersementSaisi(l)]
-          : [_VersementSaisi(libelle)];
+          : [_VersementSaisi(libelle)] {
+    // 1er versement (ou rubrique simple) à l'inscription par défaut.
+    versements.first.aLInscription = true;
+  }
   final String code;
   final String libelle;
   final List<_VersementSaisi> versements;
@@ -164,7 +167,8 @@ class _GrilleFraisState extends ConsumerState<GrilleFraisPage> {
       for (final v in l.versements) {
         v.vider();
       }
-      if (l.scolarite) l.versements.first.aLInscription = true;
+      // Par défaut : 1er versement (ou rubrique simple) à l'inscription.
+      l.versements.first.aLInscription = true;
     }
     _observations.text = reference == null
         ? ''
@@ -628,216 +632,221 @@ class _GrilleFraisState extends ConsumerState<GrilleFraisPage> {
     final large = MediaQuery.sizeOf(context).width >= 720;
     return EcoleScaffold(
       title: 'Grille des frais',
-      body: ListView(
+      // Toutes les lignes restent construites (saisies et totaux visibles
+      // même après défilement).
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            'Année ${annee.label} • montants en FCFA',
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-          const SizedBox(height: 8),
-          // A. Classes concernées.
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Classes concernées',
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                      ),
-                      TextButton.icon(
-                        key: const Key('toutes-classes'),
-                        icon: Icon(
-                          _classes.length == classes.length
-                              ? Icons.check_box
-                              : Icons.check_box_outline_blank,
-                        ),
-                        label: const Text('Toutes'),
-                        onPressed: () => _changerClasses(
-                          _classes.length == classes.length
-                              ? <String>{}
-                              : {for (final k in classes) k.id},
-                        ),
-                      ),
-                    ],
-                  ),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: [
-                      for (final k in classes)
-                        FilterChip(
-                          key: Key('classe-${k.id}'),
-                          label: Text(k.name),
-                          selected: _classes.contains(k.id),
-                          onSelected: (v) => _changerClasses({
-                            ..._classes.where((x) => x != k.id),
-                            if (v) k.id,
-                          }),
-                        ),
-                    ],
-                  ),
-                  if (classes.isEmpty)
-                    const Text('Créez d’abord les classes de l’année.'),
-                ],
-              ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Année ${annee.label} • montants en FCFA',
+              style: Theme.of(context).textTheme.labelLarge,
             ),
-          ),
-          if (_classes.isEmpty)
-            const InfoMessage(
-              'Cochez une ou plusieurs classes : la grille affiche leurs '
-              'frais ; « Enregistrer » les applique à chaque classe cochée '
-              '(chaque classe garde ensuite son propre paramétrage).',
-            ),
-          if (differentes.isNotEmpty)
-            InfoMessage(
-              'Ces classes ont des frais différents : la grille montre ceux '
-              'de ${cochees.first.name}. « Enregistrer » appliquera la '
-              'grille à ${differentes.map((k) => k.name).join(', ')} aussi.',
-              icon: Icons.warning_amber,
-            ),
-          if (_classes.isNotEmpty) ...[
             const SizedBox(height: 8),
-            // B. La grille.
-            if (large) _enteteTableau(context),
-            for (final l in lignes)
-              _ligneGrille(
-                context,
-                l,
-                large: large,
-                onSupprimer: () {
-                  for (final v in l.versements) {
-                    v.vider();
-                  }
-                  _marquer();
-                  setState(() {});
-                },
-              ),
-            Wrap(
-              spacing: 8,
-              children: [
-                OutlinedButton.icon(
-                  key: const Key('ajouter-rubrique'),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Ajouter une rubrique'),
-                  onPressed: () => _ajouterRubrique(ecole),
-                ),
-                OutlinedButton.icon(
-                  key: const Key('supprimer-rubrique'),
-                  icon: const Icon(Icons.remove_circle_outline),
-                  label: const Text('Supprimer une rubrique'),
-                  onPressed: () => _supprimerRubrique(
-                    ecole,
-                    annee,
-                    ordonnees,
-                    classes,
-                    grille,
-                  ),
-                ),
-              ],
-            ),
-            // D. Totaux.
-            const SizedBox(height: 8),
+            // A. Classes concernées.
             Card(
-              color: Theme.of(context).colorScheme.primaryContainer,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _total(
-                      context,
-                      'Total de la scolarité',
-                      totalScol,
-                      cle: 'total-scolarite',
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Classes concernées',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                        ),
+                        TextButton.icon(
+                          key: const Key('toutes-classes'),
+                          icon: Icon(
+                            _classes.length == classes.length
+                                ? Icons.check_box
+                                : Icons.check_box_outline_blank,
+                          ),
+                          label: const Text('Toutes'),
+                          onPressed: () => _changerClasses(
+                            _classes.length == classes.length
+                                ? <String>{}
+                                : {for (final k in classes) k.id},
+                          ),
+                        ),
+                      ],
                     ),
-                    _total(
-                      context,
-                      'Total des autres rubriques',
-                      totalAutres,
-                      cle: 'total-autres',
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        for (final k in classes)
+                          FilterChip(
+                            key: Key('classe-${k.id}'),
+                            label: Text(k.name),
+                            selected: _classes.contains(k.id),
+                            onSelected: (v) => _changerClasses({
+                              ..._classes.where((x) => x != k.id),
+                              if (v) k.id,
+                            }),
+                          ),
+                      ],
                     ),
-                    const Divider(),
-                    _total(
-                      context,
-                      'Total à payer par élève',
-                      totalScol + totalAutres,
-                      fort: true,
-                      cle: 'total-eleve',
-                    ),
+                    if (classes.isEmpty)
+                      const Text('Créez d’abord les classes de l’année.'),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            TextField(
-              key: const Key('observations-frais'),
-              controller: _observations,
-              maxLines: 2,
-              onChanged: (_) => _marquer(),
-              decoration: const InputDecoration(
-                labelText: 'Observations (imprimées sur le récapitulatif)',
-                border: OutlineInputBorder(),
+            if (_classes.isEmpty)
+              const InfoMessage(
+                'Cochez une ou plusieurs classes : la grille affiche leurs '
+                'frais ; « Enregistrer » les applique à chaque classe cochée '
+                '(chaque classe garde ensuite son propre paramétrage).',
               ),
-            ),
-            const SizedBox(height: 12),
-            BigButton(
-              icon: Icons.check,
-              label: _classes.length > 1
-                  ? 'Enregistrer pour les ${_classes.length} classes'
-                  : 'Enregistrer',
-              onPressed: _occupe
-                  ? null
-                  : () => _enregistrer(ecole, annee, classes, grille),
-            ),
-            const SizedBox(height: 10),
-            // E. Récapitulatif.
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    key: const Key('imprimer-recap'),
-                    icon: const Icon(Icons.print),
-                    label: const Text('Imprimer le récapitulatif'),
-                    onPressed: () => _sortirRecap(
+            if (differentes.isNotEmpty)
+              InfoMessage(
+                'Ces classes ont des frais différents : la grille montre ceux '
+                'de ${cochees.first.name}. « Enregistrer » appliquera la '
+                'grille à ${differentes.map((k) => k.name).join(', ')} aussi.',
+                icon: Icons.warning_amber,
+              ),
+            if (_classes.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              // B. La grille.
+              if (large) _enteteTableau(context),
+              for (final l in lignes)
+                _ligneGrille(
+                  context,
+                  l,
+                  large: large,
+                  onSupprimer: () {
+                    for (final v in l.versements) {
+                      v.vider();
+                    }
+                    _marquer();
+                    setState(() {});
+                  },
+                ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    key: const Key('ajouter-rubrique'),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Ajouter une rubrique'),
+                    onPressed: () => _ajouterRubrique(ecole),
+                  ),
+                  OutlinedButton.icon(
+                    key: const Key('supprimer-rubrique'),
+                    icon: const Icon(Icons.remove_circle_outline),
+                    label: const Text('Supprimer une rubrique'),
+                    onPressed: () => _supprimerRubrique(
                       ecole,
                       annee,
+                      ordonnees,
                       classes,
                       grille,
-                      tranches,
-                      notes,
-                      ordonnees,
-                      partager: false,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton.icon(
-                    key: const Key('partager-recap'),
-                    icon: const Icon(Icons.share),
-                    label: const Text('Partager sur WhatsApp'),
-                    onPressed: () => _sortirRecap(
-                      ecole,
-                      annee,
-                      classes,
-                      grille,
-                      tranches,
-                      notes,
-                      ordonnees,
-                      partager: true,
-                    ),
+                ],
+              ),
+              // D. Totaux.
+              const SizedBox(height: 8),
+              Card(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      _total(
+                        context,
+                        'Total de la scolarité',
+                        totalScol,
+                        cle: 'total-scolarite',
+                      ),
+                      _total(
+                        context,
+                        'Total des autres rubriques',
+                        totalAutres,
+                        cle: 'total-autres',
+                      ),
+                      const Divider(),
+                      _total(
+                        context,
+                        'Total à payer par élève',
+                        totalScol + totalAutres,
+                        fort: true,
+                        cle: 'total-eleve',
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                key: const Key('observations-frais'),
+                controller: _observations,
+                maxLines: 2,
+                onChanged: (_) => _marquer(),
+                decoration: const InputDecoration(
+                  labelText: 'Observations (imprimées sur le récapitulatif)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              BigButton(
+                icon: Icons.check,
+                label: _classes.length > 1
+                    ? 'Enregistrer pour les ${_classes.length} classes'
+                    : 'Enregistrer',
+                onPressed: _occupe
+                    ? null
+                    : () => _enregistrer(ecole, annee, classes, grille),
+              ),
+              const SizedBox(height: 10),
+              // E. Récapitulatif.
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      key: const Key('imprimer-recap'),
+                      icon: const Icon(Icons.print),
+                      label: const Text('Imprimer le récapitulatif'),
+                      onPressed: () => _sortirRecap(
+                        ecole,
+                        annee,
+                        classes,
+                        grille,
+                        tranches,
+                        notes,
+                        ordonnees,
+                        partager: false,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilledButton.icon(
+                      key: const Key('partager-recap'),
+                      icon: const Icon(Icons.share),
+                      label: const Text('Partager sur WhatsApp'),
+                      onPressed: () => _sortirRecap(
+                        ecole,
+                        annee,
+                        classes,
+                        grille,
+                        tranches,
+                        notes,
+                        ordonnees,
+                        partager: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

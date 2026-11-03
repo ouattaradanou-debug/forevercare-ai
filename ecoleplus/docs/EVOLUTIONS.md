@@ -35,6 +35,7 @@
 | A20 | ➕ Ajout demandé (30/10/2026, test sur téléphone) | **« Archives » devient une commande à part** sur l'accueil (directeur et délégués « archives »), au lieu d'une ligne dans « Documents » — fiche ci-dessous | **Acceptée** (30/10/2026) — construite | 9 |
 | A21 | ➕ Ajout demandé (30/10/2026, test sur téléphone) | **« Effacer définitivement »** un document de la corbeille, sans attendre 30 jours ; et retrait automatique, sur les autres téléphones, des documents effacés ou devenus inaccessibles — fiche ci-dessous | **Acceptée** (30/10/2026) — construite | 9 |
 | A22 | ➕ Ajout demandé (03/11/2026, test sur téléphone) | Grille des frais : **trois versements** (montant et date limite de chacun, le 1er « à l'inscription ») ; rubriques **Carte scolaire** et **Assurance** ajoutées ; l'école peut **ajouter, renommer ou retirer** des rubriques — fiche ci-dessous | **Acceptée** (03/11/2026) — construite | 10 |
+| A23 | ➕ Ajout demandé (03/11/2026, test sur téléphone) | **Finances simplifiées** : paramétrage des frais en **une seule grille** (classes cochées, tableau des rubriques, scolarité = 1er + 2e + 3e versement calculée, totaux, récapitulatif imprimable ou partagé) ; **encaissement en un seul tableau** (rubriques à cocher, montant proposé = reste dû, jamais plus, récapitulatif puis « Valider l'encaissement ») ; **un reçu pour plusieurs rubriques** — fiche ci-dessous | **Acceptée** (03/11/2026) — construite | 10 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -246,3 +247,27 @@ Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 in
 * **Fonctionne sur ordinateur** : oui.
 * **Effort** : S. **Risques** : faibles ; les reçus déjà faits ne changent pas.
 * **Décision** : demandée par le porteur le 03/11/2026, construite le jour même.
+
+## Fiche d'impact A23 — Finances simplifiées (grille unique, encaissement en un tableau)
+* **Demande du porteur (03/11/2026)** : rendre le module plus simple, rapide et intuitif ; paramétrage dans une seule grille, encaissement dans un seul tableau, minimum de manipulations.
+* **Paramétrage (Finances → Grille des frais)** :
+  * en haut, **classes à cocher** (une, plusieurs, « Toutes ») ; « Enregistrer » applique la grille à chaque classe cochée, **une copie par classe**, modifiable ensuite seule ; avertissement si les classes cochées avaient des frais différents ;
+  * **tableau** : Rubrique, Montant (FCFA), Modalités, Période ou date limite, Actions ; sur téléphone, une carte par rubrique avec les mêmes champs ;
+  * **Scolarité** en 1er, 2e, 3e versement, chacun avec sa période « du … au … » (le 1er « à l'inscription » par défaut) ; **total calculé**, jamais saisi ;
+  * rubriques proposées : Cotisation, Assurance, Carte scolaire, Fournitures (montant libre) ; « + Ajouter une rubrique », « Supprimer une rubrique » (pour les classes cochées ou toute l'école, avec avertissement si des reçus existent : ils restent valables dans l'historique) ;
+  * **modalités** de chaque rubrique : « En une fois » ou « Paiement partiel autorisé » ;
+  * **totaux** mis à jour à chaque frappe : scolarité, autres rubriques, total par élève ; **observations** par classe ;
+  * « **Imprimer le récapitulatif** », « **Partager sur WhatsApp** » : PDF professionnel (nom et logo, année, classe, rubriques, versements, périodes, total, observations) ; plusieurs classes : **un document regroupé ou un document par classe**.
+* **Encaissement (Finances → Encaisser)** :
+  * choix de l'élève : **classe**, recherche nom/prénom, liste ; puis nom, classe, **total des frais, déjà payé, reste** ;
+  * **tableau** : Sélection, Rubrique, Montant dû, Déjà payé, Reste à payer, Montant à encaisser ; les rubriques ajoutées par l'école y apparaissent seules ; statuts en couleurs discrètes : **Payé / Partiel / Impayé** ;
+  * case cochée → montant proposé = **reste dû** ; modifiable si le paiement partiel est autorisé ; **jamais plus que le reste dû** ; une rubrique payée ne se coche plus ;
+  * mode : Espèces, Orange Money, Moov Money, Virement bancaire, Chèque, **Autre (à préciser, retenu pour la suite)** ; nom du payeur ; téléphone et référence facultatifs ;
+  * **récapitulatif** (élève, classe, rubriques, montants, total, mode, payeur, date) puis « **VALIDER L'ENCAISSEMENT** » ;
+  * **un seul reçu** numéroté pour toutes les rubriques réglées, avec le détail par rubrique, le total, le mode, le payeur et le solde restant ; **Imprimer, Télécharger en PDF, Partager par WhatsApp**.
+* **Règles respectées** : scolarité = somme des trois versements ; plusieurs classes à la fois, chacune gardant son paramétrage ; rubriques personnalisées automatiquement dans le tableau ; plusieurs rubriques en une opération ; paiements partiels suivis par versement ; aucun encaissement au-delà du reste dû (contrôlé à l'écran et à l'enregistrement) ; historique consultable (reçus, journal d'activité) ; annulation motivée qui reprend le détail en négatif, sans rien effacer ; les modifications des frais ne changent pas les anciens reçus (libellés et montants figés dans le détail) ; enregistrement automatique sur le téléphone, envoi au serveur dès que le réseau revient.
+* **Interprétations (à confirmer)** : « Modalités de paiement » = « En une fois » ou « Paiement partiel autorisé » ; « Période » = « du … au … », la date « au » sert au calcul des retards ; Coris Money passe par « Autre » ; « Inscription » ne fait plus partie des rubriques proposées (une école qui l'avait la garde).
+* **Données** : serveur — détail des reçus (`payment_allocations`, ajout seul, contrôlé : même signe, jamais plus que le reçu), modalité des frais, début de période, mode libre et téléphone du payeur, observations (`fee_notes`) (migration `20261104000100`) ; base du téléphone v14.
+* **Fonctionne sur ordinateur** : oui (tableau en colonnes sur grand écran, cartes sur téléphone).
+* **Effort** : M. **Risques** : moyens (refonte de deux écrans) ; couverts par 6 tests d'écran, 5 tests du dépôt, 12 tests du serveur.
+* **Décision** : demandée par le porteur le 03/11/2026, construite le 04/11/2026.

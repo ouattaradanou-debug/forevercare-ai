@@ -27,7 +27,13 @@ class DonneesRecu {
     this.annule,
     this.motif,
     this.anneeScolaire,
+    this.detail = const [],
+    this.telephonePayeur,
   });
+
+  /// Rubriques réglées (A23) : (libellé, montant).
+  final List<(String, int)> detail;
+  final String? telephonePayeur;
   final String ecole;
   final String? commune;
   final String? telephone;
@@ -140,11 +146,46 @@ Future<Uint8List> pdfRecu(PolicesPdf polices, DonneesRecu r) {
               r.classe == null ? r.eleve! : '${r.eleve} — ${r.classe}',
               fort: true,
             ),
-          ligne('Objet', r.rubrique),
+          if (r.detail.length <= 1)
+            ligne('Objet', r.detail.isEmpty ? r.rubrique : r.detail.single.$1)
+          else ...[
+            pw.SizedBox(height: 4),
+            pw.Table(
+              border: bordureTableau(),
+              columnWidths: const {
+                0: pw.FlexColumnWidth(3),
+                1: pw.FlexColumnWidth(1.4),
+              },
+              children: [
+                ligneEntete(const ['Rubrique réglée', 'Montant'], gras),
+                for (final (i, (l, m)) in r.detail.indexed)
+                  pw.TableRow(
+                    decoration: fondLigne(i),
+                    children: [
+                      caseTableau(
+                        l,
+                        const pw.TextStyle(fontSize: 10),
+                        centre: false,
+                      ),
+                      caseTableau(
+                        fcfa(m),
+                        const pw.TextStyle(fontSize: 10),
+                        centre: true,
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+            pw.SizedBox(height: 4),
+          ],
           if (annulation && r.annule != null)
             ligne('Reçu annulé', r.annule!, fort: true),
           if (annulation && r.motif != null) ligne('Motif', r.motif!),
-          ligne('Montant', fcfa(r.montant), fort: true),
+          ligne(
+            r.detail.length > 1 ? 'Total reçu' : 'Montant',
+            fcfa(r.montant),
+            fort: true,
+          ),
           ligne('En lettres', _majuscule(enLettres(r.montant))),
           ligne(
             'Mode de paiement',
@@ -152,7 +193,13 @@ Future<Uint8List> pdfRecu(PolicesPdf polices, DonneesRecu r) {
                 ? r.mode
                 : '${r.mode} — réf. ${r.reference}',
           ),
-          if ((r.payeur ?? '').isNotEmpty) ligne('Versé par', r.payeur!),
+          if ((r.payeur ?? '').isNotEmpty)
+            ligne(
+              'Versé par',
+              (r.telephonePayeur ?? '').isEmpty
+                  ? r.payeur!
+                  : '${r.payeur} (${r.telephonePayeur})',
+            ),
           if ((r.recuPar ?? '').isNotEmpty) ligne('Reçu par', r.recuPar!),
           if (r.resteApres != null)
             ligne(

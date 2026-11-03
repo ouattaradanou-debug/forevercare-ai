@@ -5,12 +5,12 @@ import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
-import 'package:ecoleplus/core/widgets/form_fields.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
 import 'package:ecoleplus/features/finances/pdf/pdf_finances.dart';
 import 'package:ecoleplus/features/finances/presentation/finances_providers.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
+import 'package:ecoleplus/features/grades/presentation/classement_page.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/staff/presentation/staff_providers.dart';
 import 'package:flutter/material.dart';
@@ -206,6 +206,46 @@ String _jourLocal(PaymentRow x) {
 // Encaissement
 // ----------------------------------------------------------------------
 
+/// Couleurs discrètes des statuts (payé, partiel, impayé).
+(Color, Color, String) couleursStatut(BuildContext context, Statut s) {
+  final sombre = Theme.of(context).brightness == Brightness.dark;
+  return switch (s) {
+    Statut.paye => (
+      sombre ? const Color(0xFF1E4620) : const Color(0xFFE6F4EA),
+      sombre ? const Color(0xFFA8DAB5) : const Color(0xFF1E6B32),
+      'Payé',
+    ),
+    Statut.partiel => (
+      sombre ? const Color(0xFF4A3B12) : const Color(0xFFFFF4DC),
+      sombre ? const Color(0xFFF3D28A) : const Color(0xFF8A5A00),
+      'Partiel',
+    ),
+    Statut.impaye => (
+      sombre ? const Color(0xFF4A1F1F) : const Color(0xFFFDECEC),
+      sombre ? const Color(0xFFF2B8B5) : const Color(0xFFA32A2A),
+      'Impayé',
+    ),
+  };
+}
+
+Widget pastilleStatut(BuildContext context, Statut s) {
+  final (fond, texte, libelle) = couleursStatut(context, s);
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    decoration: BoxDecoration(
+      color: fond,
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Text(
+      libelle,
+      style: TextStyle(color: texte, fontWeight: FontWeight.w600, fontSize: 12),
+    ),
+  );
+}
+
+/// Encaissement en un seul tableau (A23) : choix de l'élève (classe,
+/// recherche), rubriques à cocher, montant proposé = reste dû (jamais
+/// plus), mode et payeur, récapitulatif puis « Valider l'encaissement ».
 class EncaissementPage extends ConsumerStatefulWidget {
   const new({this.eleveId, super.key});
   final String? eleveId;
@@ -216,13 +256,18 @@ class EncaissementPage extends ConsumerStatefulWidget {
 
 class _EncaissementState extends ConsumerState<EncaissementPage> {
   String? _eleve;
-  String? _ligne;
-  String _rubrique = 'scolarite';
+  String? _classe;
   String _mode = 'especes';
-  final _montant = TextEditingController();
+  final _modeLibre = TextEditingController();
   final _reference = TextEditingController();
   final _payeur = TextEditingController();
+  final _telephone = TextEditingController();
   final _recherche = TextEditingController();
+  final _montantLibre = TextEditingController();
+
+  /// Rubriques cochées : clé du versement → montant à encaisser.
+  final _coches = <String, TextEditingController>{};
+  List<String> _modesConnus = const [];
   bool _occupe = false;
 
   /// Recette sans élève (fonds de caisse, don, location…).
@@ -232,20 +277,164 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
   void initState() {
     super.initState();
     _eleve = widget.eleveId;
+    unawaited(() async {
+      final m = await ref.read(financesRepositoryProvider).modesLibres();
+      if (mounted) setState(() => _modesConnus = m);
+    }());
   }
 
   @override
   void dispose() {
-    _montant.dispose();
-    _reference.dispose();
-    _payeur.dispose();
-    _recherche.dispose();
+    for (final c in [
+      _modeLibre,
+      _reference,
+      _payeur,
+      _telephone,
+      _recherche,
+      _montantLibre,
+      ..._coches.values,
+    ]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _encaisser(SchoolRow ecole, SchoolYearRow annee) async {
-    final montant = lireMontant(_montant.text);
-    if (montant == null) {
+  void _choisirEleve(String? id) => setState(() {
+    _eleve = id;
+    for (final c in _coches.values) {
+      c.dispose();
+    }
+    _coches.clear();
+  });
+
+  void _cocher(VersementSituation v, bool oui) => setState(() {
+    if (oui) {
+      _coches[v.cle] = TextEditingController(text: '${v.reste}')
+        ..addListener(() => setState(() {}));
+    } else {
+      _coches.remove(v.cle)?.dispose();
+    }
+  });
+
+  int _montant(String cle) => lireMontant(_coches[cle]?.text ?? '') ?? 0;
+
+  int get _totalCoche => _coches.keys.fold(0, (s, k) => s + _montant(k));
+
+  String get _libelleModeChoisi =>
+      _mode == 'autre' ? _modeLibre.text.trim() : libelleMode(_mode);
+
+  Future<void> _valider(
+    SchoolRow ecole,
+    SchoolYearRow annee,
+    LigneEleve l,
+  ) async {
+    final choix = [
+      for (final v in l.situation.versements)
+        if (_coches.containsKey(v.cle)) (v, _montant(v.cle)),
+    ];
+    // Contrôles avant le récapitulatif (les mêmes sont refaits à
+    // l'enregistrement).
+    String? erreur;
+    if (choix.isEmpty) erreur = 'Cochez au moins une rubrique.';
+    for (final (v, m) in choix) {
+      if (m <= 0) erreur ??= '« ${v.libelle} » : montant à indiquer.';
+      if (m > v.reste) {
+        erreur ??=
+            '« ${v.libelle} » : ${fcfa(m)} dépasse le reste dû '
+            '(${fcfa(v.reste)}).';
+      }
+      if (!v.partielAutorise && m != v.reste) {
+        erreur ??= '« ${v.libelle} » se règle en une fois : ${fcfa(v.reste)}.';
+      }
+    }
+    if (_mode == 'autre' && _modeLibre.text.trim().isEmpty) {
+      erreur ??= 'Précisez le mode de paiement.';
+    }
+    if (erreur != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(erreur)));
+      return;
+    }
+    final total = choix.fold<int>(0, (s, c) => s + c.$2);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Récapitulatif'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.nom, style: Theme.of(ctx).textTheme.titleMedium),
+              Text(l.classe),
+              const Divider(),
+              for (final (v, m) in choix)
+                Row(
+                  children: [
+                    Expanded(child: Text(_libelleLigne(v))),
+                    Text(fcfa(m)),
+                  ],
+                ),
+              const Divider(),
+              Row(
+                children: [
+                  const Expanded(child: Text('Total encaissé')),
+                  Text(
+                    fcfa(total),
+                    key: const Key('recap-total'),
+                    style: Theme.of(ctx).textTheme.titleMedium,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text('Mode : $_libelleModeChoisi'),
+              if (_payeur.text.trim().isNotEmpty)
+                Text('Payeur : ${_payeur.text.trim()}'),
+              Text('Date : ${dateHeure(ref.read(clockProvider).nowIso())}'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Corriger'),
+          ),
+          FilledButton(
+            key: const Key('valider-encaissement'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('VALIDER L’ENCAISSEMENT'),
+          ),
+        ],
+      ),
+    );
+    if (!(ok ?? false) || !mounted) return;
+    setState(() => _occupe = true);
+    final r = await avecMessage(
+      context,
+      () => ref
+          .read(financesRepositoryProvider)
+          .encaisserRubriques(
+            schoolId: ecole.id,
+            yearId: annee.id,
+            studentId: l.eleve.eleve.id,
+            choix: choix,
+            mode: _mode,
+            libelleMode: _modeLibre.text,
+            reference: _reference.text,
+            payeur: _payeur.text,
+            telephone: _telephone.text,
+          ),
+    );
+    if (!mounted) return;
+    setState(() => _occupe = false);
+    if (r == null) return;
+    unawaited(ref.read(syncEngineProvider).syncNow());
+    context.pushReplacement('/finances/recu/${r.id}');
+  }
+
+  Future<void> _encaisserSansEleve(SchoolRow ecole, SchoolYearRow annee) async {
+    final montant = lireMontant(_montantLibre.text);
+    if (montant == null || montant <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tapez le montant en chiffres.')),
       );
@@ -259,9 +448,9 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
           .encaisser(
             schoolId: ecole.id,
             yearId: annee.id,
-            studentId: _sansEleve ? null : _eleve,
-            rubric: _rubrique,
-            feeItemId: _ligne,
+            studentId: null,
+            rubric: rubriqueAutre,
+            feeItemId: null,
             montant: montant,
             mode: _mode,
             reference: _reference.text,
@@ -275,6 +464,13 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
     context.pushReplacement('/finances/recu/${r.id}');
   }
 
+  static String _libelleLigne(VersementSituation v) =>
+      v.tranche == null || v.libelle == v.ligne.label
+      ? v.ligne.label
+      : v.ligne.rubric == 'scolarite'
+      ? v.libelle
+      : '${v.ligne.label} — ${v.libelle}';
+
   @override
   Widget build(BuildContext context) {
     final c = contexteFinances(ref);
@@ -283,150 +479,28 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
     final lignes = ref.watch(situationsProvider((ecole.id, annee.id)));
     if (lignes == null) return _chargement('Encaisser');
     final eleve = lignes.where((l) => l.eleve.eleve.id == _eleve).firstOrNull;
-    final q = _recherche.text.trim().toLowerCase();
     return EcoleScaffold(
       title: 'Encaisser',
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           if (_sansEleve)
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.savings_outlined),
-                title: const Text('Recette sans élève'),
-                subtitle: const Text('Fonds de caisse, don, location…'),
-                trailing: TextButton(
-                  onPressed: () => setState(() => _eleve = null),
-                  child: const Text('Changer'),
-                ),
-              ),
-            )
-          else if (eleve == null) ...[
-            const Text('Pour quel élève ?'),
-            const SizedBox(height: 6),
-            TextField(
-              key: const Key('recherche-eleve'),
-              controller: _recherche,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                labelText: 'Nom de l’élève',
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            for (final l in lignes)
-              if (q.isEmpty || l.nom.toLowerCase().contains(q))
-                ListTile(
-                  key: Key('choisir-${l.eleve.eleve.id}'),
-                  title: Text(l.nom),
-                  subtitle: Text(
-                    '${l.classe} • reste ${fcfa(l.situation.reste)}',
-                  ),
-                  onTap: () => setState(() => _eleve = l.eleve.eleve.id),
-                ),
-            const Divider(),
-            TextButton(
-              onPressed: () => setState(() {
-                _eleve = '';
-                _rubrique = 'autre';
-              }),
-              child: const Text(
-                'Recette sans élève (fonds de caisse, don, location…)',
-              ),
-            ),
-          ] else ...[
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.person),
-                title: Text(eleve.nom),
-                subtitle: Text(
-                  '${eleve.classe} • dû ${fcfa(eleve.situation.du)} • '
-                  'reste ${fcfa(eleve.situation.reste)}',
-                ),
-                trailing: TextButton(
-                  onPressed: () => setState(() {
-                    _eleve = null;
-                    _ligne = null;
-                  }),
-                  child: const Text('Changer'),
-                ),
-              ),
-            ),
+            ..._sansEleveVue(ecole, annee)
+          else if (eleve == null)
+            ..._choixEleve(lignes, annee)
+          else ...[
+            _enteteEleve(context, eleve),
             const SizedBox(height: 8),
-            const Text('Pour quoi ?'),
-            Wrap(
-              spacing: 6,
-              children: [
-                for (final s in eleve.situation.lignes)
-                  ChoiceChip(
-                    key: Key('ligne-${s.ligne.id}'),
-                    label: Text('${s.ligne.label} (reste ${fcfa(s.reste)})'),
-                    selected: _ligne == s.ligne.id,
-                    onSelected: (v) => setState(() {
-                      _ligne = v ? s.ligne.id : null;
-                      _rubrique = s.ligne.rubric;
-                      if (v && _montant.text.isEmpty && s.reste > 0) {
-                        _montant.text = '${s.reste}';
-                      }
-                    }),
-                  ),
-                ChoiceChip(
-                  label: const Text('Autre'),
-                  selected: _ligne == null,
-                  onSelected: (_) => setState(() {
-                    _ligne = null;
-                    _rubrique = 'autre';
-                  }),
-                ),
-              ],
-            ),
-          ],
-          if (_eleve != null) ...[
+            _tableau(context, eleve),
+            const SizedBox(height: 8),
+            ..._infosPaiement(context),
             const SizedBox(height: 12),
-            TextField(
-              key: const Key('montant'),
-              controller: _montant,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Montant reçu (FCFA)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            ChoiceField(
-              label: 'Mode de paiement',
-              value: _mode,
-              options: modesPaiement,
-              onChanged: (v) => setState(() => _mode = v ?? 'especes'),
-            ),
-            if (_mode != 'especes')
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: TextField(
-                  key: const Key('reference'),
-                  controller: _reference,
-                  decoration: InputDecoration(
-                    labelText: 'Référence (${libelleMode(_mode)})',
-                    helperText: 'N° de transaction, de chèque ou de virement',
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-              ),
-            TextField(
-              controller: _payeur,
-              decoration: const InputDecoration(
-                labelText: 'Versé par (facultatif)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
             BigButton(
-              icon: Icons.check,
-              label: 'Encaisser et faire le reçu',
-              onPressed: _occupe ? null : () => _encaisser(ecole, annee),
+              icon: Icons.point_of_sale,
+              label: 'Encaisser ${fcfa(_totalCoche)}',
+              onPressed: _occupe ? null : () => _valider(ecole, annee, eleve),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             const Text(
               'Le numéro du reçu est définitif tout de suite, même sans '
               'Internet.',
@@ -436,6 +510,388 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
       ),
     );
   }
+
+  List<Widget> _choixEleve(List<LigneEleve> lignes, SchoolYearRow annee) {
+    final classes = ref.watch(classesProvider(annee.id)).value ?? const [];
+    final q = _recherche.text.trim().toLowerCase();
+    final visibles = [
+      for (final l in lignes)
+        if ((_classe == null || l.eleve.classe?.id == _classe) &&
+            (q.isEmpty || l.nom.toLowerCase().contains(q)))
+          l,
+    ];
+    return [
+      const Text('Classe'),
+      Wrap(
+        spacing: 6,
+        children: [
+          ChoiceChip(
+            label: const Text('Toutes'),
+            selected: _classe == null,
+            onSelected: (_) => setState(() => _classe = null),
+          ),
+          for (final k in classes)
+            ChoiceChip(
+              key: Key('encaisser-classe-${k.id}'),
+              label: Text(k.name),
+              selected: _classe == k.id,
+              onSelected: (_) => setState(() => _classe = k.id),
+            ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      TextField(
+        key: const Key('recherche-eleve'),
+        controller: _recherche,
+        decoration: const InputDecoration(
+          prefixIcon: Icon(Icons.search),
+          labelText: 'Nom ou prénom de l’élève',
+          border: OutlineInputBorder(),
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
+      for (final l in visibles)
+        ListTile(
+          key: Key('choisir-${l.eleve.eleve.id}'),
+          title: Text(l.nom),
+          subtitle: Text('${l.classe} • reste ${fcfa(l.situation.reste)}'),
+          trailing: l.situation.reste == 0
+              ? pastilleStatut(context, Statut.paye)
+              : null,
+          onTap: () => _choisirEleve(l.eleve.eleve.id),
+        ),
+      if (visibles.isEmpty) const Text('Aucun élève.'),
+      const Divider(),
+      TextButton(
+        onPressed: () => _choisirEleve(''),
+        child: const Text(
+          'Recette sans élève (fonds de caisse, don, location…)',
+        ),
+      ),
+    ];
+  }
+
+  Widget _enteteEleve(BuildContext context, LigneEleve l) {
+    final s = l.situation;
+    final t = Theme.of(context).textTheme;
+    Widget chiffre(String titre, int m, {Key? key, Color? couleur}) => Expanded(
+      child: Column(
+        children: [
+          Text(titre, style: t.labelMedium),
+          Text(
+            fcfa(m),
+            key: key,
+            style: t.titleMedium?.copyWith(color: couleur),
+          ),
+        ],
+      ),
+    );
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.person),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l.nom, style: t.titleMedium),
+                      Text(l.classe),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => _choisirEleve(null),
+                  child: const Text('Changer'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                chiffre('Total des frais', s.du, key: const Key('frais-eleve')),
+                chiffre('Déjà payé', s.paye, key: const Key('paye-eleve')),
+                chiffre(
+                  'Reste à payer',
+                  s.reste,
+                  key: const Key('reste-encaisser'),
+                  couleur: s.reste == 0 ? null : Colors.red.shade700,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tableau(BuildContext context, LigneEleve l) {
+    final versements = [
+      for (final v in l.situation.versements)
+        if (v.du > 0 || v.paye > 0) v,
+    ];
+    if (versements.isEmpty) {
+      return const InfoMessage(
+        'Aucun frais pour la classe de cet élève : complétez la grille des '
+        'frais.',
+      );
+    }
+    final large = MediaQuery.sizeOf(context).width >= 720;
+    final t = Theme.of(context).textTheme;
+    Widget montantChamp(VersementSituation v) {
+      final ctl = _coches[v.cle];
+      return TextField(
+        key: Key('a-encaisser-${v.cle}'),
+        controller: ctl,
+        enabled: ctl != null && v.partielAutorise,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: InputDecoration(
+          isDense: true,
+          border: const OutlineInputBorder(),
+          hintText: ctl == null ? '—' : null,
+          helperText: ctl != null && !v.partielAutorise ? 'En une fois' : null,
+          errorText: ctl != null && _montant(v.cle) > v.reste
+              ? 'Max ${fcfa(v.reste)}'
+              : null,
+        ),
+      );
+    }
+
+    Widget ligne(VersementSituation v) {
+      final paye = v.statut == Statut.paye;
+      final case_ = Checkbox(
+        key: Key('cocher-${v.cle}'),
+        value: _coches.containsKey(v.cle),
+        onChanged: paye ? null : (x) => _cocher(v, x ?? false),
+      );
+      final nom = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_libelleLigne(v), style: t.titleSmall),
+          Row(
+            children: [
+              pastilleStatut(context, v.statut),
+              if (v.echeance != null) ...[
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    'avant le ${dateCourte(v.echeance!)}',
+                    style: t.bodySmall,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      );
+      if (large) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              SizedBox(width: 48, child: case_),
+              Expanded(flex: 4, child: nom),
+              Expanded(flex: 2, child: Text(fcfa(v.du))),
+              Expanded(flex: 2, child: Text(fcfa(v.paye))),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  fcfa(v.reste),
+                  style: t.titleSmall?.copyWith(
+                    color: v.reste == 0 ? null : Colors.red.shade700,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: paye ? const Text('—') : montantChamp(v),
+              ),
+            ],
+          ),
+        );
+      }
+      return Card(
+        key: Key('ligne-encaisser-${v.cle}'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 6, 10, 8),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  case_,
+                  Expanded(child: nom),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Dû ${fcfa(v.du)}\nPayé ${fcfa(v.paye)}\n'
+                        'Reste ${fcfa(v.reste)}',
+                        style: t.bodySmall,
+                      ),
+                    ),
+                    if (!paye) SizedBox(width: 140, child: montantChamp(v)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (large)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Row(
+              children: [
+                const SizedBox(width: 48),
+                Expanded(flex: 4, child: Text('Rubrique', style: t.labelLarge)),
+                Expanded(
+                  flex: 2,
+                  child: Text('Montant dû', style: t.labelLarge),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text('Déjà payé', style: t.labelLarge),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text('Reste à payer', style: t.labelLarge),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text('Montant à encaisser', style: t.labelLarge),
+                ),
+              ],
+            ),
+          ),
+        for (final v in versements) ligne(v),
+      ],
+    );
+  }
+
+  List<Widget> _infosPaiement(BuildContext context) => [
+    const SectionTitle('Paiement'),
+    Wrap(
+      spacing: 6,
+      children: [
+        for (final MapEntry(key: k, value: v) in modesPaiement.entries)
+          ChoiceChip(
+            key: Key('mode-$k'),
+            label: Text(v),
+            selected: _mode == k,
+            onSelected: (_) => setState(() => _mode = k),
+          ),
+      ],
+    ),
+    if (_mode == 'autre') ...[
+      const SizedBox(height: 8),
+      TextField(
+        key: const Key('mode-libre'),
+        controller: _modeLibre,
+        decoration: const InputDecoration(
+          labelText: 'Préciser le mode (ex. Wave, Coris Money)',
+          border: OutlineInputBorder(),
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
+      if (_modesConnus.isNotEmpty)
+        Wrap(
+          spacing: 6,
+          children: [
+            for (final m in _modesConnus)
+              ActionChip(
+                label: Text(m),
+                onPressed: () => setState(() => _modeLibre.text = m),
+              ),
+          ],
+        ),
+    ],
+    const SizedBox(height: 10),
+    TextField(
+      key: const Key('payeur'),
+      controller: _payeur,
+      textCapitalization: TextCapitalization.words,
+      decoration: const InputDecoration(
+        labelText: 'Nom et prénom du payeur',
+        border: OutlineInputBorder(),
+      ),
+    ),
+    const SizedBox(height: 8),
+    Row(
+      children: [
+        Expanded(
+          child: TextField(
+            key: const Key('telephone-payeur'),
+            controller: _telephone,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              labelText: 'Téléphone (facultatif)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextField(
+            key: const Key('reference'),
+            controller: _reference,
+            decoration: const InputDecoration(
+              labelText: 'Référence (facultatif)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+      ],
+    ),
+  ];
+
+  List<Widget> _sansEleveVue(SchoolRow ecole, SchoolYearRow annee) => [
+    Card(
+      child: ListTile(
+        leading: const Icon(Icons.savings_outlined),
+        title: const Text('Recette sans élève'),
+        subtitle: const Text('Fonds de caisse, don, location…'),
+        trailing: TextButton(
+          onPressed: () => _choisirEleve(null),
+          child: const Text('Changer'),
+        ),
+      ),
+    ),
+    const SizedBox(height: 8),
+    TextField(
+      key: const Key('montant'),
+      controller: _montantLibre,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      decoration: const InputDecoration(
+        labelText: 'Montant reçu (FCFA)',
+        border: OutlineInputBorder(),
+      ),
+    ),
+    ..._infosPaiement(context),
+    const SizedBox(height: 12),
+    BigButton(
+      icon: Icons.check,
+      label: 'Encaisser et faire le reçu',
+      onPressed: _occupe ? null : () => _encaisserSansEleve(ecole, annee),
+    ),
+  ];
 }
 
 // ----------------------------------------------------------------------
@@ -457,11 +913,20 @@ Future<DonneesRecu> donneesRecu(WidgetRef ref, PaymentRow x) async {
   final annule = paiements
       .where((o) => o.id == x.reversesPaymentId)
       .firstOrNull;
+  final detail = [
+    for (final a
+        in ref.read(detailsProvider(annee.id)).value ??
+            const <PaymentAllocationRow>[])
+      if (a.paymentId == x.id)
+        (a.label ?? libelleRubrique(a.rubric ?? ''), a.amount),
+  ];
   final media = ref.read(mediaDirProvider);
   final logo = ecole.logoPath == null || media == null
       ? null
       : File(p.join(media.path, ecole.logoPath));
   return DonneesRecu(
+    detail: detail,
+    telephonePayeur: x.payerPhone,
     ecole: ecole.name,
     commune: ecole.commune,
     telephone: ecole.phone,
@@ -469,7 +934,7 @@ Future<DonneesRecu> donneesRecu(WidgetRef ref, PaymentRow x) async {
     numero: x.receiptNumber,
     date: dateHeure(x.paidAt),
     montant: x.amount,
-    mode: libelleMode(x.method),
+    mode: libelleMode(x.method, x.methodLabel),
     reference: x.reference,
     rubrique:
         ligne?.label ??
@@ -485,21 +950,32 @@ Future<DonneesRecu> donneesRecu(WidgetRef ref, PaymentRow x) async {
   );
 }
 
+/// Sortie d'un reçu : imprimer, télécharger (enregistrer le PDF) ou
+/// partager (WhatsApp…).
+enum SortieRecu { imprimer, telecharger, partager }
+
 Future<void> sortirRecu(
   BuildContext context,
   WidgetRef ref,
   PaymentRow x, {
-  required bool partager,
+  SortieRecu comment = SortieRecu.imprimer,
+  bool partager = false,
 }) => avecMessage(context, () async {
   final pdf = await pdfRecu(
     await ref.read(policesPdfProvider.future),
     await donneesRecu(ref, x),
   );
+  final nom = 'Recu_${x.receiptNumber}.pdf';
+  final mode = partager ? SortieRecu.partager : comment;
   final sortie = ref.read(sortiePdfProvider);
-  await (partager ? sortie.partager : sortie.imprimer)(
-    pdf,
-    'Recu_${x.receiptNumber}.pdf',
-  );
+  switch (mode) {
+    case SortieRecu.imprimer:
+      await sortie.imprimer(pdf, nom);
+    case SortieRecu.partager:
+      await sortie.partager(pdf, nom);
+    case SortieRecu.telecharger:
+      await ref.read(sortieFichierProvider)(pdf, nom, 'application/pdf');
+  }
 });
 
 class RecuPage extends ConsumerWidget {
@@ -512,6 +988,12 @@ class RecuPage extends ConsumerWidget {
     final x = ref.watch(paiementProvider(id)).value;
     if (c == null || x == null) return _chargement('Reçu');
     final (_, annee) = c;
+    final detail = [
+      for (final a
+          in ref.watch(detailsProvider(annee.id)).value ??
+              const <PaymentAllocationRow>[])
+        if (a.paymentId == x.id) a,
+    ];
     final paiements = ref.watch(paiementsProvider(annee.id)).value ?? const [];
     final annulation = paiements
         .where((o) => o.reversesPaymentId == x.id)
@@ -554,10 +1036,16 @@ class RecuPage extends ConsumerWidget {
                   const SizedBox(height: 8),
                   if (eleve != null) Text('${eleve.nom} — ${eleve.classe}'),
                   Text(
-                    '${libelleMode(x.method)}'
+                    '${libelleMode(x.method, x.methodLabel)}'
                     '${x.reference == null ? '' : ' — réf. ${x.reference}'}',
                   ),
-                  if (x.payerName != null) Text('Versé par ${x.payerName}'),
+                  for (final a in detail)
+                    Text('${a.label ?? ''} : ${fcfa(a.amount)}'),
+                  if (x.payerName != null)
+                    Text(
+                      'Versé par ${x.payerName}'
+                      '${x.payerPhone == null ? '' : ' (${x.payerPhone})'}',
+                    ),
                   if (origine != null)
                     Text('Annule le reçu ${origine.receiptNumber}'),
                   if (x.reversalReason != null)
@@ -588,14 +1076,34 @@ class RecuPage extends ConsumerWidget {
           const SizedBox(height: 12),
           BigButton(
             icon: Icons.share,
-            label: 'Partager le reçu (WhatsApp…)',
+            label: 'Partager par WhatsApp',
             onPressed: () => sortirRecu(context, ref, x, partager: true),
           ),
           const SizedBox(height: 10),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.print),
-            label: const Text('Imprimer'),
-            onPressed: () => sortirRecu(context, ref, x, partager: false),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.print),
+                  label: const Text('Imprimer'),
+                  onPressed: () => sortirRecu(context, ref, x),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  key: const Key('telecharger-recu'),
+                  icon: const Icon(Icons.download),
+                  label: const Text('Télécharger en PDF'),
+                  onPressed: () => sortirRecu(
+                    context,
+                    ref,
+                    x,
+                    comment: SortieRecu.telecharger,
+                  ),
+                ),
+              ),
+            ],
           ),
           if (annulation == null && x.reversesPaymentId == null) ...[
             const SizedBox(height: 24),
