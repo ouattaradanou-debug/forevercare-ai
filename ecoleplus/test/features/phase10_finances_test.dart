@@ -168,14 +168,18 @@ void main() {
     await tapLong(tester, find.byKey(const Key('imprimer-recap')));
     await tapLong(tester, find.textContaining('Un document regroupant'));
     final pdf = h.pdfSortis['Frais_scolaires_2025-2026.pdf']!;
-    final t = texte(texteDuPdf(pdf));
-    expect(t, contains('FRAIS SCOLAIRES — CM1 A'));
-    expect(t, contains('FRAIS SCOLAIRES — CE1 A'));
-    expect(t, contains('1er versement'));
-    expect(t, contains('À l’inscription'));
-    expect(t, contains('Avant le 15/01/2099'));
-    expect(t, contains('MONTANT TOTAL À PAYER PAR ÉLÈVE 27 000'));
-    expect(t, contains('Tenue obligatoire.'));
+    // Texte du PDF : seulement là où pdftotext est installé.
+    final lu = texteDuPdf(pdf);
+    if (lu != null) {
+      final t = texte(lu);
+      expect(t, contains('FRAIS SCOLAIRES — CM1 A'));
+      expect(t, contains('FRAIS SCOLAIRES — CE1 A'));
+      expect(t, contains('1er versement'));
+      expect(t, contains('À l’inscription'));
+      expect(t, contains('Avant le 15/01/2099'));
+      expect(t, contains('MONTANT TOTAL À PAYER PAR ÉLÈVE 27 000'));
+      expect(t, contains('Tenue obligatoire.'));
+    }
     await h.dispose(tester);
   });
 
@@ -242,13 +246,16 @@ void main() {
 
     // Reçu PDF détaillé.
     await tapLong(tester, find.text('Partager par WhatsApp'));
-    final t = texte(texteDuPdf(h.pdfSortis['partage:Recu_R2526-A-00001.pdf']!));
-    expect(t, contains('Rubrique réglée'));
-    expect(t, contains('Scolarité — 2e versement 3 000'));
-    expect(t, contains('Total reçu 14 500'));
-    expect(t, contains('Wave'));
-    expect(t, contains('TEST Mariam (70 00 00 00)'));
-    expect(t, contains('Reste à payer 12 000'));
+    final lu = texteDuPdf(h.pdfSortis['partage:Recu_R2526-A-00001.pdf']!);
+    if (lu != null) {
+      final t = texte(lu);
+      expect(t, contains('Rubrique réglée'));
+      expect(t, contains('Scolarité — 2e versement 3 000'));
+      expect(t, contains('Total reçu 14 500'));
+      expect(t, contains('Wave'));
+      expect(t, contains('TEST Mariam (70 00 00 00)'));
+      expect(t, contains('Reste à payer 12 000'));
+    }
     await tapLong(tester, find.byKey(const Key('telecharger-recu')));
     expect(h.fichiersSortis.keys, contains('Recu_R2526-A-00001.pdf'));
 
