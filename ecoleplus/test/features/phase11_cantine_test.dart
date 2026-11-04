@@ -1,14 +1,12 @@
 import 'package:ecoleplus/app/providers.dart';
-import 'package:ecoleplus/features/cantine/domain/cantine.dart';
-import 'package:ecoleplus/features/finances/data/finances_repository.dart';
 import 'package:ecoleplus/features/finances/presentation/finances_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/app_harness.dart';
-import 'phase10_finances_test.dart' show idFrais, ouvrirFinances, saisir, texte;
-import 'phase8_cartes_test.dart' show accueil, retour, tap;
+import 'phase10_finances_test.dart' show ouvrirFinances, saisir, texte;
+import 'phase8_cartes_test.dart' show accueil, retour, tap, tapLong, voir;
 import 'phase9_bibliotheque_test.dart' show calme;
 
 ProviderContainer conteneur(WidgetTester tester) =>
@@ -19,11 +17,15 @@ Future<void> basculerCantine(
   required bool activer,
 }) async {
   await accueil(tester);
+  await voir(tester, find.text('Mon école'));
   await AppHarness.ouvrirDansMonEcole(tester, 'Options de l’école');
   await tester.tap(find.byKey(const Key('module-cantine')));
   await AppHarness.settle(tester);
   if (!activer) {
-    expect(find.textContaining('les cotisations de cantine'), findsOneWidget);
+    expect(
+      find.textContaining('les abonnements et reçus de cantine'),
+      findsOneWidget,
+    );
     expect(find.textContaining('Vos données sont conservées'), findsOneWidget);
     await tester.tap(find.text('Désactiver'));
     await AppHarness.settle(tester);
@@ -32,10 +34,10 @@ Future<void> basculerCantine(
 }
 
 void main() {
-  testWidgets('cantine OFF → ON → OFF → ON : invisible tant qu’elle est '
-      'désactivée, données conservées ; réglages, bénéficiaires, pointage, '
-      'stock (sortie au-delà du stock refusée), cotisation partielle avec '
-      'reçu, impayés distincts ; élève sorti : historique conservé', (
+  testWidgets('cantine OFF → ON → OFF → ON ; tarif mensuel ; abonner et '
+      'encaisser plusieurs mois non consécutifs en un reçu ; mois payé non '
+      'recochable ; avance = paiement partiel ; tableau de bord ; abonnement '
+      'groupé ; stock (sortie au-delà refusée) ; élève sorti : historique', (
     tester,
   ) async {
     final h = AppHarness()..seedEcoleTest();
@@ -43,89 +45,129 @@ void main() {
     await h.login(tester, 'directeur@ecole-test.local');
 
     // ------------------------------ OFF --------------------------------
+    expect(find.text('Cantine scolaire'), findsNothing);
     await ouvrirFinances(tester);
-    expect(find.text('Cantine'), findsNothing);
-    await accueil(tester);
     expect(find.text('Cantine'), findsNothing);
 
     // ------------------------------ ON ---------------------------------
     await basculerCantine(tester, activer: true);
-    await ouvrirFinances(tester);
-    await tap(tester, find.text('Cantine'));
-    expect(find.textContaining('Commencez par « Réglages'), findsOne);
+    await AppHarness.toucher(tester, 'Cantine scolaire');
+    await AppHarness.settle(tester);
+    expect(find.textContaining('fixer le tarif mensuel'), findsOne);
 
-    // Réglages : mode mixte et définition locale.
-    await tap(tester, find.text('Réglages de la cantine'));
-    await tap(tester, find.byKey(const Key('mode-mixte')));
-    await saisir(
-      tester,
-      'definition-cantine',
-      'Vivres apportés par les parents et la communauté',
-    );
+    // Réglages : 5 000 par mois.
+    await tap(tester, find.byKey(const Key('reglages-cantine')));
+    await saisir(tester, 'tarif-mensuel', '5000');
+    await saisir(tester, 'definition-cantine', 'Vivres de la communauté');
     await tap(tester, find.byKey(const Key('enregistrer-reglages')));
     await calme(tester);
-    final reglages = await h.db.select(h.db.canteenSettings).getSingle();
-    expect(reglages.mode, 'mixte');
-    expect(reglages.localDefinition, contains('communauté'));
+    expect((await h.db.select(h.db.canteenRates).getSingle()).amount, 5000);
+    final annee = await h.db.select(h.db.canteenYears).getSingle();
+    expect(annee.months, contains('2025-10-01'));
+    await retour(tester);
+
+    // Abonner et encaisser : TEST Aïcha, octobre + décembre (non
+    // consécutifs) = 10 000, un seul reçu.
+    await tap(tester, find.byKey(const Key('abonner-encaisser')));
+    await tester.enterText(find.byKey(const Key('recherche-eleve')), 'aïc');
+    await AppHarness.settle(tester);
+    await tap(tester, find.byKey(const Key('choisir-e-0')));
+    await tap(tester, find.byKey(const Key('mois-2025-10')));
+    await tap(tester, find.byKey(const Key('mois-2025-12')));
     expect(
-      (await h.db.select(h.db.feeRubrics).get()).map((r) => r.code),
-      contains(rubriqueCantine),
-      reason: 'rubrique « Cantine » ajoutée à la grille',
+      texte(tester.widget<Text>(find.byKey(const Key('total-a-payer'))).data),
+      '10 000',
+    );
+    await saisir(tester, 'payeur', 'TEST Mariam');
+    await tap(tester, find.byKey(const Key('valider-abonnement')));
+    expect(find.text('Vérifiez avant de valider'), findsOne);
+    await tap(tester, find.byKey(const Key('valider-paiement')));
+    await calme(tester);
+    final recu = (await h.db.select(h.db.payments).get()).single;
+    expect(
+      (recu.rubric, recu.amount, recu.payerName),
+      ('cantine', 10000, 'TEST Mariam'),
+    );
+    expect(find.byKey(const Key('numero-recu')), findsOne, reason: 'reçu');
+    expect(find.textContaining('Cantine — octobre 2025 : 5'), findsOne);
+    await retour(tester);
+
+    // Situation de l'élève : octobre et décembre ABONNÉ, novembre NON
+    // ABONNÉ (aucune dette).
+    await tap(tester, find.text('Situation et historique'));
+    await tap(tester, find.text('TEST Aïcha'));
+    Text pastille(String k) => tester.widget<Text>(
+      find.descendant(of: find.byKey(Key(k)), matching: find.byType(Text)),
+    );
+    expect(pastille('statut-mois-2025-10').data, 'ABONNÉ');
+    expect(pastille('statut-mois-2025-11').data, 'NON ABONNÉ');
+    expect(pastille('statut-mois-2025-12').data, 'ABONNÉ');
+    expect(
+      texte(tester.widget<Text>(find.byKey(const Key('resume-eleve'))).data),
+      contains('2 mois abonné(s)'),
+    );
+
+    // Encore : octobre payé ne se recoche pas ; avance de 2 000 sur
+    // novembre → PAIEMENT PARTIEL.
+    await tap(tester, find.text('ABONNER ET ENCAISSER'));
+    expect(
+      tester.widget<Checkbox>(find.byKey(const Key('mois-2025-10'))).onChanged,
+      isNull,
+      reason: 'déjà payé : pas de double paiement',
+    );
+    await tap(tester, find.byKey(const Key('mois-2025-11')));
+    await saisir(tester, 'montant-recu', '2000');
+    await tap(tester, find.byKey(const Key('valider-abonnement')));
+    expect(find.textContaining('Paiement partiel'), findsOne);
+    await tap(tester, find.byKey(const Key('valider-paiement')));
+    await calme(tester);
+    await retour(tester);
+    expect(pastille('statut-mois-2025-11').data, 'PAIEMENT PARTIEL');
+    await accueil(tester);
+
+    // Tableau de bord d'octobre : 1 abonné sur 4 ; attendu 5 000 (les
+    // non-abonnés ne doivent rien) ; taux 100 %.
+    await AppHarness.toucher(tester, 'Cantine scolaire');
+    await AppHarness.settle(tester);
+    await tap(tester, find.text('Tableau de bord'));
+    await tap(tester, find.byKey(const Key('choix-mois')));
+    await tap(tester, find.text('octobre 2025').last);
+    String val(String k) => texte(tester.widget<Text>(find.byKey(Key(k))).data);
+    expect(
+      (val('nb-abonnes'), val('nb-non-abonnes'), val('attendu'), val('taux')),
+      ('1', '3', '5 000', '100 %'),
     );
     await retour(tester);
 
-    // Bénéficiaires : Aïcha et Boukary ; la famille de Boukary ne paie pas.
-    await tap(tester, find.text('Élèves bénéficiaires'));
-    await tap(tester, find.byKey(const Key('benef-e-0')));
-    await tap(tester, find.byKey(const Key('benef-e-1')));
-    await tap(tester, find.byKey(const Key('participe-e-1')));
+    // Abonnement groupé d'octobre : toute la classe de CM1 A d'un coup.
+    await tap(tester, find.text('Abonnements'));
+    await tap(tester, find.byKey(const Key('choix-mois')));
+    await tap(tester, find.text('octobre 2025').last);
+    await tap(tester, find.byKey(const Key('choix-classe')));
+    await tap(tester, find.text('CM1 A').last);
+    await tap(tester, find.byKey(const Key('tout-cocher')));
+    await tap(tester, find.byKey(const Key('abonner-selection')));
+    await tap(tester, find.byKey(const Key('valider-groupe')));
     await calme(tester);
-    expect(
-      texte(
-        tester.widget<Text>(find.byKey(const Key('total-beneficiaires'))).data,
-      ),
-      'Total : 2 bénéficiaire(s) sur 4 élève(s)',
+    final p = await h.db.select(h.db.payments).get();
+    expect(p, hasLength(4), reason: '2 reçus d’Aïcha + 2 élèves du CM1 A');
+    await tapLong(tester, find.byKey(const Key('liste-autorises')));
+    final pdf = h.pdfSortis.keys.firstWhere(
+      (k) => k.contains('Cantine_autorises_2025-10'),
     );
-    final b = await h.db.select(h.db.canteenBeneficiaries).get();
-    expect(
-      {for (final x in b) (x.studentId, x.contributes)},
-      {('e-0', true), ('e-1', false)},
-    );
+    expect(pdf, isNotNull);
     await retour(tester);
 
-    // Pointage : le nombre de bénéficiaires se recopie d'un geste.
-    await tap(tester, find.text('Pointage des repas'));
-    await tap(tester, find.byKey(const Key('remplir-c-cm1')));
-    await saisir(tester, 'repas-c-ce1', '1');
-    await saisir(tester, 'repas--', '3');
-    expect(
-      texte(tester.widget<Text>(find.byKey(const Key('total-pointage'))).data),
-      '6',
-    );
-    await tap(tester, find.byKey(const Key('enregistrer-pointage')));
-    await calme(tester);
-    final p = await h.db.select(h.db.mealServices).get();
-    expect(totalRepas(p), 6);
-    expect(p, hasLength(3));
-    // Nouvelle saisie du même jour : remplace, n'additionne pas.
-    await saisir(tester, 'repas-c-cm1', '1');
-    await tap(tester, find.byKey(const Key('enregistrer-pointage')));
-    await calme(tester);
-    expect(totalRepas(await h.db.select(h.db.mealServices).get()), 5);
-    await retour(tester);
-
-    // Stock : produit, entrée, sortie refusée au-delà du stock, sortie.
+    // Vivres et repas : stock, sortie au-delà du stock refusée.
+    await tap(tester, find.text('Vivres et repas'));
     await tap(tester, find.text('Stock de vivres'));
     await tap(tester, find.byKey(const Key('nouveau-produit')));
     await tester.enterText(find.byKey(const Key('nom-produit')), 'Riz');
-    await tester.enterText(find.byKey(const Key('seuil-produit')), '5');
     await tap(tester, find.byKey(const Key('valider-produit')));
     await calme(tester);
-    final riz = (await h.db.select(h.db.stockProducts).getSingle()).id;
-    Future<void> mouvement(String bouton, String q, {String? motif}) async {
+    Future<void> mouvement(String bouton, String q) async {
       await tap(tester, find.byKey(Key(bouton)));
       await tester.enterText(find.byKey(const Key('quantite-mouvement')), q);
-      if (motif != null) await tap(tester, find.byKey(Key('motif-$motif')));
       await tester.tap(find.byKey(const Key('valider-mouvement')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
@@ -135,149 +177,51 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
     }
 
-    await mouvement('bouton-entree', '20', motif: 'produits_locaux');
+    await mouvement('bouton-entree', '20');
     await calme(tester);
     await mouvement('bouton-sortie', '30');
     expect(find.textContaining('Il ne reste que 20 kg'), findsOne);
     await calme(tester);
-    await mouvement('bouton-sortie', '16');
-    await calme(tester);
-    expect(texte(tester.widget<Text>(find.byKey(Key('stock-$riz'))).data), '4');
-    final m = await h.db.select(h.db.stockMovements).get();
-    expect(m.map((x) => (x.kind, x.quantityDelta)), [
-      ('entree', 20.0),
-      ('sortie', -16.0),
-    ]);
-    expect(m.first.provenance, 'produits_locaux');
-    await retour(tester);
-    expect(find.byKey(const Key('alerte-stock')), findsOne, reason: '4 ≤ 5');
-
-    // Cotisation : tarif de la cantine pour le CM1 A, 3 trimestres.
-    await calme(tester);
-    final c = conteneur(tester);
-    await c
-        .read(financesRepositoryProvider)
-        .enregistrerFrais(
-          {
-            'id': idFrais('c-cm1', rubriqueCantine),
-            'school_id': ecoleId,
-            'school_year_id': anneeId,
-            'rubric': rubriqueCantine,
-            'label': 'Cantine',
-            'class_id': 'c-cm1',
-          },
-          const [
-            Versement('1er trimestre', 2000),
-            Versement('2e trimestre', 2000, fin: '2099-01-15'),
-            Versement('3e trimestre', 2000, fin: '2099-04-15'),
-          ],
-        );
-    final suivi = c.listen(
-      situationsCantineProvider((ecoleId, anneeId)),
-      (_, _) {},
-    );
-    final suiviHors = c.listen(
-      situationsHorsCantineProvider((ecoleId, anneeId)),
-      (_, _) {},
-    );
-    await AppHarness.settle(tester);
-    var cantine = suivi.read()!;
-    expect(cantine.map((l) => l.eleve.eleve.id), [
-      'e-0',
-    ], reason: 'seule la famille d’Aïcha participe');
-    final versement = cantine.single.situation.versements.first;
-    final recu = await c
-        .read(financesRepositoryProvider)
-        .encaisserRubriques(
-          schoolId: ecoleId,
-          yearId: anneeId,
-          studentId: 'e-0',
-          choix: [(versement, 1500)],
-          mode: 'especes',
-        );
-    expect(recu.receiptNumber, startsWith('R2526-'));
-    expect(recu.rubric, rubriqueCantine);
-    await AppHarness.settle(tester);
-    cantine = suivi.read()!;
-    expect(
-      (cantine.single.situation.encaisse, cantine.single.situation.reste),
-      (1500, 4500),
-      reason: 'cotisation partielle',
-    );
-    // Impayés distincts : la cantine n'entre pas dans les impayés de
-    // scolarité.
-    final horsCantine = suiviHors.read()!;
-    expect(
-      horsCantine
-          .firstWhere((l) => l.eleve.eleve.id == 'e-0')
-          .situation
-          .lignes
-          .any((x) => x.ligne.rubric == rubriqueCantine),
-      isFalse,
-    );
-    await tap(tester, find.text('Cotisations et impayés de cantine'));
-    expect(find.byKey(const Key('reste-cantine-e-0')), findsOne);
-    expect(find.byKey(const Key('reste-cantine-e-1')), findsNothing);
-    expect(
-      texte(tester.widget<Text>(find.byKey(const Key('impayes-cantine'))).data),
-      contains('500'),
-      reason: '1er trimestre : 2 000 − 1 500',
-    );
-    await retour(tester);
+    await accueil(tester);
 
     // Élève sorti : historique de cantine conservé.
+    final c = conteneur(tester);
     await c.read(localStoreProvider).save('students', {
       'id': 'e-0',
       'archived_at': '2026-11-04T08:00:00Z',
     });
     await AppHarness.settle(tester);
-    await tap(tester, find.text('Élèves bénéficiaires'));
-    expect(find.text('Élèves sortis (historique conservé)'), findsOne);
-    expect(find.text('TEST Aïcha'), findsOne);
-    await accueil(tester);
+    expect(
+      (await h.db.select(h.db.canteenSubscriptions).get()).where(
+        (s) => s.studentId == 'e-0',
+      ),
+      hasLength(3),
+    );
 
     // ------------------------ OFF : données intactes ---------------------
-    final avant = (
-      (await h.db.select(h.db.stockMovements).get()).length,
-      (await h.db.select(h.db.mealServices).get()).length,
-      (await h.db.select(h.db.canteenBeneficiaries).get()).length,
-    );
+    final avant = (await h.db.select(h.db.canteenSubscriptions).get()).length;
     await basculerCantine(tester, activer: false);
-    await ouvrirFinances(tester);
-    expect(find.text('Cantine'), findsNothing);
-    final c2 = conteneur(tester);
-    final toutes = c2.read(situationsProvider((ecoleId, anneeId)))!;
+    expect(find.text('Cantine scolaire'), findsNothing);
     expect(
-      toutes.every(
-        (l) => l.situation.lignes.every((x) => x.ligne.rubric != 'cantine'),
-      ),
-      isTrue,
-      reason: 'module désactivé : plus de cotisation de cantine due',
-    );
-    expect(
-      c2.read(rubriquesProvider(ecoleId)).value!.map((r) => r.code),
-      isNot(contains(rubriqueCantine)),
-    );
-    expect(
-      (
-        (await h.db.select(h.db.stockMovements).get()).length,
-        (await h.db.select(h.db.mealServices).get()).length,
-        (await h.db.select(h.db.canteenBeneficiaries).get()).length,
-      ),
+      (await h.db.select(h.db.canteenSubscriptions).get()).length,
       avant,
       reason: 'désactiver ne supprime rien',
     );
-
-    // ------------------------ ON : tout revient --------------------------
+    // Les frais scolaires ne contiennent jamais la cantine.
+    final toutes = conteneur(tester)
+        .read(situationsProvider((ecoleId, anneeId)));
+    expect(
+      (toutes ?? const []).every(
+        (l) => l.situation.lignes.every((x) => x.ligne.rubric != 'cantine'),
+      ),
+      isTrue,
+    );
     await basculerCantine(tester, activer: true);
-    await ouvrirFinances(tester);
-    await tap(tester, find.text('Cantine'));
-    await tap(tester, find.text('Stock de vivres'));
-    expect(texte(tester.widget<Text>(find.byKey(Key('stock-$riz'))).data), '4');
+    expect(find.text('Cantine scolaire'), findsOne);
     await h.dispose(tester);
   });
 
-  testWidgets('responsable de cantine : bouton « Cantine » à l’accueil, '
+  testWidgets('responsable de cantine : « Cantine scolaire » à l’accueil, '
       'pas de Finances ; dépense de cantine dans la caisse commune ; menu', (
     tester,
   ) async {
@@ -305,10 +249,11 @@ void main() {
     await h.pump(tester);
     await h.login(tester, 'cantine@ecole-test.local');
     expect(find.text('Finances'), findsNothing);
-    await AppHarness.toucher(tester, 'Cantine');
+    await AppHarness.toucher(tester, 'Cantine scolaire');
     await AppHarness.settle(tester);
-    expect(find.text('Cotisations et impayés de cantine'), findsNothing);
+    expect(find.byKey(const Key('abonner-encaisser')), findsOne);
 
+    await tap(tester, find.text('Vivres et repas'));
     await tap(tester, find.text('Dépenses de cantine'));
     await tap(tester, find.byKey(const Key('nouvelle-depense-cantine')));
     expect(find.text('Dépense de cantine'), findsOne);

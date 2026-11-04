@@ -261,3 +261,15 @@ Appels uniquement depuis une Edge Function (fournisseur et modèle par variables
   bénéficiaires dont la famille participe (`avecCantine`) ; mêmes reçus
   numérotés ; impayés de cantine séparés (`situationsCantineProvider`,
   `situationsHorsCantineProvider`).
+
+### A26 — Cantine par abonnement mensuel (`20261106000100_a26_abonnements_cantine.sql`, base v16)
+- `canteen_years` (mois de fonctionnement, jour limite), `canteen_rates`
+  (tarif à partir d'un mois), `canteen_subscriptions` (élève + mois,
+  identifiant calculé, montant dû figé par trigger), réduction mensuelle
+  sur `canteen_beneficiaries`, `payment_allocations.canteen_subscription_id`.
+- Un reçu de cantine = `payments` rubrique `cantine` + un détail par mois.
+  Statut d'un mois calculé sur le téléphone (`MoisEleve`) : abonné (payé en
+  entier ou exonéré), paiement partiel, non abonné (aucune dette).
+- Le délégué « cantine » lit et crée les reçus de cantine seulement
+  (politiques `payments_cantine_*`). La rubrique « cantine » n'apparaît
+  plus dans les frais scolaires.

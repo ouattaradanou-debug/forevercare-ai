@@ -996,6 +996,8 @@ CREATE TABLE payment_allocations (
   installment_id TEXT,
   rubric TEXT,
   label TEXT,
+  -- A26 : mois de cantine réglé.
+  canteen_subscription_id TEXT,
   amount INTEGER NOT NULL,
   created_at TEXT,
   updated_at TEXT NOT NULL DEFAULT '',
@@ -1042,6 +1044,8 @@ CREATE TABLE canteen_beneficiaries (
   -- Mode mixte : la famille participe-t-elle ?
   contributes BOOLEAN NOT NULL DEFAULT TRUE,
   since TEXT,
+  -- A26 : réduction mensuelle (FCFA) ; contributes = faux : exonéré.
+  monthly_reduction INTEGER,
   created_at TEXT,
   updated_at TEXT NOT NULL,
   deleted_at TEXT,
@@ -1109,3 +1113,49 @@ CREATE TABLE canteen_menus (
   deleted_at TEXT,
   synced_at TEXT
 ) AS CanteenMenuRow;
+
+-- ---------------- A26 : cantine par abonnement mensuel ----------------
+-- Réglages de l'année : mois de fonctionnement (liste JSON de
+-- « 2025-10-01 »…), jour limite de paiement.
+CREATE TABLE canteen_years (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  months TEXT NOT NULL DEFAULT '[]',
+  due_day INTEGER,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS CanteenYearRow;
+
+-- Tarif mensuel applicable à partir d'un mois (historique conservé).
+CREATE TABLE canteen_rates (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  from_month TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS CanteenRateRow;
+
+-- Abonnement d'un élève pour un mois (montant dû figé à la création).
+CREATE TABLE canteen_subscriptions (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  school_year_id TEXT NOT NULL,
+  student_id TEXT NOT NULL,
+  month TEXT NOT NULL,
+  class_id TEXT,
+  amount_due INTEGER NOT NULL,
+  exempt BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS CanteenSubscriptionRow;
+
+CREATE INDEX canteen_subscriptions_year ON canteen_subscriptions (school_year_id, month);

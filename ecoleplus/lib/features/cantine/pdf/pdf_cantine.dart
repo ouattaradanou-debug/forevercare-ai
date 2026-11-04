@@ -122,12 +122,12 @@ Future<Uint8List> pdfBilanCantine(PolicesPdf polices, DonneesBilanCantine d) {
             ['Repas servis', fcfa(b.repas)],
             ['Jours de service', '${b.joursServis}'],
             ['Moyenne de repas par jour', fcfa(b.moyenneParJour)],
-            ['Élèves bénéficiaires', '${b.beneficiaires}'],
+            ['Élèves abonnés', '${b.beneficiaires}'],
             ['Dépenses de cantine', fcfa(b.cout.depenses)],
             ['Coût moyen par repas', texteCout(b.cout)],
             if (d.avecCotisations) ...[
-              ['Cotisations de cantine encaissées', fcfa(b.cotisations)],
-              ['Impayés de cantine (à ce jour)', fcfa(b.impayes)],
+              ['Abonnements encaissés', fcfa(b.cotisations)],
+              ['Avances à compléter (mois payés en partie)', fcfa(b.impayes)],
             ],
           ],
           largeurs: const {0: pw.FlexColumnWidth(3), 1: pw.FlexColumnWidth()},
@@ -146,9 +146,9 @@ Future<Uint8List> pdfBilanCantine(PolicesPdf polices, DonneesBilanCantine d) {
             ],
             total: ['Total', fcfa(b.repas)],
           ),
-        _titre('3. Bénéficiaires par classe'),
+        _titre('3. Abonnés par classe'),
         _tableau(
-          const ['Classe', 'Bénéficiaires', 'Effectif'],
+          const ['Classe', 'Abonnés', 'Effectif'],
           [
             for (final e in d.effectifs)
               [e.classe, '${e.beneficiaires}', '${e.effectif}'],
@@ -230,5 +230,51 @@ Future<Uint8List> pdfMenu(
         ),
       ),
     );
+  return doc.save();
+}
+
+/// Liste des élèves autorisés à la cantine pour un mois (contrôle
+/// quotidien), par classe.
+Future<Uint8List> pdfAutorises(
+  PolicesPdf polices, {
+  required String ecole,
+  required String mois,
+  required List<(String, List<String>)> classes,
+}) {
+  final doc = pw.Document(theme: polices.theme);
+  final total = classes.fold<int>(0, (s, c) => s + c.$2.length);
+  doc.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(32),
+      build: (_) => [
+        pw.Text(ecole.toUpperCase(), style: _gras.copyWith(fontSize: 13)),
+        pw.SizedBox(height: 4),
+        pw.Text(
+          'Cantine — élèves autorisés : $mois',
+          style: _gras.copyWith(fontSize: 14),
+        ),
+        pw.Text(
+          '$total élève(s) abonné(s) (mois payé en entier ou exonéré).',
+          style: _normal,
+        ),
+        for (final (classe, noms) in classes)
+          if (noms.isNotEmpty) ...[
+            _titre('$classe (${noms.length})'),
+            _tableau(
+              const ['N°', 'Nom et prénom', 'Présent'],
+              [
+                for (final (i, n) in noms.indexed) ['${i + 1}', n, ''],
+              ],
+              largeurs: const {
+                0: pw.FixedColumnWidth(28),
+                1: pw.FlexColumnWidth(5),
+                2: pw.FlexColumnWidth(),
+              },
+            ),
+          ],
+      ],
+    ),
+  );
   return doc.save();
 }

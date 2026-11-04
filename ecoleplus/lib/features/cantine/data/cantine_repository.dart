@@ -3,6 +3,7 @@ import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/sync/local_store.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/cantine/domain/cantine.dart';
+import 'package:ecoleplus/features/finances/data/finances_repository.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
 import 'package:uuid/uuid.dart';
 
@@ -47,30 +48,6 @@ class CantineRepository {
             : definition!.trim(),
         'deleted_at': null,
       });
-      if (mode != 'sans_participation') await _assurerRubrique(schoolId);
-    });
-  }
-
-  /// Rubrique « Cantine » des Finances (même identifiant sur tous les
-  /// téléphones ; reprise si elle avait été retirée).
-  Future<void> _assurerRubrique(String schoolId) async {
-    final id = _v5('ecoleplus:rubrique:$schoolId:$rubriqueCantine');
-    final r = await (db.select(
-      db.feeRubrics,
-    )..where((x) => x.id.equals(id))).getSingleOrNull();
-    if (r != null && r.deletedAt == null) return;
-    final ordre = await (db.select(
-      db.feeRubrics,
-    )..where((x) => x.schoolId.equals(schoolId))).get();
-    await store.save('fee_rubrics', {
-      'id': id,
-      'school_id': schoolId,
-      'code': rubriqueCantine,
-      'label': r?.label ?? 'Cantine',
-      'sort_order':
-          r?.sortOrder ??
-          ordre.fold<int>(0, (m, x) => x.sortOrder > m ? x.sortOrder : m) + 10,
-      'deleted_at': null,
     });
   }
 
@@ -432,6 +409,196 @@ class CantineRepository {
       'week_start': semaine,
       'content': texte.trim(),
       'deleted_at': null,
+    });
+  }
+
+  // ----------------------- A26 : abonnements mensuels --------------------
+
+  static String idAnnee(String yearId) =>
+      _v5('ecoleplus:cantine-annee:$yearId');
+  static String idTarif(String yearId, String mois) =>
+      _v5('ecoleplus:cantine-tarif:$yearId:$mois');
+  static String idAbonnement(String studentId, String mois) =>
+      _v5('ecoleplus:abonnement:$studentId:${debutMois(mois)}');
+
+  Stream<CanteenYearRow?> watchAnnee(String yearId) => (db.select(
+    db.canteenYears,
+  )..where((y) => y.id.equals(idAnnee(yearId)))).watchSingleOrNull();
+
+  Stream<List<CanteenRateRow>> watchTarifs(String yearId) =>
+      (db.select(db.canteenRates)
+            ..where((t) => t.schoolYearId.equals(yearId) & t.deletedAt.isNull())
+            ..orderBy([(t) => OrderingTerm.asc(t.fromMonth)]))
+          .watch();
+
+  Stream<List<CanteenSubscriptionRow>> watchAbonnements(String yearId) =>
+      (db.select(
+            db.canteenSubscriptions,
+          )..where((a) => a.schoolYearId.equals(yearId) & a.deletedAt.isNull()))
+          .watch();
+
+  /// Mois de fonctionnement et jour limite de paiement de l'année.
+  Future<void> enregistrerAnnee({
+    required String schoolId,
+    required String yearId,
+    required List<String> mois,
+    int? jourLimite,
+  }) async {
+    if (mois.isEmpty) {
+      throw const UserMessage('Cochez au moins un mois de fonctionnement.');
+    }
+    if (jourLimite != null && (jourLimite < 1 || jourLimite > 31)) {
+      throw const UserMessage('Jour limite : entre 1 et 31.');
+    }
+    await store.save('canteen_years', {
+      'id': idAnnee(yearId),
+      'school_id': schoolId,
+      'school_year_id': yearId,
+      'months': ([for (final m in mois) debutMois(m)]..sort()),
+      'due_day': jourLimite,
+      'deleted_at': null,
+    });
+  }
+
+  /// Tarif mensuel à partir d'un mois. Les mois déjà abonnés gardent le
+  /// montant de leur abonnement.
+  Future<void> fixerTarif({
+    required String schoolId,
+    required String yearId,
+    required String aPartirDe,
+    required int montant,
+  }) async {
+    if (montant < 0) {
+      throw const UserMessage('Le tarif ne peut pas être négatif.');
+    }
+    final mois = debutMois(aPartirDe);
+    await store.save('canteen_rates', {
+      'id': idTarif(yearId, mois),
+      'school_id': schoolId,
+      'school_year_id': yearId,
+      'from_month': mois,
+      'amount': montant,
+      'deleted_at': null,
+    });
+  }
+
+  /// Exonération ou réduction mensuelle d'un élève (pour les prochains
+  /// abonnements ; les mois déjà abonnés ne changent pas).
+  Future<void> definirFiche({
+    required String schoolId,
+    required String yearId,
+    required String studentId,
+    required bool exonere,
+    int? reduction,
+  }) async {
+    if (reduction != null && reduction < 0) {
+      throw const UserMessage('La réduction ne peut pas être négative.');
+    }
+    await store.save('canteen_beneficiaries', {
+      'id': idBeneficiaire(studentId, yearId),
+      'school_id': schoolId,
+      'school_year_id': yearId,
+      'student_id': studentId,
+      'is_beneficiary': true,
+      'contributes': !exonere,
+      'monthly_reduction': reduction == 0 ? null : reduction,
+      'deleted_at': null,
+    });
+  }
+
+  /// Abonne un élève aux mois choisis et encaisse en un seul reçu.
+  /// [recu] : montant versé (le total des mois par défaut ; moins = avance,
+  /// le dernier mois servi restant en paiement partiel). Les mois exonérés
+  /// sont abonnés sans paiement. Renvoie le reçu (null : rien à payer).
+  Future<PaymentRow?> abonnerEtEncaisser({
+    required FinancesRepository finances,
+    required String schoolId,
+    required String yearId,
+    required String studentId,
+    required String? classId,
+    required List<MoisEleve> mois,
+    required int recu,
+    required String mode,
+    String? libelleMode,
+    String? reference,
+    String? payeur,
+    String? telephone,
+  }) async {
+    if (mois.isEmpty) throw const UserMessage('Cochez au moins un mois.');
+    for (final m in mois) {
+      if (m.statut == StatutMois.abonne) {
+        throw UserMessage(
+          '${libelleMoisCantine(m.mois)} est déjà payé : impossible de le '
+          'payer deux fois.',
+        );
+      }
+      if (!m.payable) {
+        throw UserMessage(
+          '${libelleMoisCantine(m.mois)} : aucun tarif fixé (réglages).',
+        );
+      }
+    }
+    final total = mois.fold<int>(0, (s, m) => s + m.aVerser);
+    if (recu < 0) throw const UserMessage('Montant reçu invalide.');
+    if (recu > total) {
+      throw UserMessage(
+        'Montant reçu (${fcfa(recu)}) supérieur au total des mois '
+        '(${fcfa(total)}).',
+      );
+    }
+    if (total > 0 && recu == 0) {
+      throw const UserMessage('Indiquez le montant reçu.');
+    }
+    final parts = {
+      for (final (m, part) in repartir(recu, [
+        for (final m in mois)
+          if (m.aVerser > 0) m,
+      ]))
+        m.mois: part,
+    };
+    return await db.transaction(() async {
+      // Abonnement des mois payés (même en partie) ou exonérés ; montant
+      // figé au tarif du jour. Un mois sans aucun versement n'est pas
+      // abonné (aucune dette).
+      final ids = <String, String>{};
+      for (final m in mois) {
+        final id = m.abonnement?.id ?? idAbonnement(studentId, m.mois);
+        ids[m.mois] = id;
+        if (m.abonnement == null &&
+            (m.montant == 0 || (parts[m.mois] ?? 0) > 0)) {
+          await store.save('canteen_subscriptions', {
+            'id': id,
+            'school_id': schoolId,
+            'school_year_id': yearId,
+            'student_id': studentId,
+            'month': debutMois(m.mois),
+            'class_id': classId,
+            'amount_due': m.montant,
+            'exempt': m.montant == 0,
+            'deleted_at': null,
+          });
+        }
+      }
+      if (total == 0) return null;
+      return await finances.encaisserCantine(
+        schoolId: schoolId,
+        yearId: yearId,
+        studentId: studentId,
+        detail: [
+          for (final m in [...mois]..sort((x, y) => x.mois.compareTo(y.mois)))
+            if ((parts[m.mois] ?? 0) > 0)
+              (
+                'Cantine — ${libelleMoisCantine(m.mois)}',
+                parts[m.mois]!,
+                ids[m.mois]!,
+              ),
+        ],
+        mode: mode,
+        libelleMode: libelleMode,
+        reference: reference,
+        payeur: payeur,
+        telephone: telephone,
+      );
     });
   }
 }

@@ -191,10 +191,9 @@ List<Widget> _boutonsEcole(
     // Finances (phase 10) : directeur et délégué « finances » seulement.
     if (droits.contains('finances'))
       bouton(Icons.payments_outlined, 'Finances', '/finances'),
-    // Cantine (phase 11) : dans « Finances » pour qui y a accès ; bouton à
-    // part pour le responsable de cantine sans droit « finances ».
-    if (cantine && droits.contains('cantine') && !droits.contains('finances'))
-      bouton(Icons.restaurant, 'Cantine', '/cantine'),
+    // Cantine scolaire (A26) : rubrique à part, si elle est activée.
+    if (cantine && (droits.contains('cantine') || droits.contains('finances')))
+      bouton(Icons.restaurant, 'Cantine scolaire', '/cantine'),
     bouton(Icons.local_library_outlined, 'Bibliothèque', '/bibliotheque'),
     // Commande à part (A20) : directeur et délégués « archives ».
     if (droits.contains('archives'))

@@ -101,8 +101,8 @@ select is((select count(*)::int from public.classes where level_code like 'C%'),
 -- Dossier médico-scolaire : inaccessible directement, même pour le directeur
 select throws_ok($$select * from medical.records$$, '42501', null, 'medical : aucun accès direct');
 reset role;
-select is((select count(*)::int from pg_policies where policyname like 'module_%' and permissive = 'RESTRICTIVE'), 17,
-  'gardes posées sur les 17 tables des modules optionnels (5 maternelle, 7 cantine, 4 médical + 1 factice)');
+select is((select count(*)::int from pg_policies where policyname like 'module_%' and permissive = 'RESTRICTIVE'), 20,
+  'gardes posées sur les 20 tables des modules optionnels (5 maternelle, 10 cantine, 4 médical + 1 factice)');
 
 select * from finish();
 rollback;

@@ -13,6 +13,10 @@ const tablesCantine = [
   'stock_products',
   'stock_movements',
   'canteen_menus',
+  // A26 (version 16).
+  'canteen_years',
+  'canteen_rates',
+  'canteen_subscriptions',
 ];
 
 void main() {
@@ -56,7 +60,7 @@ void main() {
   });
 
   test('base du téléphone : passage de la version 14 (A23) à la 15 '
-      '(cantine) sans perte', () async {
+      '(cantine) puis 16 sans perte', () async {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     final dir = Directory.systemTemp.createTempSync('migration14');
     final fichier = File('${dir.path}/ecole.db');
@@ -70,6 +74,9 @@ void main() {
     for (final t in tablesCantine) {
       await db.customStatement('DROP TABLE $t');
     }
+    await db.customStatement(
+      'ALTER TABLE payment_allocations DROP COLUMN canteen_subscription_id',
+    );
     await db.customStatement('PRAGMA user_version = 14');
     await db.close();
 
@@ -77,6 +84,40 @@ void main() {
     expect((await db.select(db.payments).get()).single.amount, 5000);
     expect(await db.select(db.stockMovements).get(), isEmpty);
     expect(await db.select(db.canteenSettings).get(), isEmpty);
+    await db.close();
+    dir.deleteSync(recursive: true);
+  });
+
+  test('base du téléphone : passage de la version 15 (cantine) à la 16 '
+      '(abonnements A26) sans perte', () async {
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+    final dir = Directory.systemTemp.createTempSync('migration15');
+    final fichier = File('${dir.path}/ecole.db');
+    var db = AppDatabase(NativeDatabase(fichier));
+    await db.customStatement(
+      'INSERT INTO canteen_beneficiaries (id, school_id, student_id, '
+      "school_year_id, updated_at) VALUES ('b', 's', 'e', 'a', '')",
+    );
+    for (final t in [
+      'canteen_years',
+      'canteen_rates',
+      'canteen_subscriptions',
+    ]) {
+      await db.customStatement('DROP TABLE $t');
+    }
+    for (final (t, c) in const [
+      ('canteen_beneficiaries', 'monthly_reduction'),
+      ('payment_allocations', 'canteen_subscription_id'),
+    ]) {
+      await db.customStatement('ALTER TABLE $t DROP COLUMN $c');
+    }
+    await db.customStatement('PRAGMA user_version = 15');
+    await db.close();
+
+    db = AppDatabase(NativeDatabase(fichier));
+    final b = await db.select(db.canteenBeneficiaries).getSingle();
+    expect((b.id, b.monthlyReduction), ('b', null));
+    expect(await db.select(db.canteenSubscriptions).get(), isEmpty);
     await db.close();
     dir.deleteSync(recursive: true);
   });

@@ -107,13 +107,7 @@ void main() {
     expect(vide.formule, contains('aucun repas'));
   });
 
-  test('participation des familles selon le mode', () {
-    expect(participe('avec_participation', benef()), isTrue);
-    expect(participe('sans_participation', benef()), isFalse);
-    expect(participe('mixte', benef(paie: false)), isFalse);
-    expect(participe('mixte', benef()), isTrue);
-    expect(participe('avec_participation', benef(oui: false)), isFalse);
-    expect(participe('avec_participation', null), isFalse);
+  test('ancienne rubrique « Cantine » : séparée des frais scolaires', () {
     final lignes = [
       const FeeItemRow(
         id: 'scol',
@@ -138,16 +132,6 @@ void main() {
         updatedAt: _t,
       ),
     ];
-    expect(avecCantine(lignes, actif: true, participeAuxFrais: true).length, 2);
-    expect(
-      avecCantine(lignes, actif: true, participeAuxFrais: false).single.id,
-      'scol',
-    );
-    expect(
-      avecCantine(lignes, actif: false, participeAuxFrais: true).single.id,
-      'scol',
-      reason: 'module désactivé : les totaux de scolarité ne changent pas',
-    );
     // Impayés de cantine distincts des impayés de scolarité.
     final s = situation(
       studentId: 'e1',
@@ -395,22 +379,13 @@ void main() {
         ra.pointer(schoolId: 's', jour: '2026-11-03', classId: null, repas: -1),
         throwsA(isA<UserMessage>()),
       );
-      // Réglages : avec participation, la rubrique « Cantine » apparaît.
+      // Réglages : plus de rubrique « Cantine » dans la grille (A26).
       await ra.enregistrerReglages(
         schoolId: 's',
-        mode: 'mixte',
+        mode: 'avec_participation',
         definition: 'Vivres apportés par la communauté',
       );
-      final r = await a.db.select(a.db.feeRubrics).get();
-      expect(r.where((x) => x.code == rubriqueCantine), hasLength(1));
-      await ra.enregistrerReglages(schoolId: 's', mode: 'avec_participation');
-      expect(
-        (await a.db.select(a.db.feeRubrics).get()).where(
-          (x) => x.code == rubriqueCantine,
-        ),
-        hasLength(1),
-        reason: 'pas de doublon',
-      );
+      expect(await a.db.select(a.db.feeRubrics).get(), isEmpty);
       await ra.enregistrerMenu(
         schoolId: 's',
         jour: '2026-11-05',

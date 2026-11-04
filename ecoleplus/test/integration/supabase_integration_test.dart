@@ -1758,6 +1758,84 @@ void mainA6() {
     await b.close();
     await a.close();
   }, skip: skip);
+
+  test('A26 : abonnement de plusieurs mois en un reçu, reçu par le serveur, '
+      'vu sur l’autre téléphone ; mois payé : montant figé', () async {
+    const ecole = '10000000-0000-4000-8000-000000000001';
+    const annee = '20000000-0000-4000-8000-000000002025';
+    const aicha = 'd0000000-0000-4000-8000-000000000001';
+    final a = await connecte('directeur@ecole-test.local');
+    final b = await connecte('directeur@ecole-test.local');
+    await a.repo.setModule(ecole, 'cantine', on: true);
+    final ra = CantineRepository(a.store);
+    final fa = FinancesRepository(
+      a.store,
+      remote: a.remote,
+      mediaDir: a.mediaDir,
+    );
+    const mois = ['2025-10-01', '2025-11-01', '2025-12-01'];
+    await ra.enregistrerAnnee(schoolId: ecole, yearId: annee, mois: mois);
+    await ra.fixerTarif(
+      schoolId: ecole,
+      yearId: annee,
+      aPartirDe: '2025-10-01',
+      montant: 5000,
+    );
+    Future<SituationCantine> lire(Phone p) async => situationCantine(
+      studentId: aicha,
+      mois: mois,
+      tarifs: await p.db.select(p.db.canteenRates).get(),
+      abonnements: await p.db.select(p.db.canteenSubscriptions).get(),
+      payes: payeParAbonnement(
+        await p.db.select(p.db.paymentAllocations).get(),
+      ),
+    );
+    final s = await lire(a);
+    final recu = await ra.abonnerEtEncaisser(
+      finances: fa,
+      schoolId: ecole,
+      yearId: annee,
+      studentId: aicha,
+      classId: null,
+      mois: [s.duMois('2025-10-01')!, s.duMois('2025-12-01')!],
+      recu: 10000,
+      mode: 'especes',
+    );
+    await a.engine.syncNow();
+    final refus = await (a.db.select(
+      a.db.outbox,
+    )..where((o) => o.status.equals('refuse'))).get();
+    expect(refus, isEmpty);
+    expect(
+      await a.client
+          .from('payment_allocations')
+          .select('canteen_subscription_id')
+          .eq('payment_id', recu!.id),
+      hasLength(2),
+    );
+    await b.engine.syncNow();
+    final vu = await lire(b);
+    expect(
+      [for (final m in vu.mois) m.statut],
+      [StatutMois.abonne, StatutMois.nonAbonne, StatutMois.abonne],
+    );
+    // Montant figé même si on essaie de le changer sur le serveur.
+    final id = vu.duMois('2025-10-01')!.abonnement!.id;
+    await a.client
+        .from('canteen_subscriptions')
+        .update({'amount_due': 1})
+        .eq('id', id);
+    final lu = await a.client
+        .from('canteen_subscriptions')
+        .select('amount_due')
+        .eq('id', id)
+        .single();
+    expect(lu['amount_due'], 5000);
+    await a.repo.setModule(ecole, 'cantine', on: false);
+    await a.engine.syncNow();
+    await b.close();
+    await a.close();
+  }, skip: skip);
 }
 
 /// Lit le code à 6 chiffres dans la boîte de test locale (Mailpit).

@@ -418,6 +418,7 @@ class FinancesRepository {
             'rubric': a.rubric,
             'label': a.label,
             'amount': -a.amount,
+            'canteen_subscription_id': a.canteenSubscriptionId,
           },
       ],
     );
@@ -494,6 +495,56 @@ class FinancesRepository {
                 ? v.ligne.label
                 : '${v.ligne.label} — ${v.libelle}',
             'amount': m,
+          },
+      ],
+    );
+  }
+
+  /// Reçu de cantine (A26) : un seul paiement, détaillé mois par mois
+  /// ([detail] : libellé, montant, abonnement).
+  Future<PaymentRow> encaisserCantine({
+    required String schoolId,
+    required String yearId,
+    required String studentId,
+    required List<(String, int, String)> detail,
+    required String mode,
+    String? libelleMode,
+    String? reference,
+    String? payeur,
+    String? telephone,
+  }) async {
+    final utiles = [
+      for (final d in detail)
+        if (d.$2 > 0) d,
+    ];
+    if (utiles.isEmpty) {
+      throw const UserMessage('Le montant doit être supérieur à zéro.');
+    }
+    if (mode == 'autre' && (libelleMode ?? '').trim().isEmpty) {
+      throw const UserMessage('Précisez le mode de paiement.');
+    }
+    String? propre(String? t) => (t ?? '').trim().isEmpty ? null : t!.trim();
+    return await _ecrirePaiement(
+      schoolId: schoolId,
+      yearId: yearId,
+      champs: {
+        'student_id': studentId,
+        'rubric': 'cantine',
+        'fee_item_id': null,
+        'amount': utiles.fold<int>(0, (s, d) => s + d.$2),
+        'method': mode,
+        'method_label': mode == 'autre' ? propre(libelleMode) : null,
+        'reference': propre(reference),
+        'payer_name': propre(payeur),
+        'payer_phone': propre(telephone),
+      },
+      detail: [
+        for (final (libelle, montant, abonnement) in utiles)
+          {
+            'rubric': 'cantine',
+            'label': libelle,
+            'amount': montant,
+            'canteen_subscription_id': abonnement,
           },
       ],
     );

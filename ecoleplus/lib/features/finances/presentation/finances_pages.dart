@@ -7,8 +7,8 @@ import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
-import 'package:ecoleplus/features/cantine/presentation/cantine_pages.dart'
-    show droitsCantine;
+import 'package:ecoleplus/features/cantine/domain/cantine.dart'
+    show rubriqueCantine;
 import 'package:ecoleplus/features/cantine/presentation/cantine_providers.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
 import 'package:ecoleplus/features/finances/pdf/pdf_finances.dart';
@@ -297,18 +297,6 @@ class FinancesPage extends ConsumerWidget {
             'Rapports (PDF, Excel)',
             '/finances/rapports',
           ),
-          // Cantine (phase 11) : dans le volet financier, si active.
-          // Sans le droit « cantine » : seulement les cotisations.
-          if (ref.watch(cantineActiveProvider(ecole.id)))
-            if (droitsCantine(ref).contains('cantine'))
-              bouton(Icons.restaurant, 'Cantine', '/cantine')
-            else if (ref.watch(modeCantineProvider(ecole.id)) !=
-                'sans_participation')
-              bouton(
-                Icons.restaurant,
-                'Cotisations de cantine',
-                '/cantine/cotisations',
-              ),
           const SectionTitle('Paramétrage'),
           bouton(
             Icons.table_chart_outlined,
@@ -1065,6 +1053,7 @@ Future<DonneesRecu> donneesRecu(WidgetRef ref, PaymentRow x) async {
       if (a.paymentId == x.id)
         (a.label ?? libelleRubrique(a.rubric ?? ''), a.amount),
   ];
+  final cantine = ref.read(situationsAbonnementProvider((ecole.id, annee.id)));
   final media = ref.read(mediaDirProvider);
   final logo = ecole.logoPath == null || media == null
       ? null
@@ -1088,7 +1077,10 @@ Future<DonneesRecu> donneesRecu(WidgetRef ref, PaymentRow x) async {
     classe: eleve?.classe,
     payeur: x.payerName,
     recuPar: par?.displayName,
-    resteApres: eleve?.situation.reste,
+    // Reçu de cantine : reste des mois de cantine engagés (A26).
+    resteApres: x.rubric == rubriqueCantine
+        ? (cantine == null ? null : cantine[x.studentId]?.reste)
+        : eleve?.situation.reste,
     annule: annule?.receiptNumber,
     motif: x.reversalReason,
     anneeScolaire: annee.label,

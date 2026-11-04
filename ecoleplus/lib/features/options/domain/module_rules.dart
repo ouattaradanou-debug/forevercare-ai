@@ -6,10 +6,10 @@ const Map<String, List<String>> elementsMasques = {
     'les livrets d’évaluation',
   ],
   'cantine': [
-    'les élèves bénéficiaires de la cantine',
+    'les abonnements mensuels des élèves',
     'le pointage des repas',
     'le stock de vivres et les menus',
-    'les cotisations de cantine',
+    'les abonnements et reçus de cantine',
   ],
   'medico_scolaire': ['les fiches médico-scolaires des élèves'],
 };

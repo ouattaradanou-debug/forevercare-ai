@@ -1,7 +1,6 @@
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/features/cantine/domain/cantine.dart';
-import 'package:ecoleplus/features/cantine/presentation/cantine_providers.dart';
 import 'package:ecoleplus/features/finances/data/finances_repository.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
 import 'package:ecoleplus/features/staff/presentation/staff_providers.dart';
@@ -29,19 +28,19 @@ final StreamProviderFamily<List<FeeItemRow>, String> grilleProvider =
     );
 
 final StreamProviderFamily<List<FeeRubricRow>, String> rubriquesProvider =
-    StreamProvider.family((ref, schoolId) {
-      // La rubrique « Cantine » n'apparaît que si le module est actif.
-      final cantine = ref.watch(cantineActiveProvider(schoolId));
-      return ref
+    StreamProvider.family(
+      // La cantine a son propre module (abonnements mensuels, A26) : pas de
+      // rubrique « Cantine » dans la grille des frais.
+      (ref, schoolId) => ref
           .watch(financesRepositoryProvider)
           .watchRubriques(schoolId)
           .map(
             (l) => [
               for (final r in l)
-                if (cantine || r.code != rubriqueCantine) r,
+                if (r.code != rubriqueCantine) r,
             ],
-          );
-    });
+          ),
+    );
 
 /// Libellés des rubriques de l'école connectée (code → libellé).
 final Provider<Map<String, String>> nomsRubriquesProvider = Provider((ref) {
@@ -132,17 +131,6 @@ final ProviderFamily<List<LigneEleve>?, (String, String)> situationsProvider =
           paiements == null) {
         return null;
       }
-      // Cantine (phase 11) : la cotisation ne s'applique qu'aux
-      // bénéficiaires dont la famille participe, module actif.
-      final cantine = ref.watch(cantineActiveProvider(schoolId));
-      final mode = ref.watch(modeCantineProvider(schoolId));
-      final beneficiaires = cantine
-          ? ref.watch(beneficiairesProvider(yearId)).value
-          : const <String, CanteenBeneficiaryRow>{};
-      if (beneficiaires == null ||
-          (cantine && !ref.watch(reglagesCantineProvider(schoolId)).hasValue)) {
-        return null;
-      }
       final jour = ref.watch(aujourdhuiProvider);
       // Ordre de la grille : scolarité d'abord, puis l'ordre des rubriques
       // de l'école (A23).
@@ -164,15 +152,16 @@ final ProviderFamily<List<LigneEleve>?, (String, String)> situationsProvider =
             situation(
               studentId: e.eleve.id,
               lignes: trier(
-                avecCantine(
-                  fraisApplicables(
+                // La cantine est suivie par abonnement mensuel (A26),
+                // à part des frais scolaires.
+                [
+                  for (final f in fraisApplicables(
                     grille,
                     niveau: e.inscription?.levelCode ?? e.classe?.levelCode,
                     classe: e.classe?.id,
-                  ),
-                  actif: cantine,
-                  participeAuxFrais: participe(mode, beneficiaires[e.eleve.id]),
-                ),
+                  ))
+                    if (f.rubric != rubriqueCantine) f,
+                ],
               ),
               tranches: tranches,
               remises: remises,
@@ -196,20 +185,5 @@ situationsHorsCantineProvider = Provider.family((ref, k) {
         l.eleve,
         filtrerRubrique(l.situation, rubriqueCantine, garder: false),
       ),
-  ];
-});
-
-/// Cotisations de cantine : seulement les élèves qui ont la rubrique.
-final ProviderFamily<List<LigneEleve>?, (String, String)>
-situationsCantineProvider = Provider.family((ref, k) {
-  final toutes = ref.watch(situationsProvider(k));
-  if (toutes == null) return null;
-  return [
-    for (final l in toutes)
-      if (l.situation.lignes.any((x) => x.ligne.rubric == rubriqueCantine))
-        LigneEleve(
-          l.eleve,
-          filtrerRubrique(l.situation, rubriqueCantine, garder: true),
-        ),
   ];
 });

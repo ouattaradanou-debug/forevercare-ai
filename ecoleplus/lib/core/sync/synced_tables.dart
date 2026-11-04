@@ -177,6 +177,13 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
     info: db.stockMovements,
   ),
   SyncedTable<CanteenMenuRow>(name: 'canteen_menus', info: db.canteenMenus),
+  // A26 : abonnements mensuels (avant le détail des reçus qui les cite).
+  SyncedTable<CanteenYearRow>(name: 'canteen_years', info: db.canteenYears),
+  SyncedTable<CanteenRateRow>(name: 'canteen_rates', info: db.canteenRates),
+  SyncedTable<CanteenSubscriptionRow>(
+    name: 'canteen_subscriptions',
+    info: db.canteenSubscriptions,
+  ),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];

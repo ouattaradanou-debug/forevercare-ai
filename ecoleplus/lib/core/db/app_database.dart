@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -207,6 +207,26 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(t);
         }
         await m.createIndex(stockMovementsProduct);
+      }
+      if (from < 16) {
+        // A26 : cantine par abonnement mensuel. Les tables créées juste
+        // au-dessus (téléphone venant d'avant) ont déjà les colonnes.
+        if (from >= 15) {
+          await m.addColumn(
+            canteenBeneficiaries,
+            canteenBeneficiaries.monthlyReduction,
+          );
+        }
+        if (from >= 14) {
+          await m.addColumn(
+            paymentAllocations,
+            paymentAllocations.canteenSubscriptionId,
+          );
+        }
+        await m.createTable(canteenYears);
+        await m.createTable(canteenRates);
+        await m.createTable(canteenSubscriptions);
+        await m.createIndex(canteenSubscriptionsYear);
       }
     },
   );

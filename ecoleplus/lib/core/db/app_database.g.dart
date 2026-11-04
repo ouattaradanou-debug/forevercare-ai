@@ -43520,6 +43520,17 @@ class PaymentAllocations extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _canteenSubscriptionIdMeta =
+      const VerificationMeta('canteenSubscriptionId');
+  late final GeneratedColumn<String> canteenSubscriptionId =
+      GeneratedColumn<String>(
+        'canteen_subscription_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: '',
+      );
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   late final GeneratedColumn<int> amount = GeneratedColumn<int>(
     'amount',
@@ -43572,6 +43583,7 @@ class PaymentAllocations extends Table
     installmentId,
     rubric,
     label,
+    canteenSubscriptionId,
     amount,
     createdAt,
     updatedAt,
@@ -43637,6 +43649,15 @@ class PaymentAllocations extends Table
         label.isAcceptableOrUnknown(data['label']!, _labelMeta),
       );
     }
+    if (data.containsKey('canteen_subscription_id')) {
+      context.handle(
+        _canteenSubscriptionIdMeta,
+        canteenSubscriptionId.isAcceptableOrUnknown(
+          data['canteen_subscription_id']!,
+          _canteenSubscriptionIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('amount')) {
       context.handle(
         _amountMeta,
@@ -43700,6 +43721,10 @@ class PaymentAllocations extends Table
         DriftSqlType.string,
         data['${effectivePrefix}label'],
       ),
+      canteenSubscriptionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}canteen_subscription_id'],
+      ),
       amount: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}amount'],
@@ -43737,6 +43762,9 @@ class PaymentAllocationRow extends DataClass
   final String? installmentId;
   final String? rubric;
   final String? label;
+
+  /// A26 : mois de cantine réglé.
+  final String? canteenSubscriptionId;
   final int amount;
   final String? createdAt;
   final String updatedAt;
@@ -43749,6 +43777,7 @@ class PaymentAllocationRow extends DataClass
     this.installmentId,
     this.rubric,
     this.label,
+    this.canteenSubscriptionId,
     required this.amount,
     this.createdAt,
     required this.updatedAt,
@@ -43771,6 +43800,9 @@ class PaymentAllocationRow extends DataClass
     }
     if (!nullToAbsent || label != null) {
       map['label'] = Variable<String>(label);
+    }
+    if (!nullToAbsent || canteenSubscriptionId != null) {
+      map['canteen_subscription_id'] = Variable<String>(canteenSubscriptionId);
     }
     map['amount'] = Variable<int>(amount);
     if (!nullToAbsent || createdAt != null) {
@@ -43800,6 +43832,9 @@ class PaymentAllocationRow extends DataClass
       label: label == null && nullToAbsent
           ? const Value.absent()
           : Value(label),
+      canteenSubscriptionId: canteenSubscriptionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(canteenSubscriptionId),
       amount: Value(amount),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
@@ -43824,6 +43859,9 @@ class PaymentAllocationRow extends DataClass
       installmentId: serializer.fromJson<String?>(json['installment_id']),
       rubric: serializer.fromJson<String?>(json['rubric']),
       label: serializer.fromJson<String?>(json['label']),
+      canteenSubscriptionId: serializer.fromJson<String?>(
+        json['canteen_subscription_id'],
+      ),
       amount: serializer.fromJson<int>(json['amount']),
       createdAt: serializer.fromJson<String?>(json['created_at']),
       updatedAt: serializer.fromJson<String>(json['updated_at']),
@@ -43841,6 +43879,9 @@ class PaymentAllocationRow extends DataClass
       'installment_id': serializer.toJson<String?>(installmentId),
       'rubric': serializer.toJson<String?>(rubric),
       'label': serializer.toJson<String?>(label),
+      'canteen_subscription_id': serializer.toJson<String?>(
+        canteenSubscriptionId,
+      ),
       'amount': serializer.toJson<int>(amount),
       'created_at': serializer.toJson<String?>(createdAt),
       'updated_at': serializer.toJson<String>(updatedAt),
@@ -43856,6 +43897,7 @@ class PaymentAllocationRow extends DataClass
     Value<String?> installmentId = const Value.absent(),
     Value<String?> rubric = const Value.absent(),
     Value<String?> label = const Value.absent(),
+    Value<String?> canteenSubscriptionId = const Value.absent(),
     int? amount,
     Value<String?> createdAt = const Value.absent(),
     String? updatedAt,
@@ -43870,6 +43912,9 @@ class PaymentAllocationRow extends DataClass
         : this.installmentId,
     rubric: rubric.present ? rubric.value : this.rubric,
     label: label.present ? label.value : this.label,
+    canteenSubscriptionId: canteenSubscriptionId.present
+        ? canteenSubscriptionId.value
+        : this.canteenSubscriptionId,
     amount: amount ?? this.amount,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -43886,6 +43931,9 @@ class PaymentAllocationRow extends DataClass
           : this.installmentId,
       rubric: data.rubric.present ? data.rubric.value : this.rubric,
       label: data.label.present ? data.label.value : this.label,
+      canteenSubscriptionId: data.canteenSubscriptionId.present
+          ? data.canteenSubscriptionId.value
+          : this.canteenSubscriptionId,
       amount: data.amount.present ? data.amount.value : this.amount,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -43903,6 +43951,7 @@ class PaymentAllocationRow extends DataClass
           ..write('installmentId: $installmentId, ')
           ..write('rubric: $rubric, ')
           ..write('label: $label, ')
+          ..write('canteenSubscriptionId: $canteenSubscriptionId, ')
           ..write('amount: $amount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -43920,6 +43969,7 @@ class PaymentAllocationRow extends DataClass
     installmentId,
     rubric,
     label,
+    canteenSubscriptionId,
     amount,
     createdAt,
     updatedAt,
@@ -43936,6 +43986,7 @@ class PaymentAllocationRow extends DataClass
           other.installmentId == this.installmentId &&
           other.rubric == this.rubric &&
           other.label == this.label &&
+          other.canteenSubscriptionId == this.canteenSubscriptionId &&
           other.amount == this.amount &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -43951,6 +44002,7 @@ class PaymentAllocationsCompanion
   final Value<String?> installmentId;
   final Value<String?> rubric;
   final Value<String?> label;
+  final Value<String?> canteenSubscriptionId;
   final Value<int> amount;
   final Value<String?> createdAt;
   final Value<String> updatedAt;
@@ -43964,6 +44016,7 @@ class PaymentAllocationsCompanion
     this.installmentId = const Value.absent(),
     this.rubric = const Value.absent(),
     this.label = const Value.absent(),
+    this.canteenSubscriptionId = const Value.absent(),
     this.amount = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -43978,6 +44031,7 @@ class PaymentAllocationsCompanion
     this.installmentId = const Value.absent(),
     this.rubric = const Value.absent(),
     this.label = const Value.absent(),
+    this.canteenSubscriptionId = const Value.absent(),
     required int amount,
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -43995,6 +44049,7 @@ class PaymentAllocationsCompanion
     Expression<String>? installmentId,
     Expression<String>? rubric,
     Expression<String>? label,
+    Expression<String>? canteenSubscriptionId,
     Expression<int>? amount,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
@@ -44009,6 +44064,8 @@ class PaymentAllocationsCompanion
       if (installmentId != null) 'installment_id': installmentId,
       if (rubric != null) 'rubric': rubric,
       if (label != null) 'label': label,
+      if (canteenSubscriptionId != null)
+        'canteen_subscription_id': canteenSubscriptionId,
       if (amount != null) 'amount': amount,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -44025,6 +44082,7 @@ class PaymentAllocationsCompanion
     Value<String?>? installmentId,
     Value<String?>? rubric,
     Value<String?>? label,
+    Value<String?>? canteenSubscriptionId,
     Value<int>? amount,
     Value<String?>? createdAt,
     Value<String>? updatedAt,
@@ -44039,6 +44097,8 @@ class PaymentAllocationsCompanion
       installmentId: installmentId ?? this.installmentId,
       rubric: rubric ?? this.rubric,
       label: label ?? this.label,
+      canteenSubscriptionId:
+          canteenSubscriptionId ?? this.canteenSubscriptionId,
       amount: amount ?? this.amount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -44071,6 +44131,11 @@ class PaymentAllocationsCompanion
     if (label.present) {
       map['label'] = Variable<String>(label.value);
     }
+    if (canteenSubscriptionId.present) {
+      map['canteen_subscription_id'] = Variable<String>(
+        canteenSubscriptionId.value,
+      );
+    }
     if (amount.present) {
       map['amount'] = Variable<int>(amount.value);
     }
@@ -44099,6 +44164,7 @@ class PaymentAllocationsCompanion
           ..write('installmentId: $installmentId, ')
           ..write('rubric: $rubric, ')
           ..write('label: $label, ')
+          ..write('canteenSubscriptionId: $canteenSubscriptionId, ')
           ..write('amount: $amount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -45287,6 +45353,17 @@ class CanteenBeneficiaries extends Table
     requiredDuringInsert: false,
     $customConstraints: '',
   );
+  static const VerificationMeta _monthlyReductionMeta = const VerificationMeta(
+    'monthlyReduction',
+  );
+  late final GeneratedColumn<int> monthlyReduction = GeneratedColumn<int>(
+    'monthly_reduction',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -45340,6 +45417,7 @@ class CanteenBeneficiaries extends Table
     isBeneficiary,
     contributes,
     since,
+    monthlyReduction,
     createdAt,
     updatedAt,
     deletedAt,
@@ -45413,6 +45491,15 @@ class CanteenBeneficiaries extends Table
         since.isAcceptableOrUnknown(data['since']!, _sinceMeta),
       );
     }
+    if (data.containsKey('monthly_reduction')) {
+      context.handle(
+        _monthlyReductionMeta,
+        monthlyReduction.isAcceptableOrUnknown(
+          data['monthly_reduction']!,
+          _monthlyReductionMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -45476,6 +45563,10 @@ class CanteenBeneficiaries extends Table
         DriftSqlType.string,
         data['${effectivePrefix}since'],
       ),
+      monthlyReduction: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}monthly_reduction'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}created_at'],
@@ -45515,6 +45606,9 @@ class CanteenBeneficiaryRow extends DataClass
   /// Mode mixte : la famille participe-t-elle ?
   final bool contributes;
   final String? since;
+
+  /// A26 : réduction mensuelle (FCFA) ; contributes = faux : exonéré.
+  final int? monthlyReduction;
   final String? createdAt;
   final String updatedAt;
   final String? deletedAt;
@@ -45527,6 +45621,7 @@ class CanteenBeneficiaryRow extends DataClass
     required this.isBeneficiary,
     required this.contributes,
     this.since,
+    this.monthlyReduction,
     this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -45543,6 +45638,9 @@ class CanteenBeneficiaryRow extends DataClass
     map['contributes'] = Variable<bool>(contributes);
     if (!nullToAbsent || since != null) {
       map['since'] = Variable<String>(since);
+    }
+    if (!nullToAbsent || monthlyReduction != null) {
+      map['monthly_reduction'] = Variable<int>(monthlyReduction);
     }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<String>(createdAt);
@@ -45568,6 +45666,9 @@ class CanteenBeneficiaryRow extends DataClass
       since: since == null && nullToAbsent
           ? const Value.absent()
           : Value(since),
+      monthlyReduction: monthlyReduction == null && nullToAbsent
+          ? const Value.absent()
+          : Value(monthlyReduction),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -45594,6 +45695,7 @@ class CanteenBeneficiaryRow extends DataClass
       isBeneficiary: serializer.fromJson<bool>(json['is_beneficiary']),
       contributes: serializer.fromJson<bool>(json['contributes']),
       since: serializer.fromJson<String?>(json['since']),
+      monthlyReduction: serializer.fromJson<int?>(json['monthly_reduction']),
       createdAt: serializer.fromJson<String?>(json['created_at']),
       updatedAt: serializer.fromJson<String>(json['updated_at']),
       deletedAt: serializer.fromJson<String?>(json['deleted_at']),
@@ -45611,6 +45713,7 @@ class CanteenBeneficiaryRow extends DataClass
       'is_beneficiary': serializer.toJson<bool>(isBeneficiary),
       'contributes': serializer.toJson<bool>(contributes),
       'since': serializer.toJson<String?>(since),
+      'monthly_reduction': serializer.toJson<int?>(monthlyReduction),
       'created_at': serializer.toJson<String?>(createdAt),
       'updated_at': serializer.toJson<String>(updatedAt),
       'deleted_at': serializer.toJson<String?>(deletedAt),
@@ -45626,6 +45729,7 @@ class CanteenBeneficiaryRow extends DataClass
     bool? isBeneficiary,
     bool? contributes,
     Value<String?> since = const Value.absent(),
+    Value<int?> monthlyReduction = const Value.absent(),
     Value<String?> createdAt = const Value.absent(),
     String? updatedAt,
     Value<String?> deletedAt = const Value.absent(),
@@ -45638,6 +45742,9 @@ class CanteenBeneficiaryRow extends DataClass
     isBeneficiary: isBeneficiary ?? this.isBeneficiary,
     contributes: contributes ?? this.contributes,
     since: since.present ? since.value : this.since,
+    monthlyReduction: monthlyReduction.present
+        ? monthlyReduction.value
+        : this.monthlyReduction,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -45658,6 +45765,9 @@ class CanteenBeneficiaryRow extends DataClass
           ? data.contributes.value
           : this.contributes,
       since: data.since.present ? data.since.value : this.since,
+      monthlyReduction: data.monthlyReduction.present
+          ? data.monthlyReduction.value
+          : this.monthlyReduction,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -45675,6 +45785,7 @@ class CanteenBeneficiaryRow extends DataClass
           ..write('isBeneficiary: $isBeneficiary, ')
           ..write('contributes: $contributes, ')
           ..write('since: $since, ')
+          ..write('monthlyReduction: $monthlyReduction, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -45692,6 +45803,7 @@ class CanteenBeneficiaryRow extends DataClass
     isBeneficiary,
     contributes,
     since,
+    monthlyReduction,
     createdAt,
     updatedAt,
     deletedAt,
@@ -45708,6 +45820,7 @@ class CanteenBeneficiaryRow extends DataClass
           other.isBeneficiary == this.isBeneficiary &&
           other.contributes == this.contributes &&
           other.since == this.since &&
+          other.monthlyReduction == this.monthlyReduction &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -45723,6 +45836,7 @@ class CanteenBeneficiariesCompanion
   final Value<bool> isBeneficiary;
   final Value<bool> contributes;
   final Value<String?> since;
+  final Value<int?> monthlyReduction;
   final Value<String?> createdAt;
   final Value<String> updatedAt;
   final Value<String?> deletedAt;
@@ -45736,6 +45850,7 @@ class CanteenBeneficiariesCompanion
     this.isBeneficiary = const Value.absent(),
     this.contributes = const Value.absent(),
     this.since = const Value.absent(),
+    this.monthlyReduction = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -45750,6 +45865,7 @@ class CanteenBeneficiariesCompanion
     this.isBeneficiary = const Value.absent(),
     this.contributes = const Value.absent(),
     this.since = const Value.absent(),
+    this.monthlyReduction = const Value.absent(),
     this.createdAt = const Value.absent(),
     required String updatedAt,
     this.deletedAt = const Value.absent(),
@@ -45768,6 +45884,7 @@ class CanteenBeneficiariesCompanion
     Expression<bool>? isBeneficiary,
     Expression<bool>? contributes,
     Expression<String>? since,
+    Expression<int>? monthlyReduction,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
     Expression<String>? deletedAt,
@@ -45782,6 +45899,7 @@ class CanteenBeneficiariesCompanion
       if (isBeneficiary != null) 'is_beneficiary': isBeneficiary,
       if (contributes != null) 'contributes': contributes,
       if (since != null) 'since': since,
+      if (monthlyReduction != null) 'monthly_reduction': monthlyReduction,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -45798,6 +45916,7 @@ class CanteenBeneficiariesCompanion
     Value<bool>? isBeneficiary,
     Value<bool>? contributes,
     Value<String?>? since,
+    Value<int?>? monthlyReduction,
     Value<String?>? createdAt,
     Value<String>? updatedAt,
     Value<String?>? deletedAt,
@@ -45812,6 +45931,7 @@ class CanteenBeneficiariesCompanion
       isBeneficiary: isBeneficiary ?? this.isBeneficiary,
       contributes: contributes ?? this.contributes,
       since: since ?? this.since,
+      monthlyReduction: monthlyReduction ?? this.monthlyReduction,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -45844,6 +45964,9 @@ class CanteenBeneficiariesCompanion
     if (since.present) {
       map['since'] = Variable<String>(since.value);
     }
+    if (monthlyReduction.present) {
+      map['monthly_reduction'] = Variable<int>(monthlyReduction.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
     }
@@ -45872,6 +45995,7 @@ class CanteenBeneficiariesCompanion
           ..write('isBeneficiary: $isBeneficiary, ')
           ..write('contributes: $contributes, ')
           ..write('since: $since, ')
+          ..write('monthlyReduction: $monthlyReduction, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -48506,6 +48630,1851 @@ class CanteenMenusCompanion extends UpdateCompanion<CanteenMenuRow> {
   }
 }
 
+class CanteenYears extends Table with TableInfo<CanteenYears, CanteenYearRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  CanteenYears(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _monthsMeta = const VerificationMeta('months');
+  late final GeneratedColumn<String> months = GeneratedColumn<String>(
+    'months',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'[]\'',
+    defaultValue: const CustomExpression('\'[]\''),
+  );
+  static const VerificationMeta _dueDayMeta = const VerificationMeta('dueDay');
+  late final GeneratedColumn<int> dueDay = GeneratedColumn<int>(
+    'due_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    schoolYearId,
+    months,
+    dueDay,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'canteen_years';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CanteenYearRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('months')) {
+      context.handle(
+        _monthsMeta,
+        months.isAcceptableOrUnknown(data['months']!, _monthsMeta),
+      );
+    }
+    if (data.containsKey('due_day')) {
+      context.handle(
+        _dueDayMeta,
+        dueDay.isAcceptableOrUnknown(data['due_day']!, _dueDayMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CanteenYearRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CanteenYearRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      months: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}months'],
+      )!,
+      dueDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}due_day'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  CanteenYears createAlias(String alias) {
+    return CanteenYears(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class CanteenYearRow extends DataClass implements Insertable<CanteenYearRow> {
+  final String id;
+  final String schoolId;
+  final String schoolYearId;
+  final String months;
+  final int? dueDay;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const CanteenYearRow({
+    required this.id,
+    required this.schoolId,
+    required this.schoolYearId,
+    required this.months,
+    this.dueDay,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    map['months'] = Variable<String>(months);
+    if (!nullToAbsent || dueDay != null) {
+      map['due_day'] = Variable<int>(dueDay);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  CanteenYearsCompanion toCompanion(bool nullToAbsent) {
+    return CanteenYearsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      schoolYearId: Value(schoolYearId),
+      months: Value(months),
+      dueDay: dueDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDay),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory CanteenYearRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CanteenYearRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      months: serializer.fromJson<String>(json['months']),
+      dueDay: serializer.fromJson<int?>(json['due_day']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'months': serializer.toJson<String>(months),
+      'due_day': serializer.toJson<int?>(dueDay),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  CanteenYearRow copyWith({
+    String? id,
+    String? schoolId,
+    String? schoolYearId,
+    String? months,
+    Value<int?> dueDay = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => CanteenYearRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    months: months ?? this.months,
+    dueDay: dueDay.present ? dueDay.value : this.dueDay,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  CanteenYearRow copyWithCompanion(CanteenYearsCompanion data) {
+    return CanteenYearRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      months: data.months.present ? data.months.value : this.months,
+      dueDay: data.dueDay.present ? data.dueDay.value : this.dueDay,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CanteenYearRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('months: $months, ')
+          ..write('dueDay: $dueDay, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    schoolYearId,
+    months,
+    dueDay,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CanteenYearRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.months == this.months &&
+          other.dueDay == this.dueDay &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class CanteenYearsCompanion extends UpdateCompanion<CanteenYearRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> schoolYearId;
+  final Value<String> months;
+  final Value<int?> dueDay;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const CanteenYearsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.months = const Value.absent(),
+    this.dueDay = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CanteenYearsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String schoolYearId,
+    this.months = const Value.absent(),
+    this.dueDay = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       schoolYearId = Value(schoolYearId),
+       updatedAt = Value(updatedAt);
+  static Insertable<CanteenYearRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? schoolYearId,
+    Expression<String>? months,
+    Expression<int>? dueDay,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (months != null) 'months': months,
+      if (dueDay != null) 'due_day': dueDay,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CanteenYearsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? schoolYearId,
+    Value<String>? months,
+    Value<int?>? dueDay,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return CanteenYearsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      months: months ?? this.months,
+      dueDay: dueDay ?? this.dueDay,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (months.present) {
+      map['months'] = Variable<String>(months.value);
+    }
+    if (dueDay.present) {
+      map['due_day'] = Variable<int>(dueDay.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CanteenYearsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('months: $months, ')
+          ..write('dueDay: $dueDay, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class CanteenRates extends Table with TableInfo<CanteenRates, CanteenRateRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  CanteenRates(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _fromMonthMeta = const VerificationMeta(
+    'fromMonth',
+  );
+  late final GeneratedColumn<String> fromMonth = GeneratedColumn<String>(
+    'from_month',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    schoolYearId,
+    fromMonth,
+    amount,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'canteen_rates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CanteenRateRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('from_month')) {
+      context.handle(
+        _fromMonthMeta,
+        fromMonth.isAcceptableOrUnknown(data['from_month']!, _fromMonthMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fromMonthMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CanteenRateRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CanteenRateRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      fromMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_month'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  CanteenRates createAlias(String alias) {
+    return CanteenRates(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class CanteenRateRow extends DataClass implements Insertable<CanteenRateRow> {
+  final String id;
+  final String schoolId;
+  final String schoolYearId;
+  final String fromMonth;
+  final int amount;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const CanteenRateRow({
+    required this.id,
+    required this.schoolId,
+    required this.schoolYearId,
+    required this.fromMonth,
+    required this.amount,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    map['from_month'] = Variable<String>(fromMonth);
+    map['amount'] = Variable<int>(amount);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  CanteenRatesCompanion toCompanion(bool nullToAbsent) {
+    return CanteenRatesCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      schoolYearId: Value(schoolYearId),
+      fromMonth: Value(fromMonth),
+      amount: Value(amount),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory CanteenRateRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CanteenRateRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      fromMonth: serializer.fromJson<String>(json['from_month']),
+      amount: serializer.fromJson<int>(json['amount']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'from_month': serializer.toJson<String>(fromMonth),
+      'amount': serializer.toJson<int>(amount),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  CanteenRateRow copyWith({
+    String? id,
+    String? schoolId,
+    String? schoolYearId,
+    String? fromMonth,
+    int? amount,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => CanteenRateRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    fromMonth: fromMonth ?? this.fromMonth,
+    amount: amount ?? this.amount,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  CanteenRateRow copyWithCompanion(CanteenRatesCompanion data) {
+    return CanteenRateRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      fromMonth: data.fromMonth.present ? data.fromMonth.value : this.fromMonth,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CanteenRateRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('fromMonth: $fromMonth, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    schoolYearId,
+    fromMonth,
+    amount,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CanteenRateRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.fromMonth == this.fromMonth &&
+          other.amount == this.amount &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class CanteenRatesCompanion extends UpdateCompanion<CanteenRateRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> schoolYearId;
+  final Value<String> fromMonth;
+  final Value<int> amount;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const CanteenRatesCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.fromMonth = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CanteenRatesCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String schoolYearId,
+    required String fromMonth,
+    required int amount,
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       schoolYearId = Value(schoolYearId),
+       fromMonth = Value(fromMonth),
+       amount = Value(amount),
+       updatedAt = Value(updatedAt);
+  static Insertable<CanteenRateRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? schoolYearId,
+    Expression<String>? fromMonth,
+    Expression<int>? amount,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (fromMonth != null) 'from_month': fromMonth,
+      if (amount != null) 'amount': amount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CanteenRatesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? schoolYearId,
+    Value<String>? fromMonth,
+    Value<int>? amount,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return CanteenRatesCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      fromMonth: fromMonth ?? this.fromMonth,
+      amount: amount ?? this.amount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (fromMonth.present) {
+      map['from_month'] = Variable<String>(fromMonth.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CanteenRatesCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('fromMonth: $fromMonth, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class CanteenSubscriptions extends Table
+    with TableInfo<CanteenSubscriptions, CanteenSubscriptionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  CanteenSubscriptions(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _schoolYearIdMeta = const VerificationMeta(
+    'schoolYearId',
+  );
+  late final GeneratedColumn<String> schoolYearId = GeneratedColumn<String>(
+    'school_year_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _studentIdMeta = const VerificationMeta(
+    'studentId',
+  );
+  late final GeneratedColumn<String> studentId = GeneratedColumn<String>(
+    'student_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _monthMeta = const VerificationMeta('month');
+  late final GeneratedColumn<String> month = GeneratedColumn<String>(
+    'month',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _classIdMeta = const VerificationMeta(
+    'classId',
+  );
+  late final GeneratedColumn<String> classId = GeneratedColumn<String>(
+    'class_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _amountDueMeta = const VerificationMeta(
+    'amountDue',
+  );
+  late final GeneratedColumn<int> amountDue = GeneratedColumn<int>(
+    'amount_due',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _exemptMeta = const VerificationMeta('exempt');
+  late final GeneratedColumn<bool> exempt = GeneratedColumn<bool>(
+    'exempt',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT FALSE',
+    defaultValue: const CustomExpression('FALSE'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    schoolYearId,
+    studentId,
+    month,
+    classId,
+    amountDue,
+    exempt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'canteen_subscriptions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CanteenSubscriptionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('school_year_id')) {
+      context.handle(
+        _schoolYearIdMeta,
+        schoolYearId.isAcceptableOrUnknown(
+          data['school_year_id']!,
+          _schoolYearIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolYearIdMeta);
+    }
+    if (data.containsKey('student_id')) {
+      context.handle(
+        _studentIdMeta,
+        studentId.isAcceptableOrUnknown(data['student_id']!, _studentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_studentIdMeta);
+    }
+    if (data.containsKey('month')) {
+      context.handle(
+        _monthMeta,
+        month.isAcceptableOrUnknown(data['month']!, _monthMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_monthMeta);
+    }
+    if (data.containsKey('class_id')) {
+      context.handle(
+        _classIdMeta,
+        classId.isAcceptableOrUnknown(data['class_id']!, _classIdMeta),
+      );
+    }
+    if (data.containsKey('amount_due')) {
+      context.handle(
+        _amountDueMeta,
+        amountDue.isAcceptableOrUnknown(data['amount_due']!, _amountDueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountDueMeta);
+    }
+    if (data.containsKey('exempt')) {
+      context.handle(
+        _exemptMeta,
+        exempt.isAcceptableOrUnknown(data['exempt']!, _exemptMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CanteenSubscriptionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CanteenSubscriptionRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      schoolYearId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_year_id'],
+      )!,
+      studentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}student_id'],
+      )!,
+      month: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}month'],
+      )!,
+      classId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}class_id'],
+      ),
+      amountDue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_due'],
+      )!,
+      exempt: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}exempt'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  CanteenSubscriptions createAlias(String alias) {
+    return CanteenSubscriptions(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class CanteenSubscriptionRow extends DataClass
+    implements Insertable<CanteenSubscriptionRow> {
+  final String id;
+  final String schoolId;
+  final String schoolYearId;
+  final String studentId;
+  final String month;
+  final String? classId;
+  final int amountDue;
+  final bool exempt;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const CanteenSubscriptionRow({
+    required this.id,
+    required this.schoolId,
+    required this.schoolYearId,
+    required this.studentId,
+    required this.month,
+    this.classId,
+    required this.amountDue,
+    required this.exempt,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['school_year_id'] = Variable<String>(schoolYearId);
+    map['student_id'] = Variable<String>(studentId);
+    map['month'] = Variable<String>(month);
+    if (!nullToAbsent || classId != null) {
+      map['class_id'] = Variable<String>(classId);
+    }
+    map['amount_due'] = Variable<int>(amountDue);
+    map['exempt'] = Variable<bool>(exempt);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  CanteenSubscriptionsCompanion toCompanion(bool nullToAbsent) {
+    return CanteenSubscriptionsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      schoolYearId: Value(schoolYearId),
+      studentId: Value(studentId),
+      month: Value(month),
+      classId: classId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(classId),
+      amountDue: Value(amountDue),
+      exempt: Value(exempt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory CanteenSubscriptionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CanteenSubscriptionRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      schoolYearId: serializer.fromJson<String>(json['school_year_id']),
+      studentId: serializer.fromJson<String>(json['student_id']),
+      month: serializer.fromJson<String>(json['month']),
+      classId: serializer.fromJson<String?>(json['class_id']),
+      amountDue: serializer.fromJson<int>(json['amount_due']),
+      exempt: serializer.fromJson<bool>(json['exempt']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'school_year_id': serializer.toJson<String>(schoolYearId),
+      'student_id': serializer.toJson<String>(studentId),
+      'month': serializer.toJson<String>(month),
+      'class_id': serializer.toJson<String?>(classId),
+      'amount_due': serializer.toJson<int>(amountDue),
+      'exempt': serializer.toJson<bool>(exempt),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  CanteenSubscriptionRow copyWith({
+    String? id,
+    String? schoolId,
+    String? schoolYearId,
+    String? studentId,
+    String? month,
+    Value<String?> classId = const Value.absent(),
+    int? amountDue,
+    bool? exempt,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => CanteenSubscriptionRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    schoolYearId: schoolYearId ?? this.schoolYearId,
+    studentId: studentId ?? this.studentId,
+    month: month ?? this.month,
+    classId: classId.present ? classId.value : this.classId,
+    amountDue: amountDue ?? this.amountDue,
+    exempt: exempt ?? this.exempt,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  CanteenSubscriptionRow copyWithCompanion(CanteenSubscriptionsCompanion data) {
+    return CanteenSubscriptionRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      schoolYearId: data.schoolYearId.present
+          ? data.schoolYearId.value
+          : this.schoolYearId,
+      studentId: data.studentId.present ? data.studentId.value : this.studentId,
+      month: data.month.present ? data.month.value : this.month,
+      classId: data.classId.present ? data.classId.value : this.classId,
+      amountDue: data.amountDue.present ? data.amountDue.value : this.amountDue,
+      exempt: data.exempt.present ? data.exempt.value : this.exempt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CanteenSubscriptionRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('studentId: $studentId, ')
+          ..write('month: $month, ')
+          ..write('classId: $classId, ')
+          ..write('amountDue: $amountDue, ')
+          ..write('exempt: $exempt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    schoolYearId,
+    studentId,
+    month,
+    classId,
+    amountDue,
+    exempt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CanteenSubscriptionRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.schoolYearId == this.schoolYearId &&
+          other.studentId == this.studentId &&
+          other.month == this.month &&
+          other.classId == this.classId &&
+          other.amountDue == this.amountDue &&
+          other.exempt == this.exempt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class CanteenSubscriptionsCompanion
+    extends UpdateCompanion<CanteenSubscriptionRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> schoolYearId;
+  final Value<String> studentId;
+  final Value<String> month;
+  final Value<String?> classId;
+  final Value<int> amountDue;
+  final Value<bool> exempt;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const CanteenSubscriptionsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.schoolYearId = const Value.absent(),
+    this.studentId = const Value.absent(),
+    this.month = const Value.absent(),
+    this.classId = const Value.absent(),
+    this.amountDue = const Value.absent(),
+    this.exempt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CanteenSubscriptionsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String schoolYearId,
+    required String studentId,
+    required String month,
+    this.classId = const Value.absent(),
+    required int amountDue,
+    this.exempt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       schoolYearId = Value(schoolYearId),
+       studentId = Value(studentId),
+       month = Value(month),
+       amountDue = Value(amountDue),
+       updatedAt = Value(updatedAt);
+  static Insertable<CanteenSubscriptionRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? schoolYearId,
+    Expression<String>? studentId,
+    Expression<String>? month,
+    Expression<String>? classId,
+    Expression<int>? amountDue,
+    Expression<bool>? exempt,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (schoolYearId != null) 'school_year_id': schoolYearId,
+      if (studentId != null) 'student_id': studentId,
+      if (month != null) 'month': month,
+      if (classId != null) 'class_id': classId,
+      if (amountDue != null) 'amount_due': amountDue,
+      if (exempt != null) 'exempt': exempt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CanteenSubscriptionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? schoolYearId,
+    Value<String>? studentId,
+    Value<String>? month,
+    Value<String?>? classId,
+    Value<int>? amountDue,
+    Value<bool>? exempt,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return CanteenSubscriptionsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      schoolYearId: schoolYearId ?? this.schoolYearId,
+      studentId: studentId ?? this.studentId,
+      month: month ?? this.month,
+      classId: classId ?? this.classId,
+      amountDue: amountDue ?? this.amountDue,
+      exempt: exempt ?? this.exempt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (schoolYearId.present) {
+      map['school_year_id'] = Variable<String>(schoolYearId.value);
+    }
+    if (studentId.present) {
+      map['student_id'] = Variable<String>(studentId.value);
+    }
+    if (month.present) {
+      map['month'] = Variable<String>(month.value);
+    }
+    if (classId.present) {
+      map['class_id'] = Variable<String>(classId.value);
+    }
+    if (amountDue.present) {
+      map['amount_due'] = Variable<int>(amountDue.value);
+    }
+    if (exempt.present) {
+      map['exempt'] = Variable<bool>(exempt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CanteenSubscriptionsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('schoolYearId: $schoolYearId, ')
+          ..write('studentId: $studentId, ')
+          ..write('month: $month, ')
+          ..write('classId: $classId, ')
+          ..write('amountDue: $amountDue, ')
+          ..write('exempt: $exempt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -48631,6 +50600,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'CREATE INDEX stock_movements_product ON stock_movements (product_id)',
   );
   late final CanteenMenus canteenMenus = CanteenMenus(this);
+  late final CanteenYears canteenYears = CanteenYears(this);
+  late final CanteenRates canteenRates = CanteenRates(this);
+  late final CanteenSubscriptions canteenSubscriptions = CanteenSubscriptions(
+    this,
+  );
+  late final Index canteenSubscriptionsYear = Index(
+    'canteen_subscriptions_year',
+    'CREATE INDEX canteen_subscriptions_year ON canteen_subscriptions (school_year_id, month)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -48716,6 +50694,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     stockMovements,
     stockMovementsProduct,
     canteenMenus,
+    canteenYears,
+    canteenRates,
+    canteenSubscriptions,
+    canteenSubscriptionsYear,
   ];
 }
 
@@ -69445,6 +71427,7 @@ typedef $PaymentAllocationsCreateCompanionBuilder =
       Value<String?> installmentId,
       Value<String?> rubric,
       Value<String?> label,
+      Value<String?> canteenSubscriptionId,
       required int amount,
       Value<String?> createdAt,
       Value<String> updatedAt,
@@ -69460,6 +71443,7 @@ typedef $PaymentAllocationsUpdateCompanionBuilder =
       Value<String?> installmentId,
       Value<String?> rubric,
       Value<String?> label,
+      Value<String?> canteenSubscriptionId,
       Value<int> amount,
       Value<String?> createdAt,
       Value<String> updatedAt,
@@ -69508,6 +71492,11 @@ class $PaymentAllocationsFilterComposer
 
   ColumnFilters<String> get label => $composableBuilder(
     column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get canteenSubscriptionId => $composableBuilder(
+    column: $table.canteenSubscriptionId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -69576,6 +71565,11 @@ class $PaymentAllocationsOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get canteenSubscriptionId => $composableBuilder(
+    column: $table.canteenSubscriptionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get amount => $composableBuilder(
     column: $table.amount,
     builder: (column) => ColumnOrderings(column),
@@ -69628,6 +71622,11 @@ class $PaymentAllocationsAnnotationComposer
 
   GeneratedColumn<String> get label =>
       $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get canteenSubscriptionId => $composableBuilder(
+    column: $table.canteenSubscriptionId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
@@ -69684,6 +71683,7 @@ class $PaymentAllocationsTableManager
                 Value<String?> installmentId = const Value.absent(),
                 Value<String?> rubric = const Value.absent(),
                 Value<String?> label = const Value.absent(),
+                Value<String?> canteenSubscriptionId = const Value.absent(),
                 Value<int> amount = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
@@ -69697,6 +71697,7 @@ class $PaymentAllocationsTableManager
                 installmentId: installmentId,
                 rubric: rubric,
                 label: label,
+                canteenSubscriptionId: canteenSubscriptionId,
                 amount: amount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -69712,6 +71713,7 @@ class $PaymentAllocationsTableManager
                 Value<String?> installmentId = const Value.absent(),
                 Value<String?> rubric = const Value.absent(),
                 Value<String?> label = const Value.absent(),
+                Value<String?> canteenSubscriptionId = const Value.absent(),
                 required int amount,
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
@@ -69725,6 +71727,7 @@ class $PaymentAllocationsTableManager
                 installmentId: installmentId,
                 rubric: rubric,
                 label: label,
+                canteenSubscriptionId: canteenSubscriptionId,
                 amount: amount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -70318,6 +72321,7 @@ typedef $CanteenBeneficiariesCreateCompanionBuilder =
       Value<bool> isBeneficiary,
       Value<bool> contributes,
       Value<String?> since,
+      Value<int?> monthlyReduction,
       Value<String?> createdAt,
       required String updatedAt,
       Value<String?> deletedAt,
@@ -70333,6 +72337,7 @@ typedef $CanteenBeneficiariesUpdateCompanionBuilder =
       Value<bool> isBeneficiary,
       Value<bool> contributes,
       Value<String?> since,
+      Value<int?> monthlyReduction,
       Value<String?> createdAt,
       Value<String> updatedAt,
       Value<String?> deletedAt,
@@ -70381,6 +72386,11 @@ class $CanteenBeneficiariesFilterComposer
 
   ColumnFilters<String> get since => $composableBuilder(
     column: $table.since,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get monthlyReduction => $composableBuilder(
+    column: $table.monthlyReduction,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -70449,6 +72459,11 @@ class $CanteenBeneficiariesOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get monthlyReduction => $composableBuilder(
+    column: $table.monthlyReduction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -70505,6 +72520,11 @@ class $CanteenBeneficiariesAnnotationComposer
 
   GeneratedColumn<String> get since =>
       $composableBuilder(column: $table.since, builder: (column) => column);
+
+  GeneratedColumn<int> get monthlyReduction => $composableBuilder(
+    column: $table.monthlyReduction,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -70563,6 +72583,7 @@ class $CanteenBeneficiariesTableManager
                 Value<bool> isBeneficiary = const Value.absent(),
                 Value<bool> contributes = const Value.absent(),
                 Value<String?> since = const Value.absent(),
+                Value<int?> monthlyReduction = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
                 Value<String?> deletedAt = const Value.absent(),
@@ -70576,6 +72597,7 @@ class $CanteenBeneficiariesTableManager
                 isBeneficiary: isBeneficiary,
                 contributes: contributes,
                 since: since,
+                monthlyReduction: monthlyReduction,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -70591,6 +72613,7 @@ class $CanteenBeneficiariesTableManager
                 Value<bool> isBeneficiary = const Value.absent(),
                 Value<bool> contributes = const Value.absent(),
                 Value<String?> since = const Value.absent(),
+                Value<int?> monthlyReduction = const Value.absent(),
                 Value<String?> createdAt = const Value.absent(),
                 required String updatedAt,
                 Value<String?> deletedAt = const Value.absent(),
@@ -70604,6 +72627,7 @@ class $CanteenBeneficiariesTableManager
                 isBeneficiary: isBeneficiary,
                 contributes: contributes,
                 since: since,
+                monthlyReduction: monthlyReduction,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -71929,6 +73953,932 @@ typedef $CanteenMenusProcessedTableManager =
       CanteenMenuRow,
       PrefetchHooks Function()
     >;
+typedef $CanteenYearsCreateCompanionBuilder = CanteenYearsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String schoolYearId,
+  Value<String> months,
+  Value<int?> dueDay,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $CanteenYearsUpdateCompanionBuilder = CanteenYearsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> schoolYearId,
+  Value<String> months,
+  Value<int?> dueDay,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $CanteenYearsFilterComposer
+    extends Composer<_$AppDatabase, CanteenYears> {
+  $CanteenYearsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get months => $composableBuilder(
+    column: $table.months,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dueDay => $composableBuilder(
+    column: $table.dueDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $CanteenYearsOrderingComposer
+    extends Composer<_$AppDatabase, CanteenYears> {
+  $CanteenYearsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get months => $composableBuilder(
+    column: $table.months,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dueDay => $composableBuilder(
+    column: $table.dueDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $CanteenYearsAnnotationComposer
+    extends Composer<_$AppDatabase, CanteenYears> {
+  $CanteenYearsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get months =>
+      $composableBuilder(column: $table.months, builder: (column) => column);
+
+  GeneratedColumn<int> get dueDay =>
+      $composableBuilder(column: $table.dueDay, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $CanteenYearsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          CanteenYears,
+          CanteenYearRow,
+          $CanteenYearsFilterComposer,
+          $CanteenYearsOrderingComposer,
+          $CanteenYearsAnnotationComposer,
+          $CanteenYearsCreateCompanionBuilder,
+          $CanteenYearsUpdateCompanionBuilder,
+          (
+            CanteenYearRow,
+            BaseReferences<_$AppDatabase, CanteenYears, CanteenYearRow>,
+          ),
+          CanteenYearRow,
+          PrefetchHooks Function()
+        > {
+  $CanteenYearsTableManager(_$AppDatabase db, CanteenYears table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $CanteenYearsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $CanteenYearsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $CanteenYearsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String> months = const Value.absent(),
+                Value<int?> dueDay = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CanteenYearsCompanion(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                months: months,
+                dueDay: dueDay,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String schoolYearId,
+                Value<String> months = const Value.absent(),
+                Value<int?> dueDay = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CanteenYearsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                months: months,
+                dueDay: dueDay,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<CanteenYears, CanteenYearRow>(table),
+                  BaseReferences<_$AppDatabase, CanteenYears, CanteenYearRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $CanteenYearsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      CanteenYears,
+      CanteenYearRow,
+      $CanteenYearsFilterComposer,
+      $CanteenYearsOrderingComposer,
+      $CanteenYearsAnnotationComposer,
+      $CanteenYearsCreateCompanionBuilder,
+      $CanteenYearsUpdateCompanionBuilder,
+      (
+        CanteenYearRow,
+        BaseReferences<_$AppDatabase, CanteenYears, CanteenYearRow>,
+      ),
+      CanteenYearRow,
+      PrefetchHooks Function()
+    >;
+typedef $CanteenRatesCreateCompanionBuilder = CanteenRatesCompanion Function({
+  required String id,
+  required String schoolId,
+  required String schoolYearId,
+  required String fromMonth,
+  required int amount,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $CanteenRatesUpdateCompanionBuilder = CanteenRatesCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> schoolYearId,
+  Value<String> fromMonth,
+  Value<int> amount,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $CanteenRatesFilterComposer
+    extends Composer<_$AppDatabase, CanteenRates> {
+  $CanteenRatesFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fromMonth => $composableBuilder(
+    column: $table.fromMonth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $CanteenRatesOrderingComposer
+    extends Composer<_$AppDatabase, CanteenRates> {
+  $CanteenRatesOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fromMonth => $composableBuilder(
+    column: $table.fromMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $CanteenRatesAnnotationComposer
+    extends Composer<_$AppDatabase, CanteenRates> {
+  $CanteenRatesAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fromMonth =>
+      $composableBuilder(column: $table.fromMonth, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $CanteenRatesTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          CanteenRates,
+          CanteenRateRow,
+          $CanteenRatesFilterComposer,
+          $CanteenRatesOrderingComposer,
+          $CanteenRatesAnnotationComposer,
+          $CanteenRatesCreateCompanionBuilder,
+          $CanteenRatesUpdateCompanionBuilder,
+          (
+            CanteenRateRow,
+            BaseReferences<_$AppDatabase, CanteenRates, CanteenRateRow>,
+          ),
+          CanteenRateRow,
+          PrefetchHooks Function()
+        > {
+  $CanteenRatesTableManager(_$AppDatabase db, CanteenRates table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $CanteenRatesFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $CanteenRatesOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $CanteenRatesAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String> fromMonth = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CanteenRatesCompanion(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                fromMonth: fromMonth,
+                amount: amount,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String schoolYearId,
+                required String fromMonth,
+                required int amount,
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CanteenRatesCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                fromMonth: fromMonth,
+                amount: amount,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<CanteenRates, CanteenRateRow>(table),
+                  BaseReferences<_$AppDatabase, CanteenRates, CanteenRateRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $CanteenRatesProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      CanteenRates,
+      CanteenRateRow,
+      $CanteenRatesFilterComposer,
+      $CanteenRatesOrderingComposer,
+      $CanteenRatesAnnotationComposer,
+      $CanteenRatesCreateCompanionBuilder,
+      $CanteenRatesUpdateCompanionBuilder,
+      (
+        CanteenRateRow,
+        BaseReferences<_$AppDatabase, CanteenRates, CanteenRateRow>,
+      ),
+      CanteenRateRow,
+      PrefetchHooks Function()
+    >;
+typedef $CanteenSubscriptionsCreateCompanionBuilder =
+    CanteenSubscriptionsCompanion Function({
+      required String id,
+      required String schoolId,
+      required String schoolYearId,
+      required String studentId,
+      required String month,
+      Value<String?> classId,
+      required int amountDue,
+      Value<bool> exempt,
+      Value<String?> createdAt,
+      required String updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $CanteenSubscriptionsUpdateCompanionBuilder =
+    CanteenSubscriptionsCompanion Function({
+      Value<String> id,
+      Value<String> schoolId,
+      Value<String> schoolYearId,
+      Value<String> studentId,
+      Value<String> month,
+      Value<String?> classId,
+      Value<int> amountDue,
+      Value<bool> exempt,
+      Value<String?> createdAt,
+      Value<String> updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $CanteenSubscriptionsFilterComposer
+    extends Composer<_$AppDatabase, CanteenSubscriptions> {
+  $CanteenSubscriptionsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get month => $composableBuilder(
+    column: $table.month,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountDue => $composableBuilder(
+    column: $table.amountDue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get exempt => $composableBuilder(
+    column: $table.exempt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $CanteenSubscriptionsOrderingComposer
+    extends Composer<_$AppDatabase, CanteenSubscriptions> {
+  $CanteenSubscriptionsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get studentId => $composableBuilder(
+    column: $table.studentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get month => $composableBuilder(
+    column: $table.month,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountDue => $composableBuilder(
+    column: $table.amountDue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get exempt => $composableBuilder(
+    column: $table.exempt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $CanteenSubscriptionsAnnotationComposer
+    extends Composer<_$AppDatabase, CanteenSubscriptions> {
+  $CanteenSubscriptionsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolYearId => $composableBuilder(
+    column: $table.schoolYearId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get studentId =>
+      $composableBuilder(column: $table.studentId, builder: (column) => column);
+
+  GeneratedColumn<String> get month =>
+      $composableBuilder(column: $table.month, builder: (column) => column);
+
+  GeneratedColumn<String> get classId =>
+      $composableBuilder(column: $table.classId, builder: (column) => column);
+
+  GeneratedColumn<int> get amountDue =>
+      $composableBuilder(column: $table.amountDue, builder: (column) => column);
+
+  GeneratedColumn<bool> get exempt =>
+      $composableBuilder(column: $table.exempt, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $CanteenSubscriptionsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          CanteenSubscriptions,
+          CanteenSubscriptionRow,
+          $CanteenSubscriptionsFilterComposer,
+          $CanteenSubscriptionsOrderingComposer,
+          $CanteenSubscriptionsAnnotationComposer,
+          $CanteenSubscriptionsCreateCompanionBuilder,
+          $CanteenSubscriptionsUpdateCompanionBuilder,
+          (
+            CanteenSubscriptionRow,
+            BaseReferences<
+              _$AppDatabase,
+              CanteenSubscriptions,
+              CanteenSubscriptionRow
+            >,
+          ),
+          CanteenSubscriptionRow,
+          PrefetchHooks Function()
+        > {
+  $CanteenSubscriptionsTableManager(
+    _$AppDatabase db,
+    CanteenSubscriptions table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $CanteenSubscriptionsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $CanteenSubscriptionsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $CanteenSubscriptionsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> schoolYearId = const Value.absent(),
+                Value<String> studentId = const Value.absent(),
+                Value<String> month = const Value.absent(),
+                Value<String?> classId = const Value.absent(),
+                Value<int> amountDue = const Value.absent(),
+                Value<bool> exempt = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CanteenSubscriptionsCompanion(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                studentId: studentId,
+                month: month,
+                classId: classId,
+                amountDue: amountDue,
+                exempt: exempt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String schoolYearId,
+                required String studentId,
+                required String month,
+                Value<String?> classId = const Value.absent(),
+                required int amountDue,
+                Value<bool> exempt = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CanteenSubscriptionsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                schoolYearId: schoolYearId,
+                studentId: studentId,
+                month: month,
+                classId: classId,
+                amountDue: amountDue,
+                exempt: exempt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<CanteenSubscriptions, CanteenSubscriptionRow>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    CanteenSubscriptions,
+                    CanteenSubscriptionRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $CanteenSubscriptionsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      CanteenSubscriptions,
+      CanteenSubscriptionRow,
+      $CanteenSubscriptionsFilterComposer,
+      $CanteenSubscriptionsOrderingComposer,
+      $CanteenSubscriptionsAnnotationComposer,
+      $CanteenSubscriptionsCreateCompanionBuilder,
+      $CanteenSubscriptionsUpdateCompanionBuilder,
+      (
+        CanteenSubscriptionRow,
+        BaseReferences<
+          _$AppDatabase,
+          CanteenSubscriptions,
+          CanteenSubscriptionRow
+        >,
+      ),
+      CanteenSubscriptionRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -72063,4 +75013,10 @@ class $AppDatabaseManager {
       $StockMovementsTableManager(_db, _db.stockMovements);
   $CanteenMenusTableManager get canteenMenus =>
       $CanteenMenusTableManager(_db, _db.canteenMenus);
+  $CanteenYearsTableManager get canteenYears =>
+      $CanteenYearsTableManager(_db, _db.canteenYears);
+  $CanteenRatesTableManager get canteenRates =>
+      $CanteenRatesTableManager(_db, _db.canteenRates);
+  $CanteenSubscriptionsTableManager get canteenSubscriptions =>
+      $CanteenSubscriptionsTableManager(_db, _db.canteenSubscriptions);
 }

@@ -36,8 +36,15 @@ Set<String> droitsCantine(WidgetRef ref) {
 Widget _chargement(String titre) =>
     EcoleScaffold(title: titre, body: const LinearProgressIndicator());
 
-/// Écran affiché quand le module est désactivé (ou sans le droit).
-Widget? _garde(WidgetRef ref, String titre, {String droit = 'cantine'}) {
+Widget? _garde(WidgetRef ref, String titre) =>
+    gardeCantine(ref, titre, droits: const {'cantine'});
+
+/// Écran affiché quand le module est désactivé, ou sans aucun des [droits].
+Widget? gardeCantine(
+  WidgetRef ref,
+  String titre, {
+  Set<String> droits = const {'cantine', 'finances'},
+}) {
   final s = ref.watch(sessionProvider).value;
   if (s == null) return _chargement(titre);
   if (!ref.watch(cantineActiveProvider(s.schoolId))) {
@@ -49,7 +56,7 @@ Widget? _garde(WidgetRef ref, String titre, {String droit = 'cantine'}) {
       ),
     );
   }
-  if (!droitsCantine(ref).contains(droit)) {
+  if (droitsCantine(ref).intersection(droits).isEmpty) {
     return EcoleScaffold(
       title: titre,
       body: const InfoMessage(
@@ -71,413 +78,34 @@ String _isoDe(DateTime d) =>
 String _decale(String jour, int jours) =>
     _isoDe(DateTime.parse(jour).add(Duration(days: jours)));
 
-// ----------------------------------------------------------------------
-// Accueil de la cantine
-// ----------------------------------------------------------------------
-
-class CantinePage extends ConsumerWidget {
-  const new({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final s = ref.watch(sessionProvider).value;
-    final c = contexteFinances(ref);
-    if (s == null || c == null) return _chargement('Cantine');
-    final garde = _garde(ref, 'Cantine');
-    if (garde != null) return garde;
-    final (ecole, annee) = c;
-    final droits = droitsCantine(ref);
-    final jour = ref.watch(aujourdhuiProvider);
-    final pointages = ref.watch(pointagesProvider(ecole.id)).value ?? const [];
-    final stock = ref.watch(stockProvider(ecole.id)) ?? const [];
-    final beneficiaires =
-        ref.watch(beneficiairesProvider(annee.id)).value ?? const {};
-    final mode = ref.watch(modeCantineProvider(ecole.id));
-    final reglages = ref.watch(reglagesCantineProvider(ecole.id)).value;
-    final alertes = stock.where((e) => e.alerte || e.negatif).toList();
-    final repasJour = totalRepas(pointages.where((p) => p.day == jour));
-    final nb = beneficiaires.values.where((b) => b.isBeneficiary).length;
-    Widget bouton(IconData i, String t, String route) => Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: BigButton(icon: i, label: t, onPressed: () => context.push(route)),
-    );
-    return EcoleScaffold(
-      title: 'Cantine',
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Aujourd’hui : ${fcfa(repasJour)} repas pointés',
-                    key: const Key('repas-du-jour'),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  Text('$nb élève(s) bénéficiaire(s)'),
-                  Text(modesCantine[mode] ?? mode),
-                  if (reglages == null)
-                    const Text(
-                      'Commencez par « Réglages de la cantine ».',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          if (alertes.isNotEmpty)
-            Card(
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: ListTile(
-                key: const Key('alerte-stock'),
-                leading: const Icon(Icons.warning_amber),
-                title: Text(
-                  'Stock bas : ${alertes.map((e) => '${e.produit.name} '
-                      '(${qte(e.stock)} ${e.produit.unit})').join(', ')}',
-                ),
-                onTap: () => context.push('/cantine/stock'),
-              ),
-            ),
-          const SizedBox(height: 8),
-          bouton(
-            Icons.fact_check_outlined,
-            'Pointage des repas',
-            '/cantine/pointage',
-          ),
-          bouton(Icons.inventory_outlined, 'Stock de vivres', '/cantine/stock'),
-          bouton(
-            Icons.groups_outlined,
-            'Élèves bénéficiaires',
-            '/cantine/beneficiaires',
-          ),
-          bouton(
-            Icons.menu_book_outlined,
-            'Menus de la semaine',
-            '/cantine/menus',
-          ),
-          bouton(
-            Icons.shopping_basket_outlined,
-            'Dépenses de cantine',
-            '/cantine/depenses',
-          ),
-          if (droits.contains('finances') && mode != 'sans_participation')
-            bouton(
-              Icons.payments_outlined,
-              'Cotisations et impayés de '
-                  'cantine',
-              '/cantine/cotisations',
-            ),
-          bouton(
-            Icons.summarize_outlined,
-            'Rapports et bilan mensuel',
-            '/cantine/rapports',
-          ),
-          bouton(Icons.tune, 'Réglages de la cantine', '/cantine/reglages'),
-        ],
-      ),
-    );
-  }
-}
-
-// ----------------------------------------------------------------------
-// Réglages
-// ----------------------------------------------------------------------
-
-class ReglagesCantinePage extends ConsumerStatefulWidget {
-  const new({super.key});
-
-  @override
-  ConsumerState<ReglagesCantinePage> createState() => _ReglagesState();
-}
-
-class _ReglagesState extends ConsumerState<ReglagesCantinePage> {
-  final _definition = TextEditingController();
-  String? _mode;
-  bool _charge = false;
-
-  @override
-  void dispose() {
-    _definition.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final garde = _garde(ref, 'Réglages de la cantine');
-    if (garde != null) return garde;
-    final s = ref.watch(sessionProvider).value!;
-    final r = ref.watch(reglagesCantineProvider(s.schoolId));
-    if (!r.hasValue) return _chargement('Réglages de la cantine');
-    if (!_charge) {
-      _charge = true;
-      _mode = r.value?.mode ?? 'sans_participation';
-      _definition.text = r.value?.localDefinition ?? '';
-    }
-    return EcoleScaffold(
-      title: 'Réglages de la cantine',
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const SectionTitle('Mode de fonctionnement'),
-          RadioGroup<String>(
-            groupValue: _mode,
-            onChanged: (v) => setState(() => _mode = v),
-            child: Column(
-              children: [
-                for (final MapEntry(key: k, value: v) in modesCantine.entries)
-                  RadioListTile<String>(
-                    key: Key('mode-$k'),
-                    value: k,
-                    title: Text(v),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            key: const Key('definition-cantine'),
-            controller: _definition,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Ce que l’école appelle « cantine endogène »',
-              hintText:
-                  'Ex. : cantine qui fonctionne surtout avec des vivres '
-                  'apportés par les parents et la communauté.',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (_mode != 'sans_participation')
-            const InfoMessage(
-              'Le tarif de la cantine se règle dans « Finances » → « Grille '
-              'des frais », rubrique « Cantine » (par exemple trois '
-              'versements, un par trimestre, avec leurs périodes). Il '
-              's’applique seulement aux élèves bénéficiaires dont la '
-              'famille participe ; l’encaissement donne un reçu numéroté, '
-              'comme pour la scolarité.',
-              icon: Icons.payments_outlined,
-            ),
-          const SizedBox(height: 12),
-          BigButton(
-            key: const Key('enregistrer-reglages'),
-            icon: Icons.save,
-            label: 'Enregistrer',
-            onPressed: () async {
-              final ok = await avecMessage(context, () async {
-                await ref
-                    .read(cantineRepositoryProvider)
-                    .enregistrerReglages(
-                      schoolId: s.schoolId,
-                      mode: _mode ?? 'sans_participation',
-                      definition: _definition.text,
-                    );
-                return true;
-              });
-              if (ok != true || !context.mounted) return;
-              unawaited(ref.read(syncEngineProvider).syncNow());
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Réglages enregistrés.')),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ----------------------------------------------------------------------
-// Bénéficiaires
-// ----------------------------------------------------------------------
-
-/// Effectif et bénéficiaires par classe (élèves présents).
+/// Effectif et abonnés (repas autorisés) par classe, pour un mois.
 List<EffectifCantine> effectifsParClasse(
   List<EleveDansAnnee> eleves,
   List<ClassRow> classes,
-  Map<String, CanteenBeneficiaryRow> beneficiaires,
+  Set<String> abonnes,
 ) {
-  final out = <EffectifCantine>[];
-  for (final k in classes) {
-    final dans = eleves.where((e) => e.classe?.id == k.id).toList();
-    out.add(
+  EffectifCantine effectif(String nom, List<EleveDansAnnee> dans) =>
       EffectifCantine(
-        k.name,
-        dans
-            .where((e) => beneficiaires[e.eleve.id]?.isBeneficiary ?? false)
-            .length,
+        nom,
+        dans.where((e) => abonnes.contains(e.eleve.id)).length,
         dans.length,
-      ),
-    );
-  }
+      );
   final sans = eleves.where((e) => e.classe == null).toList();
-  if (sans.isNotEmpty) {
-    out.add(
-      EffectifCantine(
-        'Sans classe',
-        sans
-            .where((e) => beneficiaires[e.eleve.id]?.isBeneficiary ?? false)
-            .length,
-        sans.length,
-      ),
-    );
-  }
-  return out;
+  return [
+    for (final k in classes)
+      effectif(k.name, eleves.where((e) => e.classe?.id == k.id).toList()),
+    if (sans.isNotEmpty) effectif('Sans classe', sans),
+  ];
 }
 
-class BeneficiairesPage extends ConsumerWidget {
-  const new({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final garde = _garde(ref, 'Élèves bénéficiaires');
-    if (garde != null) return garde;
-    final c = contexteFinances(ref);
-    if (c == null) return _chargement('Élèves bénéficiaires');
-    final (ecole, annee) = c;
-    final eleves = ref.watch(elevesProvider((ecole.id, annee.id, true))).value;
-    final classes = ref.watch(classesProvider(annee.id)).value;
-    final b = ref.watch(beneficiairesProvider(annee.id)).value;
-    if (eleves == null || classes == null || b == null) {
-      return _chargement('Élèves bénéficiaires');
-    }
-    final mixte = ref.watch(modeCantineProvider(ecole.id)) == 'mixte';
-    final repo = ref.read(cantineRepositoryProvider);
-    final presents = [
-      for (final e in eleves)
-        if (e.eleve.archivedAt == null) e,
-    ];
-    final sortis = [
-      for (final e in eleves)
-        if (e.eleve.archivedAt != null && b[e.eleve.id] != null) e,
-    ];
-    final effectifs = effectifsParClasse(presents, classes, b);
-    final total = effectifs.fold<int>(0, (s, e) => s + e.beneficiaires);
-    Future<void> marquer(String eleve, {required bool on, bool? paie}) =>
-        repo.definirBeneficiaire(
-          schoolId: ecole.id,
-          yearId: annee.id,
-          studentId: eleve,
-          beneficiaire: on,
-          participe: paie,
-        );
-    return EcoleScaffold(
-      title: 'Élèves bénéficiaires',
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            'Total : $total bénéficiaire(s) sur ${presents.length} élève(s)',
-            key: const Key('total-beneficiaires'),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          if (mixte)
-            const Text(
-              'Mode mixte : décochez « Participe » pour une famille qui ne '
-              'paie pas la cantine.',
-            ),
-          for (final k in [...classes, null])
-            () {
-              final dans = [
-                for (final e in presents)
-                  if (e.classe?.id == k?.id) e,
-              ];
-              if (dans.isEmpty) return const SizedBox.shrink();
-              final n = dans
-                  .where((e) => b[e.eleve.id]?.isBeneficiary ?? false)
-                  .length;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TableauDonnees(
-                    titre:
-                        '${k?.name ?? 'Sans classe'} — $n / '
-                        '${dans.length}',
-                    colonnes: [
-                      const ColonneTableau(
-                        'Nom et prénom',
-                        flex: 5,
-                        largeurMin: 170,
-                      ),
-                      const ColonneTableau(
-                        'Bénéficiaire',
-                        centre: true,
-                        largeurMin: 100,
-                      ),
-                      if (mixte)
-                        const ColonneTableau(
-                          'Participe',
-                          centre: true,
-                          largeurMin: 90,
-                        ),
-                    ],
-                    lignes: [
-                      for (final e in dans)
-                        LigneTableau([
-                          Text('${e.eleve.lastName} ${e.eleve.firstNames}'),
-                          Checkbox(
-                            key: Key('benef-${e.eleve.id}'),
-                            value: b[e.eleve.id]?.isBeneficiary ?? false,
-                            onChanged: (v) =>
-                                marquer(e.eleve.id, on: v ?? false),
-                          ),
-                          if (mixte)
-                            Checkbox(
-                              key: Key('participe-${e.eleve.id}'),
-                              value:
-                                  (b[e.eleve.id]?.isBeneficiary ?? false) &&
-                                  (b[e.eleve.id]?.contributes ?? true),
-                              onChanged: (b[e.eleve.id]?.isBeneficiary ?? false)
-                                  ? (v) => marquer(
-                                      e.eleve.id,
-                                      on: true,
-                                      paie: v ?? true,
-                                    )
-                                  : null,
-                            ),
-                        ]),
-                    ],
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.done_all),
-                      label: const Text('Toute la classe'),
-                      onPressed: () async {
-                        for (final e in dans) {
-                          if (!(b[e.eleve.id]?.isBeneficiary ?? false)) {
-                            await marquer(e.eleve.id, on: true);
-                          }
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              );
-            }(),
-          if (sortis.isNotEmpty) ...[
-            const SectionTitle('Élèves sortis (historique conservé)'),
-            for (final e in sortis)
-              ListTile(
-                dense: true,
-                title: Text('${e.eleve.lastName} ${e.eleve.firstNames}'),
-                subtitle: Text(
-                  (b[e.eleve.id]!.isBeneficiary
-                          ? 'Bénéficiaire'
-                          : 'Non bénéficiaire') +
-                      (b[e.eleve.id]!.since == null
-                          ? ''
-                          : ' depuis le ${dateCourte(b[e.eleve.id]!.since!)}'),
-                ),
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-}
+/// Élèves autorisés à manger un mois donné (abonnés).
+Set<String> abonnesDuMois(
+  Map<String, SituationCantine> situations,
+  String mois,
+) => {
+  for (final MapEntry(key: id, value: s) in situations.entries)
+    if (s.duMois(debutMois(mois))?.statut == StatutMois.abonne) id,
+};
 
 // ----------------------------------------------------------------------
 // Pointage des repas
@@ -564,10 +192,16 @@ class _PointageState extends ConsumerState<PointagePage> {
     final classes = ref.watch(classesProvider(annee.id)).value;
     final pointages = ref.watch(pointagesProvider(ecole.id)).value;
     final eleves = ref.watch(elevesProvider((ecole.id, annee.id, false))).value;
-    final b = ref.watch(beneficiairesProvider(annee.id)).value;
-    if (classes == null || pointages == null || eleves == null || b == null) {
+    final situations = ref.watch(
+      situationsAbonnementProvider((ecole.id, annee.id)),
+    );
+    if (classes == null ||
+        pointages == null ||
+        eleves == null ||
+        situations == null) {
       return _chargement('Pointage des repas');
     }
+    final b = abonnesDuMois(situations, _jour);
     _charger(pointages, classes);
     final effectifs = {
       for (final (i, e) in effectifsParClasse(eleves, classes, b).indexed)
@@ -625,7 +259,7 @@ class _PointageState extends ConsumerState<PointagePage> {
           TableauDonnees(
             colonnes: const [
               ColonneTableau('Classe', flex: 4, largeurMin: 120),
-              ColonneTableau('Bénéficiaires', montant: true, largeurMin: 110),
+              ColonneTableau('Abonnés du mois', montant: true, largeurMin: 120),
               ColonneTableau('Repas servis', montant: true, largeurMin: 110),
             ],
             lignes: [
@@ -655,7 +289,7 @@ class _PointageState extends ConsumerState<PointagePage> {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Touchez le nombre de bénéficiaires pour le recopier.',
+            'Touchez le nombre d’abonnés pour le recopier.',
             style: TextStyle(fontSize: 12),
           ),
           const SizedBox(height: 12),
@@ -1560,105 +1194,6 @@ class DepensesCantinePage extends ConsumerWidget {
 }
 
 // ----------------------------------------------------------------------
-// Cotisations et impayés de cantine
-// ----------------------------------------------------------------------
-
-class CotisationsCantinePage extends ConsumerWidget {
-  const new({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final garde = _garde(ref, 'Cotisations de cantine', droit: 'finances');
-    if (garde != null) return garde;
-    final c = contexteFinances(ref);
-    if (c == null) return _chargement('Cotisations de cantine');
-    final (ecole, annee) = c;
-    final lignes = ref.watch(situationsCantineProvider((ecole.id, annee.id)));
-    final classes = ref.watch(classesProvider(annee.id)).value;
-    if (lignes == null || classes == null) {
-      return _chargement('Cotisations de cantine');
-    }
-    final synthese = Synthese.depuis([for (final l in lignes) l.situation]);
-    final impayes = lignes.fold<int>(0, (s, l) => s + l.situation.impaye);
-    return EcoleScaffold(
-      title: 'Cotisations de cantine',
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const MentionFcfa(),
-          if (lignes.isEmpty)
-            const InfoMessage(
-              'Aucun élève ne paie la cantine : vérifiez le tarif (Grille '
-              'des frais, rubrique « Cantine ») et les bénéficiaires.',
-            )
-          else ...[
-            TableauSynthese(synthese, titre: 'Cantine — toute l’école'),
-            const SizedBox(height: 8),
-            Text(
-              'Impayés de cantine (échéances passées) : ${fcfa(impayes)}',
-              key: const Key('impayes-cantine'),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const Text(
-              'Distincts des impayés de scolarité. L’encaissement se fait '
-              'dans « Encaisser » : même reçu numéroté.',
-            ),
-          ],
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.point_of_sale),
-            label: const Text('Encaisser'),
-            onPressed: () => context.push('/finances/encaisser'),
-          ),
-          for (final (classe, groupe) in parClasse(lignes, classes))
-            TableauDonnees(
-              titre: classe,
-              colonnes: const [
-                ColonneTableau('Nom et prénom', flex: 5, largeurMin: 170),
-                ColonneTableau('Dû', montant: true),
-                ColonneTableau('Encaissé', montant: true),
-                ColonneTableau('Reste', montant: true),
-                ColonneTableau('Relance', centre: true, largeurMin: 80),
-              ],
-              lignes: [
-                for (final l in groupe)
-                  LigneTableau(
-                    [
-                      Text(l.nom),
-                      Text(fcfa(l.situation.du)),
-                      Text(fcfa(l.situation.encaisse)),
-                      restantOuSolde(
-                        context,
-                        l.situation.reste,
-                        l.situation.du,
-                        key: Key('reste-cantine-${l.eleve.eleve.id}'),
-                      ),
-                      if (l.situation.impaye > 0)
-                        IconButton(
-                          tooltip: 'Préparer une relance',
-                          icon: const Icon(Icons.sms_outlined),
-                          onPressed: () => preparerRelance(
-                            context,
-                            ref,
-                            l,
-                            objet: 'la cantine',
-                          ),
-                        )
-                      else
-                        const SizedBox(),
-                    ],
-                    onTap: () =>
-                        context.push('/finances/eleve/${l.eleve.eleve.id}'),
-                  ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-// ----------------------------------------------------------------------
 // Rapports et bilan mensuel
 // ----------------------------------------------------------------------
 
@@ -1681,31 +1216,34 @@ class _RapportsCantineState extends ConsumerState<RapportsCantinePage> {
     final mouvements = ref.read(mouvementsProvider(ecole.id)).value;
     final eleves = ref.read(elevesProvider((ecole.id, annee.id, false))).value;
     final classes = ref.read(classesProvider(annee.id)).value;
-    final b = ref.read(beneficiairesProvider(annee.id)).value;
+    final situations = ref.read(
+      situationsAbonnementProvider((ecole.id, annee.id)),
+    );
     final depenses = ref.read(depensesProvider(annee.id)).value;
     if (pointages == null ||
         produits == null ||
         mouvements == null ||
         eleves == null ||
         classes == null ||
-        b == null ||
+        situations == null ||
         depenses == null) {
       return null;
     }
-    final mode = ref.read(modeCantineProvider(ecole.id));
+    final b = abonnesDuMois(situations, _mois);
     final finances =
-        droitsCantine(ref).contains('finances') && mode != 'sans_participation';
-    final paiements = finances
-        ? ref.read(paiementsProvider(annee.id)).value ?? const <PaymentRow>[]
-        : const <PaymentRow>[];
-    final details = finances
-        ? ref.read(detailsProvider(annee.id)).value ??
-              const <PaymentAllocationRow>[]
-        : const <PaymentAllocationRow>[];
-    final cantine = finances
-        ? ref.read(situationsCantineProvider((ecole.id, annee.id))) ??
-              const <LigneEleve>[]
-        : const <LigneEleve>[];
+        droitsCantine(ref).contains('finances') ||
+        droitsCantine(ref).contains('cantine');
+    final paiements =
+        ref.read(paiementsProvider(annee.id)).value ?? const <PaymentRow>[];
+    final details =
+        ref.read(detailsProvider(annee.id)).value ??
+        const <PaymentAllocationRow>[];
+    // Restant à compléter : mois payés en partie (avances).
+    final aCompleter = [
+      for (final sc in situations.values)
+        for (final m in sc.mois)
+          if (m.mois.startsWith(_mois)) m.reste,
+    ].fold<int>(0, (x, y) => x + y);
     final parJour = repasParJour(pointages, mois: _mois);
     final effectifs = effectifsParClasse(eleves, classes, b);
     return DonneesBilanCantine(
@@ -1713,7 +1251,6 @@ class _RapportsCantineState extends ConsumerState<RapportsCantinePage> {
       anneeScolaire: annee.label,
       periode: nomMois(_mois),
       genereLe: dateCourte(_aujourdhui(ref)),
-      mode: modesCantine[mode],
       definition: ref
           .read(reglagesCantineProvider(ecole.id))
           .value
@@ -1731,7 +1268,7 @@ class _RapportsCantineState extends ConsumerState<RapportsCantinePage> {
           parJour.values.fold(0, (s, n) => s + n),
         ),
         cotisations: cotisationsCantine(paiements, details, mois: _mois),
-        impayes: cantine.fold(0, (s, l) => s + l.situation.impaye),
+        impayes: aCompleter,
         stock: mouvementsDuMois(produits, mouvements, _mois),
       ),
     );
@@ -1762,12 +1299,12 @@ class _RapportsCantineState extends ConsumerState<RapportsCantinePage> {
       [],
       ['Repas servis', b.repas],
       ['Jours de service', b.joursServis],
-      ['Élèves bénéficiaires', b.beneficiaires],
+      ['Élèves abonnés', b.beneficiaires],
       ['Dépenses de cantine (FCFA)', b.cout.depenses],
       ['Coût moyen par repas (FCFA)', b.cout.arrondi ?? ''],
       ['Formule', b.cout.formule],
       if (d.avecCotisations) ...[
-        ['Cotisations encaissées (FCFA)', b.cotisations],
+        ['Abonnements encaissés (FCFA)', b.cotisations],
         ['Impayés de cantine (FCFA)', b.impayes],
       ],
       [],
@@ -1775,7 +1312,7 @@ class _RapportsCantineState extends ConsumerState<RapportsCantinePage> {
       for (final MapEntry(key: j, value: n) in d.repasParJour.entries)
         [dateCourte(j), n],
       [],
-      ['Classe', 'Bénéficiaires', 'Effectif'],
+      ['Classe', 'Abonnés', 'Effectif'],
       for (final e in d.effectifs) [e.classe, e.beneficiaires, e.effectif],
       [],
       ['Produit', 'Unité', 'Début', 'Entrées', 'Sorties', 'Inventaire', 'Fin'],
@@ -1815,11 +1352,10 @@ class _RapportsCantineState extends ConsumerState<RapportsCantinePage> {
       ..watch(mouvementsProvider(ecole.id))
       ..watch(elevesProvider((ecole.id, annee.id, false)))
       ..watch(classesProvider(annee.id))
-      ..watch(beneficiairesProvider(annee.id))
+      ..watch(situationsAbonnementProvider((ecole.id, annee.id)))
       ..watch(depensesProvider(annee.id))
       ..watch(paiementsProvider(annee.id))
-      ..watch(detailsProvider(annee.id))
-      ..watch(situationsCantineProvider((ecole.id, annee.id)));
+      ..watch(detailsProvider(annee.id));
     final mois = {
       for (final p in pointages) p.day.substring(0, 7),
       _aujourdhui(ref).substring(0, 7),
@@ -1862,7 +1398,7 @@ class _RapportsCantineState extends ConsumerState<RapportsCantinePage> {
                   Text('${d.bilan.joursServis}'),
                 ]),
                 LigneTableau([
-                  const Text('Élèves bénéficiaires'),
+                  const Text('Élèves abonnés'),
                   Text('${d.bilan.beneficiaires}'),
                 ]),
                 LigneTableau([
@@ -1880,11 +1416,11 @@ class _RapportsCantineState extends ConsumerState<RapportsCantinePage> {
                 ]),
                 if (d.avecCotisations) ...[
                   LigneTableau([
-                    const Text('Cotisations encaissées'),
+                    const Text('Abonnements encaissés'),
                     Text(fcfa(d.bilan.cotisations)),
                   ]),
                   LigneTableau([
-                    const Text('Impayés de cantine (à ce jour)'),
+                    const Text('Avances à compléter'),
                     montantRestant(context, d.bilan.impayes),
                   ]),
                 ],

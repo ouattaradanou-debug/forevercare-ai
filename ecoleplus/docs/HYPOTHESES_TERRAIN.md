@@ -133,3 +133,9 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H124 | Coût moyen par repas = dépenses de cantine du mois (annulations déduites) ÷ repas pointés du mois, arrondi au franc ; les vivres reçus en nature ne sont pas valorisés en francs (à valider) | Cantine | `CoutMoyen` |
 | H125 | Cantine désactivée : plus d'écran, plus de rubrique ni de cotisation due ; les reçus et dépenses de cantine déjà faits restent dans les reçus et la caisse (argent réellement encaissé) et peuvent être annulés | Cantine | politiques `*_module_cantine` |
 | H126 | Responsable de cantine (délégué « cantine ») : stock, pointage, bénéficiaires, menus, dépenses de cantine ; les cotisations (reçus) restent aux personnes qui ont le droit « finances » | Cantine | RLS phase 11 |
+| H127 | Cantine : abonnement mensuel facultatif payé d'avance ; un mois non payé n'est jamais une dette ; seuls les élèves dont le mois est payé en entier (ou exonérés) mangent | Cantine | `MoisEleve.statut` |
+| H128 | Mois de fonctionnement proposés : octobre à juin (modifiables) ; tarif mensuel « à partir de tel mois », les mois déjà abonnés gardent leur montant | Cantine | `moisParDefaut`, `canteen_rates` |
+| H129 | Avance (paiement partiel) toujours autorisée ; répartie dans l'ordre des mois ; le mois reste « PAIEMENT PARTIEL » jusqu'au paiement complet (choix du porteur) | Cantine | `repartir` |
+| H130 | Abonnement groupé (une classe ou toute l'école) : un reçu par élève, mois payé en entier, même mode de paiement | Cantine | `AbonnementsCantinePage` |
+| H131 | Jour limite de paiement : enregistré et affiché dans les réglages ; il ne bloque rien (le statut dépend seulement du paiement) | Cantine | `canteen_years.due_day` |
+
