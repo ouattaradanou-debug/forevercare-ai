@@ -212,7 +212,8 @@ Future<Uint8List> pdfRecu(PolicesPdf polices, DonneesRecu r) {
             children: [
               pw.Expanded(
                 child: pw.Text(
-                  'Reçu numéroté, enregistré sans possibilité de '
+                  'Montants en francs CFA. Reçu numéroté, enregistré sans '
+                  'possibilité de '
                   'modification. Une erreur se corrige par une annulation '
                   'motivée. Conservez ce reçu.',
                   style: const pw.TextStyle(

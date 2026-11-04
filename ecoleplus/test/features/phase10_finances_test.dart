@@ -102,11 +102,11 @@ void main() {
             .widget<Text>(find.byKey(const Key('total-ligne-scolarite')))
             .data,
       ),
-      '25 000 FCFA',
+      '25 000',
     );
     expect(
       texte(tester.widget<Text>(find.byKey(const Key('total-eleve'))).data),
-      '27 000 FCFA',
+      '27 000',
     );
     // 3e versement sans date limite : refusé avec un message clair.
     await tap(tester, find.text('Enregistrer pour les 2 classes'));
@@ -174,7 +174,7 @@ void main() {
     expect(t, contains('1er versement'));
     expect(t, contains('À l’inscription'));
     expect(t, contains('Avant le 15/01/2099'));
-    expect(t, contains('MONTANT TOTAL À PAYER PAR ÉLÈVE 27 000 FCFA'));
+    expect(t, contains('MONTANT TOTAL À PAYER PAR ÉLÈVE 27 000'));
     expect(t, contains('Tenue obligatoire.'));
     await h.dispose(tester);
   });
@@ -196,7 +196,7 @@ void main() {
     await tap(tester, find.byKey(const Key('choisir-e-0')));
     expect(
       texte(tester.widget<Text>(find.byKey(const Key('frais-eleve'))).data),
-      '26 500 FCFA',
+      '26 500',
     );
 
     final v1 = idVersement('c-cm1', 'scolarite', 0);
@@ -228,7 +228,7 @@ void main() {
     await tap(tester, find.textContaining('Encaisser 14'));
     expect(
       texte(tester.widget<Text>(find.byKey(const Key('recap-total'))).data),
-      '14 500 FCFA',
+      '14 500',
     );
     expect(find.text('Mode : Wave'), findsOneWidget);
     await tapLong(tester, find.byKey(const Key('valider-encaissement')));
@@ -244,11 +244,11 @@ void main() {
     await tapLong(tester, find.text('Partager par WhatsApp'));
     final t = texte(texteDuPdf(h.pdfSortis['partage:Recu_R2526-A-00001.pdf']!));
     expect(t, contains('Rubrique réglée'));
-    expect(t, contains('Scolarité — 2e versement 3 000 FCFA'));
-    expect(t, contains('Total reçu 14 500 FCFA'));
+    expect(t, contains('Scolarité — 2e versement 3 000'));
+    expect(t, contains('Total reçu 14 500'));
     expect(t, contains('Wave'));
     expect(t, contains('TEST Mariam (70 00 00 00)'));
-    expect(t, contains('Reste à payer 12 000 FCFA'));
+    expect(t, contains('Reste à payer 12 000'));
     await tapLong(tester, find.byKey(const Key('telecharger-recu')));
     expect(h.fichiersSortis.keys, contains('Recu_R2526-A-00001.pdf'));
 
@@ -263,7 +263,7 @@ void main() {
     );
     expect(
       texte(tester.widget<Text>(find.byKey(const Key('reste-encaisser'))).data),
-      '12 000 FCFA',
+      '12 000',
     );
     await accueil(tester);
 
@@ -424,9 +424,9 @@ void main() {
     await tap(tester, find.text('Situation des élèves'));
     String val(String k) => texte(tester.widget<Text>(find.byKey(Key(k))).data);
     // 3 élèves au CM1 A (26 500 chacun), 1 au CE1 A (aucun frais).
-    expect(val('synthese-du'), '79 500 FCFA');
-    expect(val('synthese-encaisse'), '26 500 FCFA');
-    expect(val('synthese-restant'), '53 000 FCFA');
+    expect(val('synthese-du'), '79 500');
+    expect(val('synthese-encaisse'), '26 500');
+    expect(val('synthese-restant'), '53 000');
     expect(val('synthese-impayes'), '2 élèves');
     expect(val('synthese-taux'), '33,3 %');
     expect(find.text('CM1 A'), findsWidgets);
@@ -436,7 +436,7 @@ void main() {
 
     // Une classe : mêmes indicateurs, limités au CE1 A.
     await tap(tester, find.byKey(const Key('situation-classe-c-ce1')));
-    expect(val('synthese-du'), '0 FCFA');
+    expect(val('synthese-du'), '0');
     expect(val('synthese-taux'), '—');
     await tap(tester, find.byKey(const Key('situation-ecole')));
     await tester.enterText(
@@ -449,11 +449,11 @@ void main() {
     // Page élève : synthèse et FRAIS DE L'ANNÉE.
     await tap(tester, find.byKey(const Key('situation-e-1')));
     expect(find.text('FRAIS DE L’ANNÉE'), findsOneWidget);
-    expect(val('eleve-du'), '26 500 FCFA');
-    expect(val('eleve-encaisse'), '0 FCFA');
+    expect(val('eleve-du'), '26 500');
+    expect(val('eleve-encaisse'), '0');
     // Échus : 1er versement (à l'inscription) + assurance.
-    expect(val('retard-eleve'), '11 500 FCFA');
-    expect(val('a-venir-eleve'), '15 000 FCFA');
+    expect(val('retard-eleve'), '11 500');
+    expect(val('a-venir-eleve'), '15 000');
     expect(find.text('Scolarité – 2e versement'), findsOneWidget);
     expect(find.text('TOTAL'), findsOneWidget);
     await accueil(tester);

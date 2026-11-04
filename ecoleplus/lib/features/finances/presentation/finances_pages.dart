@@ -600,6 +600,7 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const MentionFcfa(),
           if (_sansEleve)
             ..._sansEleveVue(ecole, annee)
           else if (eleve == null)
@@ -1359,6 +1360,7 @@ class _RecusState extends ConsumerState<RecusPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const MentionFcfa(),
           TextField(
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
@@ -1458,6 +1460,7 @@ class _ElevesFinancesState extends ConsumerState<ElevesFinancesPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const MentionFcfa(),
           Wrap(
             spacing: 6,
             runSpacing: 4,
@@ -1619,6 +1622,7 @@ class SituationElevePage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const MentionFcfa(),
           TableauDonnees(
             titre: 'Situation financière',
             colonnes: const [
@@ -1920,6 +1924,7 @@ class ImpayesPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const MentionFcfa(),
           Text(
             retards.isEmpty
                 ? 'Aucun impayé : toutes les échéances passées sont réglées.'

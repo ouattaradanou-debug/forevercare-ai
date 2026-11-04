@@ -82,6 +82,7 @@ class RemisesPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const MentionFcfa(),
           const Text(
             'Définissez les remises (fratrie, enfant du personnel…), puis '
             'attribuez-les dans la situation de chaque élève.',
@@ -220,6 +221,7 @@ class DepensesPage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const MentionFcfa(),
           BigButton(
             icon: Icons.add,
             label: 'Nouvelle dépense',
@@ -607,6 +609,7 @@ class _CaisseState extends ConsumerState<CaissePage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const MentionFcfa(),
           Wrap(
             spacing: 6,
             children: [
@@ -878,6 +881,7 @@ class _RapportsState extends ConsumerState<RapportsFinancesPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const MentionFcfa(),
           const Text('Période'),
           Wrap(
             spacing: 6,

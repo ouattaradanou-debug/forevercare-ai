@@ -97,10 +97,11 @@ void main() {
     expect(prochainNumero(const [1, 2, 5]), 6, reason: 'jamais en arrière');
   });
 
-  test('montants : FCFA et toutes lettres', () {
-    expect(fcfa(25000), '25 000 FCFA');
-    expect(fcfa(1250500), '1 250 500 FCFA');
-    expect(fcfa(-3000), '−3 000 FCFA');
+  test('montants : sans « FCFA » (A25) et toutes lettres', () {
+    expect(fcfa(25000), '25\u202f000');
+    expect(fcfa(1250500), '1\u202f250\u202f500');
+    expect(fcfa(-3000), '−3\u202f000');
+    expect(fcfaTexte(25000), '25\u202f000 FCFA', reason: 'texte de relance');
     for (final (n, txt) in const [
       (1, 'un franc CFA'),
       (21, 'vingt-et-un francs CFA'),

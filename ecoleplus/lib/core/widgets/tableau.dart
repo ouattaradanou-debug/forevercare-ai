@@ -220,3 +220,20 @@ class MentionSolde extends StatelessWidget {
     );
   }
 }
+
+/// Rappel discret de la devise, une fois par écran (les montants des
+/// tableaux sont affichés sans « FCFA » pour laisser de la place aux
+/// chiffres).
+class MentionFcfa extends StatelessWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerRight,
+    child: Text(
+      'Montants en FCFA',
+      style: Theme.of(context).textTheme.labelSmall
+          ?.copyWith(color: Theme.of(context).colorScheme.outline),
+    ),
+  );
+}

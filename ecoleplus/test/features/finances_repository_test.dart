@@ -186,7 +186,7 @@ void main() {
           (s, e) => s + (e['amount'] as int),
         ),
       ),
-      '0 FCFA',
+      '0',
     );
     await t.close();
     tmp.deleteSync(recursive: true);

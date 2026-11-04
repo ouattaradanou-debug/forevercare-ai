@@ -78,7 +78,9 @@ String libelleMode(String code, [String? precise]) =>
     : modesPaiement[code] ?? _anciensModes[code] ?? code;
 String libelleCategorie(String code) => categoriesDepenses[code] ?? code;
 
-/// « 25 000 FCFA » (espace fine insécable entre les milliers).
+/// « 25 000 » (espace fine insécable entre les milliers). Sans « FCFA »
+/// (A25 : plus de place pour les chiffres) : la devise est indiquée une
+/// fois par écran ou document.
 String fcfa(int montant) {
   final signe = montant < 0 ? '−' : '';
   final s = montant.abs().toString();
@@ -87,8 +89,11 @@ String fcfa(int montant) {
     if (i > 0 && (s.length - i) % 3 == 0) b.write(' ');
     b.write(s[i]);
   }
-  return '$signe$b FCFA';
+  return '$signe$b';
 }
+
+/// « 25 000 FCFA » : pour un texte envoyé hors de l'application (relance).
+String fcfaTexte(int montant) => '${fcfa(montant)} FCFA';
 
 /// Numéro de reçu, identique au contrôle du serveur
 /// (`app.format_receipt_number`) : « 2025-2026 », série « A », 12 →
@@ -602,7 +607,8 @@ String messageRelance({
   required int impaye,
   String? telephoneEcole,
 }) =>
-    'Bonjour, l’école $ecole vous informe qu’un montant de ${fcfa(impaye)} '
+    'Bonjour, l’école $ecole vous informe qu’un montant de '
+    '${fcfaTexte(impaye)} '
     'reste à régler pour la scolarité de $eleve ($classe). Merci de passer '
     'au secrétariat de l’école'
     '${telephoneEcole == null || telephoneEcole.isEmpty ? '' : ' ou '

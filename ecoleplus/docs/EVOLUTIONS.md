@@ -37,6 +37,7 @@
 | A22 | ➕ Ajout demandé (03/11/2026, test sur téléphone) | Grille des frais : **trois versements** (montant et date limite de chacun, le 1er « à l'inscription ») ; rubriques **Carte scolaire** et **Assurance** ajoutées ; l'école peut **ajouter, renommer ou retirer** des rubriques — fiche ci-dessous | **Acceptée** (03/11/2026) — construite | 10 |
 | A23 | ➕ Ajout demandé (03/11/2026, test sur téléphone) | **Finances simplifiées** : paramétrage des frais en **une seule grille** (classes cochées, tableau des rubriques, scolarité = 1er + 2e + 3e versement calculée, totaux, récapitulatif imprimable ou partagé) ; **encaissement en un seul tableau** (rubriques à cocher, montant proposé = reste dû, jamais plus, récapitulatif puis « Valider l'encaissement ») ; **un reçu pour plusieurs rubriques** — fiche ci-dessous | **Acceptée** (03/11/2026) — construite | 10 |
 | A24 | ➕ Ajout demandé (04/11/2026, test sur téléphone) | **Présentation en tableaux** des encaissements et de la situation financière : élèves par classe avec reste et statut (« SOLDÉ » en vert), synthèse de l'école ou d'une classe, page élève avec synthèse et « FRAIS DE L'ANNÉE » ; tableaux harmonisés dans le module Finances — fiche ci-dessous | **Acceptée** (04/11/2026) — construite | 10 |
+| A25 | ➕ Ajout demandé (04/11/2026, test sur téléphone) | **Montants sans « FCFA »** dans toute l'application (plus de place pour les chiffres) ; la devise est rappelée une fois par écran (« Montants en FCFA ») — fiche ci-dessous | **Acceptée** (04/11/2026) — construite | 10 |
 | A4 | ⚠️ Ajout proposé (phase 1) | Chiffrement du fichier de sauvegarde par un code choisi par le directeur — fiche ci-dessous | Reportée (V2), décision du 22/10/2026 | 2 |
 
 ## Fiche d'impact A2 — Photo de la carte : caméra ou import
@@ -285,3 +286,11 @@ Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 in
 * **Fonctionne sur ordinateur** : oui (tableaux en pleine largeur ; défilement horizontal sur téléphone).
 * **Effort** : S à M. **Risques** : faibles (affichage seulement) ; 1 test de calcul et 1 test d'écran ajoutés, tous les tests existants passent.
 * **Décision** : demandée par le porteur le 04/11/2026, construite le jour même.
+
+## Fiche d'impact A25 — Montants sans « FCFA »
+* **Demande du porteur (04/11/2026)** : retirer le symbole FCFA dans toute l'application pour laisser plus de place aux chiffres.
+* **Ce qui change** : tous les montants s'affichent sans « FCFA » (« 25 000 ») à l'écran et dans les PDF (reçu, récapitulatif des frais, rapport financier).
+* **Devise toujours indiquée une fois** : petite mention « Montants en FCFA » en haut des écrans Finances ; titres « Montant (FCFA) » des champs et colonnes déjà présents ; reçu : « Montants en francs CFA » et le montant en lettres (« … francs CFA ») ; rapport : « montants en FCFA ».
+* **Gardé avec « FCFA »** : le message de relance préparé pour les parents (texte envoyé hors de l'application, doit rester sans ambiguïté).
+* **Données, calculs** : aucun changement.
+* **Effort** : XS. **Risques** : aucun ; tous les tests passent.
