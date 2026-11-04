@@ -1368,24 +1368,49 @@ class _RecusState extends ConsumerState<RecusPage> {
             onChanged: (v) => setState(() => _q = v),
           ),
           const SizedBox(height: 8),
-          for (final x in visibles)
-            Card(
-              child: ListTile(
-                key: Key('recu-${x.receiptNumber}'),
-                leading: Icon(
-                  x.amount < 0 ? Icons.undo : Icons.receipt,
-                  color: x.amount < 0 ? Colors.red : null,
-                ),
-                title: Text('${x.receiptNumber} • ${fcfa(x.amount)}'),
-                subtitle: Text(
-                  '${dateHeure(x.paidAt)} • '
-                  '${noms[x.studentId] ?? libelleRubrique(x.rubric, rubriques)}'
-                  '${x.syncedAt == null ? ' • à envoyer' : ''}',
-                ),
-                onTap: () => context.push('/finances/recu/${x.id}'),
-              ),
-            ),
-          if (visibles.isEmpty) const Text('Aucun reçu.'),
+          TableauDonnees(
+            vide: 'Aucun reçu.',
+            colonnes: const [
+              ColonneTableau('N° de reçu', flex: 3, largeurMin: 130),
+              ColonneTableau('Date', flex: 3, largeurMin: 130),
+              ColonneTableau('Élève / objet', flex: 4, largeurMin: 150),
+              ColonneTableau('Montant', montant: true, largeurMin: 104),
+            ],
+            lignes: [
+              for (final x in visibles)
+                LigneTableau([
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          x.receiptNumber,
+                          key: Key('recu-${x.receiptNumber}'),
+                        ),
+                      ),
+                      if (x.syncedAt == null)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Tooltip(
+                            message: 'À envoyer',
+                            child: Icon(Icons.cloud_upload_outlined, size: 16),
+                          ),
+                        ),
+                    ],
+                  ),
+                  Text(dateHeure(x.paidAt)),
+                  Text(
+                    noms[x.studentId] ?? libelleRubrique(x.rubric, rubriques),
+                  ),
+                  Text(
+                    fcfa(x.amount),
+                    style: x.amount < 0
+                        ? TextStyle(color: CouleursFinances.de(context).rouge)
+                        : null,
+                  ),
+                ], onTap: () => context.push('/finances/recu/${x.id}')),
+            ],
+          ),
         ],
       ),
     );
@@ -1909,22 +1934,44 @@ class ImpayesPage extends ConsumerWidget {
             'cartes ne dépendent jamais des paiements.',
           ),
           const SizedBox(height: 8),
-          for (final l in retards)
-            Card(
-              child: ListTile(
-                key: Key('impaye-${l.eleve.eleve.id}'),
-                title: Text(l.nom),
-                subtitle: Text(
-                  '${l.classe} • retard ${fcfa(l.situation.impaye)}',
+          for (final (classe, groupe) in parClasse(
+            retards,
+            ref.watch(classesProvider(annee.id)).value ?? const <ClassRow>[],
+          ))
+            TableauDonnees(
+              titre: classe,
+              colonnes: const [
+                ColonneTableau('Nom et prénom', flex: 5, largeurMin: 170),
+                ColonneTableau('En retard', flex: 3, montant: true),
+                ColonneTableau('Reste total', flex: 3, montant: true),
+                ColonneTableau('Relance', centre: true, largeurMin: 80),
+              ],
+              lignes: [
+                for (final l in groupe)
+                  LigneTableau(
+                    [
+                      Text(l.nom, key: Key('impaye-${l.eleve.eleve.id}')),
+                      montantRestant(context, l.situation.enRetard),
+                      Text(fcfa(l.situation.reste)),
+                      IconButton(
+                        tooltip: 'Préparer une relance',
+                        icon: const Icon(Icons.sms_outlined),
+                        onPressed: () => preparerRelance(context, ref, l),
+                      ),
+                    ],
+                    onTap: () =>
+                        context.push('/finances/eleve/${l.eleve.eleve.id}'),
+                  ),
+              ],
+              total: LigneTableau([
+                Text('${groupe.length} élève(s)'),
+                montantRestant(
+                  context,
+                  _somme(groupe, (l) => l.situation.enRetard),
                 ),
-                trailing: IconButton(
-                  tooltip: 'Préparer une relance',
-                  icon: const Icon(Icons.sms_outlined),
-                  onPressed: () => preparerRelance(context, ref, l),
-                ),
-                onTap: () =>
-                    context.push('/finances/eleve/${l.eleve.eleve.id}'),
-              ),
+                Text(fcfa(_somme(groupe, (l) => l.situation.reste))),
+                const SizedBox(),
+              ]),
             ),
         ],
       ),

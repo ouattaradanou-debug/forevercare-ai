@@ -64,14 +64,22 @@ constater.
 3. Directeur → « Sécurité » → « Journal d'activité ». ✅ « … a encaissé
    10 000 FCFA (reçu …) », « … a annulé 10 000 FCFA (reçu … : motif) ».
 
-## 4. Soldes et impayés
-1. « Situation des élèves » : par classe ou toute l'école. ✅ Dû, payé,
-   reste, taux de recouvrement ; « Retard » en rouge pour une échéance
-   passée et non réglée.
-2. « Impayés et relances ». ✅ Seules les échéances **passées** comptent.
-3. Icône message → texte de relance prêt (modifiable) avec le numéro des
-   parents → « Partager ». ✅ Rien ne part tout seul : vous choisissez
-   WhatsApp ou SMS et le destinataire.
+## 4. Situation financière et impayés (tableaux, A24)
+1. « Encaisser » : ✅ tableau « Nom et prénom | Reste à payer | Statut » ;
+   reste en rouge ; « **SOLDÉ** » en vert ; avec « Toutes les classes », un
+   tableau par classe (titre = nom de la classe).
+2. « Situation des élèves » → « Toute l'école » : ✅ tableau de synthèse
+   (montant dû, encaissé, restant, élèves impayés, taux de recouvrement),
+   puis un tableau par classe (total, payé, restant ou « SOLDÉ »).
+   Choisissez une classe : ✅ mêmes indicateurs pour cette classe seule.
+   Tapez un nom dans la recherche : ✅ seuls les élèves correspondants.
+3. Touchez un élève : ✅ synthèse (dû, encaissé, restant, **en retard**,
+   **autres versements**), puis « **FRAIS DE L'ANNÉE** » (nom, classe,
+   année) : une ligne par rubrique ou versement, statut, ligne **TOTAL**.
+   ✅ restant = dû − encaissé ; en retard + autres versements = restant.
+4. « Impayés et relances » : ✅ un tableau par classe (en retard, reste
+   total, relance) avec un total. Icône message → texte prêt →
+   « Partager ». ✅ Rien ne part tout seul.
 
 ## 5. Dépenses avec justificatif
 1. « Dépenses » → « Nouvelle dépense » : Fournitures, « Craies », 1 500,

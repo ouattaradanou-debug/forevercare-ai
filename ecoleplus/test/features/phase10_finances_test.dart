@@ -394,4 +394,76 @@ void main() {
     expect(find.text('Frais d’examen'), findsOneWidget);
     await h.dispose(tester);
   });
+
+  testWidgets('A24 : synthèse de l’école et d’une classe, SOLDÉ en vert, '
+      'élèves groupés par classe, page élève (FRAIS DE L’ANNÉE et total)', (
+    tester,
+  ) async {
+    final h = AppHarness()..seedEcoleTest();
+    await h.pump(tester);
+    await h.login(tester, 'directeur@ecole-test.local');
+    await grilleCm1(h, tester);
+    // TEST Aïcha solde tout (page Finances ouverte : soldes chargés).
+    await ouvrirFinances(tester);
+    final conteneur = ProviderScope.containerOf(
+      tester.element(find.byType(Scaffold).first),
+    );
+    final aicha = conteneur
+        .read(situationsProvider((ecoleId, anneeId)))!
+        .firstWhere((l) => l.eleve.eleve.id == 'e-0');
+    await conteneur
+        .read(financesRepositoryProvider)
+        .encaisserRubriques(
+          schoolId: ecoleId,
+          yearId: anneeId,
+          studentId: 'e-0',
+          choix: [for (final v in aicha.situation.versements) (v, v.reste)],
+          mode: 'especes',
+        );
+    await calme(tester);
+    await tap(tester, find.text('Situation des élèves'));
+    String val(String k) => texte(tester.widget<Text>(find.byKey(Key(k))).data);
+    // 3 élèves au CM1 A (26 500 chacun), 1 au CE1 A (aucun frais).
+    expect(val('synthese-du'), '79 500 FCFA');
+    expect(val('synthese-encaisse'), '26 500 FCFA');
+    expect(val('synthese-restant'), '53 000 FCFA');
+    expect(val('synthese-impayes'), '2 élèves');
+    expect(val('synthese-taux'), '33,3 %');
+    expect(find.text('CM1 A'), findsWidgets);
+    expect(find.text('CE1 A'), findsWidgets);
+    expect(find.text('SOLDÉ'), findsOneWidget);
+    expect(find.text('Aucun frais'), findsOneWidget);
+
+    // Une classe : mêmes indicateurs, limités au CE1 A.
+    await tap(tester, find.byKey(const Key('situation-classe-c-ce1')));
+    expect(val('synthese-du'), '0 FCFA');
+    expect(val('synthese-taux'), '—');
+    await tap(tester, find.byKey(const Key('situation-ecole')));
+    await tester.enterText(
+      find.byKey(const Key('recherche-situation')),
+      'bouk',
+    );
+    await AppHarness.settle(tester);
+    expect(find.byKey(const Key('situation-e-0')), findsNothing);
+
+    // Page élève : synthèse et FRAIS DE L'ANNÉE.
+    await tap(tester, find.byKey(const Key('situation-e-1')));
+    expect(find.text('FRAIS DE L’ANNÉE'), findsOneWidget);
+    expect(val('eleve-du'), '26 500 FCFA');
+    expect(val('eleve-encaisse'), '0 FCFA');
+    // Échus : 1er versement (à l'inscription) + assurance.
+    expect(val('retard-eleve'), '11 500 FCFA');
+    expect(val('a-venir-eleve'), '15 000 FCFA');
+    expect(find.text('Scolarité – 2e versement'), findsOneWidget);
+    expect(find.text('TOTAL'), findsOneWidget);
+    await accueil(tester);
+
+    // Encaisser : tableau par classe, reste et statut.
+    await ouvrirFinances(tester);
+    await tap(tester, find.text('Encaisser'));
+    expect(find.text('Nom et prénom de l’élève'), findsWidgets);
+    expect(find.text('SOLDÉ'), findsOneWidget);
+    expect(find.text('Impayé'), findsNWidgets(2));
+    await h.dispose(tester);
+  });
 }

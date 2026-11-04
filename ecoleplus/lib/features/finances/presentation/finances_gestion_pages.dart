@@ -7,6 +7,7 @@ import 'package:ecoleplus/core/export/xlsx_ecriture.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/bibliotheque/presentation/bibliotheque_pages.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
@@ -225,29 +226,53 @@ class DepensesPage extends ConsumerWidget {
             onPressed: () => context.push('/finances/depense/nouvelle'),
           ),
           const SizedBox(height: 8),
-          Text(
-            'Total de l’année : '
-            '${fcfa(depenses.fold<int>(0, (s, d) => s + d.amount))}',
+          TableauDonnees(
+            vide: 'Aucune dépense.',
+            colonnes: const [
+              ColonneTableau('Date'),
+              ColonneTableau('Objet', flex: 4, largeurMin: 150),
+              ColonneTableau('Catégorie', flex: 3, largeurMin: 130),
+              ColonneTableau('Montant', montant: true, largeurMin: 104),
+            ],
+            lignes: [
+              for (final d in depenses)
+                LigneTableau([
+                  Text(dateCourte(d.spentOn)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (d.justificationPath != null)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 4),
+                          child: Icon(Icons.attach_file, size: 16),
+                        ),
+                      Flexible(
+                        child: Text(
+                          '${d.label}'
+                          '${annulees.contains(d.id) ? ' (annulée)' : ''}',
+                          key: Key('depense-${d.id}'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(libelleCategorie(d.category)),
+                  Text(
+                    fcfa(d.amount),
+                    style: d.amount < 0
+                        ? TextStyle(color: CouleursFinances.de(context).rouge)
+                        : null,
+                  ),
+                ], onTap: () => context.push('/finances/depense/${d.id}')),
+            ],
+            total: depenses.isEmpty
+                ? null
+                : LigneTableau([
+                    const Text('Total'),
+                    const SizedBox(),
+                    const SizedBox(),
+                    Text(fcfa(depenses.fold<int>(0, (s, d) => s + d.amount))),
+                  ]),
           ),
-          for (final d in depenses)
-            Card(
-              child: ListTile(
-                key: Key('depense-${d.id}'),
-                leading: Icon(
-                  d.amount < 0
-                      ? Icons.undo
-                      : d.justificationPath == null
-                      ? Icons.receipt_outlined
-                      : Icons.photo_camera_outlined,
-                ),
-                title: Text('${d.label} • ${fcfa(d.amount)}'),
-                subtitle: Text(
-                  '${dateCourte(d.spentOn)} • ${libelleCategorie(d.category)}'
-                  '${annulees.contains(d.id) ? ' • annulée' : ''}',
-                ),
-                onTap: () => context.push('/finances/depense/${d.id}'),
-              ),
-            ),
         ],
       ),
     );
@@ -660,21 +685,41 @@ class _CaisseState extends ConsumerState<CaissePage> {
               },
             ),
           const SectionTitle('Journal de caisse'),
-          for (final m in duMois)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              title: Text(m.libelle),
-              subtitle: Text(
-                '${dateCourte(m.date)} • ${m.numero} • '
-                '${m.mode == null ? '' : libelleMode(m.mode!)}',
-              ),
-              trailing: Text(
-                fcfa(m.montant),
-                style: TextStyle(color: m.montant < 0 ? Colors.red : null),
-              ),
-            ),
-          if (duMois.isEmpty) const Text('Aucun mouvement ce mois-ci.'),
+          TableauDonnees(
+            vide: 'Aucun mouvement ce mois-ci.',
+            colonnes: const [
+              ColonneTableau('Date'),
+              ColonneTableau('N°', flex: 3, largeurMin: 130),
+              ColonneTableau('Libellé', flex: 5, largeurMin: 170),
+              ColonneTableau('Mode', largeurMin: 100),
+              ColonneTableau('Entrée', montant: true, largeurMin: 104),
+              ColonneTableau('Sortie', montant: true, largeurMin: 104),
+            ],
+            lignes: [
+              for (final m in duMois)
+                LigneTableau([
+                  Text(dateCourte(m.date)),
+                  Text(m.numero),
+                  Text(m.libelle),
+                  Text(m.mode == null ? '' : libelleMode(m.mode!)),
+                  Text(m.montant >= 0 ? fcfa(m.montant) : ''),
+                  Text(
+                    m.montant < 0 ? fcfa(-m.montant) : '',
+                    style: TextStyle(color: CouleursFinances.de(context).rouge),
+                  ),
+                ]),
+            ],
+            total: duMois.isEmpty
+                ? null
+                : LigneTableau([
+                    const Text('Total'),
+                    const SizedBox(),
+                    const SizedBox(),
+                    const SizedBox(),
+                    Text(fcfa(entrees)),
+                    Text(fcfa(-sorties)),
+                  ]),
+          ),
         ],
       ),
     );
