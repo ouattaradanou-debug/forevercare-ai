@@ -608,7 +608,7 @@ String messageRelance({
   String? telephoneEcole,
 }) =>
     'Bonjour, l’école $ecole vous informe qu’un montant de '
-    '${fcfaTexte(impaye)} '
+    '${fcfa(impaye)} '
     'reste à régler pour la scolarité de $eleve ($classe). Merci de passer '
     'au secrétariat de l’école'
     '${telephoneEcole == null || telephoneEcole.isEmpty ? '' : ' ou '

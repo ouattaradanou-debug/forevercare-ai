@@ -258,7 +258,7 @@ void main() {
       impaye: 8000,
       telephoneEcole: '70 11 22 33',
     );
-    expect(m, contains('8 000 FCFA'));
+    expect(m, contains('8 000 reste'));
     expect(m, contains('TEST Aïcha (CM1 A)'));
     expect(m, contains('70 11 22 33'));
   });

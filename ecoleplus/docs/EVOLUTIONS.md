@@ -291,6 +291,6 @@ Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 in
 * **Demande du porteur (04/11/2026)** : retirer le symbole FCFA dans toute l'application pour laisser plus de place aux chiffres.
 * **Ce qui change** : tous les montants s'affichent sans « FCFA » (« 25 000 ») à l'écran et dans les PDF (reçu, récapitulatif des frais, rapport financier).
 * **Devise toujours indiquée une fois** : petite mention « Montants en FCFA » en haut des écrans Finances ; titres « Montant (FCFA) » des champs et colonnes déjà présents ; reçu : « Montants en francs CFA » et le montant en lettres (« … francs CFA ») ; rapport : « montants en FCFA ».
-* **Gardé avec « FCFA »** : le message de relance préparé pour les parents (texte envoyé hors de l'application, doit rester sans ambiguïté).
+* **Relance aux parents** : également sans « FCFA » (confirmé par le porteur le 04/11/2026).
 * **Données, calculs** : aucun changement.
 * **Effort** : XS. **Risques** : aucun ; tous les tests passent.
