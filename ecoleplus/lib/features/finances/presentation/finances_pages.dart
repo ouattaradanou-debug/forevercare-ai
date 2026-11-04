@@ -5,6 +5,7 @@ import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
 import 'package:ecoleplus/features/finances/pdf/pdf_finances.dart';
@@ -59,6 +60,121 @@ String dateHeure(String iso) {
 String dateCourte(String iso) {
   final d = iso.length >= 10 ? iso.substring(0, 10).split('-') : null;
   return d == null || d.length < 3 ? iso : '${d[2]}/${d[1]}/${d[0]}';
+}
+
+// ----------------------------------------------------------------------
+// Présentation en tableaux (A24)
+// ----------------------------------------------------------------------
+
+/// Élèves regroupés par classe, dans l'ordre des classes (les élèves sans
+/// classe à la fin).
+List<(String, List<LigneEleve>)> parClasse(
+  List<LigneEleve> eleves,
+  List<ClassRow> classes,
+) {
+  final groupes = <(String, List<LigneEleve>)>[
+    for (final k in classes)
+      (
+        k.name,
+        [
+          for (final l in eleves)
+            if (l.eleve.classe?.id == k.id) l,
+        ],
+      ),
+  ];
+  final sans = [
+    for (final l in eleves)
+      if (l.eleve.classe == null ||
+          !classes.any((k) => k.id == l.eleve.classe!.id))
+        l,
+  ];
+  return [
+    for (final g in groupes)
+      if (g.$2.isNotEmpty) g,
+    if (sans.isNotEmpty) ('Sans classe', sans),
+  ];
+}
+
+/// Montant restant : en rouge s'il reste à payer.
+Widget montantRestant(BuildContext context, int reste, {Key? key}) => Text(
+  fcfa(reste),
+  key: key,
+  style: reste > 0
+      ? TextStyle(
+          color: CouleursFinances.de(context).rouge,
+          fontWeight: FontWeight.w700,
+        )
+      : null,
+);
+
+/// Montant restant, ou « SOLDÉ » en vert quand tout est payé.
+Widget restantOuSolde(BuildContext context, int reste, int du, {Key? key}) {
+  if (du == 0) {
+    return Text(
+      'Aucun frais',
+      key: key,
+      style: TextStyle(color: Theme.of(context).colorScheme.outline),
+    );
+  }
+  return reste == 0
+      ? MentionSolde(key: key)
+      : montantRestant(context, reste, key: key);
+}
+
+/// Statut d'un élève : « SOLDÉ » (vert), « Partiellement payé »,
+/// « Impayé » (rouge).
+Widget statutEleve(BuildContext context, StatutEleve s, {Key? key}) {
+  final c = CouleursFinances.de(context);
+  return switch (s) {
+    StatutEleve.solde => MentionSolde(key: key),
+    StatutEleve.partiel => Text(
+      'Partiellement payé',
+      key: key,
+      style: TextStyle(color: c.orange, fontWeight: FontWeight.w600),
+    ),
+    StatutEleve.impaye => Text(
+      'Impayé',
+      key: key,
+      style: TextStyle(color: c.rouge, fontWeight: FontWeight.w600),
+    ),
+    StatutEleve.aucunFrais => Text(
+      'Aucun frais',
+      key: key,
+      style: TextStyle(color: Theme.of(context).colorScheme.outline),
+    ),
+  };
+}
+
+/// Tableau de synthèse : montant dû, encaissé, restant, élèves impayés,
+/// taux de recouvrement.
+class TableauSynthese extends StatelessWidget {
+  const new(this.s, {this.titre, super.key});
+  final Synthese s;
+  final String? titre;
+
+  @override
+  Widget build(BuildContext context) => TableauDonnees(
+    titre: titre,
+    colonnes: const [
+      ColonneTableau('Montant dû', montant: true, largeurMin: 110),
+      ColonneTableau('Montant encaissé', montant: true, largeurMin: 120),
+      ColonneTableau('Montant restant', montant: true, largeurMin: 116),
+      ColonneTableau('Élèves impayés', montant: true, largeurMin: 104),
+      ColonneTableau('Taux de recouvrement', montant: true, largeurMin: 124),
+    ],
+    lignes: [
+      LigneTableau([
+        Text(fcfa(s.du), key: const Key('synthese-du')),
+        Text(fcfa(s.encaisse), key: const Key('synthese-encaisse')),
+        montantRestant(context, s.restant, key: const Key('synthese-restant')),
+        Text(
+          '${s.nbImpayes} élève${s.nbImpayes > 1 ? 's' : ''}',
+          key: const Key('synthese-impayes'),
+        ),
+        Text(texteTaux(s.taux), key: const Key('synthese-taux')),
+      ]),
+    ],
+  );
 }
 
 // ----------------------------------------------------------------------
@@ -526,7 +642,8 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
         spacing: 6,
         children: [
           ChoiceChip(
-            label: const Text('Toutes'),
+            key: const Key('encaisser-toutes'),
+            label: const Text('Toutes les classes'),
             selected: _classe == null,
             onSelected: (_) => setState(() => _classe = null),
           ),
@@ -550,15 +667,27 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
         ),
         onChanged: (_) => setState(() {}),
       ),
-      for (final l in visibles)
-        ListTile(
-          key: Key('choisir-${l.eleve.eleve.id}'),
-          title: Text(l.nom),
-          subtitle: Text('${l.classe} • reste ${fcfa(l.situation.reste)}'),
-          trailing: l.situation.reste == 0
-              ? pastilleStatut(context, Statut.paye)
-              : null,
-          onTap: () => _choisirEleve(l.eleve.eleve.id),
+      const SizedBox(height: 8),
+      for (final (classe, groupe) in parClasse(visibles, classes))
+        TableauDonnees(
+          titre: classe,
+          colonnes: const [
+            ColonneTableau(
+              'Nom et prénom de l’élève',
+              flex: 5,
+              largeurMin: 170,
+            ),
+            ColonneTableau('Reste à payer', flex: 3, montant: true),
+            ColonneTableau('Statut', flex: 3, centre: true, largeurMin: 130),
+          ],
+          lignes: [
+            for (final l in groupe)
+              LigneTableau([
+                Text(l.nom, key: Key('choisir-${l.eleve.eleve.id}')),
+                montantRestant(context, l.situation.reste),
+                statutEleve(context, l.situation.statut),
+              ], onTap: () => _choisirEleve(l.eleve.eleve.id)),
+          ],
         ),
       if (visibles.isEmpty) const Text('Aucun élève.'),
       const Divider(),
@@ -1267,6 +1396,8 @@ class _RecusState extends ConsumerState<RecusPage> {
 // Situation des élèves, impayés, relances
 // ----------------------------------------------------------------------
 
+/// Situation des élèves (A24) : synthèse de l'école ou d'une classe, puis
+/// la situation de chaque élève, regroupée par classe ; recherche par nom.
 class ElevesFinancesPage extends ConsumerStatefulWidget {
   const new({super.key});
 
@@ -1285,16 +1416,18 @@ class _ElevesFinancesState extends ConsumerState<ElevesFinancesPage> {
     final (ecole, annee) = c;
     final lignes = ref.watch(situationsProvider((ecole.id, annee.id)));
     if (lignes == null) return _chargement('Situation des élèves');
-    final classes = ref.watch(classesProvider(annee.id)).value ?? const [];
+    final classes =
+        ref.watch(classesProvider(annee.id)).value ?? const <ClassRow>[];
+    final perimetre = [
+      for (final l in lignes)
+        if (_classe == null || l.eleve.classe?.id == _classe) l,
+    ];
     final q = _q.trim().toLowerCase();
     final visibles = [
-      for (final l in lignes)
-        if ((_classe == null || l.eleve.classe?.id == _classe) &&
-            (q.isEmpty || l.nom.toLowerCase().contains(q)))
-          l,
+      for (final l in perimetre)
+        if (q.isEmpty || l.nom.toLowerCase().contains(q)) l,
     ];
-    final du = visibles.fold<int>(0, (s, l) => s + l.situation.du);
-    final paye = visibles.fold<int>(0, (s, l) => s + l.situation.paye);
+    final nomClasse = classes.where((k) => k.id == _classe).firstOrNull?.name;
     return EcoleScaffold(
       title: 'Situation des élèves',
       body: ListView(
@@ -1302,62 +1435,95 @@ class _ElevesFinancesState extends ConsumerState<ElevesFinancesPage> {
         children: [
           Wrap(
             spacing: 6,
+            runSpacing: 4,
             children: [
               ChoiceChip(
+                key: const Key('situation-ecole'),
                 label: const Text('Toute l’école'),
                 selected: _classe == null,
                 onSelected: (_) => setState(() => _classe = null),
               ),
               for (final k in classes)
                 ChoiceChip(
+                  key: Key('situation-classe-${k.id}'),
                   label: Text(k.name),
                   selected: _classe == k.id,
                   onSelected: (_) => setState(() => _classe = k.id),
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
+          TableauSynthese(
+            Synthese.depuis([for (final l in perimetre) l.situation]),
+            titre: nomClasse == null
+                ? 'Situation financière de l’école'
+                : 'Situation financière — $nomClasse',
+          ),
+          const SizedBox(height: 12),
           TextField(
+            key: const Key('recherche-situation'),
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search),
-              labelText: 'Nom de l’élève',
+              labelText: 'Rechercher un élève (nom ou prénom)',
               border: OutlineInputBorder(),
+              isDense: true,
             ),
             onChanged: (v) => setState(() => _q = v),
           ),
-          const SizedBox(height: 8),
-          Card(
-            child: ListTile(
-              key: const Key('totaux-eleves'),
-              title: Text(
-                'Dû ${fcfa(du)} • payé ${fcfa(paye)} • reste '
-                '${fcfa(_somme(visibles, (l) => l.situation.reste))}',
-              ),
-              subtitle: Text(
-                du == 0
-                    ? '${visibles.length} élève(s)'
-                    : '${visibles.length} élève(s) • recouvrement '
-                          '${(paye * 100 / du).round()} %',
-              ),
+          for (final (classe, groupe) in parClasse(visibles, classes))
+            TableauDonnees(
+              titre: classe,
+              colonnes: const [
+                ColonneTableau('Nom et prénom', flex: 5, largeurMin: 170),
+                ColonneTableau('Montant total', flex: 3, montant: true),
+                ColonneTableau('Montant payé', flex: 3, montant: true),
+                ColonneTableau(
+                  'Montant restant',
+                  flex: 3,
+                  montant: true,
+                  largeurMin: 110,
+                ),
+              ],
+              lignes: [
+                for (final l in groupe)
+                  LigneTableau(
+                    [
+                      Text(
+                        l.nom,
+                        key: Key('situation-${l.eleve.eleve.id}'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(fcfa(l.situation.du)),
+                      Text(fcfa(l.situation.encaisse)),
+                      restantOuSolde(
+                        context,
+                        l.situation.reste,
+                        l.situation.du,
+                      ),
+                    ],
+                    onTap: () =>
+                        context.push('/finances/eleve/${l.eleve.eleve.id}'),
+                  ),
+              ],
+              total: groupe.length < 2
+                  ? null
+                  : LigneTableau([
+                      Text('${groupe.length} élèves'),
+                      Text(fcfa(_somme(groupe, (l) => l.situation.du))),
+                      Text(fcfa(_somme(groupe, (l) => l.situation.encaisse))),
+                      montantRestant(
+                        context,
+                        _somme(groupe, (l) => l.situation.reste),
+                      ),
+                    ]),
             ),
-          ),
-          for (final l in visibles)
-            ListTile(
-              key: Key('situation-${l.eleve.eleve.id}'),
-              title: Text(l.nom),
-              subtitle: Text(
-                '${l.classe} • payé ${fcfa(l.situation.paye)} sur '
-                '${fcfa(l.situation.du)}',
-              ),
-              trailing: l.situation.impaye > 0
-                  ? Text(
-                      'Retard ${fcfa(l.situation.impaye)}',
-                      style: const TextStyle(color: Colors.red),
-                    )
-                  : l.situation.reste == 0
-                  ? const Icon(Icons.check_circle, color: Colors.green)
-                  : Text('Reste ${fcfa(l.situation.reste)}'),
-              onTap: () => context.push('/finances/eleve/${l.eleve.eleve.id}'),
+          if (visibles.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: Text('Aucun élève.'),
             ),
         ],
       ),
@@ -1365,6 +1531,15 @@ class _ElevesFinancesState extends ConsumerState<ElevesFinancesPage> {
   }
 }
 
+/// Libellé d'un versement dans les tableaux : « Scolarité – 1er
+/// versement », « Assurance ».
+String libelleVersement(VersementSituation v) =>
+    v.tranche == null || v.libelle == v.ligne.label
+    ? v.ligne.label
+    : '${v.ligne.label} – ${v.libelle}';
+
+/// Situation financière détaillée d'un élève (A24) : synthèse, puis
+/// « FRAIS DE L'ANNÉE » rubrique par rubrique avec un total.
 class SituationElevePage extends ConsumerWidget {
   const new(this.eleveId, {super.key});
   final String eleveId;
@@ -1395,54 +1570,152 @@ class SituationElevePage extends ConsumerWidget {
     final remises = ref.watch(remisesProvider).value ?? const [];
     final repo = ref.read(financesRepositoryProvider);
     final s = l.situation;
+    final t = Theme.of(context).textTheme;
+    final couleurs = CouleursFinances.de(context);
+    final versements = [
+      for (final v in s.versements)
+        if (v.du > 0 || v.paye > 0) v,
+    ];
+    Widget statut(VersementSituation v) => v.reste == 0
+        ? const MentionSolde()
+        : Text(
+            v.encaisse > 0
+                ? 'Partiel'
+                : v.echu
+                ? 'En retard'
+                : 'Impayé',
+            style: TextStyle(
+              color: v.encaisse > 0 ? couleurs.orange : couleurs.rouge,
+              fontWeight: FontWeight.w600,
+            ),
+          );
     return EcoleScaffold(
       title: l.nom,
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('${l.classe} • année ${annee.label}'),
-          const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Reste à payer : ${fcfa(s.reste)}',
-                    key: const Key('reste-eleve'),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  Text('Dû ${fcfa(s.du)} • payé ${fcfa(s.paye)}'),
-                  if (s.impaye > 0)
-                    Text(
-                      'En retard (échéances passées) : ${fcfa(s.impaye)}',
-                      key: const Key('retard-eleve'),
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  if (s.autresRecettes != 0)
-                    Text('Autres versements : ${fcfa(s.autresRecettes)}'),
-                ],
+          TableauDonnees(
+            titre: 'Situation financière',
+            colonnes: const [
+              ColonneTableau('Montant dû', montant: true, largeurMin: 110),
+              ColonneTableau(
+                'Montant encaissé',
+                montant: true,
+                largeurMin: 120,
               ),
+              ColonneTableau('Montant restant', montant: true, largeurMin: 116),
+              ColonneTableau(
+                'Montant en retard',
+                montant: true,
+                largeurMin: 120,
+              ),
+              ColonneTableau(
+                'Autres versements',
+                montant: true,
+                largeurMin: 124,
+              ),
+            ],
+            lignes: [
+              LigneTableau([
+                Text(fcfa(s.du), key: const Key('eleve-du')),
+                Text(fcfa(s.encaisse), key: const Key('eleve-encaisse')),
+                restantOuSolde(
+                  context,
+                  s.reste,
+                  s.du,
+                  key: const Key('reste-eleve'),
+                ),
+                montantRestant(
+                  context,
+                  s.enRetard,
+                  key: const Key('retard-eleve'),
+                ),
+                Text(fcfa(s.aVenir), key: const Key('a-venir-eleve')),
+              ]),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              'Montant en retard : échéances dépassées non réglées. '
+              'Autres versements : reste à payer dont l’échéance n’est pas '
+              'encore arrivée.',
+              style: t.bodySmall,
             ),
           ),
-          const SectionTitle('Frais de l’année'),
-          for (final x in s.lignes)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(x.ligne.label),
-              subtitle: Text(
-                'Dû ${fcfa(x.du)}'
-                '${x.reduction > 0 ? ' (remise ${fcfa(x.reduction)})' : ''}'
-                ' • payé ${fcfa(x.paye)}',
-              ),
-              trailing: Text(x.reste == 0 ? 'Soldé' : 'Reste ${fcfa(x.reste)}'),
-            ),
-          if (s.lignes.isEmpty)
-            const Text(
+          const SizedBox(height: 16),
+          Text(
+            'FRAIS DE L’ANNÉE',
+            style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text('${l.nom} • ${l.classe} • année scolaire ${annee.label}'),
+          const SizedBox(height: 4),
+          if (versements.isEmpty)
+            const InfoMessage(
               'Aucun frais pour sa classe : complétez la grille des frais.',
+            )
+          else
+            TableauDonnees(
+              colonnes: const [
+                ColonneTableau('Rubriques', flex: 5, largeurMin: 180),
+                ColonneTableau('Montant total', flex: 3, montant: true),
+                ColonneTableau('Montant payé', flex: 3, montant: true),
+                ColonneTableau(
+                  'Montant restant',
+                  flex: 3,
+                  montant: true,
+                  largeurMin: 110,
+                ),
+                ColonneTableau('Statut', flex: 3, centre: true),
+              ],
+              lignes: [
+                for (final v in versements)
+                  LigneTableau([
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(libelleVersement(v)),
+                        if (v.echeance != null && v.reste > 0)
+                          Text(
+                            'avant le ${dateCourte(v.echeance!)}',
+                            style: t.bodySmall,
+                          ),
+                      ],
+                    ),
+                    Text(fcfa(v.du)),
+                    Text(fcfa(v.encaisse)),
+                    montantRestant(context, v.reste),
+                    statut(v),
+                  ]),
+              ],
+              total: LigneTableau([
+                const Text('TOTAL'),
+                Text(fcfa(s.du)),
+                Text(fcfa(s.encaisse)),
+                restantOuSolde(context, s.reste, s.du),
+                const SizedBox(),
+              ]),
             ),
-          const SizedBox(height: 8),
+          if (s.lignes.any((x) => x.reduction > 0))
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'Montants après remise : '
+                '${_remisesTexte(s)}.',
+                style: t.bodySmall,
+              ),
+            ),
+          if (s.autresRecettes != 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'Recettes hors frais pour cet élève : '
+                '${fcfa(s.autresRecettes)}.',
+                style: t.bodySmall,
+              ),
+            ),
+          const SizedBox(height: 12),
           BigButton(
             icon: Icons.point_of_sale,
             label: 'Encaisser',
@@ -1456,6 +1729,28 @@ class SituationElevePage extends ConsumerWidget {
               onPressed: () => preparerRelance(context, ref, l),
             ),
           ],
+          TableauDonnees(
+            titre: 'Reçus',
+            vide: 'Aucun versement.',
+            colonnes: const [
+              ColonneTableau('N° de reçu', flex: 3, largeurMin: 130),
+              ColonneTableau('Date', flex: 3, largeurMin: 130),
+              ColonneTableau('Montant', montant: true),
+            ],
+            lignes: [
+              for (final x in paiements)
+                LigneTableau([
+                  Text(x.receiptNumber),
+                  Text(dateHeure(x.paidAt)),
+                  Text(
+                    fcfa(x.amount),
+                    style: x.amount < 0
+                        ? TextStyle(color: couleurs.rouge)
+                        : null,
+                  ),
+                ], onTap: () => context.push('/finances/recu/${x.id}')),
+            ],
+          ),
           const SectionTitle('Remises'),
           for (final (r, a) in attributions)
             ListTile(
@@ -1488,21 +1783,16 @@ class SituationElevePage extends ConsumerWidget {
             )
           else
             const Text('Aucune remise définie (Finances → Remises).'),
-          const SectionTitle('Reçus'),
-          for (final x in paiements)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(x.amount < 0 ? Icons.undo : Icons.receipt),
-              title: Text('${x.receiptNumber} • ${fcfa(x.amount)}'),
-              subtitle: Text(dateHeure(x.paidAt)),
-              onTap: () => context.push('/finances/recu/${x.id}'),
-            ),
-          if (paiements.isEmpty) const Text('Aucun versement.'),
         ],
       ),
     );
   }
 }
+
+String _remisesTexte(SituationEleve s) => [
+  for (final x in s.lignes)
+    if (x.reduction > 0) '${x.ligne.label} −${fcfa(x.reduction)}',
+].join(', ');
 
 int _somme(List<LigneEleve> l, int Function(LigneEleve) f) =>
     l.fold(0, (s, x) => s + f(x));
