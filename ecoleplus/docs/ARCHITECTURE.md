@@ -237,3 +237,27 @@ Appels uniquement depuis une Edge Function (fournisseur et modèle par variables
 * **Dictée** : `speech_to_text` (reconnaissance native, `fr_FR`) derrière l'interface `Dictee` (remplaçable, testée avec une dictée simulée) ; permission `RECORD_AUDIO` demandée seulement sur action explicite, après explication.
 * **Accueil** : 10 boutons pour le directeur (Bibliothèque en phase 9, Archives à part — A20), les derniers en faisant défiler ; selon le profil et les droits délégués (« élèves », « registres »).
 
+
+## Phase 11 — Cantine (module optionnel)
+
+- Serveur (`20261105000100_phase11_cantine.sql`) : droits « cantine »
+  (directeur et délégué) sur réglages, bénéficiaires, pointages, produits,
+  mouvements et menus ; réglages et bénéficiaires lus aussi par les
+  Finances (cotisations dues) ; menus lus par toute l'école. Mouvements de
+  stock en **ajout seul**, auteur et téléphone contrôlés, annulation miroir
+  (même produit, quantité opposée, une seule fois, jamais d'annulation
+  d'annulation). Dépenses de cantine (catégorie `cantine`) dans la caisse
+  commune, justificatifs sous `<école>/cantine/`. Module désactivé : aucune
+  nouvelle écriture de cantine (y compris rubrique `cantine` de la grille,
+  des reçus et de leur détail), les annulations restant possibles.
+- Téléphone (base v15) : `canteen_settings`, `canteen_beneficiaries`
+  (+ `contributes` pour le mode mixte), `meal_services`, `stock_products`,
+  `stock_movements`, `canteen_menus`, toutes synchronisées. Identifiants
+  calculés (UUID v5) pour les réglages, bénéficiaires (élève + année),
+  pointages (jour + classe), produits (nom normalisé) et menus (lundi de la
+  semaine) : deux téléphones hors ligne écrivent la même ligne, jamais un
+  doublon. Stock courant = somme des mouvements.
+- Cotisations : rubrique `cantine` des Finances, appliquée seulement aux
+  bénéficiaires dont la famille participe (`avecCantine`) ; mêmes reçus
+  numérotés ; impayés de cantine séparés (`situationsCantineProvider`,
+  `situationsHorsCantineProvider`).

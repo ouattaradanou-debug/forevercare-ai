@@ -7,6 +7,9 @@ import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
+import 'package:ecoleplus/features/cantine/presentation/cantine_pages.dart'
+    show droitsCantine;
+import 'package:ecoleplus/features/cantine/presentation/cantine_providers.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
 import 'package:ecoleplus/features/finances/pdf/pdf_finances.dart';
 import 'package:ecoleplus/features/finances/presentation/finances_providers.dart';
@@ -294,6 +297,18 @@ class FinancesPage extends ConsumerWidget {
             'Rapports (PDF, Excel)',
             '/finances/rapports',
           ),
+          // Cantine (phase 11) : dans le volet financier, si active.
+          // Sans le droit « cantine » : seulement les cotisations.
+          if (ref.watch(cantineActiveProvider(ecole.id)))
+            if (droitsCantine(ref).contains('cantine'))
+              bouton(Icons.restaurant, 'Cantine', '/cantine')
+            else if (ref.watch(modeCantineProvider(ecole.id)) !=
+                'sans_participation')
+              bouton(
+                Icons.restaurant,
+                'Cotisations de cantine',
+                '/cantine/cotisations',
+              ),
           const SectionTitle('Paramétrage'),
           bouton(
             Icons.table_chart_outlined,
@@ -1841,8 +1856,9 @@ String texteRemise(DiscountRow r, [Map<String, String>? rubriques]) {
 Future<void> preparerRelance(
   BuildContext context,
   WidgetRef ref,
-  LigneEleve l,
-) async {
+  LigneEleve l, {
+  String objet = 'la scolarité',
+}) async {
   final (ecole, _) = contexteFinances(ref)!;
   final parents = await ref
       .read(studentsRepositoryProvider)
@@ -1859,6 +1875,7 @@ Future<void> preparerRelance(
       classe: l.classe,
       impaye: l.situation.impaye,
       telephoneEcole: ecole.phone,
+      objet: objet,
     ),
   );
   if (!context.mounted) return;
@@ -1913,7 +1930,10 @@ class ImpayesPage extends ConsumerWidget {
     final c = contexteFinances(ref);
     if (c == null) return _chargement('Impayés');
     final (ecole, annee) = c;
-    final lignes = ref.watch(situationsProvider((ecole.id, annee.id)));
+    // Scolarité et autres frais ; la cantine a ses propres impayés.
+    final lignes = ref.watch(
+      situationsHorsCantineProvider((ecole.id, annee.id)),
+    );
     if (lignes == null) return _chargement('Impayés');
     final retards = [
       for (final l in lignes)

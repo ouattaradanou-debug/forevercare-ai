@@ -10,6 +10,8 @@ import 'package:ecoleplus/core/widgets/form_fields.dart';
 import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/bibliotheque/presentation/bibliotheque_pages.dart';
+import 'package:ecoleplus/features/cantine/domain/cantine.dart';
+import 'package:ecoleplus/features/cantine/presentation/cantine_providers.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
 import 'package:ecoleplus/features/finances/pdf/pdf_finances.dart';
 import 'package:ecoleplus/features/finances/presentation/finances_pages.dart';
@@ -282,7 +284,10 @@ class DepensesPage extends ConsumerWidget {
 }
 
 class NouvelleDepensePage extends ConsumerStatefulWidget {
-  const new({super.key});
+  const new({this.cantine = false, super.key});
+
+  /// Dépense de cantine (phase 11) : catégorie « Cantine » imposée.
+  final bool cantine;
 
   @override
   ConsumerState<NouvelleDepensePage> createState() => _NouvelleDepenseState();
@@ -294,7 +299,7 @@ class _NouvelleDepenseState extends ConsumerState<NouvelleDepensePage> {
   late final _date = TextEditingController(
     text: dateCourte(ref.read(aujourdhuiProvider)),
   );
-  String _categorie = 'fournitures';
+  late String _categorie = widget.cantine ? 'cantine' : 'fournitures';
   String _mode = 'especes';
   (Uint8List, String)? _piece;
   bool _occupe = false;
@@ -360,16 +365,37 @@ class _NouvelleDepenseState extends ConsumerState<NouvelleDepensePage> {
     final (ecole, annee) = c;
     final camera = ref.watch(cameraDisponibleProvider);
     return EcoleScaffold(
-      title: 'Nouvelle dépense',
+      title: widget.cantine ? 'Dépense de cantine' : 'Nouvelle dépense',
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          ChoiceField(
-            label: 'Catégorie',
-            value: _categorie,
-            options: categoriesDepenses,
-            onChanged: (v) => setState(() => _categorie = v ?? _categorie),
-          ),
+          if (widget.cantine) ...[
+            const InfoMessage(
+              'Dépense de cantine : elle figure dans le journal de caisse '
+              'commun, catégorie « Cantine ».',
+            ),
+            Wrap(
+              spacing: 6,
+              children: [
+                for (final e in exemplesDepensesCantine)
+                  ActionChip(
+                    label: Text(e),
+                    onPressed: () => setState(() => _libelle.text = e),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ] else
+            ChoiceField(
+              label: 'Catégorie',
+              value: _categorie,
+              options: {
+                ...categoriesDepenses,
+                if (ref.watch(cantineActiveProvider(ecole.id)))
+                  categorieCantine: 'Cantine',
+              },
+              onChanged: (v) => setState(() => _categorie = v ?? _categorie),
+            ),
           TextField(
             key: const Key('objet-depense'),
             controller: _libelle,

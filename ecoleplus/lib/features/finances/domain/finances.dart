@@ -76,7 +76,8 @@ String libelleMode(String code, [String? precise]) =>
     code == 'autre' && (precise ?? '').isNotEmpty
     ? precise!
     : modesPaiement[code] ?? _anciensModes[code] ?? code;
-String libelleCategorie(String code) => categoriesDepenses[code] ?? code;
+String libelleCategorie(String code) =>
+    categoriesDepenses[code] ?? (code == 'cantine' ? 'Cantine' : code);
 
 /// « 25 000 » (espace fine insécable entre les milliers). Sans « FCFA »
 /// (A25 : plus de place pour les chiffres) : la devise est indiquée une
@@ -606,10 +607,11 @@ String messageRelance({
   required String classe,
   required int impaye,
   String? telephoneEcole,
+  String objet = 'la scolarité',
 }) =>
     'Bonjour, l’école $ecole vous informe qu’un montant de '
     '${fcfa(impaye)} '
-    'reste à régler pour la scolarité de $eleve ($classe). Merci de passer '
+    'reste à régler pour $objet de $eleve ($classe). Merci de passer '
     'au secrétariat de l’école'
     '${telephoneEcole == null || telephoneEcole.isEmpty ? '' : ' ou '
               'd’appeler le $telephoneEcole'}. '

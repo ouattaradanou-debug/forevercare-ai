@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -193,6 +193,20 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(paymentAllocations);
         await m.createIndex(paymentAllocationsPayment);
         await m.createTable(feeNotes);
+      }
+      if (from < 15) {
+        // Phase 11 : cantine (module optionnel).
+        for (final t in <TableInfo<Table, dynamic>>[
+          canteenSettings,
+          canteenBeneficiaries,
+          mealServices,
+          stockProducts,
+          stockMovements,
+          canteenMenus,
+        ]) {
+          await m.createTable(t);
+        }
+        await m.createIndex(stockMovementsProduct);
       }
     },
   );

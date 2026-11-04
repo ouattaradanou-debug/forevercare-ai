@@ -12,6 +12,8 @@ import 'package:ecoleplus/features/grades/domain/calculs.dart';
 import 'package:ecoleplus/features/security/domain/journal.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../core/migration_a23_test.dart' show tablesCantine;
+
 PolicesPdf polices() {
   ByteData lire(String n) => ByteData.sublistView(
     File('assets/fonts/Roboto-$n.ttf').readAsBytesSync(),
@@ -227,7 +229,7 @@ void main() {
   });
 
   test(
-    'base du téléphone : passage de la version 5 à la 14 sans perte',
+    'base du téléphone : passage de la version 5 à la 15 sans perte',
     () async {
       final dir = Directory.systemTemp.createTempSync('migration');
       final fichier = File('${dir.path}/ecole.db');
@@ -266,6 +268,7 @@ void main() {
         'fee_rubrics',
         'payment_allocations',
         'fee_notes',
+        ...tablesCantine,
       ]) {
         await db.customStatement('DROP TABLE $t');
       }

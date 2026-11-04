@@ -8,6 +8,7 @@ import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dar
 import 'package:ecoleplus/features/bibliotheque/domain/document.dart';
 import 'package:ecoleplus/features/bibliotheque/presentation/bibliotheque_pages.dart';
 import 'package:ecoleplus/features/bulletins/presentation/bulletins_pages.dart';
+import 'package:ecoleplus/features/cantine/presentation/cantine_pages.dart';
 import 'package:ecoleplus/features/cartes/presentation/cartes_pages.dart';
 import 'package:ecoleplus/features/classes/presentation/classes_pages.dart';
 import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
@@ -288,6 +289,46 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => FicheDocumentPage(s.pathParameters['id']!),
       ),
       GoRoute(path: '/finances', builder: (_, _) => const FinancesPage()),
+      // Phase 11 : cantine (module optionnel).
+      GoRoute(path: '/cantine', builder: (_, _) => const CantinePage()),
+      GoRoute(
+        path: '/cantine/reglages',
+        builder: (_, _) => const ReglagesCantinePage(),
+      ),
+      GoRoute(
+        path: '/cantine/beneficiaires',
+        builder: (_, _) => const BeneficiairesPage(),
+      ),
+      GoRoute(
+        path: '/cantine/pointage',
+        builder: (_, _) => const PointagePage(),
+      ),
+      GoRoute(path: '/cantine/stock', builder: (_, _) => const StockPage()),
+      GoRoute(
+        path: '/cantine/inventaire',
+        builder: (_, _) => const InventairePage(),
+      ),
+      GoRoute(
+        path: '/cantine/produit/:id',
+        builder: (_, s) => ProduitPage(s.pathParameters['id']!),
+      ),
+      GoRoute(path: '/cantine/menus', builder: (_, _) => const MenusPage()),
+      GoRoute(
+        path: '/cantine/depenses',
+        builder: (_, _) => const DepensesCantinePage(),
+      ),
+      GoRoute(
+        path: '/cantine/depense/nouvelle',
+        builder: (_, _) => const NouvelleDepensePage(cantine: true),
+      ),
+      GoRoute(
+        path: '/cantine/cotisations',
+        builder: (_, _) => const CotisationsCantinePage(),
+      ),
+      GoRoute(
+        path: '/cantine/rapports',
+        builder: (_, _) => const RapportsCantinePage(),
+      ),
       GoRoute(
         path: '/finances/encaisser',
         builder: (_, s) =>

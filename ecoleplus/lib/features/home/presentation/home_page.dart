@@ -2,6 +2,7 @@ import 'package:ecoleplus/app/app.dart';
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/features/cantine/presentation/cantine_providers.dart';
 import 'package:ecoleplus/features/options/domain/module_rules.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/security/domain/journal.dart';
@@ -40,6 +41,7 @@ class HomePage extends ConsumerWidget {
               tousLesDroits,
               enseignant: false,
               primaire: school?.managesPrimary ?? true,
+              cantine: ref.watch(cantineActiveProvider(session.schoolId)),
             ),
             BigButton(
               icon: Icons.account_balance,
@@ -64,6 +66,7 @@ class HomePage extends ConsumerWidget {
               ref.watch(mesDroitsProvider),
               enseignant: session.role == 'enseignant',
               primaire: school?.managesPrimary ?? true,
+              cantine: ref.watch(cantineActiveProvider(session.schoolId)),
             ),
             BigButton(
               icon: Icons.person,
@@ -151,6 +154,7 @@ List<Widget> _boutonsEcole(
   Set<String> droits, {
   required bool enseignant,
   required bool primaire,
+  bool cantine = false,
 }) {
   final eleves = droits.contains('eleves') || droits.contains('registres');
   final registres = droits.contains('registres');
@@ -187,6 +191,10 @@ List<Widget> _boutonsEcole(
     // Finances (phase 10) : directeur et délégué « finances » seulement.
     if (droits.contains('finances'))
       bouton(Icons.payments_outlined, 'Finances', '/finances'),
+    // Cantine (phase 11) : dans « Finances » pour qui y a accès ; bouton à
+    // part pour le responsable de cantine sans droit « finances ».
+    if (cantine && droits.contains('cantine') && !droits.contains('finances'))
+      bouton(Icons.restaurant, 'Cantine', '/cantine'),
     bouton(Icons.local_library_outlined, 'Bibliothèque', '/bibliotheque'),
     // Commande à part (A20) : directeur et délégués « archives ».
     if (droits.contains('archives'))

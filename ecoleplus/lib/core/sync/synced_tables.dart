@@ -161,6 +161,22 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
   SyncedTable<ExpenseRow>(name: 'expenses', info: db.expenses),
   SyncedTable<CashClosingRow>(name: 'cash_closings', info: db.cashClosings),
   SyncedTable<FeeNoteRow>(name: 'fee_notes', info: db.feeNotes),
+  // Phase 11 : cantine (les produits avant leurs mouvements).
+  SyncedTable<CanteenSettingsRow>(
+    name: 'canteen_settings',
+    info: db.canteenSettings,
+  ),
+  SyncedTable<CanteenBeneficiaryRow>(
+    name: 'canteen_beneficiaries',
+    info: db.canteenBeneficiaries,
+  ),
+  SyncedTable<MealServiceRow>(name: 'meal_services', info: db.mealServices),
+  SyncedTable<StockProductRow>(name: 'stock_products', info: db.stockProducts),
+  SyncedTable<StockMovementRow>(
+    name: 'stock_movements',
+    info: db.stockMovements,
+  ),
+  SyncedTable<CanteenMenuRow>(name: 'canteen_menus', info: db.canteenMenus),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];

@@ -20,6 +20,8 @@ import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dar
 import 'package:ecoleplus/features/bibliotheque/data/documents_en_ligne.dart';
 import 'package:ecoleplus/features/bibliotheque/domain/document.dart';
 import 'package:ecoleplus/features/bulletins/data/bulletins_repository.dart';
+import 'package:ecoleplus/features/cantine/data/cantine_repository.dart';
+import 'package:ecoleplus/features/cantine/domain/cantine.dart';
 import 'package:ecoleplus/features/documents/data/documents_repository.dart';
 import 'package:ecoleplus/features/documents/domain/documents_directeur.dart';
 import 'package:ecoleplus/features/finances/data/finances_repository.dart';
@@ -1614,6 +1616,147 @@ void mainA6() {
     await ens1.close();
     await dir.close();
     tmp.deleteSync(recursive: true);
+  }, skip: skip);
+
+  test('phase 11 : cantine refusée tant qu’elle est désactivée ; activée, '
+      'pointages et mouvements saisis sur deux téléphones hors ligne puis '
+      'fusionnés sans doublon ; mouvement inaltérable ; désactivée, rien '
+      'n’est effacé', () async {
+    const ecole = '10000000-0000-4000-8000-000000000001';
+    const ce1 = 'c0000000-0000-4000-8000-000000000001';
+    Future<List<OutboxEntry>> refus(Phone p) => (p.db.select(
+      p.db.outbox,
+    )..where((o) => o.status.equals('refuse'))).get();
+    final a = await connecte('directeur@ecole-test.local');
+    final b = await connecte('directeur@ecole-test.local');
+    final ra = CantineRepository(a.store);
+    final rb = CantineRepository(b.store);
+
+    // Désactivée : le serveur refuse l'écriture (et le téléphone le dit).
+    await ra.enregistrerReglages(schoolId: ecole, mode: 'mixte');
+    await a.engine.syncNow();
+    expect(await refus(a), hasLength(greaterThan(0)));
+    await a.db.delete(a.db.outbox).go();
+
+    await a.repo.setModule(ecole, 'cantine', on: true);
+    await a.engine.syncNow();
+    await b.engine.syncNow();
+
+    a.online = false;
+    b.online = false;
+    final riz = await ra.ajouterProduit(
+      schoolId: ecole,
+      nom: 'Riz',
+      unite: 'kg',
+      seuil: 10,
+    );
+    expect(
+      await rb.ajouterProduit(schoolId: ecole, nom: 'riz', unite: 'kg'),
+      riz,
+    );
+    await ra.entree(
+      produitId: riz,
+      quantite: 50,
+      provenance: 'parents',
+      date: '2025-10-06',
+    );
+    await rb.entree(
+      produitId: riz,
+      quantite: 12.5,
+      provenance: 'don',
+      date: '2025-10-06',
+    );
+    final sortie = await ra.sortie(
+      produitId: riz,
+      quantite: 20,
+      motif: 'repas',
+      date: '2025-10-07',
+    );
+    await ra.pointer(
+      schoolId: ecole,
+      jour: '2025-10-07',
+      classId: ce1,
+      repas: 30,
+    );
+    await rb.pointer(
+      schoolId: ecole,
+      jour: '2025-10-07',
+      classId: ce1,
+      repas: 31,
+    );
+    await rb.pointer(
+      schoolId: ecole,
+      jour: '2025-10-07',
+      classId: null,
+      repas: 2,
+    );
+
+    a.online = true;
+    b.online = true;
+    await a.engine.syncNow();
+    await b.engine.syncNow();
+    await a.engine.syncNow();
+    expect(await refus(a), isEmpty);
+    expect(await refus(b), isEmpty);
+    final serveur = await a.client
+        .from('stock_movements')
+        .select('quantity_delta')
+        .eq('school_id', ecole);
+    expect(serveur, hasLength(3));
+    expect(
+      await a.client.from('stock_products').select('id').eq('school_id', ecole),
+      hasLength(1),
+    );
+    for (final p in [a, b]) {
+      expect(
+        stockCourant(await p.db.select(p.db.stockMovements).get(), riz),
+        42.5,
+      );
+      expect(totalRepas(await p.db.select(p.db.mealServices).get()), 33);
+    }
+
+    // Annulation depuis l'autre téléphone, puis inaltérable.
+    final recue = (await b.db.select(b.db.stockMovements).get()).firstWhere(
+      (m) => m.id == sortie.id,
+    );
+    await rb.annuler(recue, 'Sortie saisie deux fois');
+    await b.engine.syncNow();
+    expect(await refus(b), isEmpty);
+    await a.client
+        .from('stock_movements')
+        .update({'quantity_delta': -1})
+        .eq('id', sortie.id);
+    await a.client.from('stock_movements').delete().eq('id', sortie.id);
+    final intact = await a.client
+        .from('stock_movements')
+        .select('quantity_delta')
+        .eq('id', sortie.id)
+        .single();
+    expect((intact['quantity_delta'] as num).toDouble(), -20);
+
+    // Désactivée : plus rien n'est lu, rien n'est effacé.
+    await a.repo.setModule(ecole, 'cantine', on: false);
+    await a.engine.syncNow();
+    expect(
+      await a.client
+          .from('stock_movements')
+          .select('id')
+          .eq('school_id', ecole),
+      isEmpty,
+    );
+    await a.repo.setModule(ecole, 'cantine', on: true);
+    await a.engine.syncNow();
+    expect(
+      await a.client
+          .from('stock_movements')
+          .select('id')
+          .eq('school_id', ecole),
+      hasLength(4),
+    );
+    await a.repo.setModule(ecole, 'cantine', on: false);
+    await a.engine.syncNow();
+    await b.close();
+    await a.close();
   }, skip: skip);
 }
 

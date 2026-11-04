@@ -638,7 +638,10 @@ class FinancesRepository {
     if (justificatif != null) {
       final (octets, type) = justificatif;
       final ext = type == 'application/pdf' ? 'pdf' : 'jpg';
-      chemin = '$schoolId/depenses/$id.$ext';
+      // Dépense de cantine : dossier propre, lisible par le responsable
+      // de cantine (phase 11).
+      final dossier = categorie == 'cantine' ? 'cantine' : 'depenses';
+      chemin = '$schoolId/$dossier/$id.$ext';
       final local = File(p.join(mediaDir!.path, chemin));
       await local.parent.create(recursive: true);
       await local.writeAsBytes(octets, flush: true);
