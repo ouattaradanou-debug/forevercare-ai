@@ -261,4 +261,60 @@ void main() {
     expect(m, contains('TEST Aïcha (CM1 A)'));
     expect(m, contains('70 11 22 33'));
   });
+
+  test('A24 : synthèse exacte — restant = dû − encaissé, retard et autres '
+      'versements, élèves impayés, taux (sans division par zéro)', () {
+    final scol = ligne('scol', 30000);
+    final tranches = [
+      tranche('scol', 10000, '2026-10-15'),
+      tranche('scol', 10000, '2027-01-15'),
+      tranche('scol', 10000, '2027-04-15'),
+    ];
+    SituationEleve sit(String eleve, List<PaymentRow> p) => situation(
+      studentId: eleve,
+      lignes: [scol],
+      tranches: tranches,
+      remises: const [],
+      paiements: p,
+      aujourdhui: '2026-11-04',
+    );
+    // e1 : 4 000 payés (1re tranche partielle) ; e2 : 30 000 + 1 000 de
+    // trop (le trop-perçu n'est pas « encaissé » sur les frais) ; e3 : rien.
+    final e1 = sit('e1', [paiement('p1', 4000)]);
+    final e2 = sit('e2', [
+      paiement('p2', 30000, eleve: 'e2', numero: 2),
+      paiement('p3', 1000, eleve: 'e2', numero: 3),
+    ]);
+    final e3 = sit('e3', const []);
+    expect((e1.du, e1.encaisse, e1.reste), (30000, 4000, 26000));
+    expect((e1.enRetard, e1.aVenir), (6000, 20000));
+    expect(e1.statut, StatutEleve.partiel);
+    expect((e2.encaisse, e2.reste, e2.statut), (30000, 0, StatutEleve.solde));
+    expect(
+      (e3.enRetard, e3.aVenir, e3.statut),
+      (10000, 20000, StatutEleve.impaye),
+    );
+    for (final e in [e1, e2, e3]) {
+      expect(e.reste, e.du - e.encaisse, reason: 'aucun double comptage');
+      expect(e.enRetard + e.aVenir, e.reste);
+    }
+    final ecole = Synthese.depuis([e1, e2, e3]);
+    expect((ecole.du, ecole.encaisse, ecole.restant), (90000, 34000, 56000));
+    expect((ecole.nbImpayes, ecole.nbEleves), (2, 3));
+    expect(texteTaux(ecole.taux), '37,8 %');
+    // Rien de dû : pas de taux (ni erreur).
+    final vide = Synthese.depuis(const []);
+    expect((vide.du, vide.taux, texteTaux(vide.taux)), (0, null, '—'));
+    expect(texteTaux(50), '50 %');
+    expect(sit('e4', const []).statut, StatutEleve.impaye);
+    final sansFrais = situation(
+      studentId: 'e5',
+      lignes: const [],
+      tranches: const [],
+      remises: const [],
+      paiements: const [],
+      aujourdhui: '2026-11-04',
+    );
+    expect(sansFrais.statut, StatutEleve.aucunFrais);
+  });
 }

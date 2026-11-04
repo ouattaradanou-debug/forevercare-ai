@@ -172,6 +172,63 @@ int reduction(
 /// Statut d'un versement ou d'une rubrique (couleurs discrètes à l'écran).
 enum Statut { paye, partiel, impaye }
 
+/// Statut financier d'un élève (A24).
+enum StatutEleve { solde, partiel, impaye, aucunFrais }
+
+/// Indicateurs d'un groupe d'élèves (école ou classe), calculés à partir
+/// des situations individuelles : les totaux sont toujours la somme des
+/// lignes.
+class Synthese {
+  const new({
+    required this.du,
+    required this.encaisse,
+    required this.nbImpayes,
+    required this.nbEleves,
+  });
+
+  factory depuis(Iterable<SituationEleve> eleves) {
+    var du = 0;
+    var encaisse = 0;
+    var impayes = 0;
+    var n = 0;
+    for (final e in eleves) {
+      du += e.du;
+      encaisse += e.encaisse;
+      if (e.reste > 0) impayes++;
+      n++;
+    }
+    return Synthese(
+      du: du,
+      encaisse: encaisse,
+      nbImpayes: impayes,
+      nbEleves: n,
+    );
+  }
+
+  final int du;
+  final int encaisse;
+
+  /// Élèves dont le montant restant est strictement positif.
+  final int nbImpayes;
+  final int nbEleves;
+
+  int get restant => du - encaisse;
+
+  /// Taux de recouvrement en % ; null quand rien n'est dû (pas de division
+  /// par zéro).
+  double? get taux => du == 0 ? null : encaisse * 100 / du;
+}
+
+/// « 72 % », « 66,7 % », « — » (rien de dû).
+String texteTaux(double? taux) {
+  if (taux == null) return '—';
+  final arrondi = (taux * 10).round() / 10;
+  final s = arrondi == arrondi.roundToDouble()
+      ? arrondi.toStringAsFixed(0)
+      : arrondi.toStringAsFixed(1).replaceAll('.', ',');
+  return '$s %';
+}
+
 /// Un versement d'une ligne de la grille (A23) : le 1er, 2e, 3e versement
 /// de la scolarité, ou la rubrique entière quand elle n'a pas de versements.
 class VersementSituation {
@@ -208,6 +265,10 @@ class VersementSituation {
 
   int get reste => math.max(0, du - paye);
   int get impaye => echu ? reste : 0;
+
+  /// Encaissé affecté à ce versement (un trop-perçu n'est pas compté :
+  /// restant = dû − encaissé, toujours).
+  int get encaisse => math.max(0, math.min(paye, du));
   bool get partielAutorise => ligne.paymentTerms != 'integral';
   Statut get statut => reste == 0
       ? Statut.paye
@@ -266,6 +327,24 @@ class SituationEleve {
   int get reste => lignes.fold(0, (s, l) => s + l.reste);
   int get impaye => lignes.fold(0, (s, l) => s + l.impaye);
   bool get aJour => impaye == 0;
+
+  /// Encaissé affecté aux frais (A24) : restant = dû − encaissé.
+  int get encaisse => versements.fold(0, (s, v) => s + v.encaisse);
+
+  /// Montant en retard : versements échus non réglés.
+  int get enRetard => impaye;
+
+  /// Autres versements : restant dû dont l'échéance n'est pas arrivée.
+  int get aVenir => reste - enRetard;
+
+  /// Soldé, partiellement payé, impayé (ou aucun frais).
+  StatutEleve get statut => du == 0
+      ? StatutEleve.aucunFrais
+      : reste == 0
+      ? StatutEleve.solde
+      : encaisse > 0
+      ? StatutEleve.partiel
+      : StatutEleve.impaye;
 
   /// Tous les versements, dans l'ordre de la grille (tableau
   /// d'encaissement).
