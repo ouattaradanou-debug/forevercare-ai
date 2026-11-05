@@ -69,21 +69,36 @@ void main() {
     autre.close();
   });
 
-  test('copie de sauvegarde (VACUUM INTO) : lisible sans la clé du '
-      'téléphone', () {
+  test('copie de sauvegarde : rechiffrée avec le mot de passe de '
+      'sauvegarde (lisible sur un autre téléphone, jamais en clair, sans le '
+      'code de verrouillage)', () {
     final chemin = '${dossier.path}/c.sqlite';
     final copie = '${dossier.path}/copie.sqlite';
     final db = sqlite3.open(chemin);
     appliquerCle(db, cle);
     db
       ..execute('create table t (x)')
-      ..execute("insert into t values ('y')")
+      ..execute('create table outbox (id)')
+      ..execute('create table app_lock (pin_hash)')
+      ..execute("insert into t values ('Élève Test')")
+      ..execute("insert into app_lock values ('empreinte')")
       ..execute("VACUUM INTO '$copie'")
       ..close();
-    dechiffrerCopie(copie, cle);
-    expect(File(copie).readAsBytesSync().take(15), 'SQLite format 3'.codeUnits);
-    final lue = sqlite3.open(copie);
-    expect(lue.select('select x from t').single['x'], 'y');
+    proteger(copie, cle, "mot d'école 2026");
+    final octets = File(copie).readAsBytesSync();
+    expect(octets.take(15), isNot('SQLite format 3'.codeUnits));
+    expect(
+      String.fromCharCodes(octets).contains('Élève Test'),
+      isFalse,
+      reason: 'aucune donnée lisible sans le mot de passe',
+    );
+    expect(
+      () => ouvrirSauvegarde(copie, 'mauvais mot de passe'),
+      throwsA(isA<FormatException>()),
+    );
+    final lue = ouvrirSauvegarde(copie, "mot d'école 2026");
+    expect(lue.select('select x from t').single['x'], 'Élève Test');
+    expect(lue.select('select * from app_lock'), isEmpty);
     lue.close();
   });
 

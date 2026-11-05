@@ -32,8 +32,8 @@ select throws_ok(
 -- Visiteur non connecté
 reset role;
 set local role anon;
-select is((select count(*)::int from public.students), 0, 'anonyme : aucun élève lisible');
-select is((select count(*)::int from public.grades), 0, 'anonyme : aucune note lisible');
+select throws_ok($$select count(*) from public.students$$, '42501', null, 'anonyme : aucun élève lisible (accès refusé, phase 14)');
+select throws_ok($$select count(*) from public.grades$$, '42501', null, 'anonyme : aucune note lisible (accès refusé, phase 14)');
 select throws_ok($$select * from medical.fitness$$, '42501', null, 'anonyme : schéma médical inaccessible');
 
 select * from finish();

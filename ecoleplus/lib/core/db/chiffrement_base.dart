@@ -48,14 +48,37 @@ void chiffrerSiNecessaire(String chemin, String cle) {
 }
 
 /// Le fichier de sauvegarde ne doit pas dépendre de la clé de CE téléphone
-/// (sinon il serait illisible sur un autre) : il est déchiffré après la
-/// copie. Sa protection par un code du directeur est l'évolution A4 (V2).
-void dechiffrerCopie(String chemin, String cle) {
+/// (sinon il serait illisible sur un autre) : il est rechiffré avec le mot
+/// de passe de sauvegarde choisi par le directeur (phase 14). Le code de
+/// verrouillage du téléphone en est retiré.
+void proteger(String chemin, String? cle, String motDePasse) {
   final db = sqlite3.open(chemin);
   try {
-    appliquerCle(db, cle);
-    db.execute("PRAGMA rekey = ''");
+    if (cle != null) appliquerCle(db, cle);
+    db
+      ..execute('DELETE FROM app_lock')
+      ..execute("PRAGMA rekey = '${_echapper(motDePasse)}'");
   } finally {
     db.close();
   }
 }
+
+/// Ouvre un fichier de sauvegarde avec son mot de passe ; erreur claire si
+/// le mot de passe est faux ou si ce n'est pas une sauvegarde EcolePlus.
+Database ouvrirSauvegarde(String chemin, String motDePasse) {
+  final db = sqlite3.open(chemin, mode: OpenMode.readOnly);
+  try {
+    db
+      ..execute("PRAGMA key = '${_echapper(motDePasse)}'")
+      ..select('SELECT count(*) FROM outbox');
+    return db;
+  } on SqliteException {
+    db.close();
+    throw const FormatException(
+      'Mot de passe incorrect, ou fichier qui n’est pas une sauvegarde '
+      'EcolePlus.',
+    );
+  }
+}
+
+String _echapper(String s) => s.replaceAll("'", "''");

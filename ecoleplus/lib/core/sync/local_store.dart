@@ -151,6 +151,22 @@ class LocalStore {
     }
   }
 
+  /// Reprend un élément non envoyé venu d'une sauvegarde (autre
+  /// téléphone) : écrit sur ce téléphone et mis en attente d'envoi. Le
+  /// serveur départage ensuite (dernière modification gagne, R3).
+  Future<void> reprendre(
+    String tableName,
+    Map<String, dynamic> key,
+    Map<String, dynamic> payload,
+  ) {
+    final t = table(tableName);
+    return db.transaction(() async {
+      final existing = await read(tableName, key);
+      await writeLocal(t, {...?existing, ...payload});
+      await _enqueue(t, key, payload);
+    });
+  }
+
   Future<bool> hasPending(String tableName, String rowKey) async {
     final n =
         await (db.selectOnly(db.outbox)

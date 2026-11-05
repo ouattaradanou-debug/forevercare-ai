@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:ecoleplus/app/app.dart';
+import 'package:ecoleplus/features/backup/presentation/backup_page.dart';
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/clock.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
@@ -85,6 +86,9 @@ class AppHarness {
 
   /// Fichiers envoyés (Excel) : nom → contenu.
   final Map<String, Uint8List> fichiersSortis = {};
+
+  /// Fichier de sauvegarde choisi pour « Restaurer » (chemin).
+  String? sauvegardeChoisie;
 
   /// Fichier renvoyé par « Choisir le fichier » (import Excel).
   Uint8List? fichierAImporter;
@@ -304,6 +308,12 @@ class AppHarness {
             (octets, nom, type) async => fichiersSortis[nom] = octets,
           ),
           documentsEnLigneProvider.overrideWithValue(enLigne),
+          dossierSauvegardesProvider.overrideWithValue(
+            () async => Directory('${mediaDir.path}/sauvegardes'),
+          ),
+          choisirSauvegardeProvider.overrideWithValue(
+            () async => sauvegardeChoisie,
+          ),
           partagerTexteProvider.overrideWithValue(
             (texte) async => textesPartages.add(texte),
           ),
