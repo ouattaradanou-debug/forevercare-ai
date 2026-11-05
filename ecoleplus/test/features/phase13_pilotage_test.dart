@@ -233,7 +233,7 @@ void main() {
       );
       expect(
         [for (final t in c) t.label],
-        ['Pédagogie', 'Finances', 'Bibliothèque et IA', 'Mon compte'],
+        ['Pédagogie', 'Cantine scolaire', 'Bibliothèque et IA', 'Mon compte'],
       );
       expect(c[1].route, '/cantine');
       for (final p in [d, e, c, avec]) {
