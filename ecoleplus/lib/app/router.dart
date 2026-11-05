@@ -33,6 +33,11 @@ import 'package:ecoleplus/features/medical/presentation/medical_pages.dart';
 import 'package:ecoleplus/features/members/presentation/add_member_page.dart';
 import 'package:ecoleplus/features/members/presentation/members_page.dart';
 import 'package:ecoleplus/features/options/presentation/options_page.dart';
+import 'package:ecoleplus/features/pilotage/presentation/accueil_pages.dart';
+import 'package:ecoleplus/features/pilotage/presentation/bord_pages.dart';
+import 'package:ecoleplus/features/pilotage/presentation/edt_pages.dart';
+import 'package:ecoleplus/features/pilotage/presentation/rapports_pages.dart';
+import 'package:ecoleplus/features/pilotage/presentation/recherche_page.dart';
 import 'package:ecoleplus/features/programme/presentation/programme_pages.dart';
 import 'package:ecoleplus/features/school/presentation/headers_page.dart';
 import 'package:ecoleplus/features/school/presentation/school_page.dart';
@@ -64,6 +69,7 @@ const _directorRoutes = {
   '/securite',
   '/mentions',
   '/bulletins-modele',
+  '/rapports',
 };
 
 const _lockRoutes = {'/verrouille', '/verrouille/mot-de-passe'};
@@ -109,6 +115,38 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/', builder: (_, _) => const HomePage()),
+      // Phase 13 : pilotage.
+      GoRoute(
+        path: '/theme/:id',
+        builder: (_, s) => ThemePage(s.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/tableau-de-bord',
+        builder: (_, _) => const TableauDeBordPage(),
+      ),
+      GoRoute(path: '/recherche', builder: (_, _) => const RecherchePage()),
+      GoRoute(
+        path: '/notifications',
+        builder: (_, _) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: '/emploi-du-temps',
+        builder: (_, _) => const EmploiDuTempsPage(),
+      ),
+      GoRoute(
+        path: '/emploi-du-temps/:classId',
+        builder: (_, s) => EmploiClassePage(s.pathParameters['classId']!),
+      ),
+      GoRoute(path: '/appel', builder: (_, _) => const AppelChoixPage()),
+      GoRoute(
+        path: '/appel/:classId',
+        builder: (_, s) => AppelPage(
+          s.pathParameters['classId']!,
+          jour: s.uri.queryParameters['jour'],
+        ),
+      ),
+      GoRoute(path: '/absences', builder: (_, _) => const AbsencesPage()),
+      GoRoute(path: '/rapports', builder: (_, _) => const RapportsPage()),
       GoRoute(path: '/bienvenue', builder: (_, _) => const WelcomePage()),
       GoRoute(path: '/connexion', builder: (_, _) => const LoginPage()),
       GoRoute(

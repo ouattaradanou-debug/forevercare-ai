@@ -376,16 +376,106 @@ class AppHarness {
     await settle(tester);
   }
 
-  /// Touche un bouton de l'accueil, en faisant défiler si besoin.
+  /// Chemins des anciens boutons de l'accueil dans l'accueil par thèmes
+  /// (phase 13) : le premier chemin dont le thème est affiché est suivi.
+  static const chemins = <String, List<List<String>>>{
+    'Élèves': [
+      ['Élèves et classes', 'Élèves'],
+    ],
+    'Classes': [
+      ['Élèves et classes', 'Classes'],
+    ],
+    'Enseignants': [
+      ['Élèves et classes', 'Enseignants'],
+    ],
+    'Mes élèves': [
+      ['Ma classe', 'Mes élèves'],
+    ],
+    'Documents': [
+      ['Administration', 'Formulaires officiels'],
+    ],
+    'Archives': [
+      ['Administration', 'Archives'],
+    ],
+    'Notes et classement': [
+      ['Pédagogie', 'Notes et classement'],
+      ['Notes et bulletins'],
+    ],
+    'Évaluations (maternelle)': [
+      ['Pédagogie', 'Évaluations (maternelle)'],
+    ],
+    'Finances': [
+      ['Finances', 'Toutes les finances'],
+    ],
+    'Cantine scolaire': [
+      ['Finances', 'Cantine scolaire'],
+      ['Cantine scolaire'],
+    ],
+    'Bibliothèque': [
+      ['Bibliothèque et IA', 'Bibliothèque'],
+      ['Bibliothèque'],
+    ],
+    'Assistant IA': [
+      ['Bibliothèque et IA', 'Assistant IA'],
+      ['Assistant IA et mes fiches'],
+    ],
+    'Sécurité': [
+      ['Mon école', 'Sécurité'],
+    ],
+    'Personnes et droits': [
+      ['Mon école', 'Personnes et droits'],
+    ],
+  };
+
+  /// Le bouton [bouton] est-il accessible depuis l'accueil ?
+  static bool surAccueil(String bouton) {
+    for (final c
+        in chemins[bouton] ??
+            [
+              <String>[bouton],
+            ]) {
+      if (find.text(c.first).evaluate().isNotEmpty) return true;
+    }
+    return false;
+  }
+
+  /// Touche un bouton de l'accueil (en passant par son thème), en faisant
+  /// défiler si besoin.
   static Future<void> toucher(WidgetTester tester, String bouton) async {
-    await tester.scrollUntilVisible(
-      find.text(bouton),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.ensureVisible(find.text(bouton));
-    await tester.pump();
-    await tester.tap(find.text(bouton));
+    final chemin =
+        (chemins[bouton] ??
+                [
+                  <String>[bouton],
+                ])
+            .firstWhere(
+              (c) => find.text(c.first).evaluate().isNotEmpty,
+              orElse: () =>
+                  (chemins[bouton] ??
+                          [
+                            <String>[bouton],
+                          ])
+                      .first,
+            );
+    for (final (i, etape) in chemin.indexed) {
+      if (i > 0) {
+        await settle(tester);
+        // Thème d'une seule entrée : l'écran est déjà ouvert.
+        if (find.text(etape).evaluate().isEmpty) return;
+        if (find.byKey(const Key('titre-page')).evaluate().isNotEmpty &&
+            tester.widget<Text>(find.byKey(const Key('titre-page'))).data ==
+                etape) {
+          return;
+        }
+      }
+      await tester.scrollUntilVisible(
+        find.text(etape),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.text(etape));
+      await tester.pump();
+      await tester.tap(find.text(etape));
+    }
   }
 
   /// Fait défiler l'accueil jusqu'au bouton, sans le toucher.

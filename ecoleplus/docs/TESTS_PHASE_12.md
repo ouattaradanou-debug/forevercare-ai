@@ -11,7 +11,7 @@ bibliothèque. **Avec la clé** (voir `docs/ASSISTANT_IA.md`), il répond avec
 Claude Haiku 5.5. ✅ = ce que vous devez constater.
 
 ## 1. Accueil et compteur
-1. Enseignante du CM1 → accueil → **« Assistant IA »**.
+1. Enseignante du CM1 → accueil → **« Assistant IA et mes fiches »** (directeur : « Bibliothèque et IA » → « Assistant IA »).
    ✅ « Il vous reste 30 demandes ce mois-ci. »
 2. Mode avion. ✅ « Sans Internet : vous pouvez préparer une demande… ».
 
@@ -50,7 +50,7 @@ Mode avion → une demande → ✅ « votre demande est gardée ». Réseau rét
    fiche n'en tient pas compte (à vérifier avec la clé).
 
 ## 6. Limites (directeur)
-« Assistant IA » → « **Suivi de l'école (directeur)** ». ✅ Demandes de
+« Bibliothèque et IA » → « Assistant IA » → « **Suivi de l’école (directeur)** ». ✅ Demandes de
 l'école sur 300, coût du mois sur 5 $, tableau par personne. Changez la
 limite d'un enseignant (par exemple 2). ✅ Quand il l'atteint : « Vous avez
 utilisé vos 2 demandes de ce mois… » ; ses fiches restent disponibles.

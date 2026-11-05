@@ -28,7 +28,8 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Classes'));
+    await AppHarness.toucher(tester, 'Classes');
+    await AppHarness.settle(tester);
     expect(find.text('2 classes · 4 élèves'), findsOneWidget);
     expect(find.text('Filles : 2 · Garçons : 2'), findsOneWidget);
     expect(
@@ -64,7 +65,8 @@ void main() {
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
     h.online = false;
-    await tap(tester, find.text('Élèves'));
+    await AppHarness.toucher(tester, 'Élèves');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('Ajouter un élève'));
     await tester.enterText(find.byKey(const Key('eleve-nom')), 'nouveau');
     await tester.enterText(find.byKey(const Key('eleve-prenoms')), 'Élise');
@@ -90,7 +92,8 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Élèves'));
+    await AppHarness.toucher(tester, 'Élèves');
+    await AppHarness.settle(tester);
     await tester.enterText(find.byKey(const Key('recherche')), 'boukary');
     await tester.pump();
     expect(find.text('1 élève'), findsOneWidget);
@@ -134,10 +137,11 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, '70 11 22 33');
-    expect(find.text('Mes élèves'), findsOneWidget);
+    expect(AppHarness.surAccueil('Mes élèves'), isTrue);
     expect(find.text('Enseignants'), findsNothing);
     expect(find.text('Documents'), findsNothing);
-    await tap(tester, find.text('Mes élèves'));
+    await AppHarness.toucher(tester, 'Mes élèves');
+    await AppHarness.settle(tester);
     expect(find.text('Ajouter un élève'), findsNothing);
     await tap(tester, find.text('TEST Aïcha'));
     expect(find.text('Observations du registre matricule'), findsNothing);
@@ -151,7 +155,8 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Enseignants'));
+    await AppHarness.toucher(tester, 'Enseignants');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('ENSEIGNANT Un'));
     final a = Anciennete.entre(
       DateTime(2008, 10),
@@ -206,7 +211,8 @@ void main() {
     h.fichierAImporter = fabriquerXlsx(lignes);
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Élèves'));
+    await AppHarness.toucher(tester, 'Élèves');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('Importer un fichier Excel'));
 
     final chrono = Stopwatch()..start();
@@ -260,7 +266,8 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Documents'));
+    await AppHarness.toucher(tester, 'Documents');
+    await AppHarness.settle(tester);
     expect(find.text('Registre matricule (B2)'), findsOneWidget);
     await tap(tester, find.text('Registre matricule (B2)'));
     expect(find.text('• 4 élève(s) sans date de naissance'), findsOneWidget);
@@ -300,7 +307,8 @@ void main() {
     );
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Élèves'));
+    await AppHarness.toucher(tester, 'Élèves');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('TEST Aïcha'));
     await tap(tester, micObservations);
     expect(find.textContaining('rien n’est enregistré'), findsOneWidget);
@@ -336,7 +344,8 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Élèves'));
+    await AppHarness.toucher(tester, 'Élèves');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('TEST Aïcha'));
     expect(find.textContaining('Pour modifier ou compléter'), findsOneWidget);
     await voir(tester, find.widgetWithText(TextField, 'À (lieu de naissance)'));
@@ -376,7 +385,8 @@ void main() {
     await AppHarness.settle(tester);
     await tester.tap(find.byTooltip('Retour').first);
     await AppHarness.settle(tester);
-    await tap(tester, find.text('Enseignants'));
+    await AppHarness.toucher(tester, 'Enseignants');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('ENSEIGNANT Un'));
     await tap(tester, find.byKey(const Key('ajouter-diplomes')));
     await tester.enterText(find.byKey(const Key('historique-texte')), 'CAP');
@@ -396,7 +406,8 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Élèves'));
+    await AppHarness.toucher(tester, 'Élèves');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('TEST Aïcha'));
     await voir(tester, find.byKey(const Key('identifiant-eleve')));
     await tester.enterText(
@@ -429,7 +440,8 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    await tap(tester, find.text('Élèves'));
+    await AppHarness.toucher(tester, 'Élèves');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('TEST Aïcha'));
     final naissance = find.widgetWithText(TextField, 'Né(e) le');
     await voir(tester, naissance);

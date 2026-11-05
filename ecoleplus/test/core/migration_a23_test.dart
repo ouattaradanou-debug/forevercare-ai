@@ -20,6 +20,8 @@ const tablesCantine = [
   // Phase 12 (version 17).
   'lesson_preps',
   'ai_teacher_limits',
+  // Phase 13 (version 18).
+  'timetable_slots',
 ];
 
 void main() {
@@ -107,6 +109,7 @@ void main() {
       'canteen_subscriptions',
       'lesson_preps',
       'ai_teacher_limits',
+      'timetable_slots',
     ]) {
       await db.customStatement('DROP TABLE $t');
     }
@@ -123,6 +126,27 @@ void main() {
     final b = await db.select(db.canteenBeneficiaries).getSingle();
     expect((b.id, b.monthlyReduction), ('b', null));
     expect(await db.select(db.canteenSubscriptions).get(), isEmpty);
+    await db.close();
+    dir.deleteSync(recursive: true);
+  });
+  test('base du téléphone : passage de la version 17 (IA) à la 18 (emploi '
+      'du temps) sans perte', () async {
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+    final dir = Directory.systemTemp.createTempSync('migration17');
+    final fichier = File('${dir.path}/ecole.db');
+    var db = AppDatabase(NativeDatabase(fichier));
+    await db.customStatement(
+      'INSERT INTO attendance (id, school_id, class_id, student_id, day, '
+      "status, updated_at) VALUES ('p', 's', 'c', 'e', '2026-11-05', "
+      "'absent', '')",
+    );
+    await db.customStatement('DROP TABLE timetable_slots');
+    await db.customStatement('PRAGMA user_version = 17');
+    await db.close();
+
+    db = AppDatabase(NativeDatabase(fichier));
+    expect((await db.select(db.attendance).getSingle()).status, 'absent');
+    expect(await db.select(db.timetableSlots).get(), isEmpty);
     await db.close();
     dir.deleteSync(recursive: true);
   });

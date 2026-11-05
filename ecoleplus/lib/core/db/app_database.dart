@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -232,6 +232,11 @@ class AppDatabase extends _$AppDatabase {
         // Phase 12 : assistant IA (fiches enregistrées, limites).
         await m.createTable(lessonPreps);
         await m.createTable(aiTeacherLimits);
+      }
+      if (from < 18) {
+        // Phase 13 : emploi du temps.
+        await m.createTable(timetableSlots);
+        await m.createIndex(timetableSlotsClass);
       }
     },
   );

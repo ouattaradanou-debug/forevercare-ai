@@ -148,6 +148,18 @@ class SchoolPage extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           BigButton(
+            icon: Icons.people,
+            label: 'Personnes et droits',
+            onPressed: () => context.push('/personnes'),
+          ),
+          const SizedBox(height: 12),
+          BigButton(
+            icon: Icons.shield_outlined,
+            label: 'Sécurité',
+            onPressed: () => context.push('/securite'),
+          ),
+          const SizedBox(height: 12),
+          BigButton(
             icon: Icons.save_alt,
             label: 'Sauvegarde',
             onPressed: () => context.push('/sauvegarde'),

@@ -32,6 +32,7 @@ import 'package:ecoleplus/features/maternelle/data/maternelle_repository.dart';
 import 'package:ecoleplus/features/medical/data/medical_api.dart';
 import 'package:ecoleplus/features/medical/domain/fiche_medicale.dart';
 import 'package:ecoleplus/features/photos/data/photos_repository.dart';
+import 'package:ecoleplus/features/pilotage/data/pilotage_repository.dart';
 import 'package:ecoleplus/features/photos/domain/traitement_photo.dart';
 import 'package:ecoleplus/features/programme/data/programme_repository.dart';
 import 'package:ecoleplus/features/programme/domain/programme.dart';
@@ -1940,6 +1941,90 @@ void mainA6() {
     );
     await dir.close();
     await ens.close();
+  }, skip: skip);
+
+  test('phase 13 : emploi du temps et appel synchronisés ; l’enseignante '
+      'ne reçoit que sa classe et ne modifie pas l’emploi du temps d’une '
+      'autre', () async {
+    final ens = await connecte('enseignant1@ecole-test.local');
+    final dir = await connecte('directeur@ecole-test.local');
+    final pe = PilotageRepository(ens.store);
+    const cm1 = 'c0000000-0000-4000-8000-000000000002';
+    const cm2 = 'c0000000-0000-4000-8000-000000000003';
+    final classe = await (ens.db.select(
+      ens.db.classes,
+    )..where((c) => c.id.equals(cm1))).getSingle();
+    expect(
+      await (ens.db.select(
+        ens.db.classes,
+      )..where((c) => c.id.equals(cm2))).getSingleOrNull(),
+      isNull,
+      reason: 'le CM2 ne descend pas sur son téléphone',
+    );
+    ens.online = false;
+    await pe.enregistrerCreneau(
+      schoolId: ecoleTest,
+      classId: cm1,
+      jour: 2,
+      debut: '07:30',
+      fin: '08:30',
+      activite: 'Lecture (phase 13)',
+    );
+    await pe.validerAppel(classe, '2026-11-03', {
+      'd0000000-0000-4000-8000-000000000001': ('absent', null),
+      'd0000000-0000-4000-8000-000000000002': ('present', null),
+    });
+    ens.online = true;
+    await ens.engine.syncNow();
+    expect(
+      await ens.store.pendingCount(),
+      0,
+      reason: '${ens.engine.state.error}',
+    );
+
+    await dir.engine.syncNow();
+    final creneaux = await (dir.db.select(
+      dir.db.timetableSlots,
+    )..where((s) => s.activityLabel.equals('Lecture (phase 13)'))).get();
+    expect(creneaux.single.startsAt, startsWith('07:30'));
+    final appel = await (dir.db.select(
+      dir.db.attendance,
+    )..where((a) => a.day.equals('2026-11-03'))).get();
+    expect({for (final a in appel) a.status}, {'absent', 'present'});
+
+    // Le directeur copie vers le CM2 ; l'enseignante du CM1 ne peut pas
+    // modifier ce créneau (refusé par le serveur).
+    expect(
+      await PilotageRepository(dir.store).copier(cm1, cm2, remplacer: true),
+      1,
+    );
+    await dir.engine.syncNow();
+    final copie = await ens.client
+        .from('timetable_slots')
+        .select()
+        .eq('class_id', cm2);
+    expect(copie, hasLength(1), reason: 'lu par toute l’école');
+    await expectLater(
+      ens.client
+          .from('timetable_slots')
+          .update({'activity_label': 'Piraté'})
+          .eq('id', copie.single['id'] as String)
+          .select(),
+      completion(isEmpty),
+    );
+    // Nettoyage (suppression logique).
+    for (final s in [creneaux.single.id, copie.single['id'] as String]) {
+      await dir.client
+          .from('timetable_slots')
+          .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+          .eq('id', s);
+    }
+    await dir.client
+        .from('attendance')
+        .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
+        .eq('day', '2026-11-03');
+    await ens.close();
+    await dir.close();
   }, skip: skip);
 }
 

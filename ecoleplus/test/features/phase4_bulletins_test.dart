@@ -152,7 +152,8 @@ void main() {
     await retour(tester);
     await retour(tester);
     await retour(tester);
-    await tap(tester, find.text('Élèves'));
+    await AppHarness.toucher(tester, 'Élèves');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('TEST Boukary'));
     await tap(tester, find.byKey(const Key('ouvrir-b4')));
     expect(find.text('Moyenne 7,33 · classement 2e/3'), findsOneWidget);
@@ -209,7 +210,8 @@ void main() {
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
     // Le directeur indique sur la fiche d'Aïcha qu'elle redouble le CM1.
-    await tap(tester, find.text('Élèves'));
+    await AppHarness.toucher(tester, 'Élèves');
+    await AppHarness.settle(tester);
     await tap(tester, find.text('TEST Aïcha'));
     await tap(tester, find.byKey(const Key('redouble')));
     await retour(tester);

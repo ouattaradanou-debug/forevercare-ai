@@ -51804,6 +51804,773 @@ class AiTeacherLimitsCompanion extends UpdateCompanion<AiTeacherLimitRow> {
   }
 }
 
+class TimetableSlots extends Table
+    with TableInfo<TimetableSlots, TimetableSlotRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  TimetableSlots(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _classIdMeta = const VerificationMeta(
+    'classId',
+  );
+  late final GeneratedColumn<String> classId = GeneratedColumn<String>(
+    'class_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _weekdayMeta = const VerificationMeta(
+    'weekday',
+  );
+  late final GeneratedColumn<int> weekday = GeneratedColumn<int>(
+    'weekday',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _startsAtMeta = const VerificationMeta(
+    'startsAt',
+  );
+  late final GeneratedColumn<String> startsAt = GeneratedColumn<String>(
+    'starts_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _endsAtMeta = const VerificationMeta('endsAt');
+  late final GeneratedColumn<String> endsAt = GeneratedColumn<String>(
+    'ends_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _activityLabelMeta = const VerificationMeta(
+    'activityLabel',
+  );
+  late final GeneratedColumn<String> activityLabel = GeneratedColumn<String>(
+    'activity_label',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _teacherIdMeta = const VerificationMeta(
+    'teacherId',
+  );
+  late final GeneratedColumn<String> teacherId = GeneratedColumn<String>(
+    'teacher_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    classId,
+    weekday,
+    startsAt,
+    endsAt,
+    subjectId,
+    activityLabel,
+    teacherId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'timetable_slots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TimetableSlotRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('class_id')) {
+      context.handle(
+        _classIdMeta,
+        classId.isAcceptableOrUnknown(data['class_id']!, _classIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_classIdMeta);
+    }
+    if (data.containsKey('weekday')) {
+      context.handle(
+        _weekdayMeta,
+        weekday.isAcceptableOrUnknown(data['weekday']!, _weekdayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weekdayMeta);
+    }
+    if (data.containsKey('starts_at')) {
+      context.handle(
+        _startsAtMeta,
+        startsAt.isAcceptableOrUnknown(data['starts_at']!, _startsAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startsAtMeta);
+    }
+    if (data.containsKey('ends_at')) {
+      context.handle(
+        _endsAtMeta,
+        endsAt.isAcceptableOrUnknown(data['ends_at']!, _endsAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endsAtMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    }
+    if (data.containsKey('activity_label')) {
+      context.handle(
+        _activityLabelMeta,
+        activityLabel.isAcceptableOrUnknown(
+          data['activity_label']!,
+          _activityLabelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('teacher_id')) {
+      context.handle(
+        _teacherIdMeta,
+        teacherId.isAcceptableOrUnknown(data['teacher_id']!, _teacherIdMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TimetableSlotRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TimetableSlotRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      classId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}class_id'],
+      )!,
+      weekday: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}weekday'],
+      )!,
+      startsAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}starts_at'],
+      )!,
+      endsAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ends_at'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      ),
+      activityLabel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activity_label'],
+      ),
+      teacherId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}teacher_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  TimetableSlots createAlias(String alias) {
+    return TimetableSlots(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class TimetableSlotRow extends DataClass
+    implements Insertable<TimetableSlotRow> {
+  final String id;
+  final String schoolId;
+  final String classId;
+  final int weekday;
+  final String startsAt;
+  final String endsAt;
+  final String? subjectId;
+  final String? activityLabel;
+  final String? teacherId;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const TimetableSlotRow({
+    required this.id,
+    required this.schoolId,
+    required this.classId,
+    required this.weekday,
+    required this.startsAt,
+    required this.endsAt,
+    this.subjectId,
+    this.activityLabel,
+    this.teacherId,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['class_id'] = Variable<String>(classId);
+    map['weekday'] = Variable<int>(weekday);
+    map['starts_at'] = Variable<String>(startsAt);
+    map['ends_at'] = Variable<String>(endsAt);
+    if (!nullToAbsent || subjectId != null) {
+      map['subject_id'] = Variable<String>(subjectId);
+    }
+    if (!nullToAbsent || activityLabel != null) {
+      map['activity_label'] = Variable<String>(activityLabel);
+    }
+    if (!nullToAbsent || teacherId != null) {
+      map['teacher_id'] = Variable<String>(teacherId);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  TimetableSlotsCompanion toCompanion(bool nullToAbsent) {
+    return TimetableSlotsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      classId: Value(classId),
+      weekday: Value(weekday),
+      startsAt: Value(startsAt),
+      endsAt: Value(endsAt),
+      subjectId: subjectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subjectId),
+      activityLabel: activityLabel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(activityLabel),
+      teacherId: teacherId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(teacherId),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory TimetableSlotRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TimetableSlotRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      classId: serializer.fromJson<String>(json['class_id']),
+      weekday: serializer.fromJson<int>(json['weekday']),
+      startsAt: serializer.fromJson<String>(json['starts_at']),
+      endsAt: serializer.fromJson<String>(json['ends_at']),
+      subjectId: serializer.fromJson<String?>(json['subject_id']),
+      activityLabel: serializer.fromJson<String?>(json['activity_label']),
+      teacherId: serializer.fromJson<String?>(json['teacher_id']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'class_id': serializer.toJson<String>(classId),
+      'weekday': serializer.toJson<int>(weekday),
+      'starts_at': serializer.toJson<String>(startsAt),
+      'ends_at': serializer.toJson<String>(endsAt),
+      'subject_id': serializer.toJson<String?>(subjectId),
+      'activity_label': serializer.toJson<String?>(activityLabel),
+      'teacher_id': serializer.toJson<String?>(teacherId),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  TimetableSlotRow copyWith({
+    String? id,
+    String? schoolId,
+    String? classId,
+    int? weekday,
+    String? startsAt,
+    String? endsAt,
+    Value<String?> subjectId = const Value.absent(),
+    Value<String?> activityLabel = const Value.absent(),
+    Value<String?> teacherId = const Value.absent(),
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => TimetableSlotRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    classId: classId ?? this.classId,
+    weekday: weekday ?? this.weekday,
+    startsAt: startsAt ?? this.startsAt,
+    endsAt: endsAt ?? this.endsAt,
+    subjectId: subjectId.present ? subjectId.value : this.subjectId,
+    activityLabel: activityLabel.present
+        ? activityLabel.value
+        : this.activityLabel,
+    teacherId: teacherId.present ? teacherId.value : this.teacherId,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  TimetableSlotRow copyWithCompanion(TimetableSlotsCompanion data) {
+    return TimetableSlotRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      classId: data.classId.present ? data.classId.value : this.classId,
+      weekday: data.weekday.present ? data.weekday.value : this.weekday,
+      startsAt: data.startsAt.present ? data.startsAt.value : this.startsAt,
+      endsAt: data.endsAt.present ? data.endsAt.value : this.endsAt,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      activityLabel: data.activityLabel.present
+          ? data.activityLabel.value
+          : this.activityLabel,
+      teacherId: data.teacherId.present ? data.teacherId.value : this.teacherId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TimetableSlotRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('classId: $classId, ')
+          ..write('weekday: $weekday, ')
+          ..write('startsAt: $startsAt, ')
+          ..write('endsAt: $endsAt, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('activityLabel: $activityLabel, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    classId,
+    weekday,
+    startsAt,
+    endsAt,
+    subjectId,
+    activityLabel,
+    teacherId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TimetableSlotRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.classId == this.classId &&
+          other.weekday == this.weekday &&
+          other.startsAt == this.startsAt &&
+          other.endsAt == this.endsAt &&
+          other.subjectId == this.subjectId &&
+          other.activityLabel == this.activityLabel &&
+          other.teacherId == this.teacherId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class TimetableSlotsCompanion extends UpdateCompanion<TimetableSlotRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> classId;
+  final Value<int> weekday;
+  final Value<String> startsAt;
+  final Value<String> endsAt;
+  final Value<String?> subjectId;
+  final Value<String?> activityLabel;
+  final Value<String?> teacherId;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const TimetableSlotsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.classId = const Value.absent(),
+    this.weekday = const Value.absent(),
+    this.startsAt = const Value.absent(),
+    this.endsAt = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.activityLabel = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TimetableSlotsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String classId,
+    required int weekday,
+    required String startsAt,
+    required String endsAt,
+    this.subjectId = const Value.absent(),
+    this.activityLabel = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       classId = Value(classId),
+       weekday = Value(weekday),
+       startsAt = Value(startsAt),
+       endsAt = Value(endsAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TimetableSlotRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? classId,
+    Expression<int>? weekday,
+    Expression<String>? startsAt,
+    Expression<String>? endsAt,
+    Expression<String>? subjectId,
+    Expression<String>? activityLabel,
+    Expression<String>? teacherId,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (classId != null) 'class_id': classId,
+      if (weekday != null) 'weekday': weekday,
+      if (startsAt != null) 'starts_at': startsAt,
+      if (endsAt != null) 'ends_at': endsAt,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (activityLabel != null) 'activity_label': activityLabel,
+      if (teacherId != null) 'teacher_id': teacherId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TimetableSlotsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? classId,
+    Value<int>? weekday,
+    Value<String>? startsAt,
+    Value<String>? endsAt,
+    Value<String?>? subjectId,
+    Value<String?>? activityLabel,
+    Value<String?>? teacherId,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return TimetableSlotsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      classId: classId ?? this.classId,
+      weekday: weekday ?? this.weekday,
+      startsAt: startsAt ?? this.startsAt,
+      endsAt: endsAt ?? this.endsAt,
+      subjectId: subjectId ?? this.subjectId,
+      activityLabel: activityLabel ?? this.activityLabel,
+      teacherId: teacherId ?? this.teacherId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (classId.present) {
+      map['class_id'] = Variable<String>(classId.value);
+    }
+    if (weekday.present) {
+      map['weekday'] = Variable<int>(weekday.value);
+    }
+    if (startsAt.present) {
+      map['starts_at'] = Variable<String>(startsAt.value);
+    }
+    if (endsAt.present) {
+      map['ends_at'] = Variable<String>(endsAt.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (activityLabel.present) {
+      map['activity_label'] = Variable<String>(activityLabel.value);
+    }
+    if (teacherId.present) {
+      map['teacher_id'] = Variable<String>(teacherId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TimetableSlotsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('classId: $classId, ')
+          ..write('weekday: $weekday, ')
+          ..write('startsAt: $startsAt, ')
+          ..write('endsAt: $endsAt, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('activityLabel: $activityLabel, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -51940,6 +52707,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final LessonPreps lessonPreps = LessonPreps(this);
   late final AiTeacherLimits aiTeacherLimits = AiTeacherLimits(this);
+  late final TimetableSlots timetableSlots = TimetableSlots(this);
+  late final Index timetableSlotsClass = Index(
+    'timetable_slots_class',
+    'CREATE INDEX timetable_slots_class ON timetable_slots (class_id, weekday, starts_at)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -52031,6 +52803,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     canteenSubscriptionsYear,
     lessonPreps,
     aiTeacherLimits,
+    timetableSlots,
+    timetableSlotsClass,
   ];
 }
 
@@ -76859,6 +77633,369 @@ typedef $AiTeacherLimitsProcessedTableManager =
       AiTeacherLimitRow,
       PrefetchHooks Function()
     >;
+typedef $TimetableSlotsCreateCompanionBuilder =
+    TimetableSlotsCompanion Function({
+      required String id,
+      required String schoolId,
+      required String classId,
+      required int weekday,
+      required String startsAt,
+      required String endsAt,
+      Value<String?> subjectId,
+      Value<String?> activityLabel,
+      Value<String?> teacherId,
+      Value<String?> createdAt,
+      required String updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $TimetableSlotsUpdateCompanionBuilder =
+    TimetableSlotsCompanion Function({
+      Value<String> id,
+      Value<String> schoolId,
+      Value<String> classId,
+      Value<int> weekday,
+      Value<String> startsAt,
+      Value<String> endsAt,
+      Value<String?> subjectId,
+      Value<String?> activityLabel,
+      Value<String?> teacherId,
+      Value<String?> createdAt,
+      Value<String> updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $TimetableSlotsFilterComposer
+    extends Composer<_$AppDatabase, TimetableSlots> {
+  $TimetableSlotsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get weekday => $composableBuilder(
+    column: $table.weekday,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get startsAt => $composableBuilder(
+    column: $table.startsAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endsAt => $composableBuilder(
+    column: $table.endsAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get activityLabel => $composableBuilder(
+    column: $table.activityLabel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get teacherId => $composableBuilder(
+    column: $table.teacherId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $TimetableSlotsOrderingComposer
+    extends Composer<_$AppDatabase, TimetableSlots> {
+  $TimetableSlotsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get classId => $composableBuilder(
+    column: $table.classId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get weekday => $composableBuilder(
+    column: $table.weekday,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get startsAt => $composableBuilder(
+    column: $table.startsAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endsAt => $composableBuilder(
+    column: $table.endsAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get activityLabel => $composableBuilder(
+    column: $table.activityLabel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get teacherId => $composableBuilder(
+    column: $table.teacherId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $TimetableSlotsAnnotationComposer
+    extends Composer<_$AppDatabase, TimetableSlots> {
+  $TimetableSlotsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get classId =>
+      $composableBuilder(column: $table.classId, builder: (column) => column);
+
+  GeneratedColumn<int> get weekday =>
+      $composableBuilder(column: $table.weekday, builder: (column) => column);
+
+  GeneratedColumn<String> get startsAt =>
+      $composableBuilder(column: $table.startsAt, builder: (column) => column);
+
+  GeneratedColumn<String> get endsAt =>
+      $composableBuilder(column: $table.endsAt, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get activityLabel => $composableBuilder(
+    column: $table.activityLabel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get teacherId =>
+      $composableBuilder(column: $table.teacherId, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $TimetableSlotsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          TimetableSlots,
+          TimetableSlotRow,
+          $TimetableSlotsFilterComposer,
+          $TimetableSlotsOrderingComposer,
+          $TimetableSlotsAnnotationComposer,
+          $TimetableSlotsCreateCompanionBuilder,
+          $TimetableSlotsUpdateCompanionBuilder,
+          (
+            TimetableSlotRow,
+            BaseReferences<_$AppDatabase, TimetableSlots, TimetableSlotRow>,
+          ),
+          TimetableSlotRow,
+          PrefetchHooks Function()
+        > {
+  $TimetableSlotsTableManager(_$AppDatabase db, TimetableSlots table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $TimetableSlotsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $TimetableSlotsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $TimetableSlotsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> classId = const Value.absent(),
+                Value<int> weekday = const Value.absent(),
+                Value<String> startsAt = const Value.absent(),
+                Value<String> endsAt = const Value.absent(),
+                Value<String?> subjectId = const Value.absent(),
+                Value<String?> activityLabel = const Value.absent(),
+                Value<String?> teacherId = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TimetableSlotsCompanion(
+                id: id,
+                schoolId: schoolId,
+                classId: classId,
+                weekday: weekday,
+                startsAt: startsAt,
+                endsAt: endsAt,
+                subjectId: subjectId,
+                activityLabel: activityLabel,
+                teacherId: teacherId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String classId,
+                required int weekday,
+                required String startsAt,
+                required String endsAt,
+                Value<String?> subjectId = const Value.absent(),
+                Value<String?> activityLabel = const Value.absent(),
+                Value<String?> teacherId = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TimetableSlotsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                classId: classId,
+                weekday: weekday,
+                startsAt: startsAt,
+                endsAt: endsAt,
+                subjectId: subjectId,
+                activityLabel: activityLabel,
+                teacherId: teacherId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<TimetableSlots, TimetableSlotRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    TimetableSlots,
+                    TimetableSlotRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $TimetableSlotsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      TimetableSlots,
+      TimetableSlotRow,
+      $TimetableSlotsFilterComposer,
+      $TimetableSlotsOrderingComposer,
+      $TimetableSlotsAnnotationComposer,
+      $TimetableSlotsCreateCompanionBuilder,
+      $TimetableSlotsUpdateCompanionBuilder,
+      (
+        TimetableSlotRow,
+        BaseReferences<_$AppDatabase, TimetableSlots, TimetableSlotRow>,
+      ),
+      TimetableSlotRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -77003,4 +78140,6 @@ class $AppDatabaseManager {
       $LessonPrepsTableManager(_db, _db.lessonPreps);
   $AiTeacherLimitsTableManager get aiTeacherLimits =>
       $AiTeacherLimitsTableManager(_db, _db.aiTeacherLimits);
+  $TimetableSlotsTableManager get timetableSlots =>
+      $TimetableSlotsTableManager(_db, _db.timetableSlots);
 }

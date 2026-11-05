@@ -2,18 +2,21 @@ import 'package:ecoleplus/app/app.dart';
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
-import 'package:ecoleplus/features/cantine/presentation/cantine_providers.dart';
 import 'package:ecoleplus/features/options/domain/module_rules.dart';
+import 'package:ecoleplus/features/pilotage/presentation/accueil_pages.dart';
+import 'package:ecoleplus/features/pilotage/presentation/bord_pages.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/security/domain/journal.dart';
 import 'package:ecoleplus/features/security/presentation/security_providers.dart';
-import 'package:ecoleplus/features/staff/presentation/staff_providers.dart';
 import 'package:ecoleplus/features/sync/domain/sync_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Accueil : gros boutons selon le profil (8 au plus).
+/// Accueil par thèmes (phase 13) : 8 gros boutons au plus. Directeur :
+/// tableau de bord et recherche en haut, puis les thèmes ; enseignant :
+/// « Ma journée », puis sa classe. Les modules désactivés n'apparaissent
+/// pas.
 class HomePage extends ConsumerWidget {
   const new({super.key});
 
@@ -22,9 +25,12 @@ class HomePage extends ConsumerWidget {
     final session = ref.watch(sessionProvider).value;
     if (session == null) return const Scaffold();
     final school = ref.watch(schoolProvider(session.schoolId)).value;
-    final isDirector = session.role == 'directeur';
+    final themes = ref.watch(themesProvider);
+    final directeur = session.role == 'directeur';
+    final enseignant = session.role == 'enseignant';
     return EcoleScaffold(
       title: school?.name ?? appName,
+      actions: const [ClocheNotifications()],
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -35,50 +41,45 @@ class HomePage extends ConsumerWidget {
           const SizedBox(height: 16),
           const _Alertes(),
           const SizedBox(height: 8),
-          if (isDirector) ...[
-            ..._boutonsEcole(
-              context,
-              tousLesDroits,
-              enseignant: false,
-              primaire: school?.managesPrimary ?? true,
-              cantine: ref.watch(cantineActiveProvider(session.schoolId)),
-            ),
+          if (enseignant) ...[const MaJournee(), const SizedBox(height: 12)],
+          Row(
+            children: [
+              if (directeur || enseignant) ...[
+                Expanded(
+                  child: _Raccourci(
+                    icon: Icons.dashboard_outlined,
+                    label: enseignant
+                        ? 'Mon tableau de bord'
+                        : 'Tableau de bord',
+                    route: '/tableau-de-bord',
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              const Expanded(
+                child: _Raccourci(
+                  icon: Icons.search,
+                  label: 'Rechercher',
+                  route: '/recherche',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          for (final t in themes) ...[
             BigButton(
-              icon: Icons.account_balance,
-              label: 'Mon école',
-              onPressed: () => context.push('/ecole'),
+              key: Key('theme-${t.id}'),
+              icon: t.icone,
+              label: t.label,
+              onPressed: () => context.push(t.route),
             ),
             const SizedBox(height: 12),
-            BigButton(
-              icon: Icons.people,
-              label: 'Personnes et droits',
-              onPressed: () => context.push('/personnes'),
-            ),
-            const SizedBox(height: 12),
-            BigButton(
-              icon: Icons.shield_outlined,
-              label: 'Sécurité',
-              onPressed: () => context.push('/securite'),
-            ),
-          ] else ...[
-            ..._boutonsEcole(
-              context,
-              ref.watch(mesDroitsProvider),
-              enseignant: session.role == 'enseignant',
-              primaire: school?.managesPrimary ?? true,
-              cantine: ref.watch(cantineActiveProvider(session.schoolId)),
-            ),
-            BigButton(
-              icon: Icons.person,
-              label: 'Mon compte',
-              onPressed: () => context.push('/compte'),
-            ),
-            const SizedBox(height: 12),
+          ],
+          if (session.role == 'delegue')
             _NonDirectorHome(
               role: session.role,
               membershipId: session.membershipId,
             ),
-          ],
           const SizedBox(height: 32),
           OutlinedButton.icon(
             icon: const Icon(Icons.logout),
@@ -109,6 +110,22 @@ class HomePage extends ConsumerWidget {
   }
 }
 
+/// Raccourci de l'accueil (tableau de bord, recherche).
+class _Raccourci extends StatelessWidget {
+  const new({required this.icon, required this.label, required this.route});
+  final IconData icon;
+  final String label;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) => FilledButton.tonalIcon(
+    style: FilledButton.styleFrom(minimumSize: const Size(0, 64)),
+    onPressed: () => context.push(route),
+    icon: Icon(icon),
+    label: Text(label, textAlign: TextAlign.center),
+  );
+}
+
 class _NonDirectorHome extends ConsumerWidget {
   const new({required this.role, required this.membershipId});
   final String role;
@@ -137,71 +154,11 @@ class _NonDirectorHome extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
             ],
-            const Text(
-              'Les autres fonctions (notes, bulletins…) arriveront dans les '
-              'prochaines versions de l’application.',
-            ),
           ],
         ),
       ),
     );
   }
-}
-
-/// Boutons des élèves, classes, enseignants et registres selon les droits.
-List<Widget> _boutonsEcole(
-  BuildContext context,
-  Set<String> droits, {
-  required bool enseignant,
-  required bool primaire,
-  bool cantine = false,
-}) {
-  final eleves = droits.contains('eleves') || droits.contains('registres');
-  final registres = droits.contains('registres');
-  final notes = enseignant || registres || droits.contains('formulaires');
-  Widget bouton(IconData icon, String label, String route) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: BigButton(
-      icon: icon,
-      label: label,
-      onPressed: () => context.push(route),
-    ),
-  );
-  return [
-    if (enseignant) ...[
-      bouton(Icons.school, 'Mes élèves', '/eleves'),
-      bouton(Icons.class_, 'Ma classe', '/classes'),
-    ],
-    if (eleves) ...[
-      bouton(Icons.school, 'Élèves', '/eleves'),
-      bouton(Icons.class_, 'Classes', '/classes'),
-    ],
-    if (registres) bouton(Icons.badge, 'Enseignants', '/enseignants'),
-    // Délégués « formulaires » (B1, B3, B6, B7) et « cartes ».
-    if (registres ||
-        droits.contains('formulaires') ||
-        droits.contains('cartes'))
-      bouton(Icons.folder_copy_outlined, 'Documents', '/documents'),
-    if (notes)
-      bouton(
-        Icons.grading,
-        primaire ? 'Notes et classement' : 'Évaluations (maternelle)',
-        '/notes',
-      ),
-    // Finances (phase 10) : directeur et délégué « finances » seulement.
-    if (droits.contains('finances'))
-      bouton(Icons.payments_outlined, 'Finances', '/finances'),
-    // Cantine scolaire (A26) : rubrique à part, si elle est activée.
-    if (cantine && (droits.contains('cantine') || droits.contains('finances')))
-      bouton(Icons.restaurant, 'Cantine scolaire', '/cantine'),
-    bouton(Icons.local_library_outlined, 'Bibliothèque', '/bibliotheque'),
-    // Assistant IA (phase 12) : enseignants et directeur.
-    if (enseignant || droits.containsAll(tousLesDroits))
-      bouton(Icons.auto_awesome, 'Assistant IA', '/assistant'),
-    // Commande à part (A20) : directeur et délégués « archives ».
-    if (droits.contains('archives'))
-      bouton(Icons.inventory_2_outlined, 'Archives', '/archives'),
-  ];
 }
 
 String _libelles(Set<String> droits) =>

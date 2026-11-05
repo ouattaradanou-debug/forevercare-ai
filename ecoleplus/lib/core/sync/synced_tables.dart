@@ -190,6 +190,11 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
     name: 'ai_teacher_limits',
     info: db.aiTeacherLimits,
   ),
+  // Phase 13 : emploi du temps.
+  SyncedTable<TimetableSlotRow>(
+    name: 'timetable_slots',
+    info: db.timetableSlots,
+  ),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];

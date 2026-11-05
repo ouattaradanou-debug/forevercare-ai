@@ -14,6 +14,7 @@ class EcoleScaffold extends StatelessWidget {
     required this.title,
     required this.body,
     this.showSync = true,
+    this.actions,
     super.key,
   });
 
@@ -21,10 +22,14 @@ class EcoleScaffold extends StatelessWidget {
   final Widget body;
   final bool showSync;
 
+  /// Boutons de la barre de titre (cloche de l'accueil).
+  final List<Widget>? actions;
+
   @override
   Widget build(BuildContext context) => Scaffold(
     // Titre long (nom de l'école) : sur deux lignes plutôt que coupé.
     appBar: AppBar(
+      actions: actions,
       toolbarHeight: title.length > 22 ? 76 : null,
       title: Text(
         title,

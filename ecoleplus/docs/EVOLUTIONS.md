@@ -306,3 +306,15 @@ Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 in
 * **Ce qui disparaît des écrans** (données conservées) : la rubrique « Cantine » de la grille des frais et de l'encaissement des frais scolaires, la page « Bénéficiaires », la page « Cotisations de cantine », le choix « mode avec / sans / mixte ».
 * **Effort** : L. **Risques** : deux téléphones sans Internet peuvent encaisser le même mois pour le même élève : le serveur garde les deux reçus (argent réellement reçu) et l'écran signale le trop-perçu ; il faut alors annuler l'un des reçus.
 
+
+## Fiche d'impact E7 — Accueil par thèmes (phase 13)
+
+**Demande** : regrouper les boutons de l'accueil (8 au plus) « par thèmes ».
+
+| Point | Impact |
+|---|---|
+| Écrans | L'accueil du directeur : « Tableau de bord » et « Rechercher » en haut, puis 7 thèmes (Élèves et classes, Pédagogie, Administration, Finances, Rapports, Bibliothèque et IA, Mon école). L'enseignant : « Ma journée », puis Ma classe, Notes et bulletins, Assistant IA et mes fiches, Bibliothèque, Mon compte. Un thème d'un seul écran l'ouvre directement. |
+| Ce qui change pour les habitués | Un clic de plus pour les écrans rangés dans un thème (ex. Élèves : « Élèves et classes » → « Élèves »). « Personnes et droits » et « Sécurité » sont dans « Mon école ». |
+| Données | Aucune : aucun écran ni aucune donnée n'est supprimé. |
+| Modules (R11) | La cantine et la maternelle n'apparaissent que si elles sont activées (accueil, tableau de bord, rapports, notifications). |
+| Retour en arrière | Possible sans perte (simple présentation). |
