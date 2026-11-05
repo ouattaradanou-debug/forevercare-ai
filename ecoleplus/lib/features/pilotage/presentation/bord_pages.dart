@@ -1,4 +1,5 @@
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/app/theme.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/features/bibliotheque/domain/document.dart';
@@ -9,6 +10,7 @@ import 'package:ecoleplus/features/finances/domain/finances.dart';
 import 'package:ecoleplus/features/finances/presentation/finances_providers.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
 import 'package:ecoleplus/features/grades/domain/calculs.dart';
+import 'package:ecoleplus/features/home/presentation/home_page.dart';
 import 'package:ecoleplus/features/pilotage/domain/absences.dart';
 import 'package:ecoleplus/features/pilotage/domain/emploi_du_temps.dart';
 import 'package:ecoleplus/features/pilotage/domain/notifications.dart';
@@ -38,7 +40,17 @@ final Provider<List<NotificationEcole>> notificationsProvider = Provider((ref) {
   if (yearId == null) return const [];
   final droits = ref.watch(mesDroitsProvider);
   final jour = ref.watch(aujourdhuiProvider);
-  final out = <NotificationEcole>[];
+  final out = <NotificationEcole>[
+    // Alertes de l'accueil (synchronisation, sécurité, question secrète).
+    for (final a in ref.watch(alertesAccueilProvider))
+      NotificationEcole(
+        id: 'alerte:${a.court}',
+        titre: a.titre,
+        route: a.route,
+        icone: a.icone,
+        importante: true,
+      ),
+  ];
 
   // Appel du jour : enseignant (ses classes) et directeur (toutes), les
   // jours de classe (lundi à vendredi, ou un jour prévu à l'emploi du temps).
@@ -654,7 +666,10 @@ String _ligneResultat(ResultatsClasse r) {
 /// « Ma journée » (accueil de l'enseignant) : cours du jour d'après
 /// l'emploi du temps, appel à faire ou fait.
 class MaJournee extends ConsumerWidget {
-  const new({super.key});
+  const new({this.compacte = false, super.key});
+
+  /// Une seule bande (accueil sans défilement) : prochain cours et appel.
+  final bool compacte;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -675,6 +690,93 @@ class MaJournee extends ConsumerWidget {
         if (x.weekday == jourDe(jour) && classes.any((c) => c.id == x.classId))
           x,
     ];
+    if (compacte) {
+      final aFaire = [
+        for (final c in classes)
+          if (!presences.any((a) => a.classId == c.id && a.day == jour)) c,
+      ];
+      final fait = [
+        for (final c in classes)
+          if (presences.any((a) => a.classId == c.id && a.day == jour)) c,
+      ];
+      return Container(
+        key: const Key('ma-journee'),
+        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        decoration: BoxDecoration(
+          color: Charte.blanc,
+          borderRadius: BorderRadius.circular(Charte.rayon),
+          border: Border.all(color: Charte.bordure),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.today_rounded, color: Charte.turquoise),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Ma journée',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    duJour.isEmpty
+                        ? 'Pas de cours prévu à l’emploi du temps.'
+                        : duJour
+                              .map(
+                                (x) =>
+                                    '${heureCourte(x.startsAt)} '
+                                    '${intitule(x, matieres)}',
+                              )
+                              .join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  for (final c in fait.take(1))
+                    Text(
+                      'Appel fait (${c.name}) : '
+                      '${_absents(presences, c.id, jour)} absent(s).',
+                      key: Key('appel-fait-${c.id}'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Charte.vert,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            // Un seul bouton : la classe, ou le choix des classes.
+            for (final c in aFaire.take(1))
+              Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: FilledButton(
+                  key: Key(
+                    aFaire.length > 1 ? 'faire-appel' : 'faire-appel-${c.id}',
+                  ),
+                  style: StylesBoutons.accent.copyWith(
+                    minimumSize: const WidgetStatePropertyAll(Size(0, 40)),
+                    padding: const WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    textStyle: const WidgetStatePropertyAll(
+                      TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  child: const Text('Faire l’appel'),
+                  onPressed: () => context.push(
+                    aFaire.length > 1 ? '/appel' : '/appel/${c.id}',
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
     return Card(
       key: const Key('ma-journee'),
       child: Padding(

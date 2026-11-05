@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/app/theme.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
@@ -419,7 +420,7 @@ class JournalMedicalPage extends ConsumerWidget {
                 ListTile(
                   leading: Icon(
                     e.autorise ? Icons.lock_open : Icons.block,
-                    color: e.autorise ? null : Colors.red,
+                    color: e.autorise ? null : Charte.rouge,
                   ),
                   title: Text(
                     '${e.qui} — ${e.action}'

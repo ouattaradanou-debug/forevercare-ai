@@ -22,7 +22,7 @@ void main() {
     expect(find.textContaining('différents'), findsOneWidget);
     await AppHarness.taperCode(tester, '4071');
     await AppHarness.taperCode(tester, '4071');
-    expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+    expect(find.text('Bonjour, Directeur Test !'), findsOneWidget);
     final lock = await tester.runAsync(() => h.db.select(h.db.appLock).get());
     expect(lock!.single.pinHash, isNot(contains('4071')));
     await h.dispose(tester);
@@ -36,7 +36,7 @@ void main() {
     await h.relancer(tester);
 
     expect(find.text('Tapez votre code'), findsOneWidget);
-    expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+    expect(find.text('Bonjour, Directeur Test !'), findsOneWidget);
     await AppHarness.taperCode(tester, '9999');
     expect(find.text('Code incorrect.'), findsOneWidget);
     await AppHarness.taperCode(tester, '4071');
@@ -62,7 +62,7 @@ void main() {
     capteur.accepte = true;
     await tester.tap(find.text('Avec mon empreinte'));
     await AppHarness.settle(tester);
-    expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+    expect(find.text('Bonjour, Directeur Test !'), findsOneWidget);
     final lock = await tester.runAsync(() => h.db.select(h.db.appLock).get());
     expect(lock!.single.pinHash, isEmpty);
     expect(lock.single.biometric, isTrue);
@@ -110,7 +110,7 @@ void main() {
     await AppHarness.taperCode(tester, '4071');
     expect(find.textContaining('une seconde fois'), findsOneWidget);
     await AppHarness.taperCode(tester, '4071');
-    expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+    expect(find.text('Bonjour, Directeur Test !'), findsOneWidget);
 
     await h.relancer(tester);
     expect(find.text('Tapez votre code'), findsOneWidget);
@@ -145,7 +145,8 @@ void main() {
       await tester.tap(find.byTooltip('Retour').first);
       await AppHarness.settle(tester);
     }
-    await tester.scrollUntilVisible(find.text('Se déconnecter'), 200);
+    // Accueil sans défilement (A28) : « Se déconnecter » est en bas.
+    expect(find.text('Se déconnecter'), findsOneWidget);
     await tester.tap(find.text('Se déconnecter'));
     await AppHarness.settle(tester);
     await tester.tap(find.widgetWithText(FilledButton, 'Se déconnecter'));
@@ -169,7 +170,7 @@ void main() {
     await AppHarness.settle(tester);
     await AppHarness.taperCode(tester, '4071');
     await AppHarness.taperCode(tester, '4071');
-    expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+    expect(find.text('Bonjour, Directeur Test !'), findsOneWidget);
     final session = await tester.runAsync(
       () => h.db.select(h.db.localSession).getSingle(),
     );
@@ -202,7 +203,7 @@ void main() {
       });
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    expect(find.text('1 événement de sécurité à voir'), findsOneWidget);
+    expect(find.text('1 alerte de sécurité'), findsOneWidget);
 
     await AppHarness.toucher(tester, 'Sécurité');
     await AppHarness.settle(tester);
@@ -243,7 +244,7 @@ void main() {
     );
     h.server.revokedDevices.add(session!.deviceId);
 
-    await tester.tap(find.text('Tout est synchronisé'));
+    await tester.tap(find.byKey(const Key('synchro')));
     await AppHarness.settle(tester);
     await tester.tap(find.text('Synchroniser maintenant'));
     for (var i = 0; i < 4; i++) {
@@ -263,10 +264,7 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, '70 11 22 33');
-    expect(
-      find.textContaining('Choisissez une question secrète'),
-      findsOneWidget,
-    );
+    expect(find.text('Question secrète'), findsOneWidget);
     await AppHarness.toucher(tester, 'Mon compte');
     await AppHarness.settle(tester);
     await tester.tap(find.text('Choisir ma question secrète'));
@@ -284,7 +282,8 @@ void main() {
     // Se déconnecter, puis « Mot de passe oublié ? »
     await tester.tap(find.byTooltip('Retour').first);
     await AppHarness.settle(tester);
-    await tester.scrollUntilVisible(find.text('Se déconnecter'), 200);
+    // Accueil sans défilement (A28) : « Se déconnecter » est en bas.
+    expect(find.text('Se déconnecter'), findsOneWidget);
     await tester.tap(find.text('Se déconnecter'));
     await AppHarness.settle(tester);
     await tester.tap(find.widgetWithText(FilledButton, 'Se déconnecter'));
@@ -337,6 +336,10 @@ void main() {
           ),
     );
     await AppHarness.settle(tester);
+    // Accueil : alerte courte ; texte complet dans les notifications.
+    expect(find.text('Données non envoyées'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('cloche')));
+    await AppHarness.settle(tester);
     expect(
       find.textContaining('1 élément saisi depuis 4 jours'),
       findsOneWidget,
@@ -370,6 +373,10 @@ void main() {
     await AppHarness.settle(tester);
     expect(find.textContaining('ne sont pas encore envoyés'), findsNothing);
     await enAttente('grades');
+    await AppHarness.settle(tester);
+    // Accueil : alerte courte ; texte complet dans les notifications.
+    expect(find.text('Données non envoyées'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('cloche')));
     await AppHarness.settle(tester);
     expect(
       find.textContaining('2 éléments saisis depuis 2 jours'),

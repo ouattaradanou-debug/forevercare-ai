@@ -64,7 +64,7 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
-    expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+    expect(find.text('Bonjour, Directeur Test !'), findsOneWidget);
     // Accueil par thèmes (phase 13).
     for (final b in [
       'Tableau de bord',
@@ -80,8 +80,6 @@ void main() {
       await AppHarness.toucherVisible(tester, b);
       expect(find.text(b), findsOneWidget);
     }
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
-    await AppHarness.settle(tester);
     // Années, options et sauvegarde sont dans « Mon école ».
     await AppHarness.ouvrirDansMonEcole(tester, 'Sauvegarde');
     expect(find.text('Sauvegarde'), findsWidgets);
@@ -94,7 +92,7 @@ void main() {
     final h = AppHarness()..seedEcoleTest();
     await h.pump(tester);
     await h.login(tester, '70 11 22 33');
-    expect(find.text('Bonjour Enseignant Un'), findsOneWidget);
+    expect(find.text('Bonjour, Enseignant Un !'), findsOneWidget);
     expect(find.text('Options de l’école'), findsNothing);
     expect(find.text('Personnes et droits'), findsNothing);
     await h.dispose(tester);
@@ -248,12 +246,13 @@ void main() {
     await AppHarness.settle(tester);
     await AppHarness.taperCode(tester, '4071');
     await AppHarness.taperCode(tester, '4071');
-    expect(find.text('Bonjour Directrice Neuve'), findsOneWidget);
+    expect(find.text('Bonjour, Directrice Neuve !'), findsOneWidget);
     expect(find.text('École Neuve'), findsOneWidget);
     expect(h.auth.loginPhones['22670561740'], isNotNull);
 
     // A11 : déconnexion, puis connexion avec le numéro du directeur.
-    await tester.scrollUntilVisible(find.text('Se déconnecter'), 200);
+    // Accueil sans défilement (A28) : « Se déconnecter » est en bas.
+    expect(find.text('Se déconnecter'), findsOneWidget);
     await tester.ensureVisible(find.text('Se déconnecter'));
     await tester.pump();
     await tester.tap(find.text('Se déconnecter'));
@@ -261,7 +260,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Se déconnecter'));
     await AppHarness.settle(tester);
     await h.login(tester, '70 56 17 40');
-    expect(find.text('Bonjour Directrice Neuve'), findsOneWidget);
+    expect(find.text('Bonjour, Directrice Neuve !'), findsOneWidget);
     await h.dispose(tester);
   });
 }

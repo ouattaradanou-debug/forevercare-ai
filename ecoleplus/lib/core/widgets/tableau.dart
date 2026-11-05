@@ -1,3 +1,4 @@
+import 'package:ecoleplus/app/theme.dart';
 import 'package:flutter/material.dart';
 
 /// Une colonne d'un tableau : titre, largeur relative, montant (aligné à
@@ -97,7 +98,7 @@ class TableauDonnees extends StatelessWidget {
                 ),
           ],
         );
-    final alterne = cs.primaryContainer.withValues(alpha: 0.55);
+    const alterne = Color(0xFFF6F8FC);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -114,9 +115,10 @@ class TableauDonnees extends StatelessWidget {
           ),
         Container(
           decoration: BoxDecoration(
-            color: cs.surfaceContainerLowest,
-            border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
-            borderRadius: BorderRadius.circular(12),
+            color: Charte.blanc,
+            border: Border.all(color: Charte.bordure),
+            borderRadius: BorderRadius.circular(Charte.rayon),
+            boxShadow: Charte.ombre,
           ),
           clipBehavior: Clip.antiAlias,
           child: LayoutBuilder(
@@ -136,7 +138,7 @@ class TableauDonnees extends StatelessWidget {
                     defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                     children: [
                       TableRow(
-                        decoration: BoxDecoration(color: cs.primary),
+                        decoration: const BoxDecoration(color: Charte.marine),
                         children: [
                           for (final (i, col) in colonnes.indexed)
                             cellule(i, Text(col.titre, style: entete)),
@@ -184,10 +186,10 @@ class CouleursFinances {
           Color(0xFFF3D28A),
         )
       : const CouleursFinances._(
-          Color(0xFF1E7B34),
-          Color(0xFFE3F4E7),
-          Color(0xFFC62828),
-          Color(0xFF9A6100),
+          Charte.vert,
+          Charte.vertPale,
+          Charte.rouge,
+          Charte.ambre,
         );
   final Color vert;
   final Color fondVert;

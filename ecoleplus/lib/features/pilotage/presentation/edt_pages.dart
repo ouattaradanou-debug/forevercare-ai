@@ -1,3 +1,4 @@
+import 'package:ecoleplus/app/theme.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/tableau.dart';
@@ -665,8 +666,8 @@ class _LigneAppel extends StatelessWidget {
   Widget build(BuildContext context) {
     final (s, motif) = statut;
     final couleur = switch (s) {
-      'absent' => Theme.of(context).colorScheme.errorContainer,
-      'retard' => Colors.amber.shade100,
+      'absent' => Charte.rougePale,
+      'retard' => Charte.ambrePale,
       _ => null,
     };
     return Card(

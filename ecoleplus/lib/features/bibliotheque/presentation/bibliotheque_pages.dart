@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/app/router.dart';
+import 'package:ecoleplus/app/theme.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
@@ -489,7 +490,7 @@ class _Occupation extends ConsumerWidget {
             const SizedBox(height: 4),
             LinearProgressIndicator(
               value: (o.pourcent / 100).clamp(0, 1),
-              color: o.pourcent >= 90 ? Colors.red : null,
+              color: o.pourcent >= 90 ? Charte.rouge : null,
             ),
           ],
         ),
@@ -896,7 +897,7 @@ class FicheDocumentPage extends ConsumerWidget {
             const SizedBox(height: 12),
             OutlinedButton.icon(
               key: const Key('effacer-document'),
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+              style: StylesBoutons.danger,
               icon: const Icon(Icons.delete_forever),
               label: const Text('Effacer définitivement'),
               onPressed: () async {

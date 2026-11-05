@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/app/theme.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/export/xlsx_ecriture.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
@@ -548,7 +549,7 @@ class DepensePage extends ConsumerWidget {
             const SizedBox(height: 24),
             OutlinedButton.icon(
               key: const Key('annuler-depense'),
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+              style: StylesBoutons.danger,
               icon: const Icon(Icons.undo),
               label: const Text('Annuler cette dépense (erreur)'),
               onPressed: () async {

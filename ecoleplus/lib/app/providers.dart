@@ -119,6 +119,17 @@ class SyncStatus {
   }
 }
 
+extension LibelleCourt on SyncStatus {
+  /// Libellé court (pastille de l'accueil).
+  String get court {
+    if (state.phase == SyncPhase.running) return 'Envoi en cours';
+    if (refused > 0) return 'Problème de synchro';
+    if (state.phase == SyncPhase.sessionExpired) return 'Reconnexion requise';
+    if (pending == 0) return 'Synchronisé';
+    return '$pending en attente';
+  }
+}
+
 final syncStatusProvider = StreamProvider<SyncStatus>((ref) {
   final store = ref.watch(localStoreProvider);
   final engine = ref.watch(syncEngineProvider);

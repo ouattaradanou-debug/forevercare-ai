@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/app/theme.dart';
 import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/sync/sync_engine.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
@@ -50,50 +51,98 @@ class EcoleScaffold extends StatelessWidget {
   );
 }
 
-/// « Tout est synchronisé » / « N éléments en attente » (R3).
+/// État de la synchronisation (R3), en 4 situations : synchronisé (vert),
+/// en cours (bleu), en attente (ambre), problème (rouge).
+({IconData icone, Color couleur, Color fond}) apparenceSynchro(
+  SyncStatus status,
+) {
+  final ok =
+      status.pending == 0 &&
+      status.refused == 0 &&
+      status.state.phase != SyncPhase.sessionExpired;
+  return switch (status) {
+    _ when status.state.phase == SyncPhase.running => (
+      icone: Icons.sync,
+      couleur: Charte.bleu,
+      fond: Charte.bleuClair,
+    ),
+    _
+        when status.refused > 0 ||
+            status.state.phase == SyncPhase.sessionExpired =>
+      (
+        icone: Icons.sync_problem,
+        couleur: Charte.rouge,
+        fond: Charte.rougePale,
+      ),
+    _ when ok => (
+      icone: Icons.cloud_done,
+      couleur: Charte.vert,
+      fond: Charte.vertPale,
+    ),
+    _ => (
+      icone: status.state.phase == SyncPhase.offline
+          ? Icons.cloud_off
+          : Icons.cloud_upload,
+      couleur: Charte.ambre,
+      fond: Charte.ambrePale,
+    ),
+  };
+}
+
+/// « Tout est synchronisé » / « N éléments en attente » : bandeau discret
+/// en haut de chaque écran ; touchez-le pour l'écran de synchronisation.
 class SyncBanner extends ConsumerWidget {
-  const new({super.key});
+  const new({this.compact = false, super.key});
+
+  /// Pastille arrondie (accueil) au lieu d'un bandeau pleine largeur.
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(syncStatusProvider).value;
-    if (status == null) return const SizedBox.shrink();
-    final scheme = Theme.of(context).colorScheme;
-    final ok =
-        status.pending == 0 &&
-        status.refused == 0 &&
-        status.state.phase != SyncPhase.sessionExpired;
-    final (icon, color) = switch (status) {
-      _ when status.state.phase == SyncPhase.running => (
-        Icons.sync,
-        scheme.primary,
-      ),
-      _ when status.refused > 0 => (Icons.error_outline, scheme.error),
-      _ when ok => (Icons.cloud_done_outlined, scheme.primary),
-      _ when status.state.phase == SyncPhase.offline => (
-        Icons.cloud_off_outlined,
-        scheme.tertiary,
-      ),
-      _ => (Icons.cloud_upload_outlined, scheme.tertiary),
-    };
+    if (status == null) return SizedBox(height: compact ? 34 : 0);
+    final a = apparenceSynchro(status);
+    final contenu = Row(
+      mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
+      children: [
+        Icon(a.icone, color: a.couleur, size: compact ? 18 : 20),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            compact ? status.court : status.label,
+            key: compact ? const Key('synchro') : null,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: a.couleur,
+              fontWeight: FontWeight.w600,
+              fontSize: compact ? 13.5 : 14,
+            ),
+          ),
+        ),
+      ],
+    );
+    if (compact) {
+      return Material(
+        color: a.fond,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: () => context.push('/synchronisation'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            child: contenu,
+          ),
+        ),
+      );
+    }
     return Material(
-      color: color.withValues(alpha: 0.08),
+      color: a.fond,
       child: InkWell(
         onTap: () => context.push('/synchronisation'),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            children: [
-              Icon(icon, color: color),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  status.label,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: contenu,
         ),
       ),
     );
@@ -251,10 +300,30 @@ class SectionTitle extends StatelessWidget {
   const new(this.text, {super.key});
   final String text;
 
+  /// Titre de section : marine, gras, petit trait orange devant.
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 8, bottom: 12),
-    child: Text(text, style: Theme.of(context).textTheme.titleLarge),
+    padding: const EdgeInsets.only(top: 14, bottom: 10),
+    child: Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: Charte.orange,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -270,12 +339,21 @@ class InfoMessage extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 48, color: Theme.of(context).colorScheme.outline),
-        const SizedBox(height: 12),
+        Container(
+          width: 72,
+          height: 72,
+          decoration: const BoxDecoration(
+            color: Charte.bleuClair,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 36, color: Charte.bleu),
+        ),
+        const SizedBox(height: 14),
         Text(
           text,
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyLarge,
+          style: Theme.of(context).textTheme.bodyLarge
+              ?.copyWith(color: Charte.texteSecondaire),
         ),
       ],
     ),
@@ -313,16 +391,69 @@ Future<T?> avecMessage<T>(BuildContext context, Future<T> Function() f) async {
   try {
     return await f();
   } on UserMessage catch (e) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
-    }
+    if (context.mounted) messageErreur(context, e.message);
   } on Object {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Une erreur est survenue. Réessayez.')),
-      );
+      messageErreur(context, 'Une erreur est survenue. Réessayez.');
     }
   }
   return null;
+}
+
+/// Message de réussite (vert), même apparence dans tous les modules.
+void messageSucces(BuildContext context, String texte) =>
+    _message(context, texte, Icons.check_circle, Charte.vert);
+
+/// Message d'erreur (rouge), même apparence dans tous les modules.
+void messageErreur(BuildContext context, String texte) =>
+    _message(context, texte, Icons.error, Charte.rouge);
+
+void _message(BuildContext context, String texte, IconData icone, Color c) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      backgroundColor: c,
+      content: Row(
+        children: [
+          Icon(icone, color: Charte.blanc),
+          const SizedBox(width: 10),
+          Expanded(child: Text(texte)),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Pastille de statut (Soldé, En attente, Refusé…) : mêmes couleurs dans
+/// tous les modules.
+class PastilleStatut extends StatelessWidget {
+  const new(this.texte, this.statut, {this.icone = false, super.key});
+  final String texte;
+  final TonStatut statut;
+  final bool icone;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+    decoration: BoxDecoration(
+      color: statut.fond,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icone) ...[
+          Icon(statut.icone, size: 14, color: statut.couleur),
+          const SizedBox(width: 4),
+        ],
+        Text(
+          texte,
+          style: TextStyle(
+            color: statut.couleur,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    ),
+  );
 }

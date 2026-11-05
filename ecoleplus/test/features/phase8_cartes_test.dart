@@ -8,11 +8,18 @@ import '../helpers/app_harness.dart';
 import 'cartes_domain_test.dart' show photoDeTest;
 import 'documents_directeur_test.dart' show texteDuPdf;
 
-Future<void> voir(WidgetTester tester, Finder f) => tester.scrollUntilVisible(
-  f,
-  250,
-  scrollable: find.byType(Scrollable).first,
-);
+/// Fait défiler jusqu'à [f] (rien à faire s'il est déjà là, ou sur
+/// l'accueil, qui ne défile pas).
+Future<void> voir(WidgetTester tester, Finder f) async {
+  if (f.evaluate().isNotEmpty || find.byType(Scrollable).evaluate().isEmpty) {
+    return;
+  }
+  await tester.scrollUntilVisible(
+    f,
+    250,
+    scrollable: find.byType(Scrollable).first,
+  );
+}
 
 Future<void> tap(WidgetTester tester, Finder f) async {
   if (f.evaluate().isEmpty) await voir(tester, f);

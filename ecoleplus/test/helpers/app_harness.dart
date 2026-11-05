@@ -479,11 +479,16 @@ class AppHarness {
           return;
         }
       }
-      await tester.scrollUntilVisible(
-        find.text(etape),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
+      // L'accueil ne défile pas (A28) : on ne fait défiler que les autres
+      // écrans.
+      if (find.text(etape).evaluate().isEmpty &&
+          find.byType(Scrollable).evaluate().isNotEmpty) {
+        await tester.scrollUntilVisible(
+          find.text(etape),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+      }
       await tester.ensureVisible(find.text(etape));
       await tester.pump();
       await tester.tap(find.text(etape));
@@ -491,12 +496,17 @@ class AppHarness {
   }
 
   /// Fait défiler l'accueil jusqu'au bouton, sans le toucher.
-  static Future<void> toucherVisible(WidgetTester tester, String bouton) =>
-      tester.scrollUntilVisible(
-        find.text(bouton),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
+  static Future<void> toucherVisible(WidgetTester tester, String bouton) async {
+    if (find.text(bouton).evaluate().isNotEmpty ||
+        find.byType(Scrollable).evaluate().isEmpty) {
+      return;
+    }
+    await tester.scrollUntilVisible(
+      find.text(bouton),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+  }
 
   /// Ouvre un écran rangé dans « Mon école » (années, options, sauvegarde).
   static Future<void> ouvrirDansMonEcole(

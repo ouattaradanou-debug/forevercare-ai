@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/app/theme.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
@@ -330,18 +331,18 @@ String _jourLocal(PaymentRow x) {
   final sombre = Theme.of(context).brightness == Brightness.dark;
   return switch (s) {
     Statut.paye => (
-      sombre ? const Color(0xFF1E4620) : const Color(0xFFE6F4EA),
-      sombre ? const Color(0xFFA8DAB5) : const Color(0xFF1E6B32),
+      sombre ? const Color(0xFF1E4620) : Charte.vertPale,
+      sombre ? const Color(0xFFA8DAB5) : Charte.vert,
       'Payé',
     ),
     Statut.partiel => (
-      sombre ? const Color(0xFF4A3B12) : const Color(0xFFFFF4DC),
-      sombre ? const Color(0xFFF3D28A) : const Color(0xFF8A5A00),
+      sombre ? const Color(0xFF4A3B12) : Charte.ambrePale,
+      sombre ? const Color(0xFFF3D28A) : Charte.ambre,
       'Partiel',
     ),
     Statut.impaye => (
-      sombre ? const Color(0xFF4A1F1F) : const Color(0xFFFDECEC),
-      sombre ? const Color(0xFFF2B8B5) : const Color(0xFFA32A2A),
+      sombre ? const Color(0xFF4A1F1F) : Charte.rougePale,
+      sombre ? const Color(0xFFF2B8B5) : Charte.rouge,
       'Impayé',
     ),
   };
@@ -752,7 +753,7 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
                   'Reste à payer',
                   s.reste,
                   key: const Key('reste-encaisser'),
-                  couleur: s.reste == 0 ? null : Colors.red.shade700,
+                  couleur: s.reste == 0 ? null : Charte.rouge,
                 ),
               ],
             ),
@@ -837,7 +838,7 @@ class _EncaissementState extends ConsumerState<EncaissementPage> {
                 child: Text(
                   fcfa(v.reste),
                   style: t.titleSmall?.copyWith(
-                    color: v.reste == 0 ? null : Colors.red.shade700,
+                    color: v.reste == 0 ? null : Charte.rouge,
                   ),
                 ),
               ),
@@ -1246,7 +1247,7 @@ class RecuPage extends ConsumerWidget {
             const SizedBox(height: 24),
             OutlinedButton.icon(
               key: const Key('annuler-recu'),
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+              style: StylesBoutons.danger,
               icon: const Icon(Icons.undo),
               label: const Text('Annuler ce reçu (erreur)'),
               onPressed: () => _annuler(context, ref, x),

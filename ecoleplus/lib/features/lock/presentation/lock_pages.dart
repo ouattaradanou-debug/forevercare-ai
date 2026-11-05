@@ -251,7 +251,7 @@ class _LockPageState extends ConsumerState<LockPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Bonjour ${session?.displayName ?? ''}',
+              'Bonjour, ${session?.displayName ?? ''} !',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall,
             ),

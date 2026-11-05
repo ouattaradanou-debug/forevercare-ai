@@ -56,6 +56,14 @@ void main() {
     await h.login(tester, 'directeur@ecole-test.local');
     await calme(tester);
     await capture(tester, '01-accueil-directeur');
+    // Plus petit écran demandé (360 × 740), barres Android comprises.
+    tester.view
+      ..physicalSize = const Size(720, 1480)
+      ..padding = const FakeViewPadding(top: 48, bottom: 96);
+    await capture(tester, '00-accueil-360x740');
+    tester.view
+      ..physicalSize = const Size(720, 1560)
+      ..resetPadding();
     await tap(tester, find.text('Tableau de bord'));
     await capture(tester, '02-tableau-de-bord');
     await accueil(tester);

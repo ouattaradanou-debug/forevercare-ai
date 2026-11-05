@@ -1,105 +1,293 @@
+import 'package:ecoleplus/app/charte.dart';
 import 'package:flutter/material.dart';
 
-/// Couleurs de SEDA Tech (logo) : bleu dominant, orange en accent.
-abstract final class CouleursSeda {
-  /// Bleu SEDA (barres, gros boutons, titres, en-têtes de tableaux).
-  static const bleu = Color(0xFF1B4FA0);
+export 'package:ecoleplus/app/charte.dart';
 
-  /// Bleu plus clair (dégradés, liens).
-  static const bleuClair = Color(0xFF2F74D0);
-
-  /// Bleu très clair (fonds des en-têtes doux, lignes alternées).
-  static const bleuPale = Color(0xFFE8F0FB);
-
-  /// Orange SEDA (accent : raccourcis, chiffres clés, badges).
-  static const orange = Color(0xFFF39223);
-
-  /// Orange très clair (fonds d'accent).
-  static const orangePale = Color(0xFFFFEBD3);
-
-  /// Texte sur fond orange pâle.
-  static const brun = Color(0xFF6B3A00);
-
-  /// Fond de l'application (blanc légèrement bleuté).
-  static const fond = Color(0xFFF7F9FD);
-}
-
-/// Thème clair aux couleurs de SEDA Tech, gros caractères et grandes zones
-/// tactiles (R5).
+/// Thème unique de l'application, construit sur la charte graphique (A28) :
+/// bleu marine structurant, orange pour l'accent, surfaces blanches sur fond
+/// gris très clair, gros caractères et grandes zones tactiles (R5).
 ThemeData buildTheme() {
-  final scheme = ColorScheme.fromSeed(seedColor: CouleursSeda.bleu).copyWith(
-    primary: CouleursSeda.bleu,
-    onPrimary: Colors.white,
-    primaryContainer: CouleursSeda.bleuPale,
-    onPrimaryContainer: const Color(0xFF0D2A5C),
-    secondary: CouleursSeda.orange,
-    onSecondary: Colors.white,
-    secondaryContainer: CouleursSeda.orangePale,
-    onSecondaryContainer: CouleursSeda.brun,
-    tertiary: const Color(0xFFB85F00),
-    surface: CouleursSeda.fond,
+  final scheme = ColorScheme.fromSeed(seedColor: Charte.marine).copyWith(
+    primary: Charte.marine,
+    onPrimary: Charte.blanc,
+    primaryContainer: Charte.bleuClair,
+    onPrimaryContainer: Charte.marineFonce,
+    secondary: Charte.orange,
+    onSecondary: Charte.blanc,
+    secondaryContainer: Charte.orangePale,
+    onSecondaryContainer: const Color(0xFF6B3600),
+    tertiary: Charte.orangeFonce,
+    error: Charte.rouge,
+    errorContainer: Charte.rougePale,
+    onErrorContainer: const Color(0xFF7A1D1D),
+    surface: Charte.blanc,
+    onSurface: Charte.marineFonce,
+    onSurfaceVariant: Charte.texteSecondaire,
+    outline: const Color(0xFF8C96A8),
+    outlineVariant: Charte.bordure,
+    surfaceContainerLowest: Charte.blanc,
+    surfaceContainerLow: const Color(0xFFF8FAFD),
+    surfaceContainer: Charte.fond,
+    surfaceContainerHighest: const Color(0xFFE9EEF5),
+  );
+  const police = 'Roboto';
+  final bordureChamp = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(Charte.rayonBouton),
+    borderSide: const BorderSide(color: Charte.bordure),
+  );
+  final formeBouton = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(Charte.rayonBouton),
   );
   return ThemeData(
     // Police du système Android (nommée pour que les captures du guide
     // aient le même texte que le téléphone).
-    fontFamily: 'Roboto',
+    fontFamily: police,
     colorScheme: scheme,
-    scaffoldBackgroundColor: CouleursSeda.fond,
+    scaffoldBackgroundColor: Charte.fond,
     visualDensity: VisualDensity.standard,
+    splashFactory: InkSparkle.splashFactory,
     textTheme: const TextTheme(
-      bodyLarge: TextStyle(fontSize: 18),
-      bodyMedium: TextStyle(fontSize: 16),
+      headlineSmall: TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        color: Charte.marineFonce,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: Charte.marineFonce,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Charte.marineFonce,
+      ),
+      bodyLarge: TextStyle(fontSize: 17, color: Charte.marineFonce),
+      bodyMedium: TextStyle(fontSize: 15, color: Charte.marineFonce),
+      bodySmall: TextStyle(fontSize: 13, color: Charte.texteSecondaire),
+      labelLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: CouleursSeda.bleu,
-      foregroundColor: Colors.white,
+      backgroundColor: Charte.marine,
+      foregroundColor: Charte.blanc,
       surfaceTintColor: Colors.transparent,
+      elevation: 0,
       titleTextStyle: TextStyle(
-        fontFamily: 'Roboto',
-        fontSize: 21,
+        fontFamily: police,
+        fontSize: 20,
         fontWeight: FontWeight.w600,
-        color: Colors.white,
+        color: Charte.blanc,
       ),
     ),
+    // Bouton principal (Enregistrer, Valider) : marine. Les actions phares
+    // utilisent [StylesBoutons.accent] (orange).
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(64),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Charte.marine,
+        foregroundColor: Charte.blanc,
+        disabledBackgroundColor: const Color(0xFFDDE3EC),
+        disabledForegroundColor: const Color(0xFF8C96A8),
+        minimumSize: const Size.fromHeight(54),
+        shape: formeBouton,
         textStyle: const TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 18,
+          fontFamily: police,
+          fontSize: 17,
           fontWeight: FontWeight.w600,
         ),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: CouleursSeda.bleu,
-        side: const BorderSide(color: CouleursSeda.bleu),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        foregroundColor: Charte.marine,
+        minimumSize: const Size(48, 48),
+        side: const BorderSide(color: Color(0xFFB9C4D6)),
+        shape: formeBouton,
+        textStyle: const TextStyle(
+          fontFamily: police,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
       ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: Charte.bleu,
+        minimumSize: const Size(48, 44),
+        shape: formeBouton,
+        textStyle: const TextStyle(
+          fontFamily: police,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(minimumSize: const Size(44, 44)),
     ),
     cardTheme: CardThemeData(
-      color: Colors.white,
-      elevation: 0.5,
+      color: Charte.blanc,
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(vertical: 5),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: Color(0xFFDCE4F0)),
+        borderRadius: BorderRadius.circular(Charte.rayon),
+        side: const BorderSide(color: Charte.bordure),
       ),
     ),
-    chipTheme: const ChipThemeData(
-      selectedColor: CouleursSeda.orangePale,
-      checkmarkColor: CouleursSeda.brun,
+    listTileTheme: const ListTileThemeData(
+      iconColor: Charte.marine,
+      contentPadding: EdgeInsets.symmetric(horizontal: 14),
     ),
-    badgeTheme: const BadgeThemeData(backgroundColor: CouleursSeda.orange),
+    dividerTheme: const DividerThemeData(color: Charte.bordure, space: 1),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Charte.blanc,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: bordureChamp,
+      enabledBorder: bordureChamp,
+      focusedBorder: bordureChamp.copyWith(
+        borderSide: const BorderSide(color: Charte.marine, width: 2),
+      ),
+      errorBorder: bordureChamp.copyWith(
+        borderSide: const BorderSide(color: Charte.rouge),
+      ),
+      focusedErrorBorder: bordureChamp.copyWith(
+        borderSide: const BorderSide(color: Charte.rouge, width: 2),
+      ),
+      labelStyle: const TextStyle(color: Charte.texteSecondaire),
+      floatingLabelStyle: const TextStyle(color: Charte.marine),
+      helperStyle: const TextStyle(color: Charte.texteSecondaire),
+      errorStyle: const TextStyle(color: Charte.rouge),
+    ),
+    dropdownMenuTheme: DropdownMenuThemeData(
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Charte.blanc,
+        border: bordureChamp,
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: Charte.blanc,
+      selectedColor: Charte.orangePale,
+      checkmarkColor: Charte.orangeFonce,
+      side: const BorderSide(color: Charte.bordure),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      labelStyle: const TextStyle(
+        fontFamily: police,
+        fontSize: 14,
+        color: Charte.marineFonce,
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
+              ? Charte.orangePale
+              : Charte.blanc,
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
+              ? const Color(0xFF6B3600)
+              : Charte.marineFonce,
+        ),
+        side: const WidgetStatePropertyAll(
+          BorderSide(color: Color(0xFFB9C4D6)),
+        ),
+      ),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Charte.blanc : null,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Charte.marine : null,
+      ),
+    ),
+    checkboxTheme: CheckboxThemeData(
+      fillColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Charte.marine : null,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    ),
+    radioTheme: RadioThemeData(
+      fillColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? Charte.marine : null,
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: Charte.blanc,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Charte.rayonDialogue),
+      ),
+      titleTextStyle: const TextStyle(
+        fontFamily: police,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: Charte.marineFonce,
+      ),
+      contentTextStyle: const TextStyle(
+        fontFamily: police,
+        fontSize: 16,
+        color: Charte.marineFonce,
+      ),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: Charte.blanc,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(Charte.rayonDialogue),
+        ),
+      ),
+      showDragHandle: true,
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Charte.marineFonce,
+      contentTextStyle: const TextStyle(
+        fontFamily: police,
+        fontSize: 15,
+        color: Charte.blanc,
+      ),
+      actionTextColor: Charte.orange,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Charte.rayonBouton),
+      ),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: Charte.orange,
+      linearTrackColor: Color(0xFFFCE3C7),
+    ),
+    badgeTheme: const BadgeThemeData(backgroundColor: Charte.orange),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: CouleursSeda.orange,
-      foregroundColor: Colors.white,
+      backgroundColor: Charte.orange,
+      foregroundColor: Charte.blanc,
     ),
-    inputDecorationTheme: const InputDecorationTheme(
-      focusedBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: CouleursSeda.bleu, width: 2),
-      ),
+    expansionTileTheme: const ExpansionTileThemeData(
+      iconColor: Charte.marine,
+      collapsedIconColor: Charte.marine,
     ),
+  );
+}
+
+/// Styles des boutons qui ne sont pas le bouton principal : mêmes couleurs
+/// dans tous les modules.
+abstract final class StylesBoutons {
+  /// Action phare d'un écran (Encaisser, Valider l'appel, Créer…) : orange.
+  static final ButtonStyle accent = FilledButton.styleFrom(
+    backgroundColor: Charte.orange,
+    foregroundColor: Charte.blanc,
+  );
+
+  /// Action destructive (Supprimer, Annuler un reçu, Déconnecter) : rouge.
+  static final ButtonStyle danger = OutlinedButton.styleFrom(
+    foregroundColor: Charte.rouge,
+    side: const BorderSide(color: Color(0xFFF0B4B4)),
+  );
+
+  /// Bouton destructif plein (confirmation d'une suppression).
+  static final ButtonStyle dangerPlein = FilledButton.styleFrom(
+    backgroundColor: Charte.rouge,
+    foregroundColor: Charte.blanc,
   );
 }

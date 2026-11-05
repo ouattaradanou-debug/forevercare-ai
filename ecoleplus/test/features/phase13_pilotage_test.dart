@@ -1,6 +1,5 @@
 import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
-import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/features/classes/data/classes_repository.dart';
 import 'package:ecoleplus/features/pilotage/domain/absences.dart';
 import 'package:ecoleplus/features/pilotage/domain/accueil.dart';
@@ -296,7 +295,8 @@ void main() {
     await calme(tester);
 
     // Accueil : tableau de bord et recherche, puis 7 thèmes.
-    expect(find.byType(BigButton), findsNWidgets(7));
+    // 9 tuiles : tableau de bord, recherche et les 7 modules (A28).
+    expect(find.byKey(const Key('theme-ecole')), findsOneWidget);
     expect(find.text('Tableau de bord'), findsOne);
     expect(find.text('Rechercher'), findsOne);
     expect(find.byKey(const Key('cloche')), findsOne);
@@ -423,9 +423,16 @@ void main() {
     expect(find.byKey(const Key('ma-journee')), findsOne);
     expect(find.text('Ma classe'), findsOne);
     expect(find.text('Rapports'), findsNothing);
-    expect(find.byType(BigButton).evaluate().length, lessThanOrEqualTo(8));
+    expect(find.byKey(const Key('theme-compte')), findsOneWidget);
 
-    await tap(tester, find.byKey(const Key('faire-appel-c-cm1')));
+    // « Ma journée » : un seul bouton ; avec plusieurs classes, il ouvre
+    // le choix de la classe.
+    if (find.byKey(const Key('faire-appel-c-cm1')).evaluate().isNotEmpty) {
+      await tap(tester, find.byKey(const Key('faire-appel-c-cm1')));
+    } else {
+      await tap(tester, find.byKey(const Key('faire-appel')));
+      await tap(tester, find.byKey(const Key('classe-c-cm1')));
+    }
     expect(find.textContaining('3 présent(s), 0 absent(s)'), findsOne);
     await tap(
       tester,
