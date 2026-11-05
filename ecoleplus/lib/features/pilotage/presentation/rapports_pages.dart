@@ -488,6 +488,7 @@ class _RapportsState extends ConsumerState<RapportsPage> {
               ),
               decoration: InputDecoration(
                 labelText: 'Seuil « élève en difficulté »',
+                helperMaxLines: 3,
                 helperText:
                     'Moyenne en dessous de laquelle un élève est signalé '
                     '(vide : ${_seuilTexte(ecole)}).',

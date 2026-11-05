@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 ThemeData buildTheme() {
   final scheme = ColorScheme.fromSeed(seedColor: const Color(0xFF1B6E3C));
   return ThemeData(
+    // Police du système Android (nommée pour que les captures du guide
+    // aient le même texte que le téléphone).
+    fontFamily: 'Roboto',
     colorScheme: scheme,
     visualDensity: VisualDensity.standard,
     textTheme: const TextTheme(
@@ -13,7 +16,11 @@ ThemeData buildTheme() {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(64),
-        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        textStyle: const TextStyle(
+          fontFamily: 'Roboto',
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     ),
   );

@@ -119,7 +119,16 @@ class _Raccourci extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FilledButton.tonalIcon(
-    style: FilledButton.styleFrom(minimumSize: const Size(0, 64)),
+    // Petit écran (360 points) : texte un peu plus petit, mot jamais coupé.
+    style: FilledButton.styleFrom(
+      minimumSize: const Size(0, 64),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      textStyle: const TextStyle(
+        fontFamily: 'Roboto',
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
     onPressed: () => context.push(route),
     icon: Icon(icon),
     label: Text(label, textAlign: TextAlign.center),

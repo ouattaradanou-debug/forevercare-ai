@@ -1,0 +1,3 @@
+tags:
+  captures:
+    skip: "Captures du guide : flutter test test/guide --update-goldens --run-skipped --tags captures"
