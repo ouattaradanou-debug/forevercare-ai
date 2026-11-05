@@ -18,13 +18,13 @@ pw.Widget _tableau(
 }) {
   final centrees = colonnesCentrees(lignes, titres.length);
   return pw.Table(
-    border: bordureTableau(),
+    border: bordureTableauSeda(),
     columnWidths: largeurs,
     children: [
-      ligneEntete(titres, _gras),
+      ligneEnteteSeda(titres, _gras),
       for (final (i, l) in lignes.indexed)
         pw.TableRow(
-          decoration: fondLigne(i),
+          decoration: fondLigneSeda(i),
           children: [
             for (final (j, c) in l.indexed)
               caseTableau(
@@ -36,7 +36,7 @@ pw.Widget _tableau(
         ),
       if (total != null)
         pw.TableRow(
-          decoration: fondEntete,
+          decoration: fondTotalSeda,
           children: [
             for (final (j, c) in total.indexed)
               caseTableau(c, _gras, centre: j != 0),
@@ -75,7 +75,7 @@ Future<Uint8List> pdfEmploiDuTemps(
           pw.SizedBox(height: 4),
           pw.Text(
             'Emploi du temps — $classe',
-            style: _gras.copyWith(fontSize: 15),
+            style: _gras.copyWith(fontSize: 15, color: bleuSedaPdf),
           ),
           pw.Text(
             [
@@ -113,7 +113,10 @@ Future<Uint8List> pdfRapport(PolicesPdf polices, Rapport r, String edite) {
         build: (_) => [
           pw.Text(r.ecole.toUpperCase(), style: _gras.copyWith(fontSize: 12)),
           pw.SizedBox(height: 4),
-          pw.Text(r.titre, style: _gras.copyWith(fontSize: 15)),
+          pw.Text(
+            r.titre,
+            style: _gras.copyWith(fontSize: 15, color: bleuSedaPdf),
+          ),
           pw.Text(
             [
               'Année scolaire ${r.annee}',
@@ -125,7 +128,10 @@ Future<Uint8List> pdfRapport(PolicesPdf polices, Rapport r, String edite) {
           for (final t in r.tableaux) ...[
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 12, bottom: 4),
-              child: pw.Text(t.titre, style: _gras.copyWith(fontSize: 11)),
+              child: pw.Text(
+                t.titre,
+                style: _gras.copyWith(fontSize: 11, color: bleuSedaPdf),
+              ),
             ),
             if (t.lignes.isEmpty)
               pw.Text('Rien à signaler.', style: _normal)

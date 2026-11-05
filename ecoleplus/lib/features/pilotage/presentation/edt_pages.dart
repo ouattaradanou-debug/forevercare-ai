@@ -1,5 +1,6 @@
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/finances/presentation/finances_providers.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
 import 'package:ecoleplus/features/pilotage/domain/absences.dart';
@@ -189,25 +190,36 @@ class EmploiClassePage extends ConsumerWidget {
                         'rempli.',
             ),
           for (final MapEntry(key: j, value: nom) in joursSemaine.entries)
-            if (creneaux.any((s) => s.weekday == j)) ...[
-              SectionTitle(j == aujourdhui ? '$nom (aujourd’hui)' : nom),
-              for (final s in creneaux.where((s) => s.weekday == j))
-                Card(
-                  child: ListTile(
-                    key: Key('creneau-${s.id}'),
-                    leading: const Icon(Icons.schedule),
-                    title: Text('${plage(s)}  ${intitule(s, matieres)}'),
-                    subtitle: switch (enseignants[s.teacherId]) {
-                      final e? => Text(e),
-                      null => null,
-                    },
-                    trailing: modifiable ? const Icon(Icons.edit) : null,
-                    onTap: modifiable
-                        ? () => _editer(context, ref, classe, creneaux, s)
-                        : null,
+            if (creneaux.any((s) => s.weekday == j))
+              TableauDonnees(
+                titre: j == aujourdhui ? '$nom (aujourd’hui)' : nom,
+                colonnes: const [
+                  ColonneTableau('Heures', flex: 3, largeurMin: 110),
+                  ColonneTableau(
+                    'Matière / activité',
+                    flex: 4,
+                    largeurMin: 130,
                   ),
-                ),
-            ],
+                  ColonneTableau('Enseignant(e)', flex: 3, largeurMin: 110),
+                ],
+                lignes: [
+                  for (final s in creneaux.where((s) => s.weekday == j))
+                    LigneTableau(
+                      cle: Key('creneau-${s.id}'),
+                      onTap: modifiable
+                          ? () => _editer(context, ref, classe, creneaux, s)
+                          : null,
+                      [
+                        Text(plage(s)),
+                        Text(
+                          intitule(s, matieres),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        Text(enseignants[s.teacherId] ?? '—'),
+                      ],
+                    ),
+                ],
+              ),
         ],
       ),
     );

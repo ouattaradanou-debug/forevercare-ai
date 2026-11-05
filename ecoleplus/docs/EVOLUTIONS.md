@@ -318,3 +318,17 @@ Rythme de travail confirmé le 27/10/2026 : **GO phase par phase** (règle R1 in
 | Données | Aucune : aucun écran ni aucune donnée n'est supprimé. |
 | Modules (R11) | La cantine et la maternelle n'apparaissent que si elles sont activées (accueil, tableau de bord, rapports, notifications). |
 | Retour en arrière | Possible sans perte (simple présentation). |
+
+## Fiche d'impact A27 — Couleurs SEDA Tech et données en tableaux
+
+**Demande** : appliquer les couleurs de SEDA Tech (logo) dans toute
+l'application, et présenter les données en tableaux simples et beaux.
+
+| Point | Impact |
+|---|---|
+| Couleurs | Bleu SEDA (barre du haut, gros boutons, en-têtes de tableaux, titres) ; orange SEDA en accent (raccourcis « Tableau de bord » et « Rechercher », filtres choisis, chiffre de la cloche, lignes de total) ; fond blanc légèrement bleuté. Pas de logo ni de mention SEDA Tech (choix du porteur). |
+| Tableaux de l'application | Élèves (école et classe), classes (F, G, total), enseignants, personnes et droits, emploi du temps (un tableau par jour), absences, bibliothèque, mes fiches de l'assistant, classement d'une classe (moyennes par matière, total, moyenne, mention), en plus des tableaux des finances et de la cantine (A24, A26). En-tête bleu, lignes alternées, toucher une ligne ouvre la fiche. Le numéro de l'élève et le matricule passent sous le nom pour tenir sur un téléphone de 360 points. |
+| PDF | Reçus, rapports, finances, cantine, classements, bulletins, livrets de maternelle, emploi du temps : en-têtes de tableaux bleus, lignes alternées bleu clair, totaux orange clair, titres bleus. **Formulaires officiels (B1 à B7, B4, B5) inchangés** : noir et blanc, fidèles aux modèles de l'État. |
+| Données | Aucune : présentation seulement. |
+| Gardé tel quel | Listes qui ne sont pas des données (menus, journaux d'événements, notifications) ; saisie des notes. |
+| Retour en arrière | Possible sans perte. |

@@ -5,6 +5,7 @@ import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/export/xlsx_ecriture.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/forms/domain/donnees_formulaires.dart';
 import 'package:ecoleplus/features/forms/presentation/forms_pages.dart';
 import 'package:ecoleplus/features/grades/data/grades_repository.dart';
@@ -255,52 +256,71 @@ class _ClassementState extends ConsumerState<ClassementPage> {
               Text('Derniers résultats gardés le ${jjmmaaaa(dejaGardes)}.'),
           ],
           const SizedBox(height: 12),
-          for (final r in c.resultats)
-            Card(
-              key: Key('rang-${r.eleve.id}'),
-              child: ExpansionTile(
-                leading: SizedBox(
-                  width: 72,
-                  child: Text(
+          TableauDonnees(
+            colonnes: [
+              const ColonneTableau('Rang', centre: true, largeurMin: 80),
+              const ColonneTableau(
+                'Nom et prénom(s)',
+                flex: 5,
+                largeurMin: 160,
+              ),
+              for (final (_, titre) in colonnes)
+                ColonneTableau(
+                  titre.replaceAll(' (coef. ', '\n(coef. '),
+                  montant: true,
+                  largeurMin: 84,
+                ),
+              if (!annee)
+                const ColonneTableau('Total', montant: true, largeurMin: 72),
+              ColonneTableau(
+                annee ? 'Moyenne annuelle' : 'Moyenne',
+                montant: true,
+                largeurMin: 90,
+              ),
+              const ColonneTableau('Mention'),
+            ],
+            lignes: [
+              for (final r in c.resultats)
+                LigneTableau([
+                  Text(
                     r.rang == null
                         ? r.rangTexte
                         : '${r.rangTexte}/${s.effectif}',
-                    style: Theme.of(context).textTheme.titleSmall,
+                    key: Key('rang-${r.eleve.id}'),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                ),
-                title: Text(r.eleve.nom),
-                subtitle: Text(_sousTitre(r, annee)),
-                children: [
-                  for (final (id, titre) in colonnes)
-                    ListTile(
-                      dense: true,
-                      title: Text(titre),
-                      subtitle: r.uneSeuleNote.contains(id)
-                          ? const Text('Une seule note')
-                          : null,
-                      trailing: Text(centiemesTexte(r.moyennesMatieres[id])),
+                  Text(r.eleve.nom),
+                  for (final (id, _) in colonnes)
+                    Text(
+                      r.uneSeuleNote.contains(id)
+                          ? '${centiemesTexte(r.moyennesMatieres[id])}*'
+                          : centiemesTexte(r.moyennesMatieres[id]),
                     ),
-                ],
-              ),
+                  if (!annee)
+                    Text(
+                      r.moyenne == null ? '—' : centiemesTexte(r.total),
+                      key: Key('total-${r.eleve.id}'),
+                    ),
+                  Text(
+                    centiemesTexte(r.moyenne),
+                    key: Key('moyenne-${r.eleve.id}'),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    annee && r.moyenne == null
+                        ? 'Il manque la moyenne d’un trimestre'
+                        : r.mention ?? '—',
+                  ),
+                ]),
+            ],
+          ),
+          if (c.resultats.any((r) => r.uneSeuleNote.isNotEmpty))
+            const Padding(
+              padding: EdgeInsets.only(top: 6),
+              child: Text('* Une seule note dans cette matière.'),
             ),
         ],
       ),
     );
-  }
-
-  static String _sousTitre(Resultat r, bool annee) {
-    final mention = r.mention == null ? '' : ' · ${r.mention}';
-    if (annee) {
-      return r.moyenne == null
-          ? 'Il manque la moyenne d’un trimestre'
-          : 'Moyenne annuelle ${centiemesTexte(r.moyenne)}$mention';
-    }
-    final seule = r.uneSeuleNote.isEmpty
-        ? ''
-        : ' · ${r.uneSeuleNote.length} matière(s) avec une seule note';
-    return r.moyenne == null
-        ? 'Aucune note comptée'
-        : 'Moyenne ${centiemesTexte(r.moyenne)} · total '
-              '${centiemesTexte(r.total)}$mention$seule';
   }
 }

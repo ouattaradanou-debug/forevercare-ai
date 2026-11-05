@@ -4,6 +4,7 @@ import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/staff/data/staff_repository.dart';
 import 'package:ecoleplus/features/staff/domain/anciennete.dart';
@@ -167,28 +168,52 @@ class _TeachersPageState extends ConsumerState<TeachersPage> {
           else if (liste.isEmpty)
             const InfoMessage('Aucun enseignant ne correspond à la recherche.')
           else
-            for (final t in liste)
-              Card(
-                child: ListTile(
-                  leading: CircleAvatar(
-                    child: Text(
-                      t.sex == 'F' ? 'F' : (t.sex == 'M' ? 'H' : '?'),
-                    ),
-                  ),
-                  title: Text('${t.lastName} ${t.firstNames}'),
-                  subtitle: Text(
+            TableauDonnees(
+              colonnes: const [
+                ColonneTableau('Nom et prénom(s)', flex: 5, largeurMin: 150),
+                ColonneTableau('H/F', centre: true, largeurMin: 50),
+                ColonneTableau('Classe / fonction', flex: 3, largeurMin: 120),
+              ],
+              lignes: [
+                for (final t in liste)
+                  LigneTableau(
+                    cle: Key('ligne-enseignant-${t.id}'),
+                    onTap: () => context.push('/enseignants/${t.id}'),
                     [
-                      if (t.status == 'parti') 'Parti de l’école',
-                      if (affectations[t.id]?.classId case final c?)
-                        classes[c] ?? '',
-                      ?affectations[t.id]?.fonction,
-                      if (t.matricule case final m?) 'Mle $m',
-                    ].where((x) => x.isNotEmpty).join(' · '),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${t.lastName} ${t.firstNames}',
+                            style: t.status == 'parti'
+                                ? const TextStyle(fontStyle: FontStyle.italic)
+                                : null,
+                          ),
+                          if (t.matricule case final m?)
+                            Text(
+                              'Mle $m',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                        ],
+                      ),
+                      Text(switch (t.sex) {
+                        'F' => 'F',
+                        'M' => 'H',
+                        _ => '—',
+                      }),
+                      Text(
+                        t.status == 'parti'
+                            ? 'Parti(e)'
+                            : [
+                                if (affectations[t.id]?.classId case final c?)
+                                  classes[c] ?? '',
+                                ?affectations[t.id]?.fonction,
+                              ].where((x) => x.isNotEmpty).join(' · '),
+                      ),
+                    ],
                   ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/enseignants/${t.id}'),
-                ),
-              ),
+              ],
+            ),
         ],
       ),
     );

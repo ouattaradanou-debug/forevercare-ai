@@ -32,10 +32,9 @@ void main() {
     await AppHarness.settle(tester);
     expect(find.text('2 classes · 4 élèves'), findsOneWidget);
     expect(find.text('Filles : 2 · Garçons : 2'), findsOneWidget);
-    expect(
-      find.text('3 élèves (2 F, 1 G)\nEnseignant : ENSEIGNANT Un'),
-      findsOneWidget,
-    );
+    // Tableau des classes : enseignant, filles, garçons, total.
+    expect(find.text('ENSEIGNANT Un'), findsOneWidget);
+    expect(find.text('TOTAL'), findsOneWidget);
 
     await tap(tester, find.text('Ajouter une classe'));
     // Maternelle désactivée : seuls les niveaux du primaire sont proposés.

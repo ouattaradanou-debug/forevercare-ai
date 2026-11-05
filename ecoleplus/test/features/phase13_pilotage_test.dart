@@ -334,7 +334,8 @@ void main() {
     await saisir(tester, 'creneau-fin', '8h30');
     await saisir(tester, 'creneau-activite', 'Lecture');
     await tap(tester, find.text('Enregistrer'));
-    expect(find.text('07:30 – 08:30  Lecture'), findsOne);
+    expect(find.text('07:30 – 08:30'), findsOne);
+    expect(find.text('Lecture'), findsOne);
 
     // Un créneau qui chevauche est refusé.
     await tap(tester, find.text('Ajouter un créneau'));

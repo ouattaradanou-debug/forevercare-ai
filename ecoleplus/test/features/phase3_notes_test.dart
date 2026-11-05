@@ -107,8 +107,11 @@ void main() {
     // Boukary et Clarisse : (7×3 + 7,5×2) / 5 = 36 / 5 = 7,2 → ex-aequo.
     expect(find.text('1re/3'), findsOneWidget);
     expect(find.text('2e ex-aequo/3'), findsNWidgets(2));
-    expect(find.text('Moyenne 7,8 · total 39'), findsOneWidget);
-    expect(find.text('Moyenne 7,2 · total 36'), findsNWidgets(2));
+    String cas(String k) => tester.widget<Text>(find.byKey(Key(k))).data!;
+    expect((cas('moyenne-e-0'), cas('total-e-0')), ('7,8', '39'));
+    for (final e in ['e-1', 'e-2']) {
+      expect((cas('moyenne-$e'), cas('total-$e')), ('7,2', '36'));
+    }
     expect(find.text('Meilleure moyenne : 7,8'), findsOneWidget);
     expect(find.text('Plus faible moyenne : 7,2'), findsOneWidget);
     // (7,8 + 7,2 + 7,2) / 3 = 7,4.
@@ -170,9 +173,10 @@ void main() {
     await tap(tester, find.byKey(const Key('periode-4')));
     // Boukary : (7,2 + 9 + 9) ÷ 3 = 8,4 ; Clarisse : (7,8 + 7 + 7) ÷ 3 =
     // 7,266… → 7,27 ; Aïcha : (7,8 + 6 + 6) ÷ 3 = 6,6.
-    expect(find.text('Moyenne annuelle 8,4'), findsOneWidget);
-    expect(find.text('Moyenne annuelle 7,27'), findsOneWidget);
-    expect(find.text('Moyenne annuelle 6,6'), findsOneWidget);
+    expect(
+      [cas('moyenne-e-1'), cas('moyenne-e-2'), cas('moyenne-e-0')],
+      ['8,4', '7,27', '6,6'],
+    );
     expect(find.text('1er/3'), findsOneWidget);
     // (8,4 + 7,266… + 6,6) ÷ 3 = 7,422… → 7,42.
     expect(find.text('Moyenne de la classe : 7,42'), findsOneWidget);

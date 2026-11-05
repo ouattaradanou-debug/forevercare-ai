@@ -134,14 +134,14 @@ pw.Widget _page(ModeleBulletin m, Bulletin b) {
       ),
       pw.SizedBox(height: 8),
       pw.Table(
-        border: bordureTableau(),
+        border: bordureTableauSeda(),
         columnWidths: {0: const pw.FlexColumnWidth(3)},
         defaultColumnWidth: const pw.FlexColumnWidth(),
         children: [
-          ligneEntete(entete, _gras),
+          ligneEnteteSeda(entete, _gras),
           for (final (i, l) in b.lignes.indexed)
             pw.TableRow(
-              decoration: fondLigne(i),
+              decoration: fondLigneSeda(i),
               verticalAlignment: pw.TableCellVerticalAlignment.middle,
               children: [
                 _cellule(

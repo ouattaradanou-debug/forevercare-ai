@@ -151,16 +151,16 @@ Future<Uint8List> pdfRecu(PolicesPdf polices, DonneesRecu r) {
           else ...[
             pw.SizedBox(height: 4),
             pw.Table(
-              border: bordureTableau(),
+              border: bordureTableauSeda(),
               columnWidths: const {
                 0: pw.FlexColumnWidth(3),
                 1: pw.FlexColumnWidth(1.4),
               },
               children: [
-                ligneEntete(const ['Rubrique réglée', 'Montant'], gras),
+                ligneEnteteSeda(const ['Rubrique réglée', 'Montant'], gras),
                 for (final (i, (l, m)) in r.detail.indexed)
                   pw.TableRow(
-                    decoration: fondLigne(i),
+                    decoration: fondLigneSeda(i),
                     children: [
                       caseTableau(
                         l,
@@ -303,13 +303,13 @@ Future<Uint8List> pdfRapportFinances(PolicesPdf polices, RapportFinances r) {
   }) {
     final centrees = colonnesCentrees(lignes, titres.length);
     return pw.Table(
-      border: bordureTableau(),
+      border: bordureTableauSeda(),
       columnWidths: largeurs,
       children: [
-        ligneEntete(titres, gras),
+        ligneEnteteSeda(titres, gras),
         for (final (i, l) in lignes.indexed)
           pw.TableRow(
-            decoration: fondLigne(i),
+            decoration: fondLigneSeda(i),
             children: [
               for (final (j, c) in l.indexed)
                 caseTableau(
@@ -321,7 +321,7 @@ Future<Uint8List> pdfRapportFinances(PolicesPdf polices, RapportFinances r) {
           ),
         if (total != null)
           pw.TableRow(
-            decoration: fondEntete,
+            decoration: fondTotalSeda,
             children: [
               for (final (j, c) in total.indexed)
                 caseTableau(c, gras, centre: j != 0),
@@ -555,7 +555,7 @@ Future<Uint8List> pdfRecapFrais(
             ),
             pw.SizedBox(height: 14),
             pw.Table(
-              border: bordureTableau(),
+              border: bordureTableauSeda(),
               columnWidths: const {
                 0: pw.FlexColumnWidth(2.4),
                 1: pw.FlexColumnWidth(1.3),
@@ -563,7 +563,7 @@ Future<Uint8List> pdfRecapFrais(
                 3: pw.FlexColumnWidth(2.2),
               },
               children: [
-                ligneEntete(const [
+                ligneEnteteSeda(const [
                   'Rubrique',
                   'Montant (FCFA)',
                   'Modalité',
@@ -571,7 +571,7 @@ Future<Uint8List> pdfRecapFrais(
                 ], gras),
                 for (final (i, l) in c.lignes.indexed)
                   pw.TableRow(
-                    decoration: fondLigne(i),
+                    decoration: fondLigneSeda(i),
                     verticalAlignment: pw.TableCellVerticalAlignment.middle,
                     children: [
                       caseTableau(
@@ -588,7 +588,7 @@ Future<Uint8List> pdfRecapFrais(
             ),
             pw.SizedBox(height: 14),
             pw.Table(
-              border: bordureTableau(),
+              border: bordureTableauSeda(),
               columnWidths: const {
                 0: pw.FlexColumnWidth(3),
                 1: pw.FlexColumnWidth(1.4),
@@ -600,7 +600,7 @@ Future<Uint8List> pdfRecapFrais(
                   ('MONTANT TOTAL À PAYER PAR ÉLÈVE', c.total, true),
                 ])
                   pw.TableRow(
-                    decoration: fort ? fondEntete : null,
+                    decoration: fort ? fondTotalSeda : null,
                     children: [
                       caseTableau(t, fort ? gras : normal, centre: false),
                       caseTableau(fcfa(m), fort ? gras : normal, centre: true),

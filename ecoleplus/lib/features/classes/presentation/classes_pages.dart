@@ -3,6 +3,7 @@ import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/classes/data/classes_repository.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/staff/presentation/staff_providers.dart';
@@ -196,21 +197,45 @@ class ClassesPage extends ConsumerWidget {
           const SizedBox(height: 12),
           if (classes.isEmpty)
             const InfoMessage('Aucune classe pour l’année en cours.'),
-          for (final c in classes)
-            Card(
-              child: ListTile(
-                title: Text(c.name),
-                subtitle: Text(
-                  [
-                    texteEffectif(effectifs[c.id] ?? const Effectif()),
-                    if (enseignants[c.mainTeacherId] case final n?)
-                      'Enseignant : $n',
-                  ].join('\n'),
-                ),
-                isThreeLine: c.mainTeacherId != null,
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/classes/${c.id}'),
-              ),
+          if (classes.isNotEmpty)
+            TableauDonnees(
+              colonnes: const [
+                ColonneTableau('Classe', largeurMin: 70),
+                ColonneTableau('Enseignant(e)', flex: 4, largeurMin: 116),
+                ColonneTableau('F', flex: 1, centre: true, largeurMin: 38),
+                ColonneTableau('G', flex: 1, centre: true, largeurMin: 38),
+                ColonneTableau('Total', flex: 1, centre: true, largeurMin: 54),
+              ],
+              lignes: [
+                for (final c in classes)
+                  LigneTableau(
+                    cle: Key('ligne-classe-${c.id}'),
+                    onTap: () => context.push('/classes/${c.id}'),
+                    [
+                      Text(
+                        c.name,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      Text(enseignants[c.mainTeacherId] ?? '—'),
+                      Text('${effectifs[c.id]?.filles ?? 0}'),
+                      Text('${effectifs[c.id]?.garcons ?? 0}'),
+                      Text('${effectifs[c.id]?.total ?? 0}'),
+                    ],
+                  ),
+              ],
+              total: () {
+                final t = classes.fold(
+                  const Effectif(),
+                  (s, c) => s + (effectifs[c.id] ?? const Effectif()),
+                );
+                return LigneTableau([
+                  const Text('TOTAL'),
+                  const Text(''),
+                  Text('${t.filles}'),
+                  Text('${t.garcons}'),
+                  Text('${t.total}'),
+                ]);
+              }(),
             ),
         ],
       ),
@@ -297,7 +322,7 @@ class ClassPage extends ConsumerWidget {
             ),
           const SectionTitle('Élèves'),
           if (eleves.isEmpty) const InfoMessage('Aucun élève dans la classe.'),
-          for (final e in eleves) EleveTile(e),
+          if (eleves.isNotEmpty) TableauEleves(eleves),
         ],
       ),
     );

@@ -7,6 +7,7 @@ import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
 import 'package:ecoleplus/features/bibliotheque/data/documents_en_ligne.dart';
@@ -348,35 +349,51 @@ class _BibliothequeState extends ConsumerState<BibliothequePage> {
             '${visibles.length} document${visibles.length > 1 ? 's' : ''}',
             style: Theme.of(context).textTheme.labelLarge,
           ),
-          for (final d in visibles)
-            Card(
-              child: ListTile(
-                key: Key('document-${d.id}'),
-                leading: Icon(_icone(d.mimeType)),
-                title: Text(d.title),
-                subtitle: Text(
-                  [
-                    ?d.docType,
-                    if (d.isCommon) 'Commun',
-                    for (final c in d.classes) ?nomsClasses[c],
-                    if (d.sizeBytes != null) tailleTexte(d.sizeBytes!),
-                    if (!d.approved) 'En attente de validation',
-                    if (envois[d.id] case final e?)
-                      'Envoi ${pourcentEnvoi(e)} %',
-                  ].join(' · '),
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (locaux[d.id]?.pinned ?? false)
-                      const Icon(Icons.push_pin, size: 18)
-                    else if (locaux[d.id] != null)
-                      const Icon(Icons.phone_android, size: 18),
-                    const Icon(Icons.chevron_right),
-                  ],
-                ),
-                onTap: () => context.push('/document/${d.id}'),
-              ),
+          if (visibles.isNotEmpty)
+            TableauDonnees(
+              colonnes: const [
+                ColonneTableau('Document', flex: 5, largeurMin: 180),
+                ColonneTableau('Pour', flex: 3, largeurMin: 100),
+                ColonneTableau('Type', largeurMin: 90),
+                ColonneTableau('État', largeurMin: 100),
+              ],
+              lignes: [
+                for (final d in visibles)
+                  LigneTableau(onTap: () => context.push('/document/${d.id}'), [
+                    Row(
+                      children: [
+                        Icon(_icone(d.mimeType), size: 20),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            d.title,
+                            key: Key('document-${d.id}'),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      [
+                        if (d.isCommon) 'Toute l’école',
+                        for (final c in d.classes) ?nomsClasses[c],
+                      ].join(', '),
+                    ),
+                    Text(d.docType ?? '—'),
+                    Text(
+                      [
+                        if (!d.approved) 'En attente de validation',
+                        if (envois[d.id] case final e?)
+                          'Envoi ${pourcentEnvoi(e)} %',
+                        if (locaux[d.id]?.pinned ?? false)
+                          'Sur le téléphone'
+                        else if (locaux[d.id] != null)
+                          'Ouvert récemment',
+                        if (d.sizeBytes != null) tailleTexte(d.sizeBytes!),
+                      ].join(' · '),
+                    ),
+                  ]),
+              ],
             ),
           if (visibles.isEmpty)
             const Padding(

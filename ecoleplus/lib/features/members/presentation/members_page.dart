@@ -2,6 +2,7 @@ import 'package:ecoleplus/app/providers.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/members/presentation/password_tools.dart';
 import 'package:ecoleplus/features/options/domain/module_rules.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
@@ -34,30 +35,42 @@ class MembersPage extends ConsumerWidget {
             onPressed: () => context.push('/personnes/ajouter'),
           ),
           const SizedBox(height: 16),
-          for (final m in members)
-            Card(
-              child: ListTile(
-                leading: Icon(
-                  m.active ? Icons.person : Icons.person_off,
-                  color: m.active ? null : Theme.of(context).disabledColor,
-                ),
-                title: Text(m.displayName),
-                subtitle: Text(
-                  '${libellesProfils[m.role] ?? m.role}'
-                  '${m.active ? '' : ' — compte désactivé'}',
-                ),
-                trailing: m.id == session.membershipId
-                    ? const Text('Vous')
-                    : const Icon(Icons.chevron_right),
-                onTap: m.id == session.membershipId
-                    ? null
-                    : () => showModalBottomSheet<void>(
-                        context: context,
-                        isScrollControlled: true,
-                        builder: (_) => _MemberSheet(member: m),
+          TableauDonnees(
+            colonnes: const [
+              ColonneTableau('Nom', flex: 4, largeurMin: 150),
+              ColonneTableau('Profil', flex: 3, largeurMin: 110),
+              ColonneTableau('Compte', largeurMin: 90),
+            ],
+            lignes: [
+              for (final m in members)
+                LigneTableau(
+                  cle: Key('ligne-personne-${m.id}'),
+                  onTap: m.id == session.membershipId
+                      ? null
+                      : () => showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (_) => _MemberSheet(member: m),
+                        ),
+                  [
+                    Text(
+                      m.id == session.membershipId
+                          ? '${m.displayName} (vous)'
+                          : m.displayName,
+                    ),
+                    Text(libellesProfils[m.role] ?? m.role),
+                    Text(
+                      m.active ? 'Actif' : 'Désactivé',
+                      style: TextStyle(
+                        color: m.active
+                            ? null
+                            : Theme.of(context).colorScheme.error,
                       ),
-              ),
-            ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ],
       ),
     );

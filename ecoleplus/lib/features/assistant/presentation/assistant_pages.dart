@@ -757,49 +757,62 @@ class FichesIaPage extends ConsumerWidget {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                for (final f in fiches)
-                  Card(
-                    child: ListTile(
-                      key: Key('fiche-${f.id}'),
-                      title: Text(AssistantRepository.ficheDe(f).titre),
-                      subtitle: Text(
-                        '${_types[f.kind] ?? f.kind} — modifiée le '
-                        '${f.updatedAt.substring(8, 10)}/'
-                        '${f.updatedAt.substring(5, 7)}/'
-                        '${f.updatedAt.substring(0, 4)}',
-                      ),
-                      trailing: IconButton(
-                        tooltip: 'Retirer',
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () async {
-                          final ok = await confirmer(
-                            context,
-                            titre: 'Retirer cette fiche ?',
-                            message: 'Elle disparaîtra de « Mes fiches ».',
-                            bouton: 'Retirer',
-                          );
-                          if (ok) {
-                            await ref
-                                .read(assistantRepositoryProvider)
-                                .retirer(f.id);
-                          }
-                        },
-                      ),
-                      onTap: () => context.push(
-                        '/assistant/resultat',
-                        extra: ResultatsIa.dernier = ResultatArgs(
-                          ficheId: f.id,
-                          demande: AssistantRepository.demandeDe(f),
-                          reponse: ReponseIa(
-                            fiche: AssistantRepository.ficheDe(f),
-                            sources: AssistantRepository.sourcesDe(f),
-                            restant: const Restant(enseignant: 0, ecole: 0),
-                            modele: 'fiche enregistrée',
+                TableauDonnees(
+                  colonnes: const [
+                    ColonneTableau('Fiche', flex: 5, largeurMin: 170),
+                    ColonneTableau('Type', flex: 3, largeurMin: 110),
+                    ColonneTableau('Modifiée le'),
+                    ColonneTableau('', flex: 1, centre: true, largeurMin: 52),
+                  ],
+                  lignes: [
+                    for (final f in fiches)
+                      LigneTableau(
+                        onTap: () => context.push(
+                          '/assistant/resultat',
+                          extra: ResultatsIa.dernier = ResultatArgs(
+                            ficheId: f.id,
+                            demande: AssistantRepository.demandeDe(f),
+                            reponse: ReponseIa(
+                              fiche: AssistantRepository.ficheDe(f),
+                              sources: AssistantRepository.sourcesDe(f),
+                              restant: const Restant(enseignant: 0, ecole: 0),
+                              modele: 'fiche enregistrée',
+                            ),
                           ),
                         ),
+                        [
+                          Text(
+                            AssistantRepository.ficheDe(f).titre,
+                            key: Key('fiche-${f.id}'),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Text(_types[f.kind] ?? f.kind),
+                          Text(
+                            '${f.updatedAt.substring(8, 10)}/'
+                            '${f.updatedAt.substring(5, 7)}/'
+                            '${f.updatedAt.substring(0, 4)}',
+                          ),
+                          IconButton(
+                            tooltip: 'Retirer',
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () async {
+                              final ok = await confirmer(
+                                context,
+                                titre: 'Retirer cette fiche ?',
+                                message: 'Elle disparaîtra de « Mes fiches ».',
+                                bouton: 'Retirer',
+                              );
+                              if (ok) {
+                                await ref
+                                    .read(assistantRepositoryProvider)
+                                    .retirer(f.id);
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
+                  ],
+                ),
               ],
             ),
     );

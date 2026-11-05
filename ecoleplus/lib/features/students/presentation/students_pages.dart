@@ -4,6 +4,7 @@ import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/widgets/big_button.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
 import 'package:ecoleplus/core/widgets/form_fields.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/cartes/data/cartes_repository.dart';
 import 'package:ecoleplus/features/cartes/presentation/cartes_pages.dart';
 import 'package:ecoleplus/features/medical/presentation/medical_pages.dart';
@@ -112,6 +113,62 @@ Future<void> nouvelEleve(
         classe: choisie,
       );
   if (context.mounted) await context.push('/eleves/$id');
+}
+
+/// Les élèves en tableau (A27) : toucher une ligne ouvre la fiche.
+class TableauEleves extends StatelessWidget {
+  const new(this.eleves, {this.avecClasse = false, this.titre, super.key});
+  final List<EleveDansAnnee> eleves;
+  final bool avecClasse;
+  final String? titre;
+
+  @override
+  Widget build(BuildContext context) => TableauDonnees(
+    titre: titre,
+    vide: 'Aucun élève.',
+    colonnes: [
+      const ColonneTableau('N°', flex: 1, centre: true, largeurMin: 40),
+      const ColonneTableau('Nom et prénom(s)', flex: 5, largeurMin: 150),
+      const ColonneTableau('F/G', centre: true, largeurMin: 50),
+      if (avecClasse) const ColonneTableau('Classe', largeurMin: 76),
+    ],
+    lignes: [
+      for (final (i, e) in eleves.indexed)
+        LigneTableau(
+          cle: Key('ligne-eleve-${e.eleve.id}'),
+          onTap: () => context.push('/eleves/${e.eleve.id}'),
+          [
+            Text('${i + 1}'),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${e.eleve.lastName} ${e.eleve.firstNames}',
+                  style: e.eleve.archivedAt == null
+                      ? null
+                      : const TextStyle(fontStyle: FontStyle.italic),
+                ),
+                Text(
+                  numeroAffiche(e.eleve),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+            Text(switch (e.eleve.sex) {
+              'F' => 'F',
+              'M' => 'G',
+              _ => '—',
+            }),
+            if (avecClasse)
+              Text(
+                e.eleve.archivedAt != null
+                    ? 'Sorti(e)'
+                    : e.classe?.name ?? 'Sans classe',
+              ),
+          ],
+        ),
+    ],
+  );
 }
 
 class EleveTile extends StatelessWidget {
@@ -256,7 +313,7 @@ class _StudentsPageState extends ConsumerState<StudentsPage> {
             )
           else if (liste.isEmpty)
             const InfoMessage('Aucun élève ne correspond à la recherche.'),
-          for (final e in liste) EleveTile(e, avecClasse: true),
+          if (liste.isNotEmpty) TableauEleves(liste, avecClasse: true),
         ],
       ),
     );

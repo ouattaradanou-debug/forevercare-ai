@@ -104,3 +104,53 @@ pw.TableRow ligneEntete(
       caseTableau(t, gras, centre: true, padding: padding),
   ],
 );
+
+// ------------------------------------------------------------------
+// Couleurs SEDA Tech (A27) : reçus, rapports, bulletins, classements,
+// livrets, emploi du temps. Les formulaires officiels de l'État gardent
+// la présentation ci-dessus (noir et blanc).
+// ------------------------------------------------------------------
+
+/// Bleu SEDA.
+const bleuSedaPdf = PdfColor.fromInt(0xFF1B4FA0);
+
+/// Orange SEDA.
+const orangeSedaPdf = PdfColor.fromInt(0xFFF39223);
+
+/// Bleu très clair (lignes alternées).
+const bleuPaleSedaPdf = PdfColor.fromInt(0xFFEEF3FB);
+
+/// Orange très clair (lignes de total).
+const orangePaleSedaPdf = PdfColor.fromInt(0xFFFFEBD3);
+
+pw.TableBorder bordureTableauSeda() =>
+    pw.TableBorder.all(width: 0.5, color: const PdfColor.fromInt(0xFF9FB3D1));
+
+pw.BoxDecoration? fondLigneSeda(int i) =>
+    i.isOdd ? const pw.BoxDecoration(color: bleuPaleSedaPdf) : null;
+
+/// Fond des lignes de total (orange très clair).
+const fondTotalSeda = pw.BoxDecoration(color: orangePaleSedaPdf);
+
+/// En-tête bleu SEDA, texte blanc en gras, répété à chaque page.
+pw.TableRow ligneEnteteSeda(
+  List<String> titres,
+  pw.TextStyle gras, {
+  pw.EdgeInsets padding = const pw.EdgeInsets.symmetric(
+    horizontal: 4,
+    vertical: 4,
+  ),
+}) => pw.TableRow(
+  repeat: true,
+  decoration: const pw.BoxDecoration(color: bleuSedaPdf),
+  verticalAlignment: pw.TableCellVerticalAlignment.middle,
+  children: [
+    for (final t in titres)
+      caseTableau(
+        t,
+        gras.copyWith(color: PdfColors.white),
+        centre: true,
+        padding: padding,
+      ),
+  ],
+);

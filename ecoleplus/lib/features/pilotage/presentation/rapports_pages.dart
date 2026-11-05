@@ -1,6 +1,7 @@
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/export/xlsx_ecriture.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/core/widgets/tableau.dart';
 import 'package:ecoleplus/features/cantine/presentation/cantine_providers.dart';
 import 'package:ecoleplus/features/classes/data/classes_repository.dart';
 import 'package:ecoleplus/features/finances/domain/finances.dart';
@@ -170,26 +171,36 @@ class _BoutonsExport extends ConsumerWidget {
   );
 }
 
-/// Un tableau de rapport à l'écran (défilement horizontal si besoin).
+/// Un tableau de rapport à l'écran (tableau commun de l'application).
 class _TableauEcran extends StatelessWidget {
   const new(this.t);
   final TableauRapport t;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: DataTable(
-      headingRowHeight: 40,
-      dataRowMinHeight: 36,
-      dataRowMaxHeight: 48,
-      columnSpacing: 16,
-      columns: [for (final e in t.entete) DataColumn(label: Text(e))],
-      rows: [
-        for (final l in [...t.lignes, ?t.total])
-          DataRow(cells: [for (final v in l) DataCell(Text(texteCase(v)))]),
+  Widget build(BuildContext context) {
+    bool nombre(int i) =>
+        t.lignes.isNotEmpty &&
+        t.lignes.every((l) => l[i] is num || l[i] == null);
+    return TableauDonnees(
+      colonnes: [
+        for (final (i, e) in t.entete.indexed)
+          ColonneTableau(
+            e,
+            flex: i == 0 ? 4 : 2,
+            centre: i > 0 && !nombre(i),
+            montant: nombre(i),
+            largeurMin: i == 0 ? 150 : 84,
+          ),
       ],
-    ),
-  );
+      lignes: [
+        for (final l in t.lignes)
+          LigneTableau([for (final v in l) Text(texteCase(v))]),
+      ],
+      total: t.total == null
+          ? null
+          : LigneTableau([for (final v in t.total!) Text(texteCase(v))]),
+    );
+  }
 }
 
 // ------------------------------- Rapports -------------------------------

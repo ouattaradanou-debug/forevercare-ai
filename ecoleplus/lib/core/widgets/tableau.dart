@@ -62,9 +62,10 @@ class TableauDonnees extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    // En-tête bleu SEDA, texte blanc ; lignes alternées bleu très clair.
     final entete = theme.textTheme.labelLarge?.copyWith(
       fontWeight: FontWeight.w700,
-      color: cs.onSurface,
+      color: cs.onPrimary,
     );
     final largeurMin = colonnes.fold<double>(0, (s, c) => s + c.largeurMin);
     Widget cellule(int i, Widget enfant, {TextStyle? style}) => Container(
@@ -96,7 +97,7 @@ class TableauDonnees extends StatelessWidget {
                 ),
           ],
         );
-    final alterne = cs.surfaceContainerHighest.withValues(alpha: 0.35);
+    final alterne = cs.primaryContainer.withValues(alpha: 0.55);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -113,8 +114,9 @@ class TableauDonnees extends StatelessWidget {
           ),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: cs.outlineVariant),
-            borderRadius: BorderRadius.circular(10),
+            color: cs.surfaceContainerLowest,
+            border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
+            borderRadius: BorderRadius.circular(12),
           ),
           clipBehavior: Clip.antiAlias,
           child: LayoutBuilder(
@@ -134,9 +136,7 @@ class TableauDonnees extends StatelessWidget {
                     defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                     children: [
                       TableRow(
-                        decoration: BoxDecoration(
-                          color: cs.secondaryContainer.withValues(alpha: 0.7),
-                        ),
+                        decoration: BoxDecoration(color: cs.primary),
                         children: [
                           for (final (i, col) in colonnes.indexed)
                             cellule(i, Text(col.titre, style: entete)),
@@ -155,7 +155,7 @@ class TableauDonnees extends StatelessWidget {
                       if (total != null)
                         rangee(
                           total!,
-                          fond: cs.primaryContainer.withValues(alpha: 0.6),
+                          fond: cs.secondaryContainer,
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                     ],

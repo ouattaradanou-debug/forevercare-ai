@@ -49,13 +49,13 @@ pw.Widget _tableau(
 }) {
   final centrees = colonnesCentrees(lignes, titres.length);
   return pw.Table(
-    border: bordureTableau(),
+    border: bordureTableauSeda(),
     columnWidths: largeurs,
     children: [
-      ligneEntete(titres, _gras),
+      ligneEnteteSeda(titres, _gras),
       for (final (i, l) in lignes.indexed)
         pw.TableRow(
-          decoration: fondLigne(i),
+          decoration: fondLigneSeda(i),
           children: [
             for (final (j, c) in l.indexed)
               caseTableau(
@@ -67,7 +67,7 @@ pw.Widget _tableau(
         ),
       if (total != null)
         pw.TableRow(
-          decoration: fondEntete,
+          decoration: fondTotalSeda,
           children: [
             for (final (j, c) in total.indexed)
               caseTableau(c, _gras, centre: j != 0),
