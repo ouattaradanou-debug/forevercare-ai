@@ -141,7 +141,7 @@ void main() {
     await AppHarness.settle(tester);
     expect(h.auth.loginPhones['22670561740'], 'u-dir');
 
-    for (var i = 0; i < 2; i++) {
+    while (find.byTooltip('Retour').evaluate().isNotEmpty) {
       await tester.tap(find.byTooltip('Retour').first);
       await AppHarness.settle(tester);
     }

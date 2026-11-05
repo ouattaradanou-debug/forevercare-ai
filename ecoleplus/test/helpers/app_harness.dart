@@ -442,25 +442,27 @@ class AppHarness {
   /// Touche un bouton de l'accueil (en passant par son thème), en faisant
   /// défiler si besoin.
   static Future<void> toucher(WidgetTester tester, String bouton) async {
-    final chemin =
-        (chemins[bouton] ??
-                [
-                  <String>[bouton],
-                ])
-            .firstWhere(
-              (c) => find.text(c.first).evaluate().isNotEmpty,
-              orElse: () =>
-                  (chemins[bouton] ??
-                          [
-                            <String>[bouton],
-                          ])
-                      .first,
-            );
+    // Le bouton lui-même est à l'écran (écran intérieur) : touché
+    // directement ; sinon, le premier chemin dont le thème est affiché.
+    final chemins0 = chemins[bouton] ?? const <List<String>>[];
+    bool affiche(String t) => find.text(t).evaluate().isNotEmpty;
+    // Ni le bouton ni son thème à l'écran : retour à l'accueil (les
+    // thèmes ajoutent un écran entre l'accueil et l'écran voulu).
+    if (!affiche(bouton) && !chemins0.any((c) => affiche(c.first))) {
+      while (find.byTooltip('Retour').evaluate().isNotEmpty) {
+        await tester.tap(find.byTooltip('Retour').first);
+        await settle(tester);
+      }
+    }
+    final chemin = chemins0.firstWhere(
+      (c) => affiche(c.first),
+      orElse: () =>
+          affiche(bouton) || chemins0.isEmpty ? [bouton] : chemins0.first,
+    );
     for (final (i, etape) in chemin.indexed) {
       if (i > 0) {
         await settle(tester);
         // Thème d'une seule entrée : l'écran est déjà ouvert.
-        if (find.text(etape).evaluate().isEmpty) return;
         if (find.byKey(const Key('titre-page')).evaluate().isNotEmpty &&
             tester.widget<Text>(find.byKey(const Key('titre-page'))).data ==
                 etape) {

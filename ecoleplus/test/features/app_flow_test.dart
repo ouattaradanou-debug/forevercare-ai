@@ -65,16 +65,17 @@ void main() {
     await h.pump(tester);
     await h.login(tester, 'directeur@ecole-test.local');
     expect(find.text('Bonjour Directeur Test'), findsOneWidget);
+    // Accueil par thèmes (phase 13).
     for (final b in [
-      'Élèves',
-      'Classes',
-      'Enseignants',
-      'Documents',
+      'Tableau de bord',
+      'Rechercher',
+      'Élèves et classes',
+      'Pédagogie',
+      'Administration',
+      'Finances',
+      'Rapports',
+      'Bibliothèque et IA',
       'Mon école',
-      'Personnes et droits',
-      'Bibliothèque',
-      'Archives',
-      'Sécurité',
     ]) {
       await AppHarness.toucherVisible(tester, b);
       expect(find.text(b), findsOneWidget);

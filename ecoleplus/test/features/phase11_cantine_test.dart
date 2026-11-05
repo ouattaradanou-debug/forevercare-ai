@@ -201,7 +201,11 @@ void main() {
     // ------------------------ OFF : données intactes ---------------------
     final avant = (await h.db.select(h.db.canteenSubscriptions).get()).length;
     await basculerCantine(tester, activer: false);
+    await tester.tap(find.text('Finances'));
+    await AppHarness.settle(tester);
     expect(find.text('Cantine scolaire'), findsNothing);
+    await tester.tap(find.byTooltip('Retour').first);
+    await AppHarness.settle(tester);
     expect(
       (await h.db.select(h.db.canteenSubscriptions).get()).length,
       avant,
@@ -217,6 +221,8 @@ void main() {
       isTrue,
     );
     await basculerCantine(tester, activer: true);
+    await tester.tap(find.text('Finances'));
+    await AppHarness.settle(tester);
     expect(find.text('Cantine scolaire'), findsOne);
     await h.dispose(tester);
   });
