@@ -58,9 +58,10 @@ void main() {
 
     // « Nouveau téléphone » : il n'a que ce que le serveur lui envoie.
     await h.db.customStatement('DELETE FROM outbox');
-    await h.db.customStatement("UPDATE schools SET commune = NULL");
-    h.online = true;
-    h.sauvegardeChoisie = fichier.path;
+    await h.db.customStatement('UPDATE schools SET commune = NULL');
+    h
+      ..online = true
+      ..sauvegardeChoisie = fichier.path;
 
     // Mauvais mot de passe.
     await tap(tester, find.text('Restaurer une sauvegarde'));

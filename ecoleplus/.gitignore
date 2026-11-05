@@ -58,3 +58,8 @@ sauvegardes/
 .serveur-test.json
 telephone.env
 cle-ia.txt
+
+# Clés de signature de l’application (publication) : jamais dans le dépôt
+*.jks
+*.keystore
+android/key.properties
