@@ -50,15 +50,14 @@ Rapport? rapportAbsences(WidgetRef ref, Periode periode) {
   final classes = ref.watch(classesProvider(annee.id)).value;
   final eff = ref.watch(effectifsProvider(annee.id)).value;
   final eleves = ref.watch(elevesProvider((ecole.id, annee.id, false))).value;
-  final presences = ref.watch(presencesProvider(ecole.id)).value;
-  if (classes == null || eff == null || eleves == null || presences == null) {
-    return null;
-  }
   final (du, au) = periode.bornes(
     ref.watch(aujourdhuiProvider),
     rentree: annee.startsOn,
   );
-  final l = dansPeriode(presences, du, au).toList();
+  final totaux = ref.watch(totauxPresencesProvider((ecole.id, du, au))).value;
+  if (classes == null || eff == null || eleves == null || totaux == null) {
+    return null;
+  }
   return Rapport(
     code: 'Absences',
     titre: 'Absences et retards',
@@ -69,12 +68,12 @@ Rapport? rapportAbsences(WidgetRef ref, Periode periode) {
         : '${periode.libelle.toLowerCase()} (${_jj(du)} au ${_jj(au)})',
     tableaux: [
       tableauAbsencesClasses(
-        absencesParClasse(l, [
+        totaux.parClasse([
           for (final c in classes) (c.id, c.name, eff[c.id]?.total ?? 0),
         ]),
       ),
       tableauAbsencesEleves(
-        absencesParEleve(l, {
+        totaux.parEleve({
           for (final e in eleves)
             e.eleve.id: (
               '${e.eleve.lastName} ${e.eleve.firstNames}',
@@ -406,7 +405,6 @@ class _RapportsState extends ConsumerState<RapportsPage> {
       ..watch(classesProvider(annee.id))
       ..watch(effectifsProvider(annee.id))
       ..watch(elevesProvider((ecole.id, annee.id, false)))
-      ..watch(presencesProvider(ecole.id))
       ..watch(teachersProvider(ecole.id))
       // Gardé en mémoire tant que l'écran est ouvert (calcul des notes).
       ..watch(resultatsEcoleProvider((annee.id, _trimestre, _seuilCentiemes)));

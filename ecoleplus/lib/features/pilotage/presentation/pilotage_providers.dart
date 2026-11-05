@@ -4,6 +4,7 @@ import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/drafts/draft_store.dart';
 import 'package:ecoleplus/features/grades/presentation/grades_pages.dart';
 import 'package:ecoleplus/features/pilotage/data/pilotage_repository.dart';
+import 'package:ecoleplus/features/pilotage/domain/absences.dart';
 import 'package:ecoleplus/features/pilotage/domain/rapports.dart';
 import 'package:ecoleplus/features/school/presentation/school_providers.dart';
 import 'package:ecoleplus/features/staff/presentation/staff_providers.dart';
@@ -41,11 +42,20 @@ creneauxEcoleProvider = StreamProvider.family(
       ref.watch(pilotageRepositoryProvider).watchCreneauxEcole(schoolId),
 );
 
-final StreamProviderFamily<List<AttendanceRow>, String> presencesProvider =
-    StreamProvider.family(
-      (ref, schoolId) =>
-          ref.watch(pilotageRepositoryProvider).watchPresences(schoolId),
-    );
+/// Présences d'une période. Clé : (école, du, au).
+final StreamProviderFamily<List<AttendanceRow>, (String, String, String)>
+presencesPeriodeProvider = StreamProvider.family(
+  (ref, k) => ref
+      .watch(pilotageRepositoryProvider)
+      .watchPresencesPeriode(k.$1, k.$2, k.$3),
+);
+
+/// Totaux d'une période (calculés par la base). Clé : (école, du, au).
+final StreamProviderFamily<TotauxPresences, (String, String, String)>
+totauxPresencesProvider = StreamProvider.family(
+  (ref, k) =>
+      ref.watch(pilotageRepositoryProvider).watchTotaux(k.$1, k.$2, k.$3),
+);
 
 final StreamProviderFamily<Map<String, (String, String?)>, (String, String)>
 appelProvider = StreamProvider.family(

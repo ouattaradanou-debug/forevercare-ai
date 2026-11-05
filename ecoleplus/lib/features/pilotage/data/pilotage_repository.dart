@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:ecoleplus/core/db/app_database.dart';
 import 'package:ecoleplus/core/sync/local_store.dart';
 import 'package:ecoleplus/features/maternelle/data/maternelle_repository.dart';
+import 'package:ecoleplus/features/pilotage/domain/absences.dart';
 import 'package:ecoleplus/features/pilotage/domain/emploi_du_temps.dart';
 import 'package:uuid/uuid.dart';
 
@@ -123,11 +124,72 @@ class PilotageRepository {
           .watch()
           .map((l) => {for (final a in l) a.studentId: (a.status, a.reason)});
 
-  /// Toutes les présences de l'école (une année tient sur le téléphone :
-  /// environ 200 jours × effectif).
+  /// Toutes les présences de l'école (réservé aux mesures : sur une grande
+  /// école, une année fait 180 000 lignes).
   Stream<List<AttendanceRow>> watchPresences(String schoolId) => (db.select(
     db.attendance,
   )..where((a) => a.schoolId.equals(schoolId) & a.deletedAt.isNull())).watch();
+
+  /// Présences d'une période (« AAAA-MM-JJ », bornes incluses) ; lecture
+  /// par l'index (école, jour).
+  Stream<List<AttendanceRow>> watchPresencesPeriode(
+    String schoolId,
+    String du,
+    String au,
+  ) =>
+      (db.select(db.attendance)..where(
+            (a) =>
+                a.schoolId.equals(schoolId) &
+                a.day.isBetweenValues(du, au) &
+                a.deletedAt.isNull(),
+          ))
+          .watch();
+
+  /// Totaux d'une période calculés par la base (rapide même sur une grande
+  /// école) : par classe et par élève.
+  Stream<TotauxPresences> watchTotaux(String schoolId, String du, String au) {
+    final v = [Variable(schoolId), Variable(du), Variable(au)];
+    const filtre =
+        'WHERE school_id = ? AND day BETWEEN ? AND ? AND deleted_at IS NULL';
+    return db
+        .customSelect(
+          'SELECT class_id, COUNT(DISTINCT day) AS jours, '
+          "SUM(status = 'present') AS p, SUM(status = 'absent') AS a, "
+          "SUM(status = 'retard') AS r FROM attendance $filtre "
+          'GROUP BY class_id',
+          variables: v,
+          readsFrom: {db.attendance},
+        )
+        .watch()
+        .asyncMap((lignes) async {
+          final eleves = await db
+              .customSelect(
+                "SELECT student_id, SUM(status = 'absent') AS a, "
+                "SUM(status = 'retard') AS r FROM attendance $filtre "
+                "AND status <> 'present' GROUP BY student_id",
+                variables: v,
+              )
+              .get();
+          return TotauxPresences(
+            {
+              for (final l in lignes)
+                l.read<String>('class_id'): (
+                  jours: l.read<int>('jours'),
+                  presents: l.read<int>('p'),
+                  absents: l.read<int>('a'),
+                  retards: l.read<int>('r'),
+                ),
+            },
+            {
+              for (final l in eleves)
+                l.read<String>('student_id'): (
+                  l.read<int>('a'),
+                  l.read<int>('r'),
+                ),
+            },
+          );
+        });
+  }
 
   /// Enregistre l'appel : une ligne par élève (présent par défaut), même
   /// identifiant que l'appel de la maternelle (élève + jour) : deux

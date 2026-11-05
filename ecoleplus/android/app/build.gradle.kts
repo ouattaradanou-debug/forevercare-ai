@@ -4,6 +4,13 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Signature de publication : android/key.properties (jamais dans le dépôt,
+// voir docs/PUBLICATION.md). Sans ce fichier : clé de test (debug).
+val proprietesSignature = java.util.Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
 android {
     namespace = "bf.sedatech.ecoleplus"
     compileSdk = flutter.compileSdkVersion
@@ -29,11 +36,23 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (proprietesSignature.containsKey("storeFile")) {
+            create("publication") {
+                storeFile = file(proprietesSignature.getProperty("storeFile"))
+                storePassword = proprietesSignature.getProperty("storePassword")
+                keyAlias = proprietesSignature.getProperty("keyAlias")
+                keyPassword = proprietesSignature.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (proprietesSignature.containsKey("storeFile"))
+                signingConfigs.getByName("publication")
+            else
+                signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

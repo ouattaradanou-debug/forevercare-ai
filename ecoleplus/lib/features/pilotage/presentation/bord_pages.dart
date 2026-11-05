@@ -44,7 +44,19 @@ final Provider<List<NotificationEcole>> notificationsProvider = Provider((ref) {
   // jours de classe (lundi à vendredi, ou un jour prévu à l'emploi du temps).
   final appel = s.role == 'enseignant' || s.role == 'directeur';
   final classes = ref.watch(classesProvider(yearId)).value ?? const [];
-  final presences = ref.watch(presencesProvider(s.schoolId)).value ?? const [];
+  // Seulement le jour et les totaux du mois (rapide sur une grande école).
+  final presences =
+      ref.watch(presencesPeriodeProvider((s.schoolId, jour, jour))).value ??
+      const <AttendanceRow>[];
+  final totauxMois = ref
+      .watch(
+        totauxPresencesProvider((
+          s.schoolId,
+          '${jour.substring(0, 7)}-01',
+          jour,
+        )),
+      )
+      .value;
   final eff = ref.watch(effectifsProvider(yearId)).value ?? const {};
   final creneaux =
       ref.watch(creneauxEcoleProvider(s.schoolId)).value ?? const [];
@@ -83,13 +95,9 @@ final Provider<List<NotificationEcole>> notificationsProvider = Provider((ref) {
       );
     }
     final mois = jour.substring(0, 7);
-    final parEleve = <String, int>{};
-    for (final a in presences) {
-      if (a.status == 'absent' && a.day.startsWith(mois)) {
-        parEleve[a.studentId] = (parEleve[a.studentId] ?? 0) + 1;
-      }
-    }
-    final repetes = parEleve.values.where((n) => n >= absencesRepetees).length;
+    final repetes = (totauxMois?.eleves.values ?? const <(int, int)>[])
+        .where((x) => x.$1 >= absencesRepetees)
+        .length;
     if (repetes > 0) {
       out.add(
         NotificationEcole(
@@ -324,14 +332,18 @@ class TableauDeBordPage extends ConsumerWidget {
       const Effectif(),
       (x, c) => x + (eff[c.id] ?? const Effectif()),
     );
-    final presences = ref.watch(presencesProvider(ecole.id)).value ?? const [];
-    final duJour = presences.where((a) => a.day == jour);
+    final duJour =
+        ref.watch(presencesPeriodeProvider((ecole.id, jour, jour))).value ??
+        const <AttendanceRow>[];
     final appels = {for (final a in duJour) a.classId};
     final absents = duJour.where((a) => a.status == 'absent').length;
     final (du, au) = Periode.mois.bornes(jour);
-    final mois = absencesParClasse(dansPeriode(presences, du, au), [
-      for (final c in classes) (c.id, c.name, eff[c.id]?.total ?? 0),
-    ]);
+    final mois =
+        (ref.watch(totauxPresencesProvider((ecole.id, du, au))).value ??
+                const TotauxPresences({}, {}))
+            .parClasse([
+              for (final c in classes) (c.id, c.name, eff[c.id]?.total ?? 0),
+            ]);
     final presentsMois = mois.fold(0, (x, c) => x + c.presences + c.retards);
     final appelesMois = presentsMois + mois.fold(0, (x, c) => x + c.absences);
     final tauxMois = appelesMois == 0 ? null : presentsMois * 100 / appelesMois;
@@ -655,7 +667,9 @@ class MaJournee extends ConsumerWidget {
         ref.watch(creneauxEcoleProvider(ecole.id)).value ?? const [];
     final matieres =
         ref.watch(nomsMatieresProvider(ecole.id)).value ?? const {};
-    final presences = ref.watch(presencesProvider(ecole.id)).value ?? const [];
+    final presences =
+        ref.watch(presencesPeriodeProvider((ecole.id, jour, jour))).value ??
+        const <AttendanceRow>[];
     final duJour = [
       for (final x in creneaux)
         if (x.weekday == jourDe(jour) && classes.any((c) => c.id == x.classId))

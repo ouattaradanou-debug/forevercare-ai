@@ -1213,3 +1213,6 @@ CREATE TABLE timetable_slots (
 ) AS TimetableSlotRow;
 
 CREATE INDEX timetable_slots_class ON timetable_slots (class_id, weekday, starts_at);
+
+-- Phase 14 : présences lues par période (tableau de bord, notifications).
+CREATE INDEX attendance_school_day ON attendance (school_id, day);

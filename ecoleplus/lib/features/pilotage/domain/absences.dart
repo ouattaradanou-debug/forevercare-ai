@@ -148,3 +148,44 @@ String pourcent(double? p) {
       : r.toString().replaceAll('.', ',');
   return '$t %';
 }
+
+/// Totaux d'une période calculés par la base du téléphone.
+class TotauxPresences {
+  const new(this.classes, this.eleves);
+
+  /// Classe → jours d'appel, présents, absents, retards.
+  final Map<String, ({int jours, int presents, int absents, int retards})>
+  classes;
+
+  /// Élève → (absences, retards), seulement s'il en a.
+  final Map<String, (int, int)> eleves;
+
+  /// Statistiques par classe. [classes] : (id, nom, effectif).
+  List<AbsencesClasse> parClasse(List<(String, String, int)> liste) => [
+    for (final (id, nom, effectif) in liste)
+      AbsencesClasse(
+        classId: id,
+        classe: nom,
+        effectif: effectif,
+        joursAppel: classes[id]?.jours ?? 0,
+        presences: classes[id]?.presents ?? 0,
+        absences: classes[id]?.absents ?? 0,
+        retards: classes[id]?.retards ?? 0,
+      ),
+  ];
+
+  /// Élèves absents ou en retard, les plus absents d'abord.
+  /// [noms] : id → (nom, classe) ; les autres élèves sont ignorés.
+  List<AbsencesEleve> parEleve(Map<String, (String, String)> noms) =>
+      [
+        for (final MapEntry(key: id, value: (a, r)) in eleves.entries)
+          if (noms[id] case (final nom, final classe))
+            AbsencesEleve(id, nom, classe, a, r),
+      ]..sort(
+        (x, y) => x.absences != y.absences
+            ? y.absences.compareTo(x.absences)
+            : x.retards != y.retards
+            ? y.retards.compareTo(x.retards)
+            : x.nom.compareTo(y.nom),
+      );
+}

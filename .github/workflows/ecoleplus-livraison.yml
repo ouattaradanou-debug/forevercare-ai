@@ -85,7 +85,10 @@ jobs:
       # « universel » (important avec une connexion mobile faible).
       - name: Construire les APK (un par type de téléphone)
         run: |
+          # --obfuscate + --split-debug-info : code Dart plus compact (et
+          # illisible si l'APK est désassemblé) ; symboles gardés à part.
           flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64 \
+            --obfuscate --split-debug-info=build/symboles \
             --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }} \
             --dart-define=SUPABASE_ANON_KEY=${{ vars.SUPABASE_ANON_KEY }}
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ecoleplus-test-recent.apk

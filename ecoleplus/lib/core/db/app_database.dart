@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -237,6 +237,13 @@ class AppDatabase extends _$AppDatabase {
         // Phase 13 : emploi du temps.
         await m.createTable(timetableSlots);
         await m.createIndex(timetableSlotsClass);
+      }
+      if (from < 19) {
+        // Phase 14 : présences lues par période (grande école).
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS attendance_school_day '
+          'ON attendance (school_id, day)',
+        );
       }
     },
   );

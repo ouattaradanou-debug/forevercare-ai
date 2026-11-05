@@ -150,4 +150,31 @@ void main() {
     await db.close();
     dir.deleteSync(recursive: true);
   });
+
+  test('base du téléphone : passage de la version 18 à la 19 (index des '
+      'présences) sans perte', () async {
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+    final dir = Directory.systemTemp.createTempSync('migration18');
+    final fichier = File('${dir.path}/ecole.db');
+    var db = AppDatabase(NativeDatabase(fichier));
+    await db.customStatement(
+      'INSERT INTO attendance (id, school_id, class_id, student_id, day, '
+      "status, updated_at) VALUES ('p', 's', 'c', 'e', '2026-11-05', "
+      "'absent', '')",
+    );
+    await db.customStatement('DROP INDEX attendance_school_day');
+    await db.customStatement('PRAGMA user_version = 18');
+    await db.close();
+
+    db = AppDatabase(NativeDatabase(fichier));
+    expect((await db.select(db.attendance).getSingle()).status, 'absent');
+    final index = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE name = 'attendance_school_day'",
+        )
+        .get();
+    expect(index, hasLength(1));
+    await db.close();
+    dir.deleteSync(recursive: true);
+  });
 }

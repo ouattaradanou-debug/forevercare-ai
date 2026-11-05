@@ -52712,6 +52712,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'timetable_slots_class',
     'CREATE INDEX timetable_slots_class ON timetable_slots (class_id, weekday, starts_at)',
   );
+  late final Index attendanceSchoolDay = Index(
+    'attendance_school_day',
+    'CREATE INDEX attendance_school_day ON attendance (school_id, day)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -52805,6 +52809,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     aiTeacherLimits,
     timetableSlots,
     timetableSlotsClass,
+    attendanceSchoolDay,
   ];
 }
 
