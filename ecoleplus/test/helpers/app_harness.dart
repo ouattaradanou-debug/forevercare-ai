@@ -11,6 +11,7 @@ import 'package:ecoleplus/core/dictee/dictee.dart';
 import 'package:ecoleplus/core/dictee/mic_button.dart';
 import 'package:ecoleplus/core/sync/sync_remote.dart';
 import 'package:ecoleplus/core/widgets/common.dart';
+import 'package:ecoleplus/features/assistant/presentation/assistant_pages.dart';
 import 'package:ecoleplus/features/auth/data/auth_api.dart';
 import 'package:ecoleplus/features/bibliotheque/data/bibliotheque_repository.dart';
 import 'package:ecoleplus/features/bibliotheque/presentation/bibliotheque_pages.dart';
@@ -28,6 +29,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'fake_assistant_api.dart';
 import 'fake_auth_api.dart';
 import 'fake_documents_en_ligne.dart';
 import 'fake_medical_api.dart';
@@ -79,6 +81,7 @@ class AppHarness {
 
   /// Fonctions du serveur pour le dossier médico-scolaire.
   final medical = FakeMedicalApi();
+  final assistant = FakeAssistantApi();
 
   /// Fichiers envoyés (Excel) : nom → contenu.
   final Map<String, Uint8List> fichiersSortis = {};
@@ -269,7 +272,7 @@ class AppHarness {
     await initializeDateFormatting('fr');
     // Écran haut (densité 2) : tout l’accueil visible sans défiler.
     tester.view
-      ..physicalSize = const Size(720, 2600)
+      ..physicalSize = const Size(720, 2800)
       ..devicePixelRatio = 2;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
@@ -286,6 +289,7 @@ class AppHarness {
           ),
           biometricGateProvider.overrideWithValue(biometrie),
           dicteeProvider.overrideWithValue(dictee),
+          assistantApiProvider.overrideWithValue(assistant),
           medicalApiProvider.overrideWithValue(medical),
           choisirImageProvider.overrideWithValue(
             ({required camera}) async => imageChoisie,

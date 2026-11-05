@@ -50475,6 +50475,1335 @@ class CanteenSubscriptionsCompanion
   }
 }
 
+class LessonPreps extends Table with TableInfo<LessonPreps, LessonPrepRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  LessonPreps(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _authorIdMeta = const VerificationMeta(
+    'authorId',
+  );
+  late final GeneratedColumn<String> authorId = GeneratedColumn<String>(
+    'author_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _levelCodeMeta = const VerificationMeta(
+    'levelCode',
+  );
+  late final GeneratedColumn<String> levelCode = GeneratedColumn<String>(
+    'level_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _themeMeta = const VerificationMeta('theme');
+  late final GeneratedColumn<String> theme = GeneratedColumn<String>(
+    'theme',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _requestMeta = const VerificationMeta(
+    'request',
+  );
+  late final GeneratedColumn<String> request = GeneratedColumn<String>(
+    'request',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'{}\'',
+    defaultValue: const CustomExpression('\'{}\''),
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+    'content',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'{}\'',
+    defaultValue: const CustomExpression('\'{}\''),
+  );
+  static const VerificationMeta _sourcesMeta = const VerificationMeta(
+    'sources',
+  );
+  late final GeneratedColumn<String> sources = GeneratedColumn<String>(
+    'sources',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT \'[]\'',
+    defaultValue: const CustomExpression('\'[]\''),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    authorId,
+    kind,
+    levelCode,
+    subjectId,
+    theme,
+    request,
+    content,
+    sources,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'lesson_preps';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LessonPrepRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('author_id')) {
+      context.handle(
+        _authorIdMeta,
+        authorId.isAcceptableOrUnknown(data['author_id']!, _authorIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_authorIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('level_code')) {
+      context.handle(
+        _levelCodeMeta,
+        levelCode.isAcceptableOrUnknown(data['level_code']!, _levelCodeMeta),
+      );
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    }
+    if (data.containsKey('theme')) {
+      context.handle(
+        _themeMeta,
+        theme.isAcceptableOrUnknown(data['theme']!, _themeMeta),
+      );
+    }
+    if (data.containsKey('request')) {
+      context.handle(
+        _requestMeta,
+        request.isAcceptableOrUnknown(data['request']!, _requestMeta),
+      );
+    }
+    if (data.containsKey('content')) {
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
+    }
+    if (data.containsKey('sources')) {
+      context.handle(
+        _sourcesMeta,
+        sources.isAcceptableOrUnknown(data['sources']!, _sourcesMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LessonPrepRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LessonPrepRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      authorId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}author_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      levelCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}level_code'],
+      ),
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      ),
+      theme: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}theme'],
+      ),
+      request: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}request'],
+      )!,
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      )!,
+      sources: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sources'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  LessonPreps createAlias(String alias) {
+    return LessonPreps(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class LessonPrepRow extends DataClass implements Insertable<LessonPrepRow> {
+  final String id;
+  final String schoolId;
+  final String authorId;
+
+  /// preparation, exercices, remediation
+  final String kind;
+  final String? levelCode;
+  final String? subjectId;
+  final String? theme;
+  final String request;
+  final String content;
+  final String sources;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const LessonPrepRow({
+    required this.id,
+    required this.schoolId,
+    required this.authorId,
+    required this.kind,
+    this.levelCode,
+    this.subjectId,
+    this.theme,
+    required this.request,
+    required this.content,
+    required this.sources,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['author_id'] = Variable<String>(authorId);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || levelCode != null) {
+      map['level_code'] = Variable<String>(levelCode);
+    }
+    if (!nullToAbsent || subjectId != null) {
+      map['subject_id'] = Variable<String>(subjectId);
+    }
+    if (!nullToAbsent || theme != null) {
+      map['theme'] = Variable<String>(theme);
+    }
+    map['request'] = Variable<String>(request);
+    map['content'] = Variable<String>(content);
+    map['sources'] = Variable<String>(sources);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  LessonPrepsCompanion toCompanion(bool nullToAbsent) {
+    return LessonPrepsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      authorId: Value(authorId),
+      kind: Value(kind),
+      levelCode: levelCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(levelCode),
+      subjectId: subjectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subjectId),
+      theme: theme == null && nullToAbsent
+          ? const Value.absent()
+          : Value(theme),
+      request: Value(request),
+      content: Value(content),
+      sources: Value(sources),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory LessonPrepRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LessonPrepRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      authorId: serializer.fromJson<String>(json['author_id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      levelCode: serializer.fromJson<String?>(json['level_code']),
+      subjectId: serializer.fromJson<String?>(json['subject_id']),
+      theme: serializer.fromJson<String?>(json['theme']),
+      request: serializer.fromJson<String>(json['request']),
+      content: serializer.fromJson<String>(json['content']),
+      sources: serializer.fromJson<String>(json['sources']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'author_id': serializer.toJson<String>(authorId),
+      'kind': serializer.toJson<String>(kind),
+      'level_code': serializer.toJson<String?>(levelCode),
+      'subject_id': serializer.toJson<String?>(subjectId),
+      'theme': serializer.toJson<String?>(theme),
+      'request': serializer.toJson<String>(request),
+      'content': serializer.toJson<String>(content),
+      'sources': serializer.toJson<String>(sources),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  LessonPrepRow copyWith({
+    String? id,
+    String? schoolId,
+    String? authorId,
+    String? kind,
+    Value<String?> levelCode = const Value.absent(),
+    Value<String?> subjectId = const Value.absent(),
+    Value<String?> theme = const Value.absent(),
+    String? request,
+    String? content,
+    String? sources,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => LessonPrepRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    authorId: authorId ?? this.authorId,
+    kind: kind ?? this.kind,
+    levelCode: levelCode.present ? levelCode.value : this.levelCode,
+    subjectId: subjectId.present ? subjectId.value : this.subjectId,
+    theme: theme.present ? theme.value : this.theme,
+    request: request ?? this.request,
+    content: content ?? this.content,
+    sources: sources ?? this.sources,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  LessonPrepRow copyWithCompanion(LessonPrepsCompanion data) {
+    return LessonPrepRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      authorId: data.authorId.present ? data.authorId.value : this.authorId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      levelCode: data.levelCode.present ? data.levelCode.value : this.levelCode,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      theme: data.theme.present ? data.theme.value : this.theme,
+      request: data.request.present ? data.request.value : this.request,
+      content: data.content.present ? data.content.value : this.content,
+      sources: data.sources.present ? data.sources.value : this.sources,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LessonPrepRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('authorId: $authorId, ')
+          ..write('kind: $kind, ')
+          ..write('levelCode: $levelCode, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('theme: $theme, ')
+          ..write('request: $request, ')
+          ..write('content: $content, ')
+          ..write('sources: $sources, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    authorId,
+    kind,
+    levelCode,
+    subjectId,
+    theme,
+    request,
+    content,
+    sources,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LessonPrepRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.authorId == this.authorId &&
+          other.kind == this.kind &&
+          other.levelCode == this.levelCode &&
+          other.subjectId == this.subjectId &&
+          other.theme == this.theme &&
+          other.request == this.request &&
+          other.content == this.content &&
+          other.sources == this.sources &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class LessonPrepsCompanion extends UpdateCompanion<LessonPrepRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> authorId;
+  final Value<String> kind;
+  final Value<String?> levelCode;
+  final Value<String?> subjectId;
+  final Value<String?> theme;
+  final Value<String> request;
+  final Value<String> content;
+  final Value<String> sources;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const LessonPrepsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.authorId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.levelCode = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.theme = const Value.absent(),
+    this.request = const Value.absent(),
+    this.content = const Value.absent(),
+    this.sources = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LessonPrepsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String authorId,
+    required String kind,
+    this.levelCode = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.theme = const Value.absent(),
+    this.request = const Value.absent(),
+    this.content = const Value.absent(),
+    this.sources = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       authorId = Value(authorId),
+       kind = Value(kind),
+       updatedAt = Value(updatedAt);
+  static Insertable<LessonPrepRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? authorId,
+    Expression<String>? kind,
+    Expression<String>? levelCode,
+    Expression<String>? subjectId,
+    Expression<String>? theme,
+    Expression<String>? request,
+    Expression<String>? content,
+    Expression<String>? sources,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (authorId != null) 'author_id': authorId,
+      if (kind != null) 'kind': kind,
+      if (levelCode != null) 'level_code': levelCode,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (theme != null) 'theme': theme,
+      if (request != null) 'request': request,
+      if (content != null) 'content': content,
+      if (sources != null) 'sources': sources,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LessonPrepsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? authorId,
+    Value<String>? kind,
+    Value<String?>? levelCode,
+    Value<String?>? subjectId,
+    Value<String?>? theme,
+    Value<String>? request,
+    Value<String>? content,
+    Value<String>? sources,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return LessonPrepsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      authorId: authorId ?? this.authorId,
+      kind: kind ?? this.kind,
+      levelCode: levelCode ?? this.levelCode,
+      subjectId: subjectId ?? this.subjectId,
+      theme: theme ?? this.theme,
+      request: request ?? this.request,
+      content: content ?? this.content,
+      sources: sources ?? this.sources,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (authorId.present) {
+      map['author_id'] = Variable<String>(authorId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (levelCode.present) {
+      map['level_code'] = Variable<String>(levelCode.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (theme.present) {
+      map['theme'] = Variable<String>(theme.value);
+    }
+    if (request.present) {
+      map['request'] = Variable<String>(request.value);
+    }
+    if (content.present) {
+      map['content'] = Variable<String>(content.value);
+    }
+    if (sources.present) {
+      map['sources'] = Variable<String>(sources.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LessonPrepsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('authorId: $authorId, ')
+          ..write('kind: $kind, ')
+          ..write('levelCode: $levelCode, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('theme: $theme, ')
+          ..write('request: $request, ')
+          ..write('content: $content, ')
+          ..write('sources: $sources, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class AiTeacherLimits extends Table
+    with TableInfo<AiTeacherLimits, AiTeacherLimitRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  AiTeacherLimits(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL PRIMARY KEY',
+  );
+  static const VerificationMeta _schoolIdMeta = const VerificationMeta(
+    'schoolId',
+  );
+  late final GeneratedColumn<String> schoolId = GeneratedColumn<String>(
+    'school_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _membershipIdMeta = const VerificationMeta(
+    'membershipId',
+  );
+  late final GeneratedColumn<String> membershipId = GeneratedColumn<String>(
+    'membership_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _monthlyLimitMeta = const VerificationMeta(
+    'monthlyLimit',
+  );
+  late final GeneratedColumn<int> monthlyLimit = GeneratedColumn<int>(
+    'monthly_limit',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  late final GeneratedColumn<String> deletedAt = GeneratedColumn<String>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  static const VerificationMeta _syncedAtMeta = const VerificationMeta(
+    'syncedAt',
+  );
+  late final GeneratedColumn<String> syncedAt = GeneratedColumn<String>(
+    'synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: '',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    schoolId,
+    membershipId,
+    monthlyLimit,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ai_teacher_limits';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AiTeacherLimitRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('school_id')) {
+      context.handle(
+        _schoolIdMeta,
+        schoolId.isAcceptableOrUnknown(data['school_id']!, _schoolIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_schoolIdMeta);
+    }
+    if (data.containsKey('membership_id')) {
+      context.handle(
+        _membershipIdMeta,
+        membershipId.isAcceptableOrUnknown(
+          data['membership_id']!,
+          _membershipIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_membershipIdMeta);
+    }
+    if (data.containsKey('monthly_limit')) {
+      context.handle(
+        _monthlyLimitMeta,
+        monthlyLimit.isAcceptableOrUnknown(
+          data['monthly_limit']!,
+          _monthlyLimitMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_monthlyLimitMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('synced_at')) {
+      context.handle(
+        _syncedAtMeta,
+        syncedAt.isAcceptableOrUnknown(data['synced_at']!, _syncedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AiTeacherLimitRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AiTeacherLimitRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      schoolId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}school_id'],
+      )!,
+      membershipId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}membership_id'],
+      )!,
+      monthlyLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}monthly_limit'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      syncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}synced_at'],
+      ),
+    );
+  }
+
+  @override
+  AiTeacherLimits createAlias(String alias) {
+    return AiTeacherLimits(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class AiTeacherLimitRow extends DataClass
+    implements Insertable<AiTeacherLimitRow> {
+  final String id;
+  final String schoolId;
+  final String membershipId;
+  final int monthlyLimit;
+  final String? createdAt;
+  final String updatedAt;
+  final String? deletedAt;
+  final String? syncedAt;
+  const AiTeacherLimitRow({
+    required this.id,
+    required this.schoolId,
+    required this.membershipId,
+    required this.monthlyLimit,
+    this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.syncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['school_id'] = Variable<String>(schoolId);
+    map['membership_id'] = Variable<String>(membershipId);
+    map['monthly_limit'] = Variable<int>(monthlyLimit);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    map['updated_at'] = Variable<String>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<String>(deletedAt);
+    }
+    if (!nullToAbsent || syncedAt != null) {
+      map['synced_at'] = Variable<String>(syncedAt);
+    }
+    return map;
+  }
+
+  AiTeacherLimitsCompanion toCompanion(bool nullToAbsent) {
+    return AiTeacherLimitsCompanion(
+      id: Value(id),
+      schoolId: Value(schoolId),
+      membershipId: Value(membershipId),
+      monthlyLimit: Value(monthlyLimit),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      syncedAt: syncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncedAt),
+    );
+  }
+
+  factory AiTeacherLimitRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AiTeacherLimitRow(
+      id: serializer.fromJson<String>(json['id']),
+      schoolId: serializer.fromJson<String>(json['school_id']),
+      membershipId: serializer.fromJson<String>(json['membership_id']),
+      monthlyLimit: serializer.fromJson<int>(json['monthly_limit']),
+      createdAt: serializer.fromJson<String?>(json['created_at']),
+      updatedAt: serializer.fromJson<String>(json['updated_at']),
+      deletedAt: serializer.fromJson<String?>(json['deleted_at']),
+      syncedAt: serializer.fromJson<String?>(json['synced_at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'school_id': serializer.toJson<String>(schoolId),
+      'membership_id': serializer.toJson<String>(membershipId),
+      'monthly_limit': serializer.toJson<int>(monthlyLimit),
+      'created_at': serializer.toJson<String?>(createdAt),
+      'updated_at': serializer.toJson<String>(updatedAt),
+      'deleted_at': serializer.toJson<String?>(deletedAt),
+      'synced_at': serializer.toJson<String?>(syncedAt),
+    };
+  }
+
+  AiTeacherLimitRow copyWith({
+    String? id,
+    String? schoolId,
+    String? membershipId,
+    int? monthlyLimit,
+    Value<String?> createdAt = const Value.absent(),
+    String? updatedAt,
+    Value<String?> deletedAt = const Value.absent(),
+    Value<String?> syncedAt = const Value.absent(),
+  }) => AiTeacherLimitRow(
+    id: id ?? this.id,
+    schoolId: schoolId ?? this.schoolId,
+    membershipId: membershipId ?? this.membershipId,
+    monthlyLimit: monthlyLimit ?? this.monthlyLimit,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
+  );
+  AiTeacherLimitRow copyWithCompanion(AiTeacherLimitsCompanion data) {
+    return AiTeacherLimitRow(
+      id: data.id.present ? data.id.value : this.id,
+      schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
+      membershipId: data.membershipId.present
+          ? data.membershipId.value
+          : this.membershipId,
+      monthlyLimit: data.monthlyLimit.present
+          ? data.monthlyLimit.value
+          : this.monthlyLimit,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiTeacherLimitRow(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('membershipId: $membershipId, ')
+          ..write('monthlyLimit: $monthlyLimit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    schoolId,
+    membershipId,
+    monthlyLimit,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    syncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AiTeacherLimitRow &&
+          other.id == this.id &&
+          other.schoolId == this.schoolId &&
+          other.membershipId == this.membershipId &&
+          other.monthlyLimit == this.monthlyLimit &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.syncedAt == this.syncedAt);
+}
+
+class AiTeacherLimitsCompanion extends UpdateCompanion<AiTeacherLimitRow> {
+  final Value<String> id;
+  final Value<String> schoolId;
+  final Value<String> membershipId;
+  final Value<int> monthlyLimit;
+  final Value<String?> createdAt;
+  final Value<String> updatedAt;
+  final Value<String?> deletedAt;
+  final Value<String?> syncedAt;
+  final Value<int> rowid;
+  const AiTeacherLimitsCompanion({
+    this.id = const Value.absent(),
+    this.schoolId = const Value.absent(),
+    this.membershipId = const Value.absent(),
+    this.monthlyLimit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AiTeacherLimitsCompanion.insert({
+    required String id,
+    required String schoolId,
+    required String membershipId,
+    required int monthlyLimit,
+    this.createdAt = const Value.absent(),
+    required String updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.syncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       schoolId = Value(schoolId),
+       membershipId = Value(membershipId),
+       monthlyLimit = Value(monthlyLimit),
+       updatedAt = Value(updatedAt);
+  static Insertable<AiTeacherLimitRow> custom({
+    Expression<String>? id,
+    Expression<String>? schoolId,
+    Expression<String>? membershipId,
+    Expression<int>? monthlyLimit,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<String>? deletedAt,
+    Expression<String>? syncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (schoolId != null) 'school_id': schoolId,
+      if (membershipId != null) 'membership_id': membershipId,
+      if (monthlyLimit != null) 'monthly_limit': monthlyLimit,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (syncedAt != null) 'synced_at': syncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AiTeacherLimitsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? schoolId,
+    Value<String>? membershipId,
+    Value<int>? monthlyLimit,
+    Value<String?>? createdAt,
+    Value<String>? updatedAt,
+    Value<String?>? deletedAt,
+    Value<String?>? syncedAt,
+    Value<int>? rowid,
+  }) {
+    return AiTeacherLimitsCompanion(
+      id: id ?? this.id,
+      schoolId: schoolId ?? this.schoolId,
+      membershipId: membershipId ?? this.membershipId,
+      monthlyLimit: monthlyLimit ?? this.monthlyLimit,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      syncedAt: syncedAt ?? this.syncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (schoolId.present) {
+      map['school_id'] = Variable<String>(schoolId.value);
+    }
+    if (membershipId.present) {
+      map['membership_id'] = Variable<String>(membershipId.value);
+    }
+    if (monthlyLimit.present) {
+      map['monthly_limit'] = Variable<int>(monthlyLimit.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<String>(deletedAt.value);
+    }
+    if (syncedAt.present) {
+      map['synced_at'] = Variable<String>(syncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiTeacherLimitsCompanion(')
+          ..write('id: $id, ')
+          ..write('schoolId: $schoolId, ')
+          ..write('membershipId: $membershipId, ')
+          ..write('monthlyLimit: $monthlyLimit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('syncedAt: $syncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -50609,6 +51938,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'canteen_subscriptions_year',
     'CREATE INDEX canteen_subscriptions_year ON canteen_subscriptions (school_year_id, month)',
   );
+  late final LessonPreps lessonPreps = LessonPreps(this);
+  late final AiTeacherLimits aiTeacherLimits = AiTeacherLimits(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -50698,6 +52029,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     canteenRates,
     canteenSubscriptions,
     canteenSubscriptionsYear,
+    lessonPreps,
+    aiTeacherLimits,
   ];
 }
 
@@ -74879,6 +76212,653 @@ typedef $CanteenSubscriptionsProcessedTableManager =
       CanteenSubscriptionRow,
       PrefetchHooks Function()
     >;
+typedef $LessonPrepsCreateCompanionBuilder = LessonPrepsCompanion Function({
+  required String id,
+  required String schoolId,
+  required String authorId,
+  required String kind,
+  Value<String?> levelCode,
+  Value<String?> subjectId,
+  Value<String?> theme,
+  Value<String> request,
+  Value<String> content,
+  Value<String> sources,
+  Value<String?> createdAt,
+  required String updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+typedef $LessonPrepsUpdateCompanionBuilder = LessonPrepsCompanion Function({
+  Value<String> id,
+  Value<String> schoolId,
+  Value<String> authorId,
+  Value<String> kind,
+  Value<String?> levelCode,
+  Value<String?> subjectId,
+  Value<String?> theme,
+  Value<String> request,
+  Value<String> content,
+  Value<String> sources,
+  Value<String?> createdAt,
+  Value<String> updatedAt,
+  Value<String?> deletedAt,
+  Value<String?> syncedAt,
+  Value<int> rowid,
+});
+
+class $LessonPrepsFilterComposer extends Composer<_$AppDatabase, LessonPreps> {
+  $LessonPrepsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authorId => $composableBuilder(
+    column: $table.authorId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get levelCode => $composableBuilder(
+    column: $table.levelCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get theme => $composableBuilder(
+    column: $table.theme,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get request => $composableBuilder(
+    column: $table.request,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sources => $composableBuilder(
+    column: $table.sources,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $LessonPrepsOrderingComposer
+    extends Composer<_$AppDatabase, LessonPreps> {
+  $LessonPrepsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get authorId => $composableBuilder(
+    column: $table.authorId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get levelCode => $composableBuilder(
+    column: $table.levelCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get theme => $composableBuilder(
+    column: $table.theme,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get request => $composableBuilder(
+    column: $table.request,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sources => $composableBuilder(
+    column: $table.sources,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $LessonPrepsAnnotationComposer
+    extends Composer<_$AppDatabase, LessonPreps> {
+  $LessonPrepsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get authorId =>
+      $composableBuilder(column: $table.authorId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get levelCode =>
+      $composableBuilder(column: $table.levelCode, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get theme =>
+      $composableBuilder(column: $table.theme, builder: (column) => column);
+
+  GeneratedColumn<String> get request =>
+      $composableBuilder(column: $table.request, builder: (column) => column);
+
+  GeneratedColumn<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumn<String> get sources =>
+      $composableBuilder(column: $table.sources, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $LessonPrepsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          LessonPreps,
+          LessonPrepRow,
+          $LessonPrepsFilterComposer,
+          $LessonPrepsOrderingComposer,
+          $LessonPrepsAnnotationComposer,
+          $LessonPrepsCreateCompanionBuilder,
+          $LessonPrepsUpdateCompanionBuilder,
+          (
+            LessonPrepRow,
+            BaseReferences<_$AppDatabase, LessonPreps, LessonPrepRow>,
+          ),
+          LessonPrepRow,
+          PrefetchHooks Function()
+        > {
+  $LessonPrepsTableManager(_$AppDatabase db, LessonPreps table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $LessonPrepsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $LessonPrepsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $LessonPrepsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> authorId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> levelCode = const Value.absent(),
+                Value<String?> subjectId = const Value.absent(),
+                Value<String?> theme = const Value.absent(),
+                Value<String> request = const Value.absent(),
+                Value<String> content = const Value.absent(),
+                Value<String> sources = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LessonPrepsCompanion(
+                id: id,
+                schoolId: schoolId,
+                authorId: authorId,
+                kind: kind,
+                levelCode: levelCode,
+                subjectId: subjectId,
+                theme: theme,
+                request: request,
+                content: content,
+                sources: sources,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String authorId,
+                required String kind,
+                Value<String?> levelCode = const Value.absent(),
+                Value<String?> subjectId = const Value.absent(),
+                Value<String?> theme = const Value.absent(),
+                Value<String> request = const Value.absent(),
+                Value<String> content = const Value.absent(),
+                Value<String> sources = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LessonPrepsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                authorId: authorId,
+                kind: kind,
+                levelCode: levelCode,
+                subjectId: subjectId,
+                theme: theme,
+                request: request,
+                content: content,
+                sources: sources,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<LessonPreps, LessonPrepRow>(table),
+                  BaseReferences<_$AppDatabase, LessonPreps, LessonPrepRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $LessonPrepsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      LessonPreps,
+      LessonPrepRow,
+      $LessonPrepsFilterComposer,
+      $LessonPrepsOrderingComposer,
+      $LessonPrepsAnnotationComposer,
+      $LessonPrepsCreateCompanionBuilder,
+      $LessonPrepsUpdateCompanionBuilder,
+      (
+        LessonPrepRow,
+        BaseReferences<_$AppDatabase, LessonPreps, LessonPrepRow>,
+      ),
+      LessonPrepRow,
+      PrefetchHooks Function()
+    >;
+typedef $AiTeacherLimitsCreateCompanionBuilder =
+    AiTeacherLimitsCompanion Function({
+      required String id,
+      required String schoolId,
+      required String membershipId,
+      required int monthlyLimit,
+      Value<String?> createdAt,
+      required String updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+typedef $AiTeacherLimitsUpdateCompanionBuilder =
+    AiTeacherLimitsCompanion Function({
+      Value<String> id,
+      Value<String> schoolId,
+      Value<String> membershipId,
+      Value<int> monthlyLimit,
+      Value<String?> createdAt,
+      Value<String> updatedAt,
+      Value<String?> deletedAt,
+      Value<String?> syncedAt,
+      Value<int> rowid,
+    });
+
+class $AiTeacherLimitsFilterComposer
+    extends Composer<_$AppDatabase, AiTeacherLimits> {
+  $AiTeacherLimitsFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get membershipId => $composableBuilder(
+    column: $table.membershipId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get monthlyLimit => $composableBuilder(
+    column: $table.monthlyLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $AiTeacherLimitsOrderingComposer
+    extends Composer<_$AppDatabase, AiTeacherLimits> {
+  $AiTeacherLimitsOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get schoolId => $composableBuilder(
+    column: $table.schoolId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get membershipId => $composableBuilder(
+    column: $table.membershipId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get monthlyLimit => $composableBuilder(
+    column: $table.monthlyLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncedAt => $composableBuilder(
+    column: $table.syncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $AiTeacherLimitsAnnotationComposer
+    extends Composer<_$AppDatabase, AiTeacherLimits> {
+  $AiTeacherLimitsAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get schoolId =>
+      $composableBuilder(column: $table.schoolId, builder: (column) => column);
+
+  GeneratedColumn<String> get membershipId => $composableBuilder(
+    column: $table.membershipId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get monthlyLimit => $composableBuilder(
+    column: $table.monthlyLimit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncedAt =>
+      $composableBuilder(column: $table.syncedAt, builder: (column) => column);
+}
+
+class $AiTeacherLimitsTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          AiTeacherLimits,
+          AiTeacherLimitRow,
+          $AiTeacherLimitsFilterComposer,
+          $AiTeacherLimitsOrderingComposer,
+          $AiTeacherLimitsAnnotationComposer,
+          $AiTeacherLimitsCreateCompanionBuilder,
+          $AiTeacherLimitsUpdateCompanionBuilder,
+          (
+            AiTeacherLimitRow,
+            BaseReferences<_$AppDatabase, AiTeacherLimits, AiTeacherLimitRow>,
+          ),
+          AiTeacherLimitRow,
+          PrefetchHooks Function()
+        > {
+  $AiTeacherLimitsTableManager(_$AppDatabase db, AiTeacherLimits table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $AiTeacherLimitsFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $AiTeacherLimitsOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $AiTeacherLimitsAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> schoolId = const Value.absent(),
+                Value<String> membershipId = const Value.absent(),
+                Value<int> monthlyLimit = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AiTeacherLimitsCompanion(
+                id: id,
+                schoolId: schoolId,
+                membershipId: membershipId,
+                monthlyLimit: monthlyLimit,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String schoolId,
+                required String membershipId,
+                required int monthlyLimit,
+                Value<String?> createdAt = const Value.absent(),
+                required String updatedAt,
+                Value<String?> deletedAt = const Value.absent(),
+                Value<String?> syncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AiTeacherLimitsCompanion.insert(
+                id: id,
+                schoolId: schoolId,
+                membershipId: membershipId,
+                monthlyLimit: monthlyLimit,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                syncedAt: syncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<AiTeacherLimits, AiTeacherLimitRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    AiTeacherLimits,
+                    AiTeacherLimitRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $AiTeacherLimitsProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      AiTeacherLimits,
+      AiTeacherLimitRow,
+      $AiTeacherLimitsFilterComposer,
+      $AiTeacherLimitsOrderingComposer,
+      $AiTeacherLimitsAnnotationComposer,
+      $AiTeacherLimitsCreateCompanionBuilder,
+      $AiTeacherLimitsUpdateCompanionBuilder,
+      (
+        AiTeacherLimitRow,
+        BaseReferences<_$AppDatabase, AiTeacherLimits, AiTeacherLimitRow>,
+      ),
+      AiTeacherLimitRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -75019,4 +76999,8 @@ class $AppDatabaseManager {
       $CanteenRatesTableManager(_db, _db.canteenRates);
   $CanteenSubscriptionsTableManager get canteenSubscriptions =>
       $CanteenSubscriptionsTableManager(_db, _db.canteenSubscriptions);
+  $LessonPrepsTableManager get lessonPreps =>
+      $LessonPrepsTableManager(_db, _db.lessonPreps);
+  $AiTeacherLimitsTableManager get aiTeacherLimits =>
+      $AiTeacherLimitsTableManager(_db, _db.aiTeacherLimits);
 }

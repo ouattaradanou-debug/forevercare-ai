@@ -1,4 +1,5 @@
 import 'package:ecoleplus/app/providers.dart';
+import 'package:ecoleplus/features/assistant/presentation/assistant_pages.dart';
 import 'package:ecoleplus/features/auth/presentation/create_school_page.dart';
 import 'package:ecoleplus/features/auth/presentation/forgot_password_page.dart';
 import 'package:ecoleplus/features/auth/presentation/login_page.dart';
@@ -290,6 +291,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => FicheDocumentPage(s.pathParameters['id']!),
       ),
       GoRoute(path: '/finances', builder: (_, _) => const FinancesPage()),
+      // Phase 12 : assistant IA.
+      GoRoute(path: '/assistant', builder: (_, _) => const AssistantPage()),
+      GoRoute(
+        path: '/assistant/demande/:kind',
+        builder: (_, s) => DemandeIaPage(s.pathParameters['kind']!),
+      ),
+      GoRoute(
+        path: '/assistant/resultat',
+        builder: (_, s) =>
+            ResultatIaPage((s.extra as ResultatArgs?) ?? ResultatsIa.dernier!),
+      ),
+      GoRoute(
+        path: '/assistant/fiches',
+        builder: (_, _) => const FichesIaPage(),
+      ),
+      GoRoute(path: '/assistant/suivi', builder: (_, _) => const SuiviIaPage()),
       // Phase 11 : cantine (module optionnel).
       GoRoute(path: '/cantine', builder: (_, _) => const CantinePage()),
       GoRoute(

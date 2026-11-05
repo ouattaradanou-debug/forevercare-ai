@@ -184,6 +184,12 @@ List<SyncedTable> syncedTables(AppDatabase db) => [
     name: 'canteen_subscriptions',
     info: db.canteenSubscriptions,
   ),
+  // Phase 12 : assistant IA.
+  SyncedTable<LessonPrepRow>(name: 'lesson_preps', info: db.lessonPreps),
+  SyncedTable<AiTeacherLimitRow>(
+    name: 'ai_teacher_limits',
+    info: db.aiTeacherLimits,
+  ),
   SyncedTable<DeviceRow>(name: 'devices', info: db.devices, pushable: false),
   SyncedTable<AuditRow>(name: 'audit_log', info: db.auditLog, pushable: false),
 ];

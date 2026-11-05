@@ -195,6 +195,9 @@ List<Widget> _boutonsEcole(
     if (cantine && (droits.contains('cantine') || droits.contains('finances')))
       bouton(Icons.restaurant, 'Cantine scolaire', '/cantine'),
     bouton(Icons.local_library_outlined, 'Bibliothèque', '/bibliotheque'),
+    // Assistant IA (phase 12) : enseignants et directeur.
+    if (enseignant || droits.containsAll(tousLesDroits))
+      bouton(Icons.auto_awesome, 'Assistant IA', '/assistant'),
     // Commande à part (A20) : directeur et délégués « archives ».
     if (droits.contains('archives'))
       bouton(Icons.inventory_2_outlined, 'Archives', '/archives'),

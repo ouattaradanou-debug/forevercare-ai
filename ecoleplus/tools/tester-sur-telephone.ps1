@@ -323,8 +323,26 @@ try {
 }
 catch { Write-Host '    (réglages de connexion non appliqués : sans gravité pour l''essai)' -ForegroundColor Yellow }
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $dossierReglages
-Supabase @('functions', 'deploy', 'gerer-membres', 'recuperer-mot-de-passe', 'connexion-telephone', '--project-ref', $config.ref, '--use-api')
+Supabase @('functions', 'deploy', 'gerer-membres', 'recuperer-mot-de-passe', 'connexion-telephone', 'assistant-ia',
+           '--project-ref', $config.ref, '--use-api')
 Ok 'fonctions serveur déployées'
+# Assistant IA (phase 12) : clé du fournisseur lue dans « cle-ia.txt »
+# (jamais dans le dépôt : ce fichier est ignoré par git). Sans ce fichier,
+# l'assistant répond en mode simulé.
+$fichierCleIa = Join-Path $racine 'cle-ia.txt'
+if (Test-Path $fichierCleIa) {
+  $cleIa = ([System.IO.File]::ReadAllText($fichierCleIa)).Trim()
+  $fichierSecrets = Join-Path ([System.IO.Path]::GetTempPath()) 'ecoleplus-ia.env'
+  [System.IO.File]::WriteAllText($fichierSecrets, "AI_API_KEY=$cleIa`nAI_PROVIDER=anthropic`nAI_MODEL=claude-haiku-5-5`n")
+  try {
+    Supabase @('secrets', 'set', '--env-file', $fichierSecrets, '--project-ref', $config.ref)
+    Ok 'clé de l''assistant IA installée sur le serveur (modèle Claude Haiku 5.5)'
+  }
+  finally { Remove-Item -Force -ErrorAction SilentlyContinue $fichierSecrets }
+}
+else {
+  Write-Host '    Assistant IA : mode simulé (aucun fichier cle-ia.txt).' -ForegroundColor Yellow
+}
 
 # Fin de ligne Unix et sans BOM : sinon la clé lue par Flutter serait altérée.
 [System.IO.File]::WriteAllText($fichierEnv, "SUPABASE_URL=$($config.url)`nSUPABASE_ANON_KEY=$($config.cle)`n")

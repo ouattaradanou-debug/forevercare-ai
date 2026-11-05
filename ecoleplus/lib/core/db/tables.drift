@@ -1159,3 +1159,36 @@ CREATE TABLE canteen_subscriptions (
 ) AS CanteenSubscriptionRow;
 
 CREATE INDEX canteen_subscriptions_year ON canteen_subscriptions (school_year_id, month);
+
+-- ---------------- Phase 12 : assistant IA ----------------
+-- Fiches proposées par l'IA, relues et enregistrées par l'enseignant
+-- (demande, contenu et sources en JSON).
+CREATE TABLE lesson_preps (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  author_id TEXT NOT NULL,
+  -- preparation, exercices, remediation
+  kind TEXT NOT NULL,
+  level_code TEXT,
+  subject_id TEXT,
+  theme TEXT,
+  request TEXT NOT NULL DEFAULT '{}',
+  content TEXT NOT NULL DEFAULT '{}',
+  sources TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS LessonPrepRow;
+
+-- Limite mensuelle propre à un enseignant (réglée par le directeur).
+CREATE TABLE ai_teacher_limits (
+  id TEXT NOT NULL PRIMARY KEY,
+  school_id TEXT NOT NULL,
+  membership_id TEXT NOT NULL,
+  monthly_limit INTEGER NOT NULL,
+  created_at TEXT,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  synced_at TEXT
+) AS AiTeacherLimitRow;

@@ -57,3 +57,4 @@ sauvegardes/
 # Serveur de test (créé par tools/tester-sur-telephone.ps1) : contient un mot de passe
 .serveur-test.json
 telephone.env
+cle-ia.txt

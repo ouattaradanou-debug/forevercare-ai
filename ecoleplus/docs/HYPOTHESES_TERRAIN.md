@@ -138,4 +138,9 @@ Sigles repris sans développement (non confirmés) : PAC, PAI, AGR, COGES, CPI, 
 | H129 | Avance (paiement partiel) toujours autorisée ; répartie dans l'ordre des mois ; le mois reste « PAIEMENT PARTIEL » jusqu'au paiement complet (choix du porteur) | Cantine | `repartir` |
 | H130 | Abonnement groupé (une classe ou toute l'école) : un reçu par élève, mois payé en entier, même mode de paiement | Cantine | `AbonnementsCantinePage` |
 | H131 | Jour limite de paiement : enregistré et affiché dans les réglages ; il ne bloque rien (le statut dépend seulement du paiement) | Cantine | `canteen_years.due_day` |
+| H132 | Une demande à l'assistant = une génération (préparation, exercices, remédiation, Simplifier, Développer, Changer d'approche) ; une demande qui échoue n'est pas comptée ; le compteur repart le 1er du mois (heure de Ouagadougou) | Assistant IA | `ia_usage`, `assistant-ia` |
+| H133 | Les noms des élèves de l'école tapés dans une demande sont remplacés par « [élève] » avant l'envoi ; un nom absent de la base (ex. surnom) ne peut pas être reconnu : l'écran rappelle de ne pas en écrire | Assistant IA | `anonymiser` |
+| H134 | Au plus 8 passages (1 500 caractères chacun) par demande ; recherche « par les mots » où un seul mot commun suffit | Assistant IA | `ia_passages` |
+| H135 | Un extrait recopié de plus de 25 mots d'un document est remplacé par « […] » | Assistant IA | `retirerCopies` |
+| H136 | Fiches enregistrées : visibles par leur auteur et par le directeur ; jamais partagées automatiquement avec les autres enseignants | Assistant IA | `lesson_preps` |
 

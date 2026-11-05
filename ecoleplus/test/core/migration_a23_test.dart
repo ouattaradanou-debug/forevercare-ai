@@ -17,6 +17,9 @@ const tablesCantine = [
   'canteen_years',
   'canteen_rates',
   'canteen_subscriptions',
+  // Phase 12 (version 17).
+  'lesson_preps',
+  'ai_teacher_limits',
 ];
 
 void main() {
@@ -102,6 +105,8 @@ void main() {
       'canteen_years',
       'canteen_rates',
       'canteen_subscriptions',
+      'lesson_preps',
+      'ai_teacher_limits',
     ]) {
       await db.customStatement('DROP TABLE $t');
     }
