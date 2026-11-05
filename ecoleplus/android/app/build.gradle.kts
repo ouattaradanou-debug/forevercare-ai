@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -6,7 +8,7 @@ plugins {
 
 // Signature de publication : android/key.properties (jamais dans le dépôt,
 // voir docs/PUBLICATION.md). Sans ce fichier : clé de test (debug).
-val proprietesSignature = java.util.Properties().apply {
+val proprietesSignature: Properties = Properties().apply {
     val f = rootProject.file("key.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
