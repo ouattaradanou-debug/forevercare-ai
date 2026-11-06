@@ -18,11 +18,15 @@ donné des droits (économe, secrétaire, responsable de cantine).
   mots de passe).
 
 ## 2. L'accueil du directeur
-![Accueil du directeur](guide/01-accueil-directeur.png)
+![Accueil du directeur](guide/00-accueil-360x740.png)
 
-En haut : **Tableau de bord** (l'essentiel en un coup d'œil) et
-**Rechercher**. La **cloche** 🔔 montre les notifications (appel à faire,
-absents, paiements en retard…). Ensuite, 7 gros boutons :
+Tout tient sur un seul écran. En haut : le logo et le nom de l'école, la
+**cloche** 🔔 (notifications : appel à faire, absents, paiements en
+retard…) et votre **profil** (Mon compte, Synchronisation, Me
+déconnecter). Puis un mot de bienvenue, l'état de la **synchronisation**
+(vert : tout est envoyé) et, s'il y en a, l'alerte la plus importante.
+La grille donne accès au **Tableau de bord**, à la **Recherche** et aux 7
+modules ; « Se déconnecter » est en bas :
 
 | Bouton | Ce qu'on y trouve |
 |---|---|

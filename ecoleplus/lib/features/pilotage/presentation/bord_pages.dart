@@ -280,44 +280,204 @@ class _Carte extends StatelessWidget {
   final String? cle;
   final bool alerte;
 
+  /// Couleur de la carte : celle du module concerné (même couleur qu'à
+  /// l'accueil).
+  CouleurModule get _couleur => switch (cle) {
+    'effectifs' || 'enseignants' || 'journee' => CouleurModule.eleves,
+    'absences' || 'resultats' => CouleurModule.pedagogie,
+    'finances' => CouleurModule.finances,
+    'formulaires' => CouleurModule.administration,
+    'cantine' => CouleurModule.rapports,
+    _ => CouleurModule.ecole,
+  };
+
   @override
-  Widget build(BuildContext context) => Card(
-    key: cle == null ? null : Key('bord-$cle'),
-    color: alerte ? Theme.of(context).colorScheme.errorContainer : null,
-    child: InkWell(
-      onTap: route == null ? null : () => context.push(route!),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  Widget build(BuildContext context) {
+    final c = alerte
+        ? const CouleurModule(Charte.rouge, Charte.rougePale)
+        : _couleur;
+    return Container(
+      key: cle == null ? null : Key('bord-$cle'),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: Charte.blanc,
+        borderRadius: BorderRadius.circular(Charte.rayon),
+        border: Border.all(
+          color: alerte ? const Color(0xFFF3B9B9) : Charte.bordure,
+        ),
+        boxShadow: Charte.ombre,
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(Charte.rayon),
+          onTap: route == null ? null : () => context.push(route!),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icone),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    titre,
-                    style: Theme.of(context).textTheme.titleMedium,
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: c.fond,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icone, color: c.couleur, size: 21),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        titre,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    if (route != null)
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Charte.texteSecondaire,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                DefaultTextStyle.merge(
+                  style: const TextStyle(color: Charte.texteSecondaire),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: lignes,
                   ),
                 ),
-                if (route != null) const Icon(Icons.chevron_right),
               ],
             ),
-            const SizedBox(height: 6),
-            ...lignes,
-          ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Jauge horizontale (taux de présence, recouvrement, formulaires…).
+class _Jauge extends StatelessWidget {
+  const new(this.valeur, {required this.couleur, this.libelle});
+
+  /// Pourcentage (0 à 100) ; null : rien à mesurer.
+  final double? valeur;
+  final Color couleur;
+  final String? libelle;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: Row(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: ((valeur ?? 0) / 100).clamp(0, 1),
+              minHeight: 8,
+              color: couleur,
+              backgroundColor: const Color(0xFFEEF1F6),
+            ),
+          ),
+        ),
+        if (libelle != null) ...[
+          const SizedBox(width: 8),
+          Text(
+            libelle!,
+            style: TextStyle(color: couleur, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ],
     ),
   );
 }
 
-Widget _gros(BuildContext context, String texte, {Key? key}) => Text(
-  texte,
-  key: key,
-  style: Theme.of(context).textTheme.headlineSmall
-      ?.copyWith(fontWeight: FontWeight.bold),
+/// Effectifs par classe : une barre par classe (filles en orange, garçons
+/// en bleu), longueur proportionnelle à la plus grande classe.
+class _BarresClasses extends StatelessWidget {
+  const new(this.lignes);
+
+  /// (classe, filles, garçons, total).
+  final List<(String, int, int, int)> lignes;
+
+  @override
+  Widget build(BuildContext context) {
+    final max = lignes.fold<int>(1, (m, l) => l.$4 > m ? l.$4 : m);
+    return Column(
+      children: [
+        for (final (nom, f, g, t) in lignes)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 64,
+                  child: Text(
+                    nom,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, c) {
+                      final w = c.maxWidth * t / max;
+                      return Row(
+                        children: [
+                          Container(
+                            width: t == 0 ? 0 : w * f / t,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              color: Charte.orange,
+                              borderRadius: BorderRadius.horizontal(
+                                left: Radius.circular(5),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: t == 0 ? 0 : w * (t - f) / t,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              color: Charte.bleu,
+                              borderRadius: BorderRadius.horizontal(
+                                right: Radius.circular(5),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(
+                  width: 70,
+                  child: Text(
+                    '$t (F $f, G $g)',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(fontSize: 12.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+Widget _gros(BuildContext context, String texte, {Key? key}) => Padding(
+  padding: const EdgeInsets.only(bottom: 2),
+  child: Text(
+    texte,
+    key: key,
+    style: Theme.of(context).textTheme.headlineSmall
+        ?.copyWith(fontWeight: FontWeight.w800, color: Charte.marineFonce),
+  ),
 );
 
 /// Tableau de bord : directeur (toute l'école) ou enseignant (sa classe).
@@ -386,14 +546,16 @@ class TableauDeBordPage extends ConsumerWidget {
             key: const Key('bord-fg'),
           ),
           Text('${classes.length} classe(s)'),
-          if (!enseignant && classes.length > 1) ...[
-            const SizedBox(height: 4),
-            for (final c in classes)
-              Text(
-                '${c.name} : ${eff[c.id]?.total ?? 0} '
-                '(F ${eff[c.id]?.filles ?? 0}, G ${eff[c.id]?.garcons ?? 0})',
-              ),
-          ],
+          if (!enseignant && classes.length > 1)
+            _BarresClasses([
+              for (final c in classes)
+                (
+                  c.name,
+                  eff[c.id]?.filles ?? 0,
+                  eff[c.id]?.garcons ?? 0,
+                  eff[c.id]?.total ?? 0,
+                ),
+            ]),
         ],
       ),
       if (!enseignant && droits.contains('registres'))
@@ -474,7 +636,15 @@ class TableauDeBordPage extends ConsumerWidget {
             else if (resultats.isEmpty)
               const Text('Pas encore de notes ce trimestre.')
             else
-              for (final r in resultats) Text(_ligneResultat(r)),
+              for (final r in resultats) ...[
+                Text(_ligneResultat(r)),
+                _Jauge(
+                  r.taux,
+                  couleur: Charte.turquoise,
+                  libelle: pourcent(r.taux),
+                ),
+                const SizedBox(height: 6),
+              ],
           ],
         ),
       // Finances.
@@ -550,6 +720,7 @@ class _CarteFinances extends ConsumerWidget {
               _gros(context, '${fcfa(s.encaisse)} FCFA encaissés'),
               Text('Reste à payer : ${fcfa(s.restant)} FCFA'),
               Text('Recouvrement : ${texteTaux(s.taux)}'),
+              if (s.taux != null) _Jauge(s.taux, couleur: Charte.vert),
               Text(
                 '$retard élève(s) en retard de paiement • ${s.nbImpayes} '
                 'avec un reste à payer',
@@ -589,6 +760,11 @@ class _CarteFormulaires extends ConsumerWidget {
       route: '/formulaires',
       lignes: [
         _gros(context, '$finis sur ${codes.length} complets'),
+        _Jauge(
+          codes.isEmpty ? null : finis * 100 / codes.length,
+          couleur: Charte.violet,
+        ),
+        const SizedBox(height: 6),
         for (final MapEntry(key: c, value: f) in etatsF.entries)
           Text('$c : ${etats[f?.status ?? 'a_completer']}'),
       ],
@@ -617,10 +793,8 @@ class _CarteStockage extends ConsumerWidget {
           _gros(context, '${pourcent(p)} utilisé'),
           if (utilise != null)
             Text('${tailleTexte(utilise)} sur ${tailleTexte(quota)}'),
-          if (utilise != null) ...[
-            const SizedBox(height: 4),
-            LinearProgressIndicator(value: ((p ?? 0) / 100).clamp(0, 1)),
-          ],
+          if (utilise != null)
+            _Jauge(p, couleur: (p ?? 0) >= 90 ? Charte.rouge : Charte.marine),
         ],
       );
     },

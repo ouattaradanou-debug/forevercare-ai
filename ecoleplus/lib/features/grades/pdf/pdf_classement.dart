@@ -68,7 +68,7 @@ Future<Uint8List> pdfClassement(
             ),
           ),
           pw.Table(
-            border: bordureTableauSeda(),
+            border: bordureTableauCharte(),
             columnWidths: {
               0: const pw.FixedColumnWidth(58),
               1: const pw.FlexColumnWidth(3),
@@ -76,10 +76,10 @@ Future<Uint8List> pdfClassement(
               nb - 1: const pw.FlexColumnWidth(1.4),
             },
             children: [
-              ligneEnteteSeda(tableau.entete, gras),
+              ligneEnteteCharte(tableau.entete, gras),
               for (final (k, l) in textes.indexed)
                 pw.TableRow(
-                  decoration: fondLigneSeda(k),
+                  decoration: fondLigneCharte(k),
                   verticalAlignment: pw.TableCellVerticalAlignment.middle,
                   children: [
                     for (final (i, v) in l.indexed)

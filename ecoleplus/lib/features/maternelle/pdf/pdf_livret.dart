@@ -133,7 +133,7 @@ pw.Widget _page(LivretMaternelle l) {
         padding: const pw.EdgeInsets.all(6),
         decoration: pw.BoxDecoration(
           border: pw.Border.all(width: 0.5, color: couleurTraitTableau),
-          color: bleuPaleSedaPdf,
+          color: bleuPalePdf,
         ),
         child: pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -166,7 +166,7 @@ pw.Widget _page(LivretMaternelle l) {
       ),
       pw.SizedBox(height: 10),
       pw.Table(
-        border: bordureTableauSeda(),
+        border: bordureTableauCharte(),
         columnWidths: {
           0: const pw.FlexColumnWidth(3),
           for (var i = 1; i <= niveaux.length; i++)
@@ -174,7 +174,7 @@ pw.Widget _page(LivretMaternelle l) {
         },
         children: [
           pw.TableRow(
-            decoration: fondTotalSeda,
+            decoration: fondTotalCharte,
             verticalAlignment: pw.TableCellVerticalAlignment.middle,
             children: [
               caseTableau('Domaines d’apprentissage', _gras, centre: true),
@@ -201,7 +201,7 @@ pw.Widget _page(LivretMaternelle l) {
           ),
           for (final (i, ligne) in l.lignes.indexed)
             pw.TableRow(
-              decoration: fondLigneSeda(i),
+              decoration: fondLigneCharte(i),
               verticalAlignment: pw.TableCellVerticalAlignment.middle,
               children: [
                 caseTableau(

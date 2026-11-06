@@ -332,3 +332,18 @@ l'application, et présenter les données en tableaux simples et beaux.
 | Données | Aucune : présentation seulement. |
 | Gardé tel quel | Listes qui ne sont pas des données (menus, journaux d'événements, notifications) ; saisie des notes. |
 | Retour en arrière | Possible sans perte. |
+
+## Fiche d'impact A28 — Charte graphique et accueil mobile sans défilement
+
+**Demande** : refonte esthétique et ergonomique professionnelle, charte
+commune à toute l'application, accueil tenant sur un seul écran de
+téléphone sans défilement ; aucune référence à une entreprise.
+
+| Point | Impact |
+|---|---|
+| Charte | Palette marine/orange avec couleurs complémentaires (HEX dans `CHARTE_GRAPHIQUE.md`), centralisée (`charte.dart`, `theme.dart`) ; boutons, champs, dialogues, messages, pastilles, synchronisation, tableaux harmonisés. Les couleurs codées en dur des modules passent par la charte. Toute mention SEDA Tech retirée. |
+| Accueil | Nouvelle composition mobile en 5 zones (en-tête avec logo de l'école, bienvenue, état, grille 3 × 3, déconnexion), sans défilement ; testé sur 5 tailles. Alertes : une ligne courte à l'accueil, texte complet dans les notifications. « Ma journée » compacte pour l'enseignant. |
+| Modules | Pages des modules en cartes (icône à la couleur du module, explication) ; tableau de bord avec couleurs par module, barres F/G par classe, jauges (présence, réussite, recouvrement, formulaires, stockage). |
+| Documents | Palette marine/orange ; formulaires officiels inchangés. |
+| Données, droits, synchronisation | Inchangés. Aucune fonction retirée. |
+| Retour en arrière | Possible sans perte (présentation seulement). |

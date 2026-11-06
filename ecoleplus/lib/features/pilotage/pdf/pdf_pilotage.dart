@@ -18,13 +18,13 @@ pw.Widget _tableau(
 }) {
   final centrees = colonnesCentrees(lignes, titres.length);
   return pw.Table(
-    border: bordureTableauSeda(),
+    border: bordureTableauCharte(),
     columnWidths: largeurs,
     children: [
-      ligneEnteteSeda(titres, _gras),
+      ligneEnteteCharte(titres, _gras),
       for (final (i, l) in lignes.indexed)
         pw.TableRow(
-          decoration: fondLigneSeda(i),
+          decoration: fondLigneCharte(i),
           children: [
             for (final (j, c) in l.indexed)
               caseTableau(
@@ -36,7 +36,7 @@ pw.Widget _tableau(
         ),
       if (total != null)
         pw.TableRow(
-          decoration: fondTotalSeda,
+          decoration: fondTotalCharte,
           children: [
             for (final (j, c) in total.indexed)
               caseTableau(c, _gras, centre: j != 0),
@@ -75,7 +75,7 @@ Future<Uint8List> pdfEmploiDuTemps(
           pw.SizedBox(height: 4),
           pw.Text(
             'Emploi du temps — $classe',
-            style: _gras.copyWith(fontSize: 15, color: bleuSedaPdf),
+            style: _gras.copyWith(fontSize: 15, color: marinePdf),
           ),
           pw.Text(
             [
@@ -115,7 +115,7 @@ Future<Uint8List> pdfRapport(PolicesPdf polices, Rapport r, String edite) {
           pw.SizedBox(height: 4),
           pw.Text(
             r.titre,
-            style: _gras.copyWith(fontSize: 15, color: bleuSedaPdf),
+            style: _gras.copyWith(fontSize: 15, color: marinePdf),
           ),
           pw.Text(
             [
@@ -130,7 +130,7 @@ Future<Uint8List> pdfRapport(PolicesPdf polices, Rapport r, String edite) {
               padding: const pw.EdgeInsets.only(top: 12, bottom: 4),
               child: pw.Text(
                 t.titre,
-                style: _gras.copyWith(fontSize: 11, color: bleuSedaPdf),
+                style: _gras.copyWith(fontSize: 11, color: marinePdf),
               ),
             ),
             if (t.lignes.isEmpty)

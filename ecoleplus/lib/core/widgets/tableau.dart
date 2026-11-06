@@ -63,7 +63,7 @@ class TableauDonnees extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    // En-tête bleu SEDA, texte blanc ; lignes alternées bleu très clair.
+    // En-tête bleu marine, texte blanc ; lignes alternées gris très clair.
     final entete = theme.textTheme.labelLarge?.copyWith(
       fontWeight: FontWeight.w700,
       color: cs.onPrimary,

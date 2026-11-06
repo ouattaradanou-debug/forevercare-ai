@@ -106,34 +106,34 @@ pw.TableRow ligneEntete(
 );
 
 // ------------------------------------------------------------------
-// Couleurs SEDA Tech (A27) : reçus, rapports, bulletins, classements,
+// Charte graphique (A28) : reçus, rapports, bulletins, classements,
 // livrets, emploi du temps. Les formulaires officiels de l'État gardent
 // la présentation ci-dessus (noir et blanc).
 // ------------------------------------------------------------------
 
-/// Bleu SEDA.
-const bleuSedaPdf = PdfColor.fromInt(0xFF1B4FA0);
+/// Bleu marine (en-têtes de tableaux, titres) : #13315C.
+const marinePdf = PdfColor.fromInt(0xFF13315C);
 
-/// Orange SEDA.
-const orangeSedaPdf = PdfColor.fromInt(0xFFF39223);
+/// Orange (accents) : #F28C28.
+const orangePdf = PdfColor.fromInt(0xFFF28C28);
 
-/// Bleu très clair (lignes alternées).
-const bleuPaleSedaPdf = PdfColor.fromInt(0xFFEEF3FB);
+/// Gris bleuté très clair (lignes alternées) : #F4F6FA.
+const bleuPalePdf = PdfColor.fromInt(0xFFF4F6FA);
 
-/// Orange très clair (lignes de total).
-const orangePaleSedaPdf = PdfColor.fromInt(0xFFFFEBD3);
+/// Orange très clair (lignes de total) : #FFF1E0.
+const orangePalePdf = PdfColor.fromInt(0xFFFFF1E0);
 
-pw.TableBorder bordureTableauSeda() =>
+pw.TableBorder bordureTableauCharte() =>
     pw.TableBorder.all(width: 0.5, color: const PdfColor.fromInt(0xFF9FB3D1));
 
-pw.BoxDecoration? fondLigneSeda(int i) =>
-    i.isOdd ? const pw.BoxDecoration(color: bleuPaleSedaPdf) : null;
+pw.BoxDecoration? fondLigneCharte(int i) =>
+    i.isOdd ? const pw.BoxDecoration(color: bleuPalePdf) : null;
 
 /// Fond des lignes de total (orange très clair).
-const fondTotalSeda = pw.BoxDecoration(color: orangePaleSedaPdf);
+const fondTotalCharte = pw.BoxDecoration(color: orangePalePdf);
 
-/// En-tête bleu SEDA, texte blanc en gras, répété à chaque page.
-pw.TableRow ligneEnteteSeda(
+/// En-tête bleu marine, texte blanc en gras, répété à chaque page.
+pw.TableRow ligneEnteteCharte(
   List<String> titres,
   pw.TextStyle gras, {
   pw.EdgeInsets padding = const pw.EdgeInsets.symmetric(
@@ -142,7 +142,7 @@ pw.TableRow ligneEnteteSeda(
   ),
 }) => pw.TableRow(
   repeat: true,
-  decoration: const pw.BoxDecoration(color: bleuSedaPdf),
+  decoration: const pw.BoxDecoration(color: marinePdf),
   verticalAlignment: pw.TableCellVerticalAlignment.middle,
   children: [
     for (final t in titres)

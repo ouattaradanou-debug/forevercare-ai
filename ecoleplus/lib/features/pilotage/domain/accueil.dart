@@ -109,7 +109,11 @@ List<ThemeAccueil> themesAccueil(ProfilAccueil p) {
             if (d.contains('cartes'))
               const EntreeAccueil('Cartes scolaires', '/cartes', Icons.badge),
             if (d.contains('registres'))
-              const EntreeAccueil('Enseignants', '/enseignants', Icons.badge),
+              const EntreeAccueil(
+                'Enseignants',
+                '/enseignants',
+                Icons.co_present,
+              ),
           ]),
           ThemeAccueil('pedagogie', 'Pédagogie', Icons.grading, [
             if (d.contains('registres') || d.contains('formulaires')) ...[
