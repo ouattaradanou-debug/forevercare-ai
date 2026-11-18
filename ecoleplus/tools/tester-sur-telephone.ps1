@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   EcolePlus : prépare le serveur de test et installe l'application sur le
   portable branché en USB. Une seule commande, à relancer après chaque phase.
@@ -72,11 +72,25 @@ function Supabase([string[]]$Mots) {
   }
 }
 
+# Coupure de connexion avec Supabase (réseau instable) : on réessaie.
+function CoupureReseau([string]$texte) {
+  return $texte -match ('Transport error|timed out|Timeout|connection (reset|refused|closed)|' +
+                        'Bad Gateway|Service Unavailable|Gateway Timeout')
+}
+
 function SupabaseJson([string[]]$Mots) {
   # Réponse JSON de la CLI (option --output-format json). Selon les commandes,
   # la liste peut être directe ou rangée dans une enveloppe : on la retrouve.
-  $sortie = & npx --yes supabase@2.121.0 ($Mots + @('--output-format', 'json')) 2>$null
-  $texte = ($sortie | Where-Object { $_ -is [string] }) -join "`n"
+  # Réseau instable : jusqu'à 6 essais, avec une pause qui s'allonge.
+  foreach ($attente in @(0, 3, 6, 10, 15, 20)) {
+    if ($attente -gt 0) {
+      Write-Host "    Connexion instable avec Supabase : nouvel essai dans $attente s..." -ForegroundColor Yellow
+      Start-Sleep -Seconds $attente
+    }
+    $sortie = & npx --yes supabase@2.121.0 ($Mots + @('--output-format', 'json')) 2>$null
+    $texte = ($sortie | Where-Object { $_ -is [string] }) -join "`n"
+    if (-not (CoupureReseau $texte)) { break }
+  }
   $script:derniereReponse = $texte
   $debut = $texte.IndexOfAny([char[]]'[{')
   if ($debut -lt 0) {
@@ -224,12 +238,31 @@ if ($Reinitialiser) {
   # le réseau bloque la connexion directe à la base. Le registre des mises à
   # jour installées est celui de l'outil officiel (supabase_migrations).
   $tmp = Join-Path ([System.IO.Path]::GetTempPath()) 'ecoleplus-sql.sql'
-  function ExecuterSql([string]$sql, [string]$Etiquette = 'préparation') {
+  function ExecuterSql([string]$sql, [string]$Etiquette = 'préparation', [string]$Version = '') {
     [System.IO.File]::WriteAllText($tmp, $sql, (New-Object System.Text.UTF8Encoding($false)))
-    # Sortie complète (erreurs comprises) pour pouvoir la montrer en cas d'échec.
-    $sortie = & npx --yes supabase@2.121.0 db query --linked -f $tmp --output-format json 2>&1
-    $script:derniereReponse = ($sortie | ForEach-Object { "$_" }) -join "`n"
+    # Réseau instable : jusqu'à 6 essais, avec une pause qui s'allonge.
+    foreach ($attente in @(0, 3, 6, 10, 15, 20)) {
+      if ($attente -gt 0) {
+        Write-Host "    Connexion instable avec Supabase : nouvel essai dans $attente s..." -ForegroundColor Yellow
+        Start-Sleep -Seconds $attente
+        # La mise à jour a peut-être été faite malgré la coupure : on vérifie
+        # avant de la refaire (jamais deux fois).
+        if ($Version) {
+          $deja = @(SupabaseJson @('db', 'query', '--linked',
+                    "select version from supabase_migrations.schema_migrations where version = '$Version'"))
+          if ($deja.Count -gt 0) { return }
+        }
+      }
+      # Sortie complète (erreurs comprises) pour pouvoir la montrer en cas d'échec.
+      $sortie = & npx --yes supabase@2.121.0 db query --linked -f $tmp --output-format json 2>&1
+      $script:derniereReponse = ($sortie | ForEach-Object { "$_" }) -join "`n"
+      if (-not (CoupureReseau $script:derniereReponse)) { break }
+    }
     if ($LASTEXITCODE -ne 0 -or $script:derniereReponse -match '"_tag"\s*:\s*"Error"') {
+      if (CoupureReseau $script:derniereReponse) {
+        ArretAvecReponse ("La connexion avec Supabase coupe sans cesse. Essayez avec le partage de " +
+                          "connexion de votre téléphone, puis relancez : ce qui est déjà installé est gardé.")
+      }
       ArretAvecReponse "Le serveur a refusé une partie de l'installation ($Etiquette)."
     }
   }
@@ -249,7 +282,7 @@ if ($Reinitialiser) {
     $contenu = [System.IO.File]::ReadAllText($m.FullName)
     ExecuterSql ("begin;`n$contenu`n" +
                  "insert into supabase_migrations.schema_migrations (version, name) values ('$version', '$nom');`n" +
-                 "commit;") $nom
+                 "commit;") $nom $version
   }
   if ($baseVide) {
     Write-Host '    Installation du jeu de données fictif « École Test »...'
